@@ -1,0 +1,50 @@
+.infraProviderCard {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-7);
+  }
+
+  &.selected {
+    border-color: var(--primary-7);
+    background: var(--primary-1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .machineTypeCard {
+    padding: var(--spacing-small) 12px !important;
+  }
+}
+
+.infraProviderContent {
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.infraProviderIcon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.providerIcon {
+  width: 24px;
+  height: 24px;
+  background: var(--grey-300);
+  border-radius: 4px;
+}
+
+.infraProviderInfo {
+  flex: 1;
+
+  p:first-child {
+    margin-bottom: 4px;
+  }
+
+  p:last-child {
+    margin: 0;
+  }
+}

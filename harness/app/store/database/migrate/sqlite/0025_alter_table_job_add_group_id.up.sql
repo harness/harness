@@ -1,0 +1,1 @@
+ALTER TABLE jobs ADD COLUMN job_group_id TEXT NOT NULL DEFAULT '';

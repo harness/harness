@@ -1,0 +1,3512 @@
+openapi: "3.0.0"
+info:
+  title: Harness Artifact Registry API
+  version: 1.0.0
+  contact:
+    name: Harness Artifact Registry - developers
+    url: https://www.harness.io
+
+tags:
+  - name: Registries
+    description: APIs to create, update, list registries
+  - name: Artifacts
+    description: APIs to get, list artifacts
+  - name: Docker Artifacts
+    description: APIs to get details of docker artifacts
+  - name: Helm Artifacts
+    description: APIs to get details of helm artifacts
+  - name: Webhooks
+    description: APIs to create, update, list webhooks
+
+servers:
+  - url: /api/v1
+    description: Registry
+
+paths:
+  #Tag: Spaces
+  /spaces/{space_ref}/registries:
+    get:
+      summary: List registries
+      description: Lists all the registries.
+      operationId: GetAllRegistries
+      tags:
+        - Spaces
+      parameters:
+        - $ref: "#/components/parameters/spaceRefPathParam"
+        - $ref: "#/components/parameters/packageTypeParam"
+        - $ref: "#/components/parameters/RegistryTypeParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+        - $ref: "#/components/parameters/recursiveParam"
+        - $ref: "#/components/parameters/scopeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ListRegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /spaces/{space_ref}/artifacts:
+    get:
+      summary: List artifacts
+      description: Lists all the artifacts
+      operationId: GetAllArtifacts
+      tags:
+        - Spaces
+      parameters:
+        - $ref: "#/components/parameters/spaceRefPathParam"
+        - $ref: "#/components/parameters/RegistryIdentifierParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+        - $ref: "#/components/parameters/latestVersion"
+        - $ref: "#/components/parameters/packageTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ListArtifactResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /spaces/{space_ref}/artifact/stats:
+    get:
+      summary: Get artifact stats
+      description: Get artifact stats
+      operationId: GetArtifactStatsForSpace
+      tags:
+        - Spaces
+      parameters:
+        - $ref: "#/components/parameters/spaceRefPathParam"
+        - $ref: "#/components/parameters/fromDateParam"
+        - $ref: "#/components/parameters/toDateParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactStatsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  #Tag: Replication
+  /replication/rules:
+    get:
+      summary: List replication rules
+      description: List all replication rules
+      operationId: listReplicationRules
+      tags:
+        - Replication
+      parameters:
+        - $ref: "#/components/parameters/spaceRefQueryParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ListReplicationRuleResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a replication rule
+      description: Create a replication rule
+      operationId: createReplicationRule
+      tags:
+        - Replication
+      parameters:
+        - $ref: "#/components/parameters/spaceRefQueryParam"
+      requestBody:
+        $ref: "#/components/requestBodies/ReplicationRuleRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/ReplicationRuleResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /replication/rules/{id}:
+    get:
+      summary: Get a replication rule
+      description: Get a replication rule
+      operationId: getReplicationRule
+      tags:
+        - Replication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          $ref: "#/components/responses/ReplicationRuleResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: Update a replication rule
+      description: Update a replication rule
+      operationId: updateReplicationRule
+      tags:
+        - Replication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/requestBodies/ReplicationRuleRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/ReplicationRuleResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      summary: Delete a replication rule
+      description: Delete a replication rule
+      operationId: deleteReplicationRule
+      tags:
+        - Replication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /replication/rules/{id}/migration/start:
+    post:
+      summary: Start migration
+      description: Start migration given an id
+      operationId: startMigration
+      tags:
+        - Replication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /replication/rules/{id}/migration/stop:
+    post:
+      summary: Stop migration
+      description: Stop migration given an id
+      operationId: stopMigration
+      tags:
+        - Replication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /replication/rules/{id}/migration/images:
+    get:
+      summary: List migration images
+      description: List migration images given an id
+      operationId: listMigrationImages
+      tags:
+        - Replication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+      responses:
+        200:
+          $ref: "#/components/responses/ListMigrationImageResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /replication/rules/{id}/migration/images/{image_id}/logs:
+    get:
+      summary: Get migration logs for an image
+      operationId: getMigrationLogsForImage
+      tags:
+        - Replication
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: image_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          $ref: "#/components/responses/PlainTextResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  #Tag: Registries
+  /registry:
+    post:
+      summary: Create Registry.
+      description: Create a Registry.
+      operationId: CreateRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/spaceRefQueryParam"
+      requestBody:
+        $ref: "#/components/requestBodies/RegistryRequest"
+      responses:
+        201:
+          $ref: "#/components/responses/RegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}:
+    get:
+      summary: Returns Registry Details
+      description: Returns Registry Details in the account for the given key
+      operationId: GetRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/RegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: Updates a Registry
+      description: Updates a Registry in the account for the given key
+      operationId: ModifyRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/RegistryRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/RegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete a Registry
+      description: Delete a Registry in the account for the given key
+      operationId: DeleteRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/client-setup-details:
+    get:
+      summary: Returns CLI Client Setup Details
+      description: Returns CLI Client Setup Details based on package type
+      operationId: GetClientSetupDetails
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactParam"
+        - $ref: "#/components/parameters/versionParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ClientSetupDetailsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifacts:
+    get:
+      summary: List Artifacts for Registry
+      description: Lists all the Artifacts for Registry
+      operationId: GetAllArtifactsByRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/LabelsParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+        - $ref: "#/components/parameters/artifactTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ListRegistryArtifactResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  #Tag: Artifacts
+  /registry/{registry_ref}/artifact/labels:
+    get:
+      summary: List Artifact Labels
+      description: List Artifact Labels.
+      operationId: ListArtifactLabels
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListArtifactLabelResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/stats:
+    get:
+      summary: Get Artifact Stats
+      description: Get Artifact Stats.
+      operationId: GetArtifactStatsForRegistry
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/fromDateParam"
+        - $ref: "#/components/parameters/toDateParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactStatsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}:
+    delete:
+      summary: Delete Artifact
+      description: Delete Artifact.
+      operationId: DeleteArtifact
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}:
+    delete:
+      summary: Delete an Artifact Version
+      description: Delete Artifact Version.
+      operationId: DeleteArtifactVersion
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/summary:
+    get:
+      summary: Get Artifact Summary
+      description: Get Artifact Summary.
+      operationId: GetArtifactSummary
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactSummaryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/versions:
+    get:
+      summary: List Artifact Versions
+      description: Lists all the Artifact Versions.
+      operationId: GetAllArtifactVersions
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListArtifactVersionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/tags:
+    get:
+      summary: List OCI Artifact tags
+      description: Lists OCI Artifact Tags.
+      operationId: GetOciArtifactTags
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListOciArtifactTagsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/labels:
+    put:
+      summary: Update Artifact Labels
+      description: Update Artifact Labels.
+      operationId: UpdateArtifactLabels
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+      requestBody:
+        $ref: "#/components/requestBodies/ArtifactLabelRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactLabelResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/stats:
+    get:
+      summary: Get Artifact Stats
+      description: Get Artifact Stats.
+      operationId: GetArtifactStats
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/fromDateParam"
+        - $ref: "#/components/parameters/toDateParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactStatsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/summary:
+    get:
+      summary: Get Artifact Version Summary
+      description: Get Artifact Version Summary.
+      operationId: GetArtifactVersionSummary
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestOptParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactVersionSummaryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/details:
+    get:
+      summary: Describe Artifact Details
+      description: Get Artifact Details
+      operationId: GetArtifactDetails
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/childVersionParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactDetailResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/files:
+    get:
+      summary: Describe Artifact files
+      description: Get Artifact files
+      operationId: GetArtifactFiles
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/FileDetailResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/file/{file_name}:
+    get:
+      summary: Get Artifact file
+      description: just validate existence of Artifact file
+      operationId: GetArtifactFile
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/artifactTypeParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/fileNamePathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactFileResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  #Tag: Docker Artifacts
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/details:
+    get:
+      summary: Describe Docker Artifact Detail
+      description: Get Docker Artifact Details
+      operationId: GetDockerArtifactDetails
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestParam"
+        - $ref: "#/components/parameters/versionTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerArtifactDetailResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/manifest:
+    get:
+      summary: Describe Docker Artifact Manifest
+      description: Get Docker Artifact Manifest
+      operationId: GetDockerArtifactManifest
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerArtifactManifestResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/manifests:
+    get:
+      summary: Describe Docker Artifact Manifests
+      description: Get Docker Artifact Manifests
+      operationId: GetDockerArtifactManifests
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/versionTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerManifestsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/layers:
+    get:
+      summary: Describe Docker Artifact Layers
+      description: Get Docker Artifact Layers
+      operationId: GetDockerArtifactLayers
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerLayersResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  #Tag: Helm Artifacts
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/helm/details:
+    get:
+      summary: Describe Helm Artifact Detail
+      description: Get Helm Artifact Details
+      operationId: GetHelmArtifactDetails
+      tags:
+        - Helm Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/versionTypeParam"
+      responses:
+        200:
+          $ref: "#/components/responses/HelmArtifactDetailResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/helm/manifest:
+    get:
+      summary: Describe Helm Artifact Manifest
+      description: Get Helm Artifact Manifest
+      operationId: GetHelmArtifactManifest
+      tags:
+        - Helm Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/HelmArtifactManifestResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  #Tag: Webhooks
+  /registry/{registry_ref}/webhooks:
+    post:
+      summary: CreateWebhook
+      description: Returns Webhook Details
+      operationId: CreateWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/WebhookRequest"
+      responses:
+        201:
+          $ref: "#/components/responses/WebhookResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      summary: ListWebhooks
+      description: Returns List of Webhook Details
+      operationId: ListWebhooks
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListWebhooksResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}:
+    put:
+      summary: UpdateWebhook
+      description: Returns Webhook Details
+      operationId: UpdateWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/WebhookRequest"
+      responses:
+        201:
+          $ref: "#/components/responses/WebhookResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      summary: GetWebhook
+      description: Returns Webhook Details
+      operationId: GetWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/WebhookResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: DeleteWebhook
+      description: Delete a Webhook
+      operationId: DeleteWebhook
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}/executions:
+    get:
+      summary: ListWebhookExecutions
+      description: Returns Webhook Execution Details List
+      operationId: ListWebhookExecutions
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+      responses:
+        200:
+          $ref: "#/components/responses/ListWebhooksExecutionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}:
+    get:
+      summary: GetWebhookExecution
+      description: Returns Webhook Execution Details
+      operationId: GetWebhookExecution
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+        - $ref: "#/components/parameters/webhookExecutionIdPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/WebhookExecutionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger:
+    get:
+      summary: ReTriggerWebhookExecution
+      description: Retrigger Webhook Execution
+      operationId: ReTriggerWebhookExecution
+      tags:
+        - Webhooks
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/webhookIdentifierPathParam"
+        - $ref: "#/components/parameters/webhookExecutionIdPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/WebhookExecutionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/quarantine:
+    put:
+      summary: quarantineFilePath
+      description: quarantine file path
+      operationId: quarantineFilePath
+      tags:
+        - quarantine
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/quarantineRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/quarantinePathResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: deleteQuarantineFilePath
+      description: delete Quarantine file path
+      operationId: deleteQuarantineFilePath
+      tags:
+        - quarantine
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactParam"
+        - $ref: "#/components/parameters/versionParam"
+        - $ref: "#/components/parameters/filePathParam"
+      responses:
+        200:
+          $ref:  "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+components:
+  requestBodies:
+    RegistryRequest:
+      description: request for create and update registry
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RegistryRequest"
+    ArtifactLabelRequest:
+      description: request to update artifact labels
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ArtifactLabelRequest"
+    WebhookRequest:
+      description: request for create and update webhook
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WebhookRequest"
+    quarantineRequest:
+      description: request to quarantine specific file path
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/quarantineRequest"
+    ReplicationRuleRequest:
+      description: request for create and update replication rule
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ReplicationRuleRequest"
+  responses:
+    ArtifactStatsResponse:
+      description: response to get artifact stats response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactStats"
+            required:
+              - status
+              - data
+    ArtifactLabelResponse:
+      description: response to get artifact label response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactSummary"
+            required:
+              - status
+              - data
+    ClientSetupDetailsResponse:
+      description: response for client setup details
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ClientSetupDetails"
+            required:
+              - status
+              - data
+    RegistryResponse:
+      description: response for create, get and update registry
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/Registry"
+            required:
+              - status
+              - data
+    WebhookResponse:
+      description: response for create, get and update webhook
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/Webhook"
+            required:
+              - status
+              - data
+    ListWebhooksExecutionResponse:
+      description: list webhooks executions response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListWebhooksExecutions"
+            required:
+              - status
+              - data
+    WebhookExecutionResponse:
+      description: webhook execution response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/WebhookExecution"
+            required:
+              - status
+              - data
+    quarantinePathResponse:
+      description: quarantine path response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/quarantinePath"
+            required:
+              - status
+              - data
+    quarantinePathDeleteResponse:
+      description: quarantine path response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+            required:
+              - status
+    DockerArtifactDetailResponse:
+      description: response to get docker artifact detail
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerArtifactDetail"
+            required:
+              - status
+              - data
+    ArtifactDetailResponse:
+      description: response to get artifact details
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactDetail"
+            required:
+              - status
+              - data
+    FileDetailResponse:
+      description: response to get artifact files
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListFileDetail"
+            required:
+              - status
+              - data
+    ArtifactFileResponse:
+      description: response to head artifact file
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              downloadUrl:
+                type: string
+                description: download url of artifact
+              status:
+                $ref: "#/components/schemas/Status"
+            required:
+              - status
+              - downloadUrl
+    HelmArtifactDetailResponse:
+      description: response to get helm artifact detail
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/HelmArtifactDetail"
+            required:
+              - status
+              - data
+    ArtifactSummaryResponse:
+      description: response to get artifact summary
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactSummary"
+            required:
+              - status
+              - data
+    ArtifactVersionSummaryResponse:
+      description: response to get docker artifact version summary
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactVersionSummary"
+            required:
+              - status
+              - data
+    DockerArtifactManifestResponse:
+      description: response to get docker artifact manifest
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerArtifactManifest"
+            required:
+              - status
+              - data
+    HelmArtifactManifestResponse:
+      description: response to get helm artifact manifest
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/HelmArtifactManifest"
+            required:
+              - status
+              - data
+    DockerManifestsResponse:
+      description: response to get artifact layers
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerManifests"
+            required:
+              - status
+              - data
+    ListArtifactLabelResponse:
+      description: response for list artifact labels
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListArtifactLabel"
+            required:
+              - status
+              - data
+    DockerLayersResponse:
+      description: response to get artifact layers
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerLayersSummary"
+            required:
+              - status
+              - data
+    ListRegistryResponse:
+      description: response for list registry
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListRegistry"
+            required:
+              - status
+              - data
+    ReplicationRuleResponse:
+      description: Response for replication rule update
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ReplicationRule"
+            required:
+              - status
+              - data
+    ListReplicationRuleResponse:
+      description: Response for list replication rules
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListReplicationRule"
+            required:
+              - status
+              - data
+    ListWebhooksResponse:
+      description: response for list webhooks
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListWebhooks"
+            required:
+              - status
+              - data
+    ListArtifactResponse:
+      description: response for list artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListArtifact"
+            required:
+              - status
+              - data
+    ListMigrationImageResponse:
+      description: Response for list migration images
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListMigrationImage"
+            required:
+              - status
+              - data
+    ListRegistryArtifactResponse:
+      description: response for list artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListRegistryArtifact"
+            required:
+              - status
+              - data
+    ListArtifactVersionResponse:
+      description: response for list versions of artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListArtifactVersion"
+            required:
+              - status
+              - data
+    ListOciArtifactTagsResponse:
+      description: response for list tags info of an OCI artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListOciArtifactTags"
+            required:
+              - status
+              - data
+    Unauthenticated:
+      description: Unauthenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Success:
+      description: Success Response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+            required:
+              - status
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    PlainTextResponse:
+      description: A plain text response
+      content:
+        text/plain; charset=utf-8:
+          schema:
+            type: string
+            example: "Hello, world!"
+  schemas:
+    ListMigrationImage:
+      type: object
+      description: A list of migration images
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          description: The current page
+          format: int64
+          example: 0
+        images:
+          type: array
+          description: A list of Artifact versions
+          items:
+            $ref: "#/components/schemas/MigrationImage"
+      required:
+        - pageCount
+        - itemCount
+        - pageSize
+        - pageIndex
+        - images
+    MigrationImage:
+      type: object
+      properties:
+        imageId:
+          type: string
+        imageTag:
+          type: string
+        status:
+          type: string
+        progress:
+          type: integer
+    MigrationLog:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        message:
+          type: string
+    ReplicationRule:
+      type: object
+      properties:
+        identifier:
+          type: string
+        source:
+          $ref: "#/components/schemas/ReplicationRegistry"
+        destination:
+          $ref: "#/components/schemas/ReplicationRegistry"
+        sourceType:
+          type: string
+          enum:
+            - Local
+            - Jfrog
+            - GCP
+        destinationType:
+          type: string
+          enum:
+            - Local
+            - Jfrog
+            - GCP
+        allowedPatterns:
+          type: array
+          items:
+            type: string
+        blockedPatterns:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        parentRef:
+          type: string
+      required:
+        - identifier
+        - source
+        - destination
+        - sourceType
+        - destinationType
+        - allowedPatterns
+        - blockedPatterns
+        - parentRef
+        - modifiedAt
+        - createdAt
+    ReplicationRuleRequest:
+      type: object
+      properties:
+        source:
+          $ref: "#/components/schemas/ReplicationRegistry"
+        destination:
+          $ref: "#/components/schemas/ReplicationRegistry"
+        sourceType:
+          type: string
+          enum:
+            - Local
+            - Jfrog
+            - GCP
+        destinationType:
+          type: string
+          enum:
+            - Local
+            - Jfrog
+            - GCP
+        allowedPatterns:
+          type: array
+          items:
+            type: string
+        blockedPatterns:
+          type: array
+          items:
+            type: string
+      required:
+        - source
+        - destination
+        - sourceType
+        - destinationType
+        - allowedPatterns
+        - blockedPatterns
+    ReplicationRegistry:
+      oneOf:
+        - $ref: "#/components/schemas/LocalReplicationRegistry"
+        - $ref: "#/components/schemas/JfrogReplicationRegistry"
+    LocalReplicationRegistry:
+      type: object
+      properties:
+        registryIdentifier:
+          type: string
+      required:
+        - registryIdentifier
+    JfrogReplicationRegistry:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        namespace:
+          type: string
+        username:
+          type: string
+        passwordSecretId:
+          type: string
+        passwordSecretSpaceId:
+          type: string
+      required:
+        - url
+        - namespace
+    ArtifactStats:
+      type: object
+      description: Harness Artifact Stats
+      properties:
+        downloadCount:
+          type: integer
+          format: int64
+        uploadSize:
+          type: integer
+          format: int64
+        downloadSize:
+          type: integer
+          format: int64
+        totalStorageSize:
+          type: integer
+          format: int64
+    ListReplicationRule:
+      type: object
+      description: A list of replication rules
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 10
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        rules:
+          type: array
+          description: A list of Replication Rules
+          items:
+            $ref: "#/components/schemas/ReplicationRule"
+      required:
+        - pageCount
+        - itemCount
+        - pageSize
+        - pageIndex
+        - rules
+    ListRegistry:
+      type: object
+      description: A list of Harness Artifact Registries
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        registries:
+          type: array
+          description: A list of Harness Artifact Registries
+          items:
+            $ref: "#/components/schemas/RegistryMetadata"
+      required:
+        - registries
+    ListWebhooks:
+      type: object
+      description: A list of Harness Registries webhooks
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        webhooks:
+          type: array
+          description: A list of Registries webhooks
+          items:
+            $ref: "#/components/schemas/Webhook"
+      required:
+        - webhooks
+    ListWebhooksExecutions:
+      type: object
+      description: A list of Harness Registries webhooks executions
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        executions:
+          type: array
+          description: A list of Registries webhooks executions
+          items:
+            $ref: "#/components/schemas/WebhookExecution"
+      required:
+        - executions
+    ListArtifact:
+      type: object
+      description: A list of Artifacts
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        artifacts:
+          type: array
+          description: A list of Artifact
+          items:
+            $ref: "#/components/schemas/ArtifactMetadata"
+      required:
+        - artifacts
+    ListRegistryArtifact:
+      type: object
+      description: A list of Artifacts
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        artifacts:
+          type: array
+          description: A list of Artifact
+          items:
+            $ref: "#/components/schemas/RegistryArtifactMetadata"
+      required:
+        - artifacts
+    ListArtifactVersion:
+      type: object
+      description: A list of Artifact versions
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          description: The current page
+          format: int64
+          example: 0
+        artifactVersions:
+          type: array
+          description: A list of Artifact versions
+          items:
+            $ref: "#/components/schemas/ArtifactVersionMetadata"
+      required:
+        - artifacts
+    ListOciArtifactTags:
+      type: object
+      description: A list of Artifact versions
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          description: The current page
+          format: int64
+          example: 0
+        ociArtifactTags:
+          type: array
+          description: A list of OCI Artifact tags
+          items:
+            $ref: "#/components/schemas/OciArtifactTag"
+      required:
+        - ociArtifactTags
+    ListArtifactLabel:
+      type: object
+      description: A list of Harness Artifact Labels
+      properties:
+        pageCount:
+          type: integer
+          description: The total number of pages
+          format: int64
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        labels:
+          type: array
+          items:
+            type: string
+      required:
+        - labels
+    ListFileDetail:
+      type: object
+      description: A list of Harness Artifact Files
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        files:
+          type: array
+          description: A list of Harness Artifact Files
+          items:
+            $ref: "#/components/schemas/FileDetail"
+      required:
+        - files
+    RegistryMetadata:
+      type: object
+      description: Harness Artifact Registry Metadata
+      properties:
+        type:
+          $ref: "#/components/schemas/RegistryType"
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        description:
+          type: string
+        url:
+          type: string
+        identifier:
+          type: string
+        registrySize:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        artifactsCount:
+          type: integer
+          format: int64
+        labels:
+          type: array
+          items:
+            type: string
+        lastModified:
+          type: string
+        path:
+          type: string
+        isPublic:
+          type: boolean
+      required:
+        - type
+        - packageType
+        - identifier
+        - url
+        - isPublic
+    ClientSetupDetails:
+      type: object
+      description: Client Setup Details
+      properties:
+        mainHeader:
+          type: string
+        secHeader:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSetupSection"
+      required:
+        - mainHeader
+        - secHeader
+        - sections
+    ClientSetupSection:
+      type: object
+      description: Client Setup Section
+      properties:
+        header:
+          type: string
+        secHeader:
+          type: string
+        type:
+          $ref: "#/components/schemas/SectionType"
+      discriminator:
+        propertyName: type
+        mapping:
+          INLINE: "#/components/schemas/ClientSetupStepConfig"
+          TABS: "#/components/schemas/TabSetupStepConfig"
+      oneOf:
+        - $ref: "#/components/schemas/ClientSetupStepConfig"
+        - $ref: "#/components/schemas/TabSetupStepConfig"
+      required:
+        - type
+    TabSetupStepConfig:
+      type: object
+      description: Tab Setup step config
+      properties:
+        tabs:
+          type: array
+          items:
+            $ref: "#/components/schemas/TabSetupStep"
+    ClientSetupStepConfig:
+      type: object
+      description: Client Setup Step
+      properties:
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSetupStep"
+    TabSetupStep:
+      type: object
+      description: Tab Setup step
+      properties:
+        header:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSetupSection"
+    ClientSetupStep:
+      type: object
+      description: Client Setup Step
+      properties:
+        header:
+          type: string
+        commands:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSetupStepCommand"
+        type:
+          $ref: "#/components/schemas/ClientSetupStepType"
+    ArtifactMetadata:
+      type: object
+      description: Artifact Metadata
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        registryIdentifier:
+          type: string
+        registryPath:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        lastModified:
+          type: string
+        pullCommand:
+          type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
+      required:
+        - name
+        - registryIdentifier
+        - latestVersion
+        - registryPath
+        - packageType
+    RegistryArtifactMetadata:
+      type: object
+      description: Artifact Metadata
+      properties:
+        name:
+          type: string
+        registryIdentifier:
+          type: string
+        registryPath:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        latestVersion:
+          type: string
+        lastModified:
+          type: string
+        isQuarantined:
+          type: boolean
+        isPublic:
+          type: boolean
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
+      required:
+        - name
+        - registryIdentifier
+        - latestVersion
+        - registryPath
+        - packageType
+        - isPublic
+    ArtifactVersionMetadata:
+      type: object
+      description: Artifact Version Metadata
+      properties:
+        name:
+          type: string
+        size:
+          type: string
+        registryIdentifier:
+          type: string
+        registryPath:
+          type: string
+        digestCount:
+          type: integer
+        pullCommand:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        fileCount:
+          type: integer
+          format: int64
+        lastModified:
+          type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
+      required:
+        - name
+        - registryIdentifier
+        - latestVersion
+        - registryPath
+        - packageType
+    OciArtifactTag:
+      type: object
+      description: OCI Artifact Tag info
+      properties:
+        name:
+          type: string
+        digest:
+          type: string
+      required:
+        - name
+        - digest
+    ArtifactEntityMetadata:
+      type: object
+      description: Artifact Entity Metadata
+      additionalProperties: true
+    Registry:
+      type: object
+      description: Harness Artifact Registry
+      properties:
+        cleanupPolicy:
+          type: array
+          items:
+            $ref: "#/components/schemas/CleanupPolicy"
+        identifier:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        description:
+          type: string
+        url:
+          type: string
+        allowedPattern:
+          type: array
+          items:
+            type: string
+        blockedPattern:
+          type: array
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            type: string
+        config:
+          $ref: "#/components/schemas/RegistryConfig"
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        isPublic:
+          type: boolean
+      required:
+        - name
+        - identifier
+        - type
+        - url
+        - packageType
+        - isPublic
+    ArtifactDetail:
+      type: object
+      description: Artifact Detail
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        size:
+          type: string
+        downloadCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        createdBy:
+          type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
+      discriminator:
+        propertyName: packageType
+        mapping:
+          DOCKER: "#/components/schemas/DockerArtifactDetailConfig"
+          HELM: "#/components/schemas/HelmArtifactDetailConfig"
+          GENERIC: "#/components/schemas/GenericArtifactDetailConfig"
+          MAVEN: "#/components/schemas/MavenArtifactDetailConfig"
+          PYTHON: "#/components/schemas/PythonArtifactDetailConfig"
+          NPM: "#/components/schemas/NpmArtifactDetailConfig"
+          RPM: "#/components/schemas/RpmArtifactDetailConfig"
+          NUGET: "#/components/schemas/NugetArtifactDetailConfig"
+          CARGO: "#/components/schemas/CargoArtifactDetailConfig"
+          GO: "#/components/schemas/GoArtifactDetailConfig"
+          HUGGINGFACE: "#/components/schemas/HuggingFaceArtifactDetailConfig"
+      oneOf:
+        - $ref: "#/components/schemas/DockerArtifactDetailConfig"
+        - $ref: "#/components/schemas/HelmArtifactDetailConfig"
+        - $ref: "#/components/schemas/GenericArtifactDetailConfig"
+        - $ref: "#/components/schemas/MavenArtifactDetailConfig"
+        - $ref: "#/components/schemas/PythonArtifactDetailConfig"
+        - $ref: "#/components/schemas/NpmArtifactDetailConfig"
+        - $ref: "#/components/schemas/RpmArtifactDetailConfig"
+        - $ref: "#/components/schemas/NugetArtifactDetailConfig"
+        - $ref: "#/components/schemas/CargoArtifactDetailConfig"
+        - $ref: "#/components/schemas/GoArtifactDetailConfig"
+        - $ref: "#/components/schemas/HuggingFaceArtifactDetailConfig"
+      required:
+        - imageName
+        - version
+        - registryPath
+        - url
+        - packageType
+    DockerArtifactDetailConfig:
+      type: object
+      description: Config for docker artifact details
+      properties:
+        pullCommand:
+          type: string
+    GenericArtifactDetailConfig:
+      type: object
+      description: Config for generic artifact details
+      properties:
+        description:
+          type: string
+    MavenArtifactDetailConfig:
+      type: object
+      description: Config for maven artifact details
+      properties:
+        groupId:
+          type: string
+        artifactId:
+          type: string
+    NugetArtifactDetailConfig:
+      type: object
+      description: Config for nuget artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    PythonArtifactDetailConfig:
+      type: object
+      description: Config for python artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    NpmArtifactDetailConfig:
+      type: object
+      description: Config for npm artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    RpmArtifactDetailConfig:
+      type: object
+      description: Config for RPM artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    CargoArtifactDetailConfig:
+      type: object
+      description: Config for Cargo artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    GoArtifactDetailConfig:
+      type: object
+      description: Config for Go artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    HelmArtifactDetailConfig:
+      type: object
+      description: Config for helm artifact details
+      properties:
+        pullCommand:
+          type: string
+    HuggingFaceArtifactDetailConfig:
+      type: object
+      description: Config for huggingface artifact details
+      properties:
+        metadata:
+          type: object
+          additionalProperties: true
+    Webhook:
+      type: object
+      description: Harness Regstries Webhook
+      properties:
+        version:
+          type: integer
+          format: int64
+        identifier:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        createdAt:
+          type: string
+        createdBy:
+          type: integer
+          format: int64
+        modifiedAt:
+          type: string
+        enabled:
+          type: boolean
+        internal:
+          type: boolean
+        secretIdentifier:
+          type: string
+        secretSpacePath:
+          type: string
+        secretSpaceId:
+          type: integer
+          format: int64
+        insecure:
+          type: boolean
+        triggers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trigger"
+        latestExecutionResult:
+          $ref: "#/components/schemas/WebhookExecResult"
+        extraHeaders:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtraHeader"
+      required:
+        - identifier
+        - url
+        - name
+        - enabled
+        - insecure
+    WebhookExecution:
+      type: object
+      description: Harness Regstries Webhook Execution
+      properties:
+        id:
+          type: integer
+          format: int64
+        retriggerOf:
+          type: integer
+          format: int64
+        retriggerable:
+          type: boolean
+        created:
+          type: integer
+          format: int64
+        webhookId:
+          type: integer
+          format: int64
+        triggerType:
+          $ref: "#/components/schemas/Trigger"
+        result:
+          $ref: "#/components/schemas/WebhookExecResult"
+        duration:
+          type: integer
+          format: int64
+        error:
+          type: string
+        request:
+          $ref: "#/components/schemas/WebhookExecRequest"
+        response:
+          $ref: "#/components/schemas/WebhookExecResponse"
+    quarantinePath:
+      type: object
+      description: quarantine path
+      properties:
+        id:
+          type: string
+        registryId:
+          type: integer
+          format: int64
+        artifactId:
+          type: integer
+          format: int64
+        versionId:
+          type: integer
+          format: int64
+        filePath:
+          type: string
+        reason:
+          type: string
+      required:
+        - id
+        - registryId
+        - artifactId
+        - reason
+    WebhookExecRequest:
+      type: object
+      description: Harness Regstries HTTP Webhook Request
+      properties:
+        url:
+          type: string
+        headers:
+          type: string
+        body:
+          type: string
+    WebhookExecResponse:
+      type: object
+      description: Harness Regstries HTTP Webhook Response
+      properties:
+        statusCode:
+          type: integer
+        status:
+          type: string
+        headers:
+          type: string
+        body:
+          type: string
+    DockerArtifactDetail:
+      type: object
+      description: Docker Artifact Detail
+      properties:
+        imageName:
+          type: string
+        version:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        registryPath:
+          type: string
+        url:
+          type: string
+        size:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        pullCommand:
+          type: string
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
+        pullCommandByDigest:
+          type: string
+      required:
+        - imageName
+        - version
+        - registryPath
+        - url
+        - packageType
+    FileDetail:
+      type: object
+      description: File Detail
+      properties:
+        name:
+          type: string
+        size:
+          type: string
+        checksums:
+          type: array
+          items:
+            type: string
+        downloadCommand:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - name
+        - size
+        - checksums
+        - downloadCommand
+        - createdAt
+    HelmArtifactDetail:
+      type: object
+      description: Helm Artifact Detail
+      properties:
+        artifact:
+          type: string
+        version:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        registryPath:
+          type: string
+        url:
+          type: string
+        size:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        pullCommand:
+          type: string
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/ArtifactEntityMetadata"
+        pullCommandByDigest:
+          type: string
+      required:
+        - imageName
+        - version
+        - registryPath
+        - url
+        - packageType
+    ArtifactSummary:
+      type: object
+      description: Harness Artifact Summary
+      properties:
+        imageName:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
+        labels:
+          type: array
+          items:
+            type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+      required:
+        - imageName
+        - packageType
+    ArtifactVersionSummary:
+      type: object
+      description: Docker Artifact Version Summary
+      properties:
+        imageName:
+          type: string
+        version:
+          type: string
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        artifactType:
+          $ref: "#/components/schemas/ArtifactType"
+      required:
+        - imageName
+        - version
+        - packageType
+    DockerArtifactManifest:
+      type: object
+      description: Docker Artifact Manifest
+      properties:
+        manifest:
+          type: string
+      required:
+        - manifest
+    HelmArtifactManifest:
+      type: object
+      description: Helm Artifact Manifest
+      properties:
+        manifest:
+          type: string
+      required:
+        - manifest
+    DockerLayerEntry:
+      type: object
+      description: Harness Artifact Layers
+      properties:
+        command:
+          type: string
+        size:
+          type: string
+      required:
+        - command
+    DockerManifestDetails:
+      type: object
+      description: Harness Artifact Layers
+      properties:
+        osArch:
+          type: string
+        digest:
+          type: string
+        size:
+          type: string
+        createdAt:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        isQuarantined:
+          type: boolean
+        quarantineReason:
+          type: string
+      required:
+        - digest
+        - layers
+        - osArch
+    DockerManifests:
+      type: object
+      description: Harness Manifests
+      properties:
+        imageName:
+          type: string
+        version:
+          type: string
+        manifests:
+          type: array
+          items:
+            $ref: "#/components/schemas/DockerManifestDetails"
+      required:
+        - imageName
+        - version
+    DockerLayersSummary:
+      type: object
+      description: Harness Layers Summary
+      properties:
+        digest:
+          type: string
+        osArch:
+          type: string
+        layers:
+          type: array
+          items:
+            $ref: "#/components/schemas/DockerLayerEntry"
+      required:
+        - digest
+    RegistryConfig:
+      type: object
+      description: SubConfig specific for Virtual or Upstream Registry
+      required:
+        - type
+      properties:
+        type:
+          $ref: "#/components/schemas/RegistryType"
+      discriminator:
+        propertyName: type
+        mapping:
+          VIRTUAL: "#/components/schemas/VirtualConfig"
+          UPSTREAM: "#/components/schemas/UpstreamConfig"
+      oneOf:
+        - $ref: "#/components/schemas/VirtualConfig"
+        - $ref: "#/components/schemas/UpstreamConfig"
+    VirtualConfig:
+      type: object
+      description: Configuration for Harness Virtual Artifact Registries
+      properties:
+        upstreamProxies:
+          type: array
+          items:
+            type: string
+    UpstreamConfig:
+      type: object
+      description: Configuration for Harness Artifact UpstreamProxies
+      properties:
+        authType:
+          $ref: "#/components/schemas/AuthType"
+        auth:
+          oneOf:
+            - $ref: "#/components/schemas/UserPassword"
+            - $ref: "#/components/schemas/Anonymous"
+            - $ref: "#/components/schemas/AccessKeySecretKey"
+        url:
+          type: string
+        source:
+          type: string
+          enum:
+            - Dockerhub
+            - Custom
+            - AwsEcr
+            - MavenCentral
+            - PyPi
+            - NpmJs
+            - NugetOrg
+            - Crates
+            - GoProxy
+            - HuggingFace
+      x-discriminator-value: UPSTREAM
+      required:
+        - authType
+    CleanupPolicy:
+      type: object
+      description: Cleanup Policy for Harness Artifact Registries
+      properties:
+        name:
+          type: string
+        expireDays:
+          type: integer
+        versionPrefix:
+          type: array
+          items:
+            type: string
+        packagePrefix:
+          type: array
+          items:
+            type: string
+    Trigger:
+      type: string
+      description: refers to trigger
+      enum:
+        - ARTIFACT_CREATION
+        - ARTIFACT_DELETION
+    ExtraHeader:
+      type: object
+      description: Webhook Extra Header
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+      required:
+        - key
+        - value
+    WebhookExecResult:
+      type: string
+      description: refers to webhook execution
+      enum:
+        - SUCCESS
+        - RETRIABLE_ERROR
+        - FATAL_ERROR
+    RegistryType:
+      type: string
+      description: refers to type of registry i.e virtual or upstream
+      enum:
+        - VIRTUAL
+        - UPSTREAM
+      discriminator:
+        propertyName: type
+    PackageType:
+      type: string
+      description: refers to package
+      enum:
+        - DOCKER
+        - MAVEN
+        - PYTHON
+        - GENERIC
+        - HELM
+        - NUGET
+        - NPM
+        - RPM
+        - CARGO
+        - GO
+        - HUGGINGFACE
+    ArtifactType:
+      type: string
+      description: refers to artifact type
+      enum:
+        - model
+        - dataset
+    SectionType:
+      type: string
+      description: refers to client setup section type
+      enum:
+        - INLINE
+        - TABS
+      discriminator:
+        propertyName: type
+    Status:
+      type: string
+      description: "Indicates if the request was successful or not"
+      enum:
+        - SUCCESS
+        - FAILURE
+        - ERROR
+    AuthType:
+      type: string
+      description: "Authentication type"
+      enum:
+        - UserPassword
+        - AccessKeySecretKey
+        - Anonymous
+    ClientSetupStepType:
+      type: string
+      description: "ClientSetupStepType type"
+      enum:
+        - Static
+        - GenerateToken
+    ClientSetupStepCommand:
+      type: object
+      description: Client Setup Step Command
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: The http error code
+          example: "404"
+        message:
+          type: string
+          description: The reason the request failed
+        details:
+          type: object
+          description: Additional details about the error
+      required:
+        - code
+        - message
+    RegistryRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        description:
+          type: string
+        allowedPattern:
+          type: array
+          items:
+            type: string
+        blockedPattern:
+          type: array
+          items:
+            type: string
+        cleanupPolicy:
+          type: array
+          items:
+            $ref: "#/components/schemas/CleanupPolicy"
+        labels:
+          type: array
+          items:
+            type: string
+        config:
+          $ref: "#/components/schemas/RegistryConfig"
+        parentRef:
+          type: string
+        isPublic:
+          type: boolean
+      required:
+        - identifier
+        - type
+        - packageType
+        - isPublic
+    WebhookRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        enabled:
+          type: boolean
+        insecure:
+          type: boolean
+        secretIdentifier:
+          type: string
+        secretSpacePath:
+          type: string
+        secretSpaceId:
+          type: integer
+          format: int64
+        triggers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trigger"
+        extraHeaders:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtraHeader"
+      required:
+        - insecure
+        - enabled
+        - identifier
+        - url
+        - name
+    quarantineRequest:
+      type: object
+      properties:
+        filePath:
+          type: string
+        artifact:
+          type: string
+        version:
+          type: string
+        reason:
+          type: string
+      required:
+        - artifact
+        - reason
+    ArtifactLabelRequest:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+      required:
+        - labels
+    UserPassword:
+      properties:
+        userName:
+          type: string
+        secretIdentifier:
+          type: string
+        secretSpacePath:
+          type: string
+        secretSpaceId:
+          type: integer
+          format: int64
+      required:
+        - userName
+    AccessKeySecretKey:
+      properties:
+        accessKey:
+          type: string
+        accessKeySecretIdentifier:
+          type: string
+        accessKeySecretSpacePath:
+          type: string
+        accessKeySecretSpaceId:
+          type: integer
+          format: int64
+        secretKeyIdentifier:
+          type: string
+        secretKeySpacePath:
+          type: string
+        secretKeySpaceId:
+          type: integer
+          format: int64
+      required:
+        - secretKeyIdentifier
+    Anonymous: {}
+  parameters:
+    spaceRefQueryParam:
+      name: space_ref
+      in: query
+      required: false
+      description: >
+        Unique path identifier for the final space in the branch.
+        The value can be provided either as a fully URL-encoded path (e.g., `organization%2Fproject`)
+        or as a plain path ending with a trailing plus sign (`+`) as separator (e.g., `organization/project/+`).
+      schema:
+        type: string
+    packageTypeParam:
+      name: package_type
+      in: query
+      required: false
+      description: Registry Package Type
+      schema:
+        type: array
+        items:
+          type: string
+    RegistryTypeParam:
+      name: type
+      in: query
+      required: false
+      description: Registry Type
+      schema:
+        type: string
+        enum:
+          - VIRTUAL
+          - UPSTREAM
+    RegistryIdentifierParam:
+      name: reg_identifier
+      in: query
+      required: false
+      description: Registry Identifier
+      schema:
+        type: array
+        items:
+          type: string
+    recursiveParam:
+      name: recursive
+      in: query
+      description: |
+        Whether to list registries recursively.
+
+        **Deprecated.** Use the new `scope` parameter.
+
+        * `recursive=true`  → `scope=ancestors`
+        * `recursive=false` → `scope=none`
+      required: false
+      schema:
+        type: boolean
+        default: false
+    scopeParam:
+      name: scope
+      in: query
+      description: >
+        **Scope of registries to list**
+
+        * **none** – current space only (default)  
+        * **ancestors** – current space **plus** all parent spaces  
+        * **descendants** – current space **plus** all child spaces  
+
+        If omitted, `none` is assumed.
+      required: false
+      schema:
+        type: string
+        enum:
+          - ancestors
+          - descendants
+          - none
+    spaceRefPathParam:
+      name: space_ref
+      in: path
+      required: true
+      description: >
+        Unique path identifier for the final space in the branch.
+        The value can be provided either as a fully URL-encoded path (e.g., `organization%2Fproject`)
+        or as a plain path ending with a trailing plus sign (`+`) as separator (e.g., `organization/project/+`).
+      schema:
+        type: string
+    LabelsParam:
+      name: label
+      in: query
+      required: false
+      description: Label.
+      schema:
+        type: array
+        items:
+          type: string
+    registryRefPathParam:
+      name: registry_ref
+      in: path
+      required: true
+      description: >
+        Unique path identifier for the final registry in the branch.
+        The value can be provided either as a fully URL-encoded path (e.g., `organization%2Fproject%2Fregistry`)
+        or as a plain path ending with a trailing plus sign (`+`) as separator (e.g., `organization/project/registry/+`).
+      schema:
+        type: string
+    digestOptParam:
+      name: digest
+      in: query
+      required: false
+      description: Digest.
+      schema:
+        type: string
+    webhookIdentifierPathParam:
+      name: webhook_identifier
+      in: path
+      required: true
+      description: Unique webhook identifier.
+      schema:
+        type: string
+    webhookExecutionIdPathParam:
+      name: webhook_execution_id
+      in: path
+      required: true
+      description: Unique webhook execution identifier.
+      schema:
+        type: string
+    artifactParam:
+      name: artifact
+      in: query
+      required: false
+      description: Artifat
+      schema:
+        type: string
+    versionParam:
+      name: version
+      in: query
+      required: false
+      description: Version
+      schema:
+        type: string
+    filePathParam:
+      name: file_path
+      in: query
+      required: false
+      description: filePath
+      schema:
+        type: string
+    artifactPathParam:
+      name: artifact
+      in: path
+      required: true
+      description: Name of artifact.
+      schema:
+        type: string
+    versionPathParam:
+      name: version
+      in: path
+      required: true
+      description: Name of Artifact Version.
+      schema:
+        type: string
+    fileNamePathParam:
+      name: file_name
+      in: path
+      required: true
+      description: Name of Artifact File.
+      schema:
+        type: string
+    digestParam:
+      name: digest
+      in: query
+      required: true
+      description: Digest.
+      schema:
+        type: string
+    versionTypeParam:
+      name: version_type
+      in: query
+      required: false
+      description: Version Type.
+      schema:
+        type: string
+        enum:
+          - DIGEST
+          - TAG
+    childVersionParam:
+      name: childVersion
+      in: query
+      required: false
+      description: Child version incase of Docker artifacts.
+      schema:
+        type: string
+    searchTerm:
+      name: search_term
+      in: query
+      required: false
+      description: search Term.
+      schema:
+        type: string
+    artifactTypeParam:
+      name: artifact_type
+      in: query
+      required: false
+      description: artifact type.
+      schema:
+        type: string
+        enum:
+          - model
+          - dataset
+    pageNumber:
+      name: page
+      in: query
+      required: false
+      description: Current page number
+      schema:
+        type: integer
+        format: int64
+        default: 1
+    pageSize:
+      name: size
+      in: query
+      required: false
+      description: Number of items per page
+      schema:
+        type: integer
+        format: int64
+        default: 20
+    sortOrder:
+      name: sort_order
+      in: query
+      required: false
+      description: sortOrder
+      schema:
+        type: string
+    sortField:
+      name: sort_field
+      in: query
+      required: false
+      description: sortField
+      schema:
+        type: string
+    latestVersion:
+      name: latest_version
+      in: query
+      required: false
+      description: Latest Version Filter.
+      schema:
+        type: boolean
+    fromDateParam:
+      name: from
+      in: query
+      required: false
+      description: Date. Format - MM/DD/YYYY
+      schema:
+        type: string
+    toDateParam:
+      name: to
+      in: query
+      required: false
+      description: Date. Format - MM/DD/YYYY
+      schema:
+        type: string

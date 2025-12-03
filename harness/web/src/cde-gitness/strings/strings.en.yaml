@@ -1,0 +1,503 @@
+branchPlaceholder: Branch
+lastUsed: Last Used
+introText1: Get ready to code in seconds
+introText2: Isolated cloud development environments with your favorite editor
+introText3: Connect in seconds with a repository
+cloudDeveloperExperience: Cloud Development Environments
+createGitspace: Create Gitspace
+deleteGitspace: Delete Gitspace
+resetGitspace: Reset Gitspace
+reset: Reset
+editGitspace: Edit Gitspace
+viewGitspace: View Gitspace Details
+updateGitspace: Update Gitspace
+gitspaces: Gitspaces
+noRepo: Don’t have a Git repo?
+createRepo: Create a repo in Harness
+newGitspace: + New Gitspace
+manageGitspaces: Manage Gitspaces
+noGitspaces: You have not created any Gitspace yet
+gitspaceDetail: Gitspace Detail
+machine: Machine
+region: Region
+allRegionDisabled: All regions disabled
+or: OR
+logs: Logs
+noData: No Data
+changes: Changes
+noChange: No Change
+hasChange: The Gitspace has changes
+used: Used
+hours: Hours
+na: NA
+retry: Retry
+eventTimeline: Event Timeline
+cpu: CPU
+memory: Memory
+disk: Disk
+created: Created
+edit: Edit
+account: Account
+regionSelectWarning: Select a region first
+gitspaceUpdateSuccess: Gitspace updated successfully
+regionValidationMessage: Region is required
+repoValidationMessage: Repository is required
+gitspaceNameValidation: New Gitspace name must not be blank
+gitspaceNameMaxLengthValidation: 'Name cannot exceed 32 characters'
+gitspaceNameFormatValidation: 'Name can contain letters, numbers, hyphens, underscores, and spaces, and must start and end with a letter or number.'
+branchValidationMessage: Branch is required
+machineValidationMessage: Machine Type is required
+sshValidationMessage: SSH Key is required
+startingGitspace: Starting Gitspace
+stopingGitspace: Stopping Gitspace
+sessionDuration: Last Started
+lastActivated: Last Activated
+deleteGitspaceTitle: Delete Gitspace '{{name}}'
+deleteGitspaceText: 'This action cannot be undone. Are you sure you want to proceed to delete?'
+resetGitspaceTitle: Reset Gitspace '{{name}}'
+resetGitspaceText: 'This action cannot be undone. Are you sure you want to proceed to reset?'
+resetGitspaceSuccess: Gitspace reset successfully
+deleteSuccess: Gitspace deleted successfully
+deleteInfraSuccess: Gitspace Infrastructure deleted successfully
+deleteMachineSuccess: Machine type deleted successfully
+atleastOneRegion: Please add atleast one region
+repositoryAndBranch: Repository & Branch
+importInto: Import Repository into Gitness
+status: Status
+getStarted: Get started with Gitspaces by
+createImport: creating or importing repositories
+regionAndMachineSize: Region & Machine Size
+copied: Copied
+id: ID
+project: Project
+gitspaceInfra: Gitspace Infrastructure
+configureGCPInfra: Configure GCP Infrastructure
+gcpInfrastructure: GCP Infrastructure
+gcpInfrastructureName: GCP Infrastructure Name
+awsInfrastructure: AWS Infrastructure
+awsInfrastructureName: AWS Infrastructure Name
+configureAWSInfra: Configure AWS Infrastructure
+configureGitspaceInfra: Configure Gitspace Infrastructure
+settings:
+  saveSuccess: Settings saved successfully
+  gitProviders: Git Providers
+  accessMethods: Access Methods
+  cloudRegionsAndMachineTypes: Cloud Regions and Machine types
+  gitspaceImages: Gitspace Images
+  availableGitProviders: Available Git Providers
+  gitProvidersDescription: Customize which git provider you want to use
+  selectAllGitProviders: Select all git providers
+  availableCodeEditors: Available Access Methods
+  codeEditorsDescription: Limit the editors and access methods available for Gitspace creation
+  selectAllCodeEditors: Select All Access Methods
+  images:
+    manageGitspaceImages: Manage Gitspace Images
+    manageGitspaceImagesDescription: Customize which images will be available while creating Gitspaces
+    defaultGitspaceImage: Default Gitspace Image
+    defaultImageDescription: By default, the image of every new Gitspace created is provided by Harness or the one which is mentioned in the repository used for creating Gitspace. This setting allows you to set a default image path which all newly created Gitspaces can use.
+    provideDefaultImage: Provide Default Image
+    provideDefaultImagePathOrRegistry: Provide default Image Path or Registry
+    selectImageRegistryAccessType: Select Image Registry Access Type
+    public: Public
+    publicRegistryDescription: Use publicly available container images
+    private: Private
+    privateRegistryDescription: Use private registry with authenticated access
+    selectImageRegistryConnector: Select Image Registry Connector
+    selectConnector: -Select Connector-
+    imageRegistryOrPath: Image Registry or Path
+    imagePath: Image Path
+    apply: Apply
+    cancel: Cancel
+    allowedImagePathsAndRegistries: Allowed Image Paths and Registries
+    allowedImagePathsDescription: By default, if the repository contains an image path then it will use that image path to create the Gitspace. You can restrict by specifying which image paths and registries are allowed to create Gitspace.
+    imagePathPlaceholder: Enter image path or registry
+    newImagePath: + New Image Path
+    artifactRegistryConnector: Artifact Registry Connector
+    defaultPathToPrivateGitspaceImagePath: Default Path to Private Gitspace Image Path
+    defaultPathToPublicGitspaceImagePath: Default Path to Public Gitspace Image Path
+  providers:
+    github: GitHub
+    gitlab: GitLab
+    bitbucket: Bitbucket
+    other: Other
+  editors:
+    vsCode: By Microsoft
+    jetbrains: By JetBrains
+    aiNative: AI Native IDEs
+  other: Other
+  regions:
+    availableCloudRegions: Available Cloud Regions
+    availableCloudRegionsDesc: Customize which cloud regions will be available while creating Gitspaces
+    regionsAvailable: regions available
+    selectRegionsDesc: Select which regions and machines will be available to create a Gitspace
+    region: Region
+    machinesSelected: machines selected
+    selectMachineTypes: Select which machine types will be available to create a Gitspace
+    selectAllMachineTypes: Select all machine types
+delegate:
+  DelegateSelector: Delegate Selector
+  delegateSelectorTags: Delegate Selector Tags
+  noDelegateSelectors: No delegate selectors selected
+gitspaceInfraHome:
+  minMessage: '{{field}} should contain minimum {{count}} characters'
+  maxMessage: '{{field}} should not contain more than {{count}} characters'
+  minNumber: '{{field}} should be greater than {{count}}'
+  configureGCPButton: Configure GCP infrastructure
+  configureAWSButton: Configure AWS infrastructure
+  gatewayGroupName: Gateway Group Name
+  gatewayGroupHealth: Gateway Group Health
+  gatewayInstanceName: Gateway Instance Name
+  gatewayversionnumber: Gateway version number
+  description: Configure an infrastructure with locations and machines to be used as one of the infrastructure while creating a Gitspace
+  gcpSupportText: Currently we support GCP based infrastructure only.
+  learnMore: Learn more about Gitspace Infrastructure
+  infraDetails: Infrastructure details
+  status: Status
+  lastHeartbeat: Last Heartbeat
+  zoneDetails: Zone Details
+  noZonesAvailable: No zones available
+  waitingForConnection: Waiting for Connection
+  waitingMessage: It takes around 3-5 minutes to connect to the infrastructure. If it takes longer, please follow the
+  troubleshoot: troubleshoot guidelines
+  locationAndMachine: Locations and machines
+  regionsAndMachines: Regions and machines
+  locationDetails: Location details
+  healthy: HEALTHY
+  unhealthy: UNHEALTHY
+  unknown: UNKNOWN
+  region: Region
+  locationName: Region Name
+  defaultSubnet: Default subnet IP range
+  proxySubnet: Proxy subnet IP range
+  dnsManagedZone: DNS managed zone
+  envoyHealth: Envoy health
+  configureVMRunnerImage: VM Runner Details
+  configureVMRunnerImageNote: Configure the region and zone of the VM runner image.
+  machineImageName: 'Machine Image Name'
+  machineImageNamePlaceholder: 'Enter machine image name'
+  machineImageNameRequired: 'Machine Image Name is required'
+  runnerVMRegion: Region
+  runnerVMZone: Availability Zone
+  invalidImageNameFormat: 'Invalid image name format'
+  machines: Machines
+  machine: Machine
+  diskType: Persistent Disk Type
+  bootType: Boot Size Type
+  diskSize: Persistent Disk Size (in GB)
+  persistentDisk: Persistent Disk
+  bootSizeColumn: Boot Size
+  bootDisk: Boot Disk
+  bootDiskType: Boot Disk Type
+  bootDiskSize: Boot Disk Size (in GB)
+  bootSize: Boot Size (in GB)
+  cpu: CPU (in Cores)
+  memoryInGb: Memory (in GB)
+  newMachine: New Machine
+  newRegion: New Region
+  noRegionConfigured: No regions configured
+  noRegionConfiguredText: Configure a new region to let users create a Gitspace
+  addnewRegion: Add New Region
+  machineType: Machine Type
+  zone: Zone
+  diskSizeMessage: Persistent Disk Size is required
+  zoneMessage: Zone is required
+  diskTypeMessage: Persistent Disk Type is required
+  bootTypeMessage: Boot Size Type is required
+  bootSizeMessage: Boot Size is required
+  cpuMessage: CPU is required
+  memoryMessage: Memory is required
+  createNewMachine: Create a new machine type
+  deleteMachineTitle: Delete “{{name}}” machine type?
+  addMachineNote: You can add machines once the infrastructure is connected.
+  noMachineAvailable: No machines available
+  addMachineType: Add machine types to make the region available for use
+  operatingSystem: Operating System
+  architecture: Architecture
+  osRequired: Operating system is required
+  architectureRequired: Architecture is required
+  machineName: Machine Name
+  nameMessage: Name is required
+  domainMessage: Domain is required
+  machineTypeMessage: Machine type is required
+  instanceTypeMessage: Instance type is required
+  instanceMessage: Instance is required
+  dangerZone: Danger Zone
+  deleteThisInfra: Delete this infrastructure
+  deleteWarning: Once you delete the infra, there is no going back. Please be certain
+  deleteInfraText: This action cannot be undone. Are you sure you want to proceed to delete?
+  deleteInfraTitle: Delete this infrastructure?
+  create: Create
+configureInfra:
+  project: GCP Project
+  configure: Configure
+  learnMoreAboutHybrid: Learn more about hybrid infra
+  gatewayImageName: Gateway Machine Image Name
+  machineImageName: Machine Image Name
+  gatewayDetails: Gateway Details
+  vmRunnerDetails: VM Runner Details
+  gatewayImageNamePlaceholder: Enter gateway image name
+  gatewayImageNameRequired: Gateway Image Name is required
+  configureZones: Configure Zones
+  newZone: New Zone
+  updateTime: Last Updated
+  provideInfraDetails: Provide Infrastructure Details
+  downloadAndApply: Download and Apply YAML
+  downloadInfraYaml: Download Infra YAML
+  yamlNotAvailable: YAML not available yet
+  yamlLoading: Loading...
+  applyYamlAndVerifyConnection: Apply YAML and Verify Connection
+  basicDetails: Basic Details
+  learnMore: Learn More
+  cancel: Cancel
+  id: Id
+  NumberOfInstance: Number of Gateway Instances
+  infraName: Infrastructure Name
+  name: Name
+  domain: Domain
+  subdomain: Subdomain
+  gateway: Gateway
+  numberOfInstance: Number of Instances
+  numberOfLocations: Number of Locations
+  machineType: Machine Type
+  gatewayMachineType: Gateway Machine Type
+  configureLocations: Configure Regions
+  configureLocationNote: Users will only be able to host gitspaces in these regions only.
+  gatewayNoteText: More number of instances better reliability of running the Gitspace. However more number of instances incur more costs
+  basicNoteText: The domain on which all the gitspaces created by this infra will be accessible
+  defaultImageNoteText: If not specified, Harness will use a default image name
+  instanceNoteText: To ensure better availability, we recommend running more than one instance. If you don’t specify a number, 3 instances will be created by default.
+Aws:
+  title: AWS
+  VpcCidrBlock: VPC CIDR Block
+  domainExample: e.g. gitspace.harness.io
+  instanceName: Instance Name
+  instanceType: Instance Type
+  privateSubnetCidr: Private Subnet CIDR
+  publicSubnetCidr: Public Subnet CIDR
+  gatewayInstanceType: Gateway Instance Type
+  configureRegionsAndZones: Configure Regions and Zones
+  regionConfigNote: Once the region is configured, you can't change the AWS region selection, sub-domain and configured zones. You can add only one region.
+  gatewayAmi: Gateway AMI
+  gatewayAmiId: Gateway AMI ID
+  gatewayAmiImage: Gateway AMI Image
+  runnerAmiId: Runner AMI ID
+  runnerAmiIdPlaceholder: Enter Runner AMI ID
+  runnerAmiIdRequired: Runner AMI ID is required
+  machineAmiId: 'Machine AMI ID'
+  machineAmiIdPlaceholder: 'Enter Machine AMI ID'
+  machineAmiIdRequired: 'Machine AMI ID is required'
+  invalidAmiIdFormat: Invalid AMI ID format
+  availabilityZone: Availability Zone
+  numberOfAvailabilityZone: '# of Availability Zone'
+  privateSubnet: Private Subnet CIDR Block
+  publicSubnet: Public Subnet CIDR Block
+  configureNewRegion: Configure New Region
+  selectAwsRegion: Select AWS Region
+  numberOfRegions: Number of Regions
+  singleRegionRestriction: AWS infrastructure is currently restricted to a single region.
+downloadAndApplySection:
+  title: Download and apply YAML to terraform module
+  back: Back
+  done: Done
+  downloadYaml: Download YAML
+  downloadGeneratedYaml: Download the generated YAML file
+  applyYamlText: Apply the YAML in the terraform module and run following commands
+sshSelect:
+  30days: 30 Days
+  90days: 90 Days
+  180days: 180 Days
+  noexpiration: No Expiration
+  deleteToken: Delete SSH Token '{{name}}'
+homePage:
+  start: Start
+  noSetupRequired: no setup required
+  noteOne: Dedicated cloud development environments with your favorite editor
+  noteTwo: Get always consistent development environments that boost productivity and empower collaboration.
+  getStartedNow: Get Started Now
+  learnMoreAboutGitspaces: Learn more about Gitspaces
+listing:
+  online: Active
+  offline: Stopped
+  error: Error
+  starting: Starting
+  stopping: Stopping
+  uninitialized: Uninitialized
+  cleaning: Cleaning
+  ownerAndCreated: Owner & Created On
+  infrastructureDetails: Infrastructure Details
+create:
+  repositoryDetails: Repository Details
+  gitnessRepositories: Harness Repositories
+  thirdPartyGitRepositories: Other Public Git Repositories
+  branchPlaceholder: Enter the Branch name
+  selectBranchPlaceholder: Select branch
+  searchRepositoryPlaceholder: Search for a repository
+  searchBranchPlaceholder: Search for a branch
+  repoNotFound: 'Create a repo <strong>{{repo}}</strong>'
+  gitspaceNameLabel: Gitspace Name
+  gitspaceNamePlaceholder: Provide name
+  gitspaceNameHelpertext1: Great Gitspace names are short and memorable. Need some inspiration?
+  gitspaceNameHelpertext2: 'Try this:'
+  sshKey: SSH Key
+  gitspaceSSHAddNote : There are no keys configured. Please add an SSH key.
+  gitspaceSSHhelpertext1: By default we will create the SSH key used to login to the Gitspace.
+  gitspaceSSHhelpertext2: You can add keys under Preferences in User Settings.
+  gitspaceCreateSuccess: Gitspace created successfully
+  gitspaceCreateFailed: Gitspace creation failed
+  infraProviderSuccess: Gitspace Infrastructure created successfully
+  infraProviderFailed: Gitspace Infrastructure creation failed
+  machineCreateSuccess: Machine created successfully
+  machineCreateFailed: Machine creation failed
+  gitprovider : Git Provider
+  infraProviderType : Infra Provider Type
+  infraProviderTypeText : Your Gitspace will run on the selected infra provider type
+  machineType : Machine Type
+  region : Region
+  regionText : Your Gitspace will run in the selected region
+  machineTypeNote: Resources for your Gitspace
+  scmEmpty : All SCM options are disabled
+  ideEmpty : All IDEs disabled
+  selectGitProvider : Select a Git Provider
+  githubOauthhelpertext2 : Configure the OAuth in Profile
+  githubOauthhelpertext3 : Visit the User Profile Settings.
+  githubOauthhelpertext5 : After configuring return back to this page to connect the private repositories
+  ideNote : Your Gitspace will open in the selected IDE to code
+  selectIde : Select an IDE
+
+  subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor.
+  importWarning:
+    Currently we support only third party public repositories. In order to use a private git repository, please
+    import the repository into Gitness.
+  unsaved:
+    title: Unsaved Changes
+    message: 'You have unsaved changes, On switching all unsaved changes will be lost'
+update:
+  infraProviderFailed: Gitspace Infrastructure updation failed
+  infraProviderSuccess: Gitspace Infrastructure updated successfully
+  editGitspace: Edit Gitspace
+  updateGitspace: Update Gitspace
+  gitspaceUpdateSuccess : 'Gitspace updated successfully'
+  gitspaceUpdateFailed : Failed to update gitspace
+  allMachineDisabled : All machines disabled
+  errorChosenIDE : Chosen IDE has been disabled by the admin. Please choose a different one.
+  errorAllIDE : All IDEs have been disabled by the admin. Cannot update the gitspace.
+  errorAllResources: Admin has disabled all available machine resources for this gitspace. Cannot update the gitspace.
+  gitspaceUpdateNote : Your changes won't be lost by updating the IDE or machine type. Your Gitspace has to be restarted after the update.
+usageDashboard:
+  title: "Usage Dashboard"
+  usageTab: "Usage"
+  gitspacesTab: "Gitspaces"
+  comingSoon: "Coming Soon"
+  searchOrgPlaceholder: "Search Organizations..."
+  searchProjectPlaceholder: "Search Projects..."
+  searchPlaceholder: "Search Gitspaces..."
+  projects: "Projects"
+  organizations: "Organizations"
+  loadMore: "Load More"
+  clearAll: "Clear All"
+  allProjects: "All Projects"
+  noResultsFound: "No Results Found"
+  tryDifferentKeywords: "Try different keywords"
+  loading: "Loading..."
+  sortBy: Sort By
+  total: Total
+details:
+  actions: More Actions
+  openCursor: Open Cursor
+  connectToWindsurf: Connect to Windsurf
+  openEditor: Open VS Code Editor
+  openBrowser: Open VS Code Online
+  openJetBrain: Open JetBrains Gateway
+  goToDashboard: Go To Dashboard
+  startGitspace: Start Gitspace
+  stopProvising: Stop Provising
+  noData: No Data for Gitspace
+  gitspaceActivity: Gitspace Activity
+  provisioningGitspace: Provisioning the Gitspace...
+  gitspaceStopped: Gitspace is stopped
+  gitspaceRunning: Gitspace is running
+  stopGitspace: Stop Gitspace
+  fetchingGitspace: Fetching Gitspace Details
+  fetchingLogs: Fetching gitspace logs
+  logsFailed: Gitspace logs api failed
+  noLogsFound: No gitspace logs found
+  wrongIdentifier: Invalid gitspace id or project params
+  fetchingDetails: Fetching Gitspace Events ....
+  containerLogs: Container Logs
+  containerLogsSubText: Logs showing activity inside container
+
+sshDetails:
+  connectWithSSH: Connect with SSH
+  connectViaSSH : Connect via SSH
+  congratsText: 🎉 Congratulations — your Gitspace is now active! To start using it, connect it with your SSH
+  step1 : Open Terminal
+  step2 : Copy and execute the command
+  step3 : Wait for few minutes while the IDE gets connected to the Gitspace
+  sshDisabledText: Connect with SSH has been disabled by your administrator
+  sshDisabledVSCodeWeb1 : Connect With SSH is unavailable for VSCode Web
+  sshDisabledVSCodeWeb2 : To enable SSH, edit your Gitspace and
+  sshDisabledVSCodeWeb3 : Select a different IDE.
+repository:
+  repo: Repository
+  selectRepository: Select Repository
+  pasteRepo: Paste a Git URL to create Gitspace
+  pasterRepoSubtext: You can use any public Git repository to create a Gitspace
+  privateRepoWarning: Repo URL is of Private repository
+  publicRepo: You can use any public Git repository to create a Gitspace
+  continueWith: Continue with
+  repositoryURL: Repository URL
+ide:
+  browser: VS Code Browser
+  desktop: VS Code Desktop
+  intellij: IntelliJ IDEA
+  goland: GoLand
+  webstorm: WebStorm
+  clion: CLion
+  phpstorm: PhpStorm
+  rubymine: RubyMine
+  pycharm: PyCharm
+  rider: Rider
+  windsurf: Windsurf
+  cursor: Cursor
+  bymircosoft: By Microsoft
+  byjetbrain: By JetBrains
+  byainative: AI Native IDEs
+  title: IDE
+  selectIDE: Select IDE
+  vsCode: VS Code
+  openVSCode: Open in VS Code Desktop
+  openBrowser: Open in Browser
+  errorEmptyURL : Base URL not set, refresh and try again
+regionMachineType: Region & Machine Type
+infraProvider: Infra Provider
+minuteUsage: Minute Usage
+renewsEveryMonth: Renews 1st of every month
+remainingOfTotal: remaining of <strong>{{total}}</strong>
+renewTooltip:
+  line1: With our beta plan, you receive 2,000 free minutes of Gitspace usage each month.
+  line2: These minutes automatically renew every 30 days, resetting on the 1st of each month.
+  haveQuestion: Have questions ?
+  contactUs: Contact Us
+changesTooltip:
+  description: You can monitor updates to your Gitspaces using this flag. If there are active changes, this status updates to “Has Changes”.
+  learnMore: Learn more about Gitspace changes
+lastUsedTooltip: Timestamp indicating when the Gitspace was last used.
+lastStartedTooltip: Timestamp indicating when the Gitspace was most recently started.
+lastStarted: Last Started
+gitspaceStatus:
+  active: Active
+  stopped: Stopped
+  error: Error
+owners: Owners
+gitspaceOwners:
+  allGitspaces: All Gitspaces
+  myGitspaces: My Gitspaces
+sortBy: Sort By
+total: Total
+errorCard:
+  title: There has been an error in running the Gitspace
+  viewLog: View Container Logs
+  retryGitspace: Retry starting Gitspace
+  learnMore: Learn more in Docs
+  unabletoResolve: Unable to resolve?
+  contactUs: Contact Us

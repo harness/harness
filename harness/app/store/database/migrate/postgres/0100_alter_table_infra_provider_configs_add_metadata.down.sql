@@ -1,0 +1,1 @@
+ALTER TABLE infra_provider_configs DROP COLUMN ipconf_metadata;

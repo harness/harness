@@ -1,0 +1,1 @@
+ALTER TABLE delegate_provision_details DROP COLUMN dpdeta_agent_port;

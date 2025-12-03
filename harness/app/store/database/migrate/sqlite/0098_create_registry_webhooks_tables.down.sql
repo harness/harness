@@ -1,0 +1,4 @@
+DROP INDEX registry_webhooks_registry_id_identifier;
+DROP INDEX registry_webhooks_space_id_identifier;
+DROP TABLE registry_webhook_executions;
+DROP TABLE registry_webhooks;
