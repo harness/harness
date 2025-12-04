@@ -474,7 +474,7 @@ func GetGenericFileDownloadCommand(
 	if !isAnonymous {
 		authHeader = commonAuthHeader
 	}
-	downloadCommand := "curl --location '<HOSTNAME>/<ARTIFACT>:<VERSION>:<FILENAME>'" + authHeader +
+	downloadCommand := "curl --location '<HOSTNAME>/files/<ARTIFACT>/<VERSION>/<FILENAME>'" + authHeader +
 		" -J -o '<OUTPUT_FILE_NAME>'"
 
 	// Replace the placeholders with the actual values

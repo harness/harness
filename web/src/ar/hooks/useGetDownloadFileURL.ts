@@ -29,14 +29,18 @@ export function useGetDownloadFileURL(props: UseGetDownloadFileURLParams) {
   const { repositoryIdentifier, fileName, path } = props
   const { scope } = useAppStore()
   return useMemo(() => {
-    const formattedFileName = getFormattedFileName(fileName)
-    const downloadURL = window.getApiBaseUrl(`/har/api/v2/files/${formattedFileName}`)
-    const downloadURLParams = new URLSearchParams({
-      routingId: scope.accountId || '',
-      account_identifier: scope.accountId || '',
-      registry_identifier: repositoryIdentifier,
-      path
-    })
-    return `${downloadURL}?${downloadURLParams.toString()}`
+    try {
+      const formattedFileName = getFormattedFileName(fileName)
+      const downloadURL = window.getApiBaseUrl(`/har/api/v2/files/${formattedFileName}`)
+      const downloadURLParams = new URLSearchParams({
+        routingId: scope.accountId || '',
+        account_identifier: scope.accountId || '',
+        registry_identifier: repositoryIdentifier,
+        path
+      })
+      return `${downloadURL}?${downloadURLParams.toString()}`
+    } catch (error) {
+      return ''
+    }
   }, [fileName, path, repositoryIdentifier, scope.accountId])
 }

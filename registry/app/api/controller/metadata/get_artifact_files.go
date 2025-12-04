@@ -115,6 +115,8 @@ func (c *APIController) GetArtifactFiles(
 	switch registry.PackageType { //nolint:exhaustive
 	case artifact.PackageTypeGENERIC:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "files")
+	case artifact.PackageTypePYTHON:
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "python")
 	case artifact.PackageTypeNPM:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "npm")
 	case artifact.PackageTypeRPM:
