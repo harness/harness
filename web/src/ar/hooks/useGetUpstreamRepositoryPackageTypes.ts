@@ -17,7 +17,7 @@
 import type { IconName } from '@harnessio/icons'
 
 import { Parent } from '@ar/common/types'
-import type { FeatureFlags } from '@ar/MFEAppTypes'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
 import { UpstreamProxyPackageType } from '@ar/pages/upstream-proxy-details/types'
@@ -121,6 +121,16 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     icon: 'dart-icon',
     tag: ThumbnailTagEnum.Beta,
     parent: Parent.Enterprise
+  },
+  {
+    label: 'repositoryTypes.composer',
+    value: UpstreamProxyPackageType.COMPOSER,
+    icon: 'php-composer-logo',
+    tooltip: 'Coming Soon!',
+    disabled: true,
+    tag: ThumbnailTagEnum.ComingSoon,
+    parent: Parent.Enterprise,
+    featureFlag: FeatureFlags.HAR_COMPOSER_PACKAGE_TYPE
   },
   {
     label: 'repositoryTypes.debian',

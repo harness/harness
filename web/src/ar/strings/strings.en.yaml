@@ -99,6 +99,7 @@ packageTypes:
   huggingfacePackage: Huggingface Package
   condaPackage: Conda Package
   dartPackage: Dart Package
+  package: '{{ name }} Package'
 repositoryTypes:
   docker: Docker
   helm: Helm
@@ -116,6 +117,7 @@ repositoryTypes:
   huggingface: Huggingface
   conda: Conda
   dart: Dart
+  composer: Composer
 sideNav:
   repositories: '{{ $.repositoryList.pageHeading }}'
   artifacts: '{{ $.artifactList.pageHeading }}'

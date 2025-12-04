@@ -69,5 +69,9 @@ export const UpstreamURLSourceConfig: Record<UpstreamRepositoryURLInputSource, R
   [UpstreamRepositoryURLInputSource.Pubdev]: {
     label: 'upstreamProxyDetails.createForm.source.pubdev',
     value: UpstreamRepositoryURLInputSource.Pubdev
+  },
+  [UpstreamRepositoryURLInputSource.Packagist]: {
+    label: 'upstreamProxyDetails.createForm.source.packagist',
+    value: UpstreamRepositoryURLInputSource.Packagist
   }
 }

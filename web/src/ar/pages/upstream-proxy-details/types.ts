@@ -32,7 +32,8 @@ export enum UpstreamProxyPackageType {
   ALPINE = 'ALPINE',
   HUGGINGFACE = 'HUGGINGFACE',
   CONDA = 'CONDA',
-  DART = 'DART'
+  DART = 'DART',
+  COMPOSER = 'COMPOSER'
 }
 
 export enum UpstreamRepositoryURLInputSource {
@@ -47,7 +48,8 @@ export enum UpstreamRepositoryURLInputSource {
   GoProxy = 'GoProxy',
   HuggingFace = 'HuggingFace',
   Anaconda = 'Anaconda',
-  Pubdev = 'Pubdev'
+  Pubdev = 'Pubdev',
+  Packagist = 'Packagist'
 }
 
 export enum UpstreamProxyAuthenticationMode {

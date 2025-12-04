@@ -21,6 +21,7 @@ createForm:
     huggingface: Huggingface
     bioconda: Bioconda
     pubdev: Pub.dev
+    packagist: Packagist
   authentication:
     title: Authentication
     userNameAndPassword: Username and Password

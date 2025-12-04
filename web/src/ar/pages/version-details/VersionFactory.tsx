@@ -28,6 +28,7 @@ import { GoVersionType } from './GoVersion/GoVersionType'
 import { HuggingfaceVersionType } from './HuggingfaceVersion/HuggingfaceVersionType'
 import { CondaVersionType } from './CondaVersion/CondaVersionType'
 import { DartVersionType } from './DartVersion/DartVersionType'
+import { ComposerVersionType } from './ComposerVersion/ComposerVersionType'
 
 versionFactory.registerStep(new DockerVersionType())
 versionFactory.registerStep(new HelmVersionType())
@@ -42,3 +43,4 @@ versionFactory.registerStep(new GoVersionType())
 versionFactory.registerStep(new HuggingfaceVersionType())
 versionFactory.registerStep(new CondaVersionType())
 versionFactory.registerStep(new DartVersionType())
+versionFactory.registerStep(new ComposerVersionType())
