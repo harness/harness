@@ -316,11 +316,16 @@ func (g *Git) FetchObjects(
 
 	err := cmd.Run(ctx, command.WithDir(repoPath))
 	if err != nil {
+		if parts := reNotOurRef.FindStringSubmatch(strings.TrimSpace(err.Error())); parts != nil {
+			return errors.InvalidArgumentf("Unrecognized git object: %s", parts[1])
+		}
 		return processGitErrorf(err, "failed to fetch objects")
 	}
 
 	return nil
 }
+
+var reNotOurRef = regexp.MustCompile("upload-pack: not our ref ([a-fA-f0-9]+)$")
 
 func (g *Git) AddFiles(
 	ctx context.Context,

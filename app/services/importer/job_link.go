@@ -32,51 +32,45 @@ import (
 )
 
 const (
-	importJobMaxRetries  = 0
-	importJobMaxDuration = 45 * time.Minute
+	jobLinkRepoMaxRetries  = 0
+	jobLinkRepoMaxDuration = 45 * time.Minute
 )
 
-var (
-	// ErrNotFound is returned if no import data was found.
-	ErrNotFound = errors.New("import not found")
-)
-
-type JobRepository struct {
+type JobRepositoryLink struct {
 	scheduler *job.Scheduler
 	encrypter encrypt.Encrypter
 	importer  *Importer
 }
 
-var _ job.Handler = (*JobRepository)(nil)
+var _ job.Handler = (*JobRepositoryLink)(nil)
 
-type RepositoryInput struct {
+type JobLinkRepoInput struct {
 	Input
 }
 
-const jobTypeRepositoryImport = "repository_import"
+const jobTypeRepositoryLink = "link_repository_import"
 
-func (r *JobRepository) Register(executor *job.Executor) error {
-	return executor.Register(jobTypeRepositoryImport, r)
+func (r *JobRepositoryLink) Register(executor *job.Executor) error {
+	return executor.Register(jobTypeRepositoryLink, r)
 }
 
 // Run starts a background job that imports the provided repository from the provided clone URL.
-func (r *JobRepository) Run(
+func (r *JobRepositoryLink) Run(
 	ctx context.Context,
 	provider Provider,
 	repo *types.Repository,
 	public bool,
 	cloneURL string,
-	pipelines PipelineOption,
 ) error {
 	jobID := r.jobIDFromRepoID(repo.ID)
-	jobDef, err := r.getJobDef(jobID, RepositoryInput{
+	jobDef, err := r.getJobDef(jobID, JobLinkRepoInput{
 		Input: Input{
 			RepoID:    repo.ID,
 			Public:    public,
 			GitUser:   provider.Username,
 			GitPass:   provider.Password,
 			CloneURL:  cloneURL,
-			Pipelines: pipelines,
+			Pipelines: PipelineOptionIgnore,
 		},
 	})
 	if err != nil {
@@ -86,60 +80,12 @@ func (r *JobRepository) Run(
 	return r.scheduler.RunJob(ctx, jobDef)
 }
 
-// RunMany starts background jobs that import the provided repositories from the provided clone URLs.
-func (r *JobRepository) RunMany(
-	ctx context.Context,
-	groupID string,
-	provider Provider,
-	repoIDs []int64,
-	publics []bool,
-	cloneURLs []string,
-	pipelines PipelineOption,
-) error {
-	if len(repoIDs) != len(cloneURLs) {
-		return fmt.Errorf("slice length mismatch: have %d repositories and %d clone URLs",
-			len(repoIDs), len(cloneURLs))
-	}
-
-	n := len(repoIDs)
-	defs := make([]job.Definition, n)
-
-	for k := range n {
-		repoID := repoIDs[k]
-		cloneURL := cloneURLs[k]
-
-		jobID := r.jobIDFromRepoID(repoID)
-		jobDef, err := r.getJobDef(jobID, RepositoryInput{
-			Input: Input{
-				RepoID:    repoID,
-				Public:    publics[k],
-				GitUser:   provider.Username,
-				GitPass:   provider.Password,
-				CloneURL:  cloneURL,
-				Pipelines: pipelines,
-			},
-		})
-		if err != nil {
-			return err
-		}
-
-		defs[k] = jobDef
-	}
-
-	err := r.scheduler.RunJobs(ctx, groupID, defs)
-	if err != nil {
-		return fmt.Errorf("failed to run jobs: %w", err)
-	}
-
-	return nil
-}
-
-func (*JobRepository) jobIDFromRepoID(repoID int64) string {
-	const jobIDPrefix = "import-repo-"
+func (*JobRepositoryLink) jobIDFromRepoID(repoID int64) string {
+	const jobIDPrefix = "link-repo-"
 	return jobIDPrefix + strconv.FormatInt(repoID, 10)
 }
 
-func (r *JobRepository) getJobDef(jobUID string, input RepositoryInput) (job.Definition, error) {
+func (r *JobRepositoryLink) getJobDef(jobUID string, input JobLinkRepoInput) (job.Definition, error) {
 	data, err := json.Marshal(input)
 	if err != nil {
 		return job.Definition{}, fmt.Errorf("failed to marshal job input json: %w", err)
@@ -154,29 +100,29 @@ func (r *JobRepository) getJobDef(jobUID string, input RepositoryInput) (job.Def
 
 	return job.Definition{
 		UID:        jobUID,
-		Type:       jobTypeRepositoryImport,
-		MaxRetries: importJobMaxRetries,
-		Timeout:    importJobMaxDuration,
+		Type:       jobTypeRepositoryLink,
+		MaxRetries: jobLinkRepoMaxRetries,
+		Timeout:    jobLinkRepoMaxDuration,
 		Data:       base64.StdEncoding.EncodeToString(encryptedData),
 	}, nil
 }
 
-func (r *JobRepository) getJobInput(data string) (RepositoryInput, error) {
+func (r *JobRepositoryLink) getJobInput(data string) (JobLinkRepoInput, error) {
 	encrypted, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return RepositoryInput{}, fmt.Errorf("failed to base64 decode job input: %w", err)
+		return JobLinkRepoInput{}, fmt.Errorf("failed to base64 decode job input: %w", err)
 	}
 
 	decrypted, err := r.encrypter.Decrypt(encrypted)
 	if err != nil {
-		return RepositoryInput{}, fmt.Errorf("failed to decrypt job input: %w", err)
+		return JobLinkRepoInput{}, fmt.Errorf("failed to decrypt job input: %w", err)
 	}
 
-	var input RepositoryInput
+	var input JobLinkRepoInput
 
 	err = json.NewDecoder(strings.NewReader(decrypted)).Decode(&input)
 	if err != nil {
-		return RepositoryInput{}, fmt.Errorf("failed to unmarshal job input json: %w", err)
+		return JobLinkRepoInput{}, fmt.Errorf("failed to unmarshal job input json: %w", err)
 	}
 
 	return input, nil
@@ -185,7 +131,7 @@ func (r *JobRepository) getJobInput(data string) (RepositoryInput, error) {
 // Handle is repository import background job handler.
 //
 //nolint:gocognit // refactor if needed.
-func (r *JobRepository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
+func (r *JobRepositoryLink) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
 	input, err := r.getJobInput(data)
 	if err != nil {
 		return "", err
@@ -199,7 +145,7 @@ func (r *JobRepository) Handle(ctx context.Context, data string, _ job.ProgressR
 	return "", nil
 }
 
-func (r *JobRepository) GetProgress(ctx context.Context, repo *types.RepositoryCore) (job.Progress, error) {
+func (r *JobRepositoryLink) GetProgress(ctx context.Context, repo *types.RepositoryCore) (job.Progress, error) {
 	progress, err := r.scheduler.GetJobProgress(ctx, r.jobIDFromRepoID(repo.ID))
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
 		if repo.State == enum.RepoStateGitImport {
@@ -226,7 +172,7 @@ func (r *JobRepository) GetProgress(ctx context.Context, repo *types.RepositoryC
 	return progress, nil
 }
 
-func (r *JobRepository) Cancel(ctx context.Context, repo *types.Repository) error {
+func (r *JobRepositoryLink) Cancel(ctx context.Context, repo *types.Repository) error {
 	if repo.State != enum.RepoStateGitImport {
 		return nil
 	}

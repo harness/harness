@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -64,11 +65,16 @@ func GetRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
+	allowLinked bool,
 	allowedRepoStates ...enum.RepoState,
 ) (*types.RepositoryCore, error) {
 	repo, err := GetRepo(ctx, repoFinder, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
+	}
+
+	if !allowLinked && repo.Type == enum.RepoTypeLinked && reqPermission != enum.PermissionRepoView {
+		return nil, errors.Forbidden("Changes are not allowed to a linked repository.")
 	}
 
 	if err := apiauth.CheckRepoState(ctx, session, repo, reqPermission, allowedRepoStates...); err != nil {

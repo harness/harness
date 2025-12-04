@@ -26,6 +26,7 @@ type CreationType string
 const (
 	CreationTypeCreate CreationType = "CREATE"
 	CreationTypeImport CreationType = "IMPORT"
+	CreationTypeLink   CreationType = "LINK"
 )
 
 type Property string

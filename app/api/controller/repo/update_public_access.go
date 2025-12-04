@@ -37,7 +37,7 @@ func (c *Controller) UpdatePublicAccess(
 	repoRef string,
 	in *UpdatePublicAccessInput,
 ) (*RepositoryOutput, error) {
-	repoCore, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repoCore, err := c.getRepoCheckAccessWithLinked(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}

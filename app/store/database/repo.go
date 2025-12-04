@@ -94,6 +94,8 @@ type repository struct {
 
 	// default sqlite '[]' requires []byte, fails with json.RawMessage
 	Tags []byte `db:"repo_tags"`
+
+	Type null.String `db:"repo_type"`
 }
 
 const (
@@ -122,7 +124,8 @@ const (
 		,repo_num_merged_pulls
 		,repo_state
 		,repo_is_empty
-		,repo_tags`
+		,repo_tags
+		,repo_type`
 )
 
 // Find finds the repo by id.
@@ -243,6 +246,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_state
 			,repo_is_empty
 			,repo_tags
+			,repo_type
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -268,6 +272,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_state
 			,:repo_is_empty
 			,:repo_tags
+			,:repo_type
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -879,6 +884,11 @@ func (s *RepoStore) mapToRepo(
 ) (*types.Repository, error) {
 	var err error
 
+	t := enum.RepoTypeNormal
+	if in.Type.Valid {
+		t = enum.RepoType(in.Type.String)
+	}
+
 	res := &types.Repository{
 		ID:             in.ID,
 		Version:        in.Version,
@@ -905,6 +915,7 @@ func (s *RepoStore) mapToRepo(
 		State:          in.State,
 		IsEmpty:        in.IsEmpty,
 		Tags:           in.Tags,
+		Type:           t,
 		// Path: is set below
 	}
 
@@ -994,6 +1005,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		State:          in.State,
 		IsEmpty:        in.IsEmpty,
 		Tags:           in.Tags,
+		Type:           null.NewString(string(in.Type), in.Type != ""),
 	}
 }
 

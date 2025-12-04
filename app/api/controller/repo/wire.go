@@ -56,6 +56,7 @@ func ProvideController(
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
+	linkedRepoStore store.LinkedRepoStore,
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
@@ -71,6 +72,7 @@ func ProvideController(
 	repoFinder refcache.RepoFinder,
 	importer *importer.JobRepository,
 	referenceSync *importer.JobReferenceSync,
+	importLinked *importer.JobRepositoryLink,
 	codeOwners *codeowners.Service,
 	repoReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
@@ -90,15 +92,17 @@ func ProvideController(
 	lfsCtrl *lfs.Controller,
 	favoriteStore store.FavoriteStore,
 	signatureVerifyService publickey.SignatureVerifyService,
+	connectorService importer.ConnectorService,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
-		repoStore, spaceStore, pipelineStore, executionStore,
+		repoStore, linkedRepoStore, spaceStore, pipelineStore, executionStore,
 		principalStore, ruleStore, checkStore, pullReqStore, settings,
-		principalInfoCache, protectionManager, rpcClient, spaceFinder, repoFinder, importer, referenceSync,
+		principalInfoCache, protectionManager, rpcClient, spaceFinder, repoFinder,
+		importer, referenceSync, importLinked,
 		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
-		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService,
+		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService, connectorService,
 	)
 }
 

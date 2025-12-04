@@ -375,6 +375,7 @@ func setupRepos(r chi.Router,
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
 		r.Post("/import", handlerrepo.HandleImport(repoCtrl))
+		r.Post("/link", handlerrepo.HandleLinkedCreate(repoCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
@@ -385,6 +386,7 @@ func setupRepos(r chi.Router,
 			r.Post("/public-access", handlerrepo.HandleUpdatePublicAccess(repoCtrl))
 			r.Post("/fork", handlerrepo.HandleCreateFork(repoCtrl))
 			r.Post("/fork-sync", handlerrepo.HandleForkSync(repoCtrl))
+			r.Post("/object-sync", handlerrepo.HandleLinkedSync(repoCtrl))
 
 			r.Route("/settings", func(r chi.Router) {
 				r.Get("/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))

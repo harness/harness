@@ -73,6 +73,10 @@ func (c *Controller) CreateFork(
 		return nil, err
 	}
 
+	if repoUpstreamCore.Type == enum.RepoTypeLinked {
+		return nil, errors.Forbidden("A linked repository can't be forked")
+	}
+
 	if err := in.sanitize(); err != nil {
 		return nil, err
 	}

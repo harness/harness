@@ -107,3 +107,24 @@ func (state RepoState) String() string {
 		return undefined
 	}
 }
+
+// RepoType defines repo type.
+type RepoType string
+
+// RepoType enumeration.
+const (
+	RepoTypeNormal RepoType = ""
+	RepoTypeLinked RepoType = "linked"
+)
+
+// String returns the string representation of the RepoType.
+func (t RepoType) String() string {
+	switch t {
+	case RepoTypeNormal:
+		return ""
+	case RepoTypeLinked:
+		return "linked"
+	default:
+		return undefined
+	}
+}

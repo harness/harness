@@ -248,6 +248,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	linkedRepoStore := database.ProvideLinkRepoStore(db)
 	pipelineStore := database.ProvidePipelineStore(db)
 	executionStore := database.ProvideExecutionStore(db)
 	ruleStore := database.ProvideRuleStore(db, principalInfoCache)
@@ -297,11 +298,16 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	auditService := audit.ProvideAuditService()
 	importerImporter := importer.ProvideImporter(config, provider, gitInterface, transactor, repoStore, pipelineStore, triggerStore, repoFinder, streamer, indexer, publicaccessService, eventsReporter, auditService, settingsService)
-	jobRepository, err := importer.ProvideJobRepository(encrypter, jobScheduler, executor, importerImporter)
+	jobRepository, err := importer.ProvideJobRepositoryImport(encrypter, jobScheduler, executor, importerImporter)
 	if err != nil {
 		return nil, err
 	}
 	jobReferenceSync, err := importer.ProvideJobReferenceSync(config, provider, gitInterface, repoStore, repoFinder, jobScheduler, executor, indexer, eventsReporter)
+	if err != nil {
+		return nil, err
+	}
+	connectorService := importer.ProvideConnectorService()
+	jobRepositoryLink, err := importer.ProvideJobRepositoryLink(ctx, config, encrypter, jobScheduler, executor, importerImporter, provider, gitInterface, repoFinder, linkedRepoStore, indexer, connectorService)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +347,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	lfsController := lfs.ProvideController(authorizer, repoFinder, repoStore, principalStore, lfsObjectStore, blobStore, remoteauthService, provider, settingsService)
 	keyfetcherService := keyfetcher.ProvideService(publicKeyStore)
 	signatureVerifyService := publickey.ProvideSignatureVerifyService(principalStore, keyfetcherService, gitSignatureResultStore)
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, jobRepository, jobReferenceSync, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, linkedRepoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, jobRepository, jobReferenceSync, jobRepositoryLink, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService, connectorService)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
@@ -458,8 +464,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretController := secret2.ProvideController(encrypter, secretStore, authorizer, spaceFinder)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoFinder)
 	scmService := connector.ProvideSCMConnectorHandler(secretStore)
-	connectorService := connector.ProvideConnectorHandler(secretStore, scmService)
-	connectorController := connector2.ProvideController(connectorStore, connectorService, authorizer, spaceFinder)
+	service2 := connector.ProvideConnectorHandler(secretStore, scmService)
+	connectorController := connector2.ProvideController(connectorStore, service2, authorizer, spaceFinder)
 	templateController := template.ProvideController(templateStore, authorizer, spaceFinder)
 	pluginController := plugin.ProvideController(pluginStore)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
@@ -594,7 +600,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	service2, err := webhook3.ProvideService(ctx, webhookConfig, transactor, readerFactory2, webhooksRepository, webhooksExecutionRepository, spaceStore, provider, principalStore, urlProvider, spacePathStore, secretService, registryRepository, encrypter, spaceFinder)
+	service3, err := webhook3.ProvideService(ctx, webhookConfig, transactor, readerFactory2, webhooksRepository, webhooksExecutionRepository, spaceStore, provider, principalStore, urlProvider, spacePathStore, secretService, registryRepository, encrypter, spaceFinder)
 	if err != nil {
 		return nil, err
 	}
@@ -608,7 +614,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
 	interfacesRegistryHelper := helpers.ProvideRegistryHelper(artifactRepository, fileManager, imageRepository, artifactReporter, asyncprocessingReporter, transactor, provider, config)
 	packageWrapper := helpers.ProvidePackageWrapperProvider(interfacesRegistryHelper, registryFinder, registryHelper)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service2, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository, authorizer, spaceFinder)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)
@@ -799,7 +805,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service2, branchService, asyncprocessingService)
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service3, branchService, asyncprocessingService)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

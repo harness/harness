@@ -53,6 +53,11 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, err
 	}
 
+	if !in.Internal && repo.Type == enum.RepoTypeLinked {
+		output.Error = ptr.String("Push not allowed to a linked repository")
+		return output, nil
+	}
+
 	if !in.Internal && !slices.Contains(allowedRepoStatesForPush, repo.State) {
 		output.Error = ptr.String(fmt.Sprintf("Push not allowed when repository is in '%s' state", repo.State))
 		return output, nil

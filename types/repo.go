@@ -30,6 +30,7 @@ type RepositoryCore struct {
 	GitUID        string         `json:"-" yaml:"-"`
 	DefaultBranch string         `json:"default_branch" yaml:"default_branch"`
 	State         enum.RepoState `json:"-" yaml:"-"`
+	Type          enum.RepoType  `json:"type,omitempty" yaml:"type,omitempty"`
 }
 
 func (r *RepositoryCore) GetGitUID() string {
@@ -76,6 +77,8 @@ type Repository struct {
 	GitSSHURL string `json:"git_ssh_url,omitempty" yaml:"-"`
 
 	Tags json.RawMessage `json:"tags,omitempty" yaml:"tags"`
+
+	Type enum.RepoType `json:"repo_type,omitempty" yaml:"repo_type"`
 }
 
 func (r *Repository) Core() *RepositoryCore {
@@ -87,6 +90,7 @@ func (r *Repository) Core() *RepositoryCore {
 		GitUID:        r.GitUID,
 		DefaultBranch: r.DefaultBranch,
 		State:         r.State,
+		Type:          r.Type,
 	}
 }
 
@@ -194,4 +198,15 @@ func sanitizeRepoTag(tag *string, typ TagPartType) error {
 	}
 
 	return SanitizeTag(tag, typ, false)
+}
+
+type LinkedRepo struct {
+	RepoID              int64
+	Version             int64
+	Created             int64
+	Updated             int64
+	LastFullSync        int64
+	ConnectorPath       string
+	ConnectorIdentifier string
+	ConnectorRepo       string
 }

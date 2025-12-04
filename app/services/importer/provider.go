@@ -18,17 +18,13 @@ import (
 	"context"
 	"crypto/sha512"
 	"encoding/base32"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/azure"
@@ -89,24 +85,14 @@ func (r *RepositoryInfo) ToRepo(
 	description string,
 	principal *types.Principal,
 ) (*types.Repository, bool) {
-	now := time.Now().UnixMilli()
-	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, identifier)), now)
-	return &types.Repository{
-		Version:       0,
-		ParentID:      spaceID,
-		Identifier:    identifier,
-		GitUID:        gitTempUID, // the correct git UID will be set by the job handler
-		Description:   description,
-		CreatedBy:     principal.ID,
-		Created:       now,
-		Updated:       now,
-		LastGITPush:   now, // even in case of an empty repo, the git repo got created.
-		ForkID:        0,
-		DefaultBranch: r.DefaultBranch,
-		State:         enum.RepoStateGitImport,
-		Path:          paths.Concatenate(spacePath, identifier),
-		Tags:          json.RawMessage(`{}`),
-	}, r.IsPublic
+	return NewRepo(
+		spaceID,
+		spacePath,
+		identifier,
+		description,
+		principal,
+		r.DefaultBranch,
+	), r.IsPublic
 }
 
 func hash(s string) string {

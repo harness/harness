@@ -88,6 +88,7 @@ type Controller struct {
 	urlProvider            url.Provider
 	authorizer             authz.Authorizer
 	repoStore              store.RepoStore
+	linkedRepoStore        store.LinkedRepoStore
 	spaceStore             store.SpaceStore
 	pipelineStore          store.PipelineStore
 	executionStore         store.ExecutionStore
@@ -105,6 +106,7 @@ type Controller struct {
 	repoFinder             refcache.RepoFinder
 	importer               *importer.JobRepository
 	referenceSync          *importer.JobReferenceSync
+	importLinked           *importer.JobRepositoryLink
 	codeOwners             *codeowners.Service
 	eventReporter          *repoevents.Reporter
 	indexer                keywordsearch.Indexer
@@ -122,6 +124,7 @@ type Controller struct {
 	lfsCtrl                *lfs.Controller
 	favoriteStore          store.FavoriteStore
 	signatureVerifyService publickey.SignatureVerifyService
+	connectorService       importer.ConnectorService
 }
 
 func NewController(
@@ -130,6 +133,7 @@ func NewController(
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
+	linkedRepoStore store.LinkedRepoStore,
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
 	executionStore store.ExecutionStore,
@@ -145,6 +149,7 @@ func NewController(
 	repoFinder refcache.RepoFinder,
 	importer *importer.JobRepository,
 	referenceSync *importer.JobReferenceSync,
+	importLinked *importer.JobRepositoryLink,
 	codeOwners *codeowners.Service,
 	eventReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
@@ -164,6 +169,7 @@ func NewController(
 	lfsCtrl *lfs.Controller,
 	favoriteStore store.FavoriteStore,
 	signatureVerifyService publickey.SignatureVerifyService,
+	connectorService importer.ConnectorService,
 ) *Controller {
 	return &Controller{
 		defaultBranch:          config.Git.DefaultBranch,
@@ -171,6 +177,7 @@ func NewController(
 		urlProvider:            urlProvider,
 		authorizer:             authorizer,
 		repoStore:              repoStore,
+		linkedRepoStore:        linkedRepoStore,
 		spaceStore:             spaceStore,
 		pipelineStore:          pipelineStore,
 		executionStore:         executionStore,
@@ -186,6 +193,7 @@ func NewController(
 		repoFinder:             repoFinder,
 		importer:               importer,
 		referenceSync:          referenceSync,
+		importLinked:           importLinked,
 		codeOwners:             codeOwners,
 		eventReporter:          eventReporter,
 		indexer:                indexer,
@@ -205,6 +213,7 @@ func NewController(
 		lfsCtrl:                lfsCtrl,
 		favoriteStore:          favoriteStore,
 		signatureVerifyService: signatureVerifyService,
+		connectorService:       connectorService,
 	}
 }
 
@@ -226,6 +235,28 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
+		false,
+		allowedRepoStates...,
+	)
+}
+
+// getRepoCheckAccessWithLinked fetches a repo, checks if repo state allows requested permission
+// and checks if the current user has permission to access it.
+func (c *Controller) getRepoCheckAccessWithLinked(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	reqPermission enum.Permission,
+	allowedRepoStates ...enum.RepoState,
+) (*types.RepositoryCore, error) {
+	return GetRepoCheckAccess(
+		ctx,
+		c.repoFinder,
+		c.authorizer,
+		session,
+		repoRef,
+		reqPermission,
+		true,
 		allowedRepoStates...,
 	)
 }
@@ -245,6 +276,7 @@ func (c *Controller) getRepoCheckAccessForGit(
 		session,
 		repoRef,
 		reqPermission,
+		false,
 		// importing/migrating states are allowed - we'll block in the pre-receive hook if needed.
 		enum.RepoStateGitImport, enum.RepoStateMigrateDataImport, enum.RepoStateMigrateGitPush,
 	)

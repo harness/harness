@@ -15,6 +15,9 @@
 package importer
 
 import (
+	"context"
+	"fmt"
+
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/publicaccess"
@@ -35,9 +38,14 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideImporter,
-	ProvideJobRepository,
+	ProvideJobRepositoryImport,
+	ProvideJobRepositoryLink,
 	ProvideJobReferenceSync,
 )
+
+func ProvideConnectorService() ConnectorService {
+	return connectorServiceNoop{}
+}
 
 func ProvideImporter(
 	config *types.Config,
@@ -73,7 +81,7 @@ func ProvideImporter(
 	)
 }
 
-func ProvideJobRepository(
+func ProvideJobRepositoryImport(
 	encrypter encrypt.Encrypter,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
@@ -85,9 +93,50 @@ func ProvideJobRepository(
 		importer:  importer,
 	}
 
-	err := executor.Register(jobRepositoryType, j)
-	if err != nil {
+	if err := executor.Register(jobTypeRepositoryImport, j); err != nil {
 		return nil, err
+	}
+
+	return j, nil
+}
+
+func ProvideJobRepositoryLink(
+	ctx context.Context,
+	config *types.Config,
+	encrypter encrypt.Encrypter,
+	scheduler *job.Scheduler,
+	executor *job.Executor,
+	importer *Importer,
+	urlProvider url.Provider,
+	git git.Interface,
+	repoFinder refcache.RepoFinder,
+	linkedRepoStore store.LinkedRepoStore,
+	indexer keywordsearch.Indexer,
+	connectorService ConnectorService,
+) (*JobRepositoryLink, error) {
+	j := &JobRepositoryLink{
+		encrypter: encrypter,
+		scheduler: scheduler,
+		importer:  importer,
+	}
+
+	if err := executor.Register(jobTypeRepositoryLink, j); err != nil {
+		return nil, err
+	}
+
+	if err := CreateAndRegisterJobSyncLinkedRepositories(
+		ctx,
+		scheduler,
+		executor,
+		config.Git.DefaultBranch,
+		urlProvider,
+		git,
+		repoFinder,
+		linkedRepoStore,
+		indexer,
+		connectorService,
+	); err != nil {
+		return nil, fmt.Errorf("unable to register job sync linked repositories: %w", err)
 	}
 
 	return j, nil

@@ -326,6 +326,18 @@ type (
 		UpdateParent(ctx context.Context, currentParentID, newParentID int64) (int64, error)
 	}
 
+	LinkedRepoStore interface {
+		Find(ctx context.Context, repoID int64) (*types.LinkedRepo, error)
+		Create(ctx context.Context, v *types.LinkedRepo) error
+		Update(ctx context.Context, linked *types.LinkedRepo) error
+		UpdateOptLock(
+			ctx context.Context,
+			r *types.LinkedRepo,
+			mutateFn func(*types.LinkedRepo) error,
+		) (*types.LinkedRepo, error)
+		List(ctx context.Context, limit int) ([]types.LinkedRepo, error)
+	}
+
 	// SettingsStore defines the settings storage.
 	SettingsStore interface {
 		// Find returns the value of the setting with the given key for the provided scope.
