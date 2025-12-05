@@ -144,10 +144,10 @@ func (c *localRegistry) CountPackageVersionV2(
 
 func (c *localRegistry) CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
 	searchTerm string) (count int64, err error) {
-	count, err = c.artifactDao.CountByImageName(ctx, info.RegistryID, searchTerm)
+	count, err = c.artifactDao.CountByImageName(ctx, info.RegistryID, strings.ToLower(searchTerm))
 	if err != nil {
 		return 0, fmt.Errorf(
-			"failed to get artifacts count for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
+			"failed to get artifacts count for registry: %d and image: %s: %w", info.RegistryID, searchTerm, err)
 	}
 	return count, nil
 }
@@ -155,10 +155,10 @@ func (c *localRegistry) CountPackageV2(ctx context.Context, info nugettype.Artif
 func (c *localRegistry) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
 	searchTerm string, limit int, offset int) (*nugettype.FeedResponse, error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
-	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, searchTerm, limit, offset)
+	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, strings.ToLower(searchTerm), limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
+			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, searchTerm, err)
 	}
 	return createSearchV2Response(packageURL, artifacts, searchTerm, limit, offset)
 }
@@ -167,12 +167,12 @@ func (c *localRegistry) SearchPackage(ctx context.Context,
 	info nugettype.ArtifactInfo,
 	searchTerm string, limit int, offset int) (*nugettype.SearchResultResponse, error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
-	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, searchTerm, limit, offset)
+	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, strings.ToLower(searchTerm), limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, info.Image, err)
+			"failed to get artifacts for registry: %d and image: %s: %w", info.RegistryID, searchTerm, err)
 	}
-	count, err2 := c.artifactDao.CountByImageName(ctx, info.RegistryID, searchTerm)
+	count, err2 := c.artifactDao.CountByImageName(ctx, info.RegistryID, strings.ToLower(searchTerm))
 	if err2 != nil {
 		return nil, fmt.Errorf(
 			"failed to get artifacts count for registry: %d and image: %s: %w",
