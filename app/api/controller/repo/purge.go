@@ -98,6 +98,8 @@ func (c *Controller) PurgeNoAuth(
 		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
 
+	c.repoFinder.MarkChanged(ctx, repo.Core())
+
 	if err := c.DeleteGitRepository(ctx, session, repo.GitUID); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to remove git repository")
 	}

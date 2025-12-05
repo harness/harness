@@ -159,32 +159,3 @@ func (c *Controller) Diff(
 
 	return reader, nil
 }
-
-func (c *Controller) fetchDotRangeObjectsFromUpstream(
-	ctx context.Context,
-	session *auth.Session,
-	repoForkCore *types.RepositoryCore,
-	dotRange *DotRange,
-) error {
-	if dotRange.BaseUpstream {
-		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.BaseRef)
-		if err != nil {
-			return fmt.Errorf("failed to fetch upstream objects: %w", err)
-		}
-
-		dotRange.BaseUpstream = false
-		dotRange.BaseRef = refSHA.String()
-	}
-
-	if dotRange.HeadUpstream {
-		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.HeadRef)
-		if err != nil {
-			return fmt.Errorf("failed to fetch upstream objects: %w", err)
-		}
-
-		dotRange.HeadUpstream = false
-		dotRange.HeadRef = refSHA.String()
-	}
-
-	return nil
-}

@@ -395,16 +395,11 @@ func (c *Controller) fetchUpstreamObjects(
 	repoForkCore *types.RepositoryCore,
 	getSHA func(params git.ReadParams) (sha.SHA, error),
 ) (sha.SHA, *types.RepositoryCore, error) {
-	repoFork, err := c.repoStore.Find(ctx, repoForkCore.ID)
-	if err != nil {
-		return sha.None, nil, fmt.Errorf("failed to find fork repo: %w", err)
-	}
-
-	if repoFork.ForkID == 0 {
+	if repoForkCore.ForkID == 0 {
 		return sha.None, nil, errors.InvalidArgument("Repository is not a fork.")
 	}
 
-	repoUpstreamCore, err := c.repoFinder.FindByID(ctx, repoFork.ForkID)
+	repoUpstreamCore, err := c.repoFinder.FindByID(ctx, repoForkCore.ForkID)
 	if err != nil {
 		return sha.None, nil, fmt.Errorf("failed to find upstream repo: %w", err)
 	}
@@ -443,6 +438,57 @@ func (c *Controller) fetchUpstreamObjects(
 	}
 
 	return upstreamSHA, repoUpstreamCore, nil
+}
+
+func (c *Controller) fetchCommitDivergenceObjectsFromUpstream(
+	ctx context.Context,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+	div *git.CommitDivergenceRequest,
+) error {
+	dot, err := makeDotRange(div.To, div.From, true)
+	if err != nil {
+		return fmt.Errorf("failed to make dot range: %w", err)
+	}
+
+	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dot)
+	if err != nil {
+		return fmt.Errorf("failed to fetch dot range objects: %w", err)
+	}
+
+	div.To = dot.BaseRef
+	div.From = dot.HeadRef
+
+	return nil
+}
+
+func (c *Controller) fetchDotRangeObjectsFromUpstream(
+	ctx context.Context,
+	session *auth.Session,
+	repoForkCore *types.RepositoryCore,
+	dotRange *DotRange,
+) error {
+	if dotRange.BaseUpstream {
+		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.BaseRef)
+		if err != nil {
+			return fmt.Errorf("failed to fetch upstream objects: %w", err)
+		}
+
+		dotRange.BaseUpstream = false
+		dotRange.BaseRef = refSHA.String()
+	}
+
+	if dotRange.HeadUpstream {
+		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.HeadRef)
+		if err != nil {
+			return fmt.Errorf("failed to fetch upstream objects: %w", err)
+		}
+
+		dotRange.HeadUpstream = false
+		dotRange.HeadRef = refSHA.String()
+	}
+
+	return nil
 }
 
 const dotRangeUpstreamMarker = "upstream:"

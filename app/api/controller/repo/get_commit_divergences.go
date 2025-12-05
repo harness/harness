@@ -16,6 +16,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
@@ -74,6 +75,11 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 		// backfil default branch if no 'to' was provided
 		if len(options.Requests[i].To) == 0 {
 			options.Requests[i].To = repo.DefaultBranch
+		}
+
+		err = c.fetchCommitDivergenceObjectsFromUpstream(ctx, session, repo, &options.Requests[i])
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch object from upstream: %w", err)
 		}
 	}
 

@@ -29,6 +29,7 @@ type RepositoryCore struct {
 	Path          string         `json:"path" yaml:"path"`
 	GitUID        string         `json:"-" yaml:"-"`
 	DefaultBranch string         `json:"default_branch" yaml:"default_branch"`
+	ForkID        int64          `json:"fork_id" yaml:"fork_id"`
 	State         enum.RepoState `json:"-" yaml:"-"`
 	Type          enum.RepoType  `json:"type,omitempty" yaml:"type,omitempty"`
 }
@@ -88,6 +89,7 @@ func (r *Repository) Core() *RepositoryCore {
 		Identifier:    r.Identifier,
 		Path:          r.Path,
 		GitUID:        r.GitUID,
+		ForkID:        r.ForkID,
 		DefaultBranch: r.DefaultBranch,
 		State:         r.State,
 		Type:          r.Type,
