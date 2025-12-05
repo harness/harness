@@ -52,6 +52,7 @@ func NewDockerPackageType(registryHelper interfaces.RegistryHelper) DockerPackag
 		validUpstreamSources: []string{
 			string(artifact.UpstreamConfigSourceCustom),
 			string(artifact.UpstreamConfigSourceDockerhub),
+			string(artifact.UpstreamConfigSourceAwsEcr),
 		},
 		upstreamSourceConfig: map[string]UpstreamSourceConfig{
 			string(artifact.UpstreamConfigSourceCustom): {
@@ -59,6 +60,9 @@ func NewDockerPackageType(registryHelper interfaces.RegistryHelper) DockerPackag
 			},
 			string(artifact.UpstreamConfigSourceDockerhub): {
 				urlRequired: false,
+			},
+			string(artifact.UpstreamConfigSourceAwsEcr): {
+				urlRequired: true,
 			},
 		},
 	}
