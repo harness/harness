@@ -17,23 +17,36 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/git/sha"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/types/enum"
 )
 
 type LinkedSyncInput struct {
-	ObjectSHAs []sha.SHA `json:"object_shas"`
+	Branches []string `json:"branches"`
 }
 
 func (in *LinkedSyncInput) sanitize() error {
-	if len(in.ObjectSHAs) == 0 {
-		return errors.InvalidArgument("Need at least one object SHA")
+	if len(in.Branches) == 0 {
+		return errors.InvalidArgument("Branches cannot be empty.")
+	}
+
+	for i := range in.Branches {
+		in.Branches[i] = strings.TrimSpace(in.Branches[i])
+
+		if in.Branches[i] == "" {
+			return errors.InvalidArgument("Branch name cannot be empty.")
+		}
+
+		if strings.ContainsAny(in.Branches[i], " :*\t\n\r") {
+			return errors.InvalidArgumentf("Invalid branch name %q.", in.Branches[i])
+		}
 	}
 
 	return nil
@@ -58,6 +71,16 @@ func (c *Controller) LinkedSync(
 		return errors.InvalidArgument("Repository is not a linked repository.")
 	}
 
+	refSpec := make([]string, len(in.Branches))
+	for i := range in.Branches {
+		ref, err := git.GetRefPath(in.Branches[i], gitenum.RefTypeBranch)
+		if err != nil {
+			return fmt.Errorf("failed to get ref path for branch %s: %w", in.Branches[i], err)
+		}
+
+		refSpec[i] = ref + ":" + ref
+	}
+
 	linkedRepo, err := c.linkedRepoStore.Find(ctx, repo.ID)
 	if err != nil {
 		return fmt.Errorf("failed to find linked repository: %w", err)
@@ -69,23 +92,25 @@ func (c *Controller) LinkedSync(
 		Repo:       linkedRepo.ConnectorRepo,
 	}
 
-	cloneURLWithAuth, err := importer.ConnectorToURL(ctx, c.connectorService, connector)
-	if err != nil {
-		return errors.InvalidArgument("Failed to get access to repository.")
-	}
-
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create rpc internal write params: %w", err)
 	}
 
-	_, err = c.git.FetchObjects(ctx, &git.FetchObjectsParams{
-		WriteParams: writeParams,
-		Source:      cloneURLWithAuth,
-		ObjectSHAs:  in.ObjectSHAs,
+	cloneURLWithAuth, err := importer.ConnectorToURL(ctx, c.connectorService, connector)
+	if err != nil {
+		return errors.InvalidArgument("Failed to get access to repository.")
+	}
+
+	_, err = c.git.SyncRepository(ctx, &git.SyncRepositoryParams{
+		WriteParams:       writeParams,
+		Source:            cloneURLWithAuth,
+		CreateIfNotExists: false,
+		RefSpecs:          refSpec,
+		DefaultBranch:     repo.DefaultBranch,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to fetch objects: %w", err)
+		return fmt.Errorf("failed to synchronize branches: %w", err)
 	}
 
 	return nil
