@@ -617,8 +617,8 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 	}
 
 	// Build placeholders for the 3 IN clauses
-	var placeholders1, placeholders2, placeholders3 string
-	args := make([]interface{}, 0, len(artifactIDs)*3)
+	var placeholders1, placeholders2, placeholders3, placeholders4 string
+	args := make([]interface{}, 0, len(artifactIDs)*4)
 	const placeholderSeparator = ", ?"
 
 	// nolint:nestif
@@ -626,7 +626,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 		// PostgreSQL: sequential parameter numbering across entire query
 		paramIndex := 1
 
-		// First IN clause (download_counts)
+		// First IN clause (main WHERE)
 		for i := range artifactIDs {
 			if i > 0 {
 				placeholders1 += fmt.Sprintf(", $%d", paramIndex)
@@ -636,7 +636,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 			paramIndex++
 		}
 
-		// Second IN clause (tag_lists)
+		// Second IN clause (download_counts)
 		for i := range artifactIDs {
 			if i > 0 {
 				placeholders2 += fmt.Sprintf(", $%d", paramIndex)
@@ -646,12 +646,22 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 			paramIndex++
 		}
 
-		// Third IN clause (main WHERE)
+		// Third IN clause (tag_lists)
 		for i := range artifactIDs {
 			if i > 0 {
 				placeholders3 += fmt.Sprintf(", $%d", paramIndex)
 			} else {
 				placeholders3 += fmt.Sprintf("$%d", paramIndex)
+			}
+			paramIndex++
+		}
+
+		// Fourth IN clause (main WHERE)
+		for i := range artifactIDs {
+			if i > 0 {
+				placeholders4 += fmt.Sprintf(", $%d", paramIndex)
+			} else {
+				placeholders4 += fmt.Sprintf("$%d", paramIndex)
 			}
 			paramIndex++
 		}
@@ -662,16 +672,18 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 				placeholders1 += placeholderSeparator
 				placeholders2 += placeholderSeparator
 				placeholders3 += placeholderSeparator
+				placeholders4 += placeholderSeparator
 			} else {
 				placeholders1 += "?"
 				placeholders2 += "?"
 				placeholders3 += "?"
+				placeholders4 += "?"
 			}
 		}
 	}
 
-	// Arguments: artifactIDs repeated 3 times for the 3 IN clauses
-	for range 3 {
+	// Arguments: artifactIDs repeated 4 times for the 4 IN clauses
+	for range 4 {
 		for _, id := range artifactIDs {
 			args = append(args, id)
 		}
@@ -715,7 +727,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
     LEFT JOIN download_counts dc ON dc.artifact_id = ar.artifact_id
     LEFT JOIN tag_lists tl ON tl.artifact_id = ar.artifact_id
     WHERE ar.artifact_id IN (%s);
-    `, placeholders3, placeholders1, tagAggExpr, decodeFunction, placeholders2, placeholders3)
+    `, placeholders1, placeholders2, tagAggExpr, decodeFunction, placeholders3, placeholders4)
 
 	type enrichmentRow struct {
 		ArtifactID    int64  `db:"artifact_id"`
