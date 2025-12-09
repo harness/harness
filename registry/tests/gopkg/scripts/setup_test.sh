@@ -87,7 +87,7 @@ setup_environment() {
   if [ -z "$go_proxy_registry" ]; then
     go_proxy_registry="go_proxy_registry_$epoch"
     log "Creating registry: $go_proxy_registry"
-    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry" \
+    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry?space_ref=$space" \
       -H 'Content-Type: application/json' \
       -H "Authorization: Bearer $token" \
       -H 'Accept: application/json' \
@@ -100,7 +100,7 @@ setup_environment() {
   if [ -z "$registry" ]; then
     registry="go_registry_$epoch"
     log "Creating registry: $registry"
-    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry" \
+    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry?space_ref=$space" \
       -H 'Content-Type: application/json' \
       -H "Authorization: Bearer $token" \
       -H 'Accept: application/json' \

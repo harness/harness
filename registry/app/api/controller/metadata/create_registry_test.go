@@ -99,7 +99,7 @@ func TestCreateRegistry(t *testing.T) {
 			request: api.CreateRegistryRequestObject{
 				Body: &api.CreateRegistryJSONRequestBody{
 					Identifier: testRegistryName,
-					ParentRef:  utils.StringPtr("root"),
+					ParentRef:  "root",
 					Config: func() *api.RegistryConfig {
 						config := &api.RegistryConfig{Type: api.RegistryTypeVIRTUAL}
 						_ = config.FromVirtualConfig(api.VirtualConfig{UpstreamProxies: &[]string{}})
@@ -284,7 +284,7 @@ func TestCreateRegistry(t *testing.T) {
 			request: api.CreateRegistryRequestObject{
 				Body: &api.CreateRegistryJSONRequestBody{
 					Identifier: testRegistryName,
-					ParentRef:  utils.StringPtr("invalid"),
+					ParentRef:  "invalid",
 					Config: func() *api.RegistryConfig {
 						config := &api.RegistryConfig{Type: api.RegistryTypeVIRTUAL}
 						_ = config.FromVirtualConfig(api.VirtualConfig{UpstreamProxies: &[]string{}})

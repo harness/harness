@@ -357,7 +357,7 @@ paths:
       tags:
         - Registries
       parameters:
-        - $ref: "#/components/parameters/spaceRefQueryParam"
+        - $ref: "#/components/parameters/requiredSpaceRefQueryParam"
       requestBody:
         $ref: "#/components/requestBodies/RegistryRequest"
       responses:
@@ -3171,6 +3171,7 @@ components:
         - type
         - packageType
         - isPublic
+        - parentRef
     WebhookRequest:
       type: object
       properties:
@@ -3273,6 +3274,16 @@ components:
       required: false
       description: >
         Unique path identifier for the final space in the branch.
+        The value can be provided either as a fully URL-encoded path (e.g., `organization%2Fproject`)
+        or as a plain path ending with a trailing plus sign (`+`) as separator (e.g., `organization/project/+`).
+      schema:
+        type: string
+    requiredSpaceRefQueryParam:
+      name: space_ref
+      in: query
+      required: true
+      description: >
+        Unique path identifier for the final space in the branch (required for registry creation).
         The value can be provided either as a fully URL-encoded path (e.g., `organization%2Fproject`)
         or as a plain path ending with a trailing plus sign (`+`) as separator (e.g., `organization/project/+`).
       schema:

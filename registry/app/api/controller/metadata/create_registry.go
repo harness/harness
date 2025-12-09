@@ -38,7 +38,7 @@ func (c *APIController) CreateRegistry(
 	r artifact.CreateRegistryRequestObject,
 ) (artifact.CreateRegistryResponseObject, error) {
 	registryRequest := artifact.RegistryRequest(*r.Body)
-	parentRef := artifact.SpaceRefPathParam(*registryRequest.ParentRef)
+	parentRef := artifact.SpaceRefPathParam(registryRequest.ParentRef)
 
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, string(parentRef), "")
 	if err != nil {

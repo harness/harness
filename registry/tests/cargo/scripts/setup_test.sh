@@ -87,7 +87,7 @@ setup_environment() {
   if [ -z "$crates_registry" ]; then
     crates_registry="cargo_crates_registry_$epoch"
     log "Creating registry: $crates_registry"
-    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry" \
+    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry?space_ref=$space" \
       -H 'Content-Type: application/json' \
       -H "Authorization: Bearer $token" \
       -H 'Accept: application/json' \
@@ -100,7 +100,7 @@ setup_environment() {
   if [ -z "$registry" ]; then
     registry="cargo_registry_$epoch"
     log "Creating registry: $registry"
-    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry" \
+    curl -s -X 'POST' "http://$SERVER_URL/api/v1/registry?space_ref=$space" \
       -H 'Content-Type: application/json' \
       -H "Authorization: Bearer $token" \
       -H 'Accept: application/json' \

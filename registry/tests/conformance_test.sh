@@ -13,7 +13,7 @@ function createSpace {
 
 function createRegistry {
    echo "Creating registry: $2"
-   curl --location "http://$1/api/v1/registry" \
+   curl --location "http://$1/api/v1/registry?space_ref=$3" \
    --header 'Content-Type: application/json' \
    --header 'Authorization: Bearer '"$4" \
    --header 'Accept: application/json' \

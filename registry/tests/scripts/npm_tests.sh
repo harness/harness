@@ -12,7 +12,7 @@ ORIGINAL_DIR="$(pwd)"
 # Create an NPM registry with timestamp to ensure uniqueness
 NPM_REGISTRY_NAME="npm_registry_$(date +%s)"
 echo "Creating registry: $NPM_REGISTRY_NAME with package type NPM"
-curl --location "http://$1/api/v1/registry" \
+curl --location "http://$1/api/v1/registry?space_ref=$space_lower" \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer '"$token" \
 --header 'Accept: application/json' \
