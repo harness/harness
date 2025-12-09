@@ -118,7 +118,6 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     label: 'repositoryTypes.dart',
     value: RepositoryPackageType.DART,
     icon: 'dart-icon',
-    tag: ThumbnailTagEnum.Beta,
     parent: Parent.Enterprise
   },
   {

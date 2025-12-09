@@ -119,7 +119,6 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     label: 'repositoryTypes.dart',
     value: UpstreamProxyPackageType.DART,
     icon: 'dart-icon',
-    tag: ThumbnailTagEnum.Beta,
     parent: Parent.Enterprise
   },
   {
