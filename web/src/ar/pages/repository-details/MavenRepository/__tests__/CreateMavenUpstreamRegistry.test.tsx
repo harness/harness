@@ -132,7 +132,13 @@ describe('Verify create maven upstream registry flow', () => {
       expect(createRegistryFn).toHaveBeenLastCalledWith({
         body: {
           cleanupPolicy: [],
-          config: { auth: null, authType: 'Anonymous', source: 'MavenCentral', type: 'UPSTREAM', url: '' },
+          config: {
+            auth: null,
+            authType: 'Anonymous',
+            source: 'MavenCentral',
+            type: 'UPSTREAM',
+            url: ''
+          },
           description: 'test description',
           identifier: 'maven-up-repo',
           packageType: 'MAVEN',
@@ -245,7 +251,8 @@ describe('Verify create maven upstream registry flow', () => {
             authType: 'Anonymous',
             source: 'Custom',
             type: 'UPSTREAM',
-            url: 'https://custom.docker.com'
+            url: 'https://custom.docker.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'maven-up-repo',
@@ -302,7 +309,8 @@ describe('Verify create maven upstream registry flow', () => {
             authType: 'UserPassword',
             source: 'Custom',
             type: 'UPSTREAM',
-            url: 'https://custom.docker.com'
+            url: 'https://custom.docker.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'maven-up-repo',

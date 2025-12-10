@@ -132,7 +132,13 @@ describe('Verify create npm upstream registry flow', () => {
       expect(createRegistryFn).toHaveBeenLastCalledWith({
         body: {
           cleanupPolicy: [],
-          config: { auth: null, authType: 'Anonymous', source: 'NpmJs', type: 'UPSTREAM', url: '' },
+          config: {
+            auth: null,
+            authType: 'Anonymous',
+            source: 'NpmJs',
+            type: 'UPSTREAM',
+            url: ''
+          },
           description: 'test description',
           identifier: 'npm-up-repo',
           packageType: 'NPM',
@@ -245,7 +251,8 @@ describe('Verify create npm upstream registry flow', () => {
             authType: 'Anonymous',
             source: 'Custom',
             type: 'UPSTREAM',
-            url: 'https://custom.docker.com'
+            url: 'https://custom.docker.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'npm-up-repo',
@@ -302,7 +309,8 @@ describe('Verify create npm upstream registry flow', () => {
             authType: 'UserPassword',
             source: 'Custom',
             type: 'UPSTREAM',
-            url: 'https://custom.docker.com'
+            url: 'https://custom.docker.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'npm-up-repo',

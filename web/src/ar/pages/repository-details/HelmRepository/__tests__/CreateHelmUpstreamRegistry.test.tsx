@@ -246,7 +246,14 @@ describe('Verify create helm upstream registry flow', () => {
       expect(createRegistryFn).toHaveBeenLastCalledWith({
         body: {
           cleanupPolicy: [],
-          config: { auth: null, authType: 'Anonymous', source: 'AwsEcr', type: 'UPSTREAM', url: 'https://aws.ecr.com' },
+          config: {
+            auth: null,
+            authType: 'Anonymous',
+            source: 'AwsEcr',
+            type: 'UPSTREAM',
+            url: 'https://aws.ecr.com',
+            remoteUrlSuffix: ''
+          },
           description: 'test description',
           identifier: 'helm-up-repo',
           packageType: 'HELM',
@@ -307,7 +314,8 @@ describe('Verify create helm upstream registry flow', () => {
             authType: 'AccessKeySecretKey',
             source: 'AwsEcr',
             type: 'UPSTREAM',
-            url: 'https://aws.ecr.com'
+            url: 'https://aws.ecr.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'helm-up-repo',

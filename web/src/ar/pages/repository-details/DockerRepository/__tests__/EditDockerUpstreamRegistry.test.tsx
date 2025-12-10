@@ -384,7 +384,8 @@ describe('Verify configuration form', () => {
               authType: 'Anonymous',
               source: 'AwsEcr',
               type: 'UPSTREAM',
-              url: 'https://aws.ecr.com'
+              url: 'https://aws.ecr.com',
+              remoteUrlSuffix: ''
             },
             createdAt: '1738516362995',
             description: 'test description',
@@ -426,7 +427,8 @@ describe('Verify configuration form', () => {
               authType: 'AccessKeySecretKey',
               source: 'AwsEcr',
               type: 'UPSTREAM',
-              url: 'https://aws.ecr.com'
+              url: 'https://aws.ecr.com',
+              remoteUrlSuffix: ''
             },
             createdAt: '1738516362995',
             description: 'test description',
@@ -463,7 +465,8 @@ describe('Verify configuration form', () => {
               authType: 'Anonymous',
               source: 'Custom',
               type: 'UPSTREAM',
-              url: 'https://custom.docker.com'
+              url: 'https://custom.docker.com',
+              remoteUrlSuffix: ''
             },
             createdAt: '1738516362995',
             description: 'test description',
@@ -500,7 +503,8 @@ describe('Verify configuration form', () => {
               authType: 'UserPassword',
               source: 'Custom',
               type: 'UPSTREAM',
-              url: 'https://custom.docker.com'
+              url: 'https://custom.docker.com',
+              remoteUrlSuffix: ''
             },
             createdAt: '1738516362995',
             description: 'test description',

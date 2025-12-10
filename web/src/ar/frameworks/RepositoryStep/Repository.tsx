@@ -67,6 +67,7 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected supportedScanners?: Scanners[]
   protected supportedUpstreamURLSources?: UpstreamRepositoryURLInputSource[]
   protected isWebhookSupported?: boolean
+  isSupportCustomRegistrySuffix?: boolean
   supportedRepositoryTabs?: RepositoryDetailsTab[]
   supportedArtifactTypes?: LocalArtifactType[]
   enterpriseAdvancedOptionSubTitle?: StringKeys
@@ -147,6 +148,10 @@ export abstract class RepositoryStep<T, U = unknown> {
 
   getIsWebhookSupported(): boolean {
     return this.isWebhookSupported ?? false
+  }
+
+  getIsSupportCustomRegistrySuffix(): boolean {
+    return this.isSupportCustomRegistrySuffix ?? false
   }
 
   abstract renderCreateForm(props: CreateRepositoryFormProps): JSX.Element

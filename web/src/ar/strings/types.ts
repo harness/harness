@@ -203,6 +203,8 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.authentication.userNameAndPassword': string
   'upstreamProxyDetails.createForm.authentication.username': string
   'upstreamProxyDetails.createForm.create': string
+  'upstreamProxyDetails.createForm.customRegistrySuffix': string
+  'upstreamProxyDetails.createForm.customRegistrySuffixPlaceholder': string
   'upstreamProxyDetails.createForm.key': string
   'upstreamProxyDetails.createForm.packageType': string
   'upstreamProxyDetails.createForm.source.bioconda': string

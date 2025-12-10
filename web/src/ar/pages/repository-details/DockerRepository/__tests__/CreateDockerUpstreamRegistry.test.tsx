@@ -125,7 +125,13 @@ describe('Verify create docker upstream registry flow', () => {
       expect(createRegistryFn).toHaveBeenLastCalledWith({
         body: {
           cleanupPolicy: [],
-          config: { auth: null, authType: 'Anonymous', source: 'Dockerhub', type: 'UPSTREAM', url: '' },
+          config: {
+            auth: null,
+            authType: 'Anonymous',
+            source: 'Dockerhub',
+            type: 'UPSTREAM',
+            url: ''
+          },
           description: 'test description',
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
@@ -219,7 +225,14 @@ describe('Verify create docker upstream registry flow', () => {
       expect(createRegistryFn).toHaveBeenLastCalledWith({
         body: {
           cleanupPolicy: [],
-          config: { auth: null, authType: 'Anonymous', source: 'AwsEcr', type: 'UPSTREAM', url: 'https://aws.ecr.com' },
+          config: {
+            auth: null,
+            authType: 'Anonymous',
+            source: 'AwsEcr',
+            type: 'UPSTREAM',
+            url: 'https://aws.ecr.com',
+            remoteUrlSuffix: ''
+          },
           description: 'test description',
           identifier: 'docker-up-repo',
           packageType: 'DOCKER',
@@ -273,7 +286,8 @@ describe('Verify create docker upstream registry flow', () => {
             authType: 'AccessKeySecretKey',
             source: 'AwsEcr',
             type: 'UPSTREAM',
-            url: 'https://aws.ecr.com'
+            url: 'https://aws.ecr.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'docker-up-repo',
@@ -323,7 +337,8 @@ describe('Verify create docker upstream registry flow', () => {
             authType: 'Anonymous',
             source: 'Custom',
             type: 'UPSTREAM',
-            url: 'https://custom.docker.com'
+            url: 'https://custom.docker.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'docker-up-repo',
@@ -373,7 +388,8 @@ describe('Verify create docker upstream registry flow', () => {
             authType: 'UserPassword',
             source: 'Custom',
             type: 'UPSTREAM',
-            url: 'https://custom.docker.com'
+            url: 'https://custom.docker.com',
+            remoteUrlSuffix: ''
           },
           description: 'test description',
           identifier: 'docker-up-repo',

@@ -51,6 +51,7 @@ export default function RepositoryUrlInput(props: RepositoryUrlInputProps): JSX.
             const selectedValue = e.currentTarget.value as UpstreamRepositoryURLInputSource
             if (source !== selectedValue) {
               setFieldValue('config.url', '')
+              setFieldValue('config.remoteUrlSuffix', '')
               setFieldValue('config.authType', UpstreamProxyAuthenticationMode.ANONYMOUS)
             }
           }}
@@ -59,12 +60,23 @@ export default function RepositoryUrlInput(props: RepositoryUrlInputProps): JSX.
       {[UpstreamRepositoryURLInputSource.Custom, UpstreamRepositoryURLInputSource.AwsEcr].includes(
         source as UpstreamRepositoryURLInputSource
       ) && (
-        <FormInput.Text
-          name="config.url"
-          label={getString('upstreamProxyDetails.createForm.url')}
-          placeholder={getString('upstreamProxyDetails.createForm.url')}
-          disabled={readonly}
-        />
+        <>
+          <FormInput.Text
+            name="config.url"
+            label={getString('upstreamProxyDetails.createForm.url')}
+            placeholder={getString('upstreamProxyDetails.createForm.url')}
+            disabled={readonly}
+          />
+          {repositoryType?.getIsSupportCustomRegistrySuffix() && (
+            <FormInput.Text
+              name="config.remoteUrlSuffix"
+              label={getString('upstreamProxyDetails.createForm.customRegistrySuffix')}
+              placeholder={getString('upstreamProxyDetails.createForm.customRegistrySuffixPlaceholder')}
+              disabled={readonly}
+              isOptional
+            />
+          )}
+        </>
       )}
     </Layout.Vertical>
   )

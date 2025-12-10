@@ -7,6 +7,8 @@ createForm:
   key: Upstream Proxy Key
   url: Remote Registry URL
   urlPlaceholder: Specify URL
+  customRegistrySuffix: Custom Registry Suffix
+  customRegistrySuffixPlaceholder: Specify Custom Registry Suffix
   source:
     title: Source
     dockerHub: Docker Hub
