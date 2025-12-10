@@ -929,11 +929,15 @@ func getPrimaryPackage(pi *rpmtypes.PackageInfo, rootPackagePath string) (string
 		}
 	}
 	packageVersion := fmt.Sprintf("%s-%s", pi.FileMetadata.Version, pi.FileMetadata.Release)
+	pathVersion := packageVersion
+	if pi.FileMetadata.Epoch != "" && pi.FileMetadata.Epoch != "0" {
+		pathVersion = pi.FileMetadata.Epoch + ":" + pathVersion
+	}
 	key := fmt.Sprintf("%s:%s:%s", pi.Name, packageVersion, pi.FileMetadata.Architecture)
 	location := fmt.Sprintf("%s/%s/%s/%s/%s",
 		rootPackagePath,
 		url.PathEscape(pi.Name),
-		url.PathEscape(packageVersion),
+		url.PathEscape(pathVersion),
 		url.PathEscape(pi.FileMetadata.Architecture),
 		url.PathEscape(fmt.Sprintf("%s-%s.%s.rpm", pi.Name, packageVersion, pi.FileMetadata.Architecture)))
 

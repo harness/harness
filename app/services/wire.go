@@ -33,6 +33,7 @@ import (
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
+	"github.com/harness/gitness/registry/job/handler"
 	registryasyncprocessing "github.com/harness/gitness/registry/services/asyncprocessing"
 	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 
@@ -111,6 +112,7 @@ func ProvideServices(
 	registryWebhooksService *registrywebhooks.Service,
 	branchSvc *branch.Service,
 	registryAsyncProcessingService *registryasyncprocessing.Service,
+	registryJobRpmRegistryIndex *handler.JobRpmRegistryIndex,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,

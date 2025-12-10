@@ -80,15 +80,24 @@ func (c *registryHelper) UploadPackage(
 		return nil, "", err
 	}
 
+	artifactVersion := p.Version + "." + p.FileMetadata.Architecture
+	if p.FileMetadata.Epoch != "" && p.FileMetadata.Epoch != "0" {
+		artifactVersion = fmt.Sprintf("%s:%s", p.FileMetadata.Epoch, artifactVersion)
+	}
 	info.Image = p.Name
-	info.Version = p.Version + "." + p.FileMetadata.Architecture
+	info.Version = artifactVersion
 	info.Metadata = rpmmetadata.Metadata{
 		VersionMetadata: *p.VersionMetadata,
 		FileMetadata:    *p.FileMetadata,
 	}
 
+	pathVersion := fmt.Sprintf("%s/%s", p.Version, p.FileMetadata.Architecture)
+	if p.FileMetadata.Epoch != "" && p.FileMetadata.Epoch != "0" {
+		pathVersion = fmt.Sprintf("%s/%s", pathVersion, p.FileMetadata.Epoch)
+	}
+
 	rpmFileName := fmt.Sprintf("%s-%s.%s.rpm", p.Name, p.Version, p.FileMetadata.Architecture)
-	path := fmt.Sprintf("%s/%s/%s/%s", p.Name, p.Version, p.FileMetadata.Architecture, rpmFileName)
+	path := fmt.Sprintf("%s/%s/%s", p.Name, pathVersion, rpmFileName)
 	fileInfo.Filename = rpmFileName
 	rs, sha256, artifactID, existent, err := c.localBase.MoveTempFileAndCreateArtifact(ctx, info.ArtifactInfo,
 		tempFileName, info.Version, path,

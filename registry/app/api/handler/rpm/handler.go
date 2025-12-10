@@ -16,6 +16,7 @@ package rpm
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/harness/gitness/registry/app/api/controller/pkg/rpm"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
@@ -55,7 +56,11 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	info.Image = r.PathValue("name")
 	var version string
 	if r.PathValue("version") != "" && r.PathValue("architecture") != "" {
-		version = r.PathValue("version") + "." + r.PathValue("architecture")
+		v, err := url.PathUnescape(r.PathValue("version"))
+		if err != nil {
+			return nil, err
+		}
+		version = v + "." + r.PathValue("architecture")
 	}
 	return &rpmtype.ArtifactInfo{
 		ArtifactInfo: info,

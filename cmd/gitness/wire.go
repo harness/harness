@@ -148,6 +148,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
 	gopackageutils "github.com/harness/gitness/registry/app/utils/gopackage"
+	registryhandlers "github.com/harness/gitness/registry/job"
 	registryindex "github.com/harness/gitness/registry/services/asyncprocessing"
 	registrywebhooks "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
@@ -326,6 +327,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		checkevents.WireSet,
 		registryhelpers.WireSet,
 		replicationevents.ProvideNoOpReplicationReporter,
+		registryhandlers.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

@@ -170,6 +170,7 @@ import (
 	"github.com/harness/gitness/registry/app/utils/cargo"
 	gopackage3 "github.com/harness/gitness/registry/app/utils/gopackage"
 	"github.com/harness/gitness/registry/gc"
+	job2 "github.com/harness/gitness/registry/job"
 	asyncprocessing2 "github.com/harness/gitness/registry/services/asyncprocessing"
 	webhook3 "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/ssh"
@@ -805,7 +806,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service3, branchService, asyncprocessingService)
+	jobRpmRegistryIndex, err := job2.ProvideJobRpmRegistryIndex(asyncprocessingReporter, executor)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service3, branchService, asyncprocessingService, jobRpmRegistryIndex)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

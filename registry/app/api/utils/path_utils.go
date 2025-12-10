@@ -45,8 +45,19 @@ func GetGenericFilePath(imageName string, version string) string {
 func GetRpmFilePath(imageName string, version string) string {
 	lastDotIndex := strings.LastIndex(version, ".")
 	rpmVersion := version[:lastDotIndex]
+	epochIndex := strings.LastIndex(version, ":")
+	var epoch string
+	if epochIndex > -1 {
+		parts := strings.Split(rpmVersion, ":")
+		epoch = parts[0]
+		rpmVersion = parts[1]
+	}
 	rpmArch := version[lastDotIndex+1:]
-	return "/" + imageName + "/" + rpmVersion + "/" + rpmArch
+	path := "/" + imageName + "/" + rpmVersion + "/" + rpmArch
+	if epochIndex > -1 {
+		path = path + "/" + epoch
+	}
+	return path
 }
 
 func GetCargoFilePath(imageName string, version string) string {
@@ -100,8 +111,10 @@ func GetFilePath(packageType artifact.PackageType, imageName string, version str
 	}
 }
 
-func GetFilePathWithArtifactType(packageType artifact.PackageType, imageName string, version string,
-	artifactType *artifact.ArtifactType) (string, error) {
+func GetFilePathWithArtifactType(
+	packageType artifact.PackageType, imageName string, version string,
+	artifactType *artifact.ArtifactType,
+) (string, error) {
 	switch packageType { //nolint:exhaustive
 	case artifact.PackageTypeHUGGINGFACE:
 		return GetHuggingFaceFilePath(imageName, artifactType, version), nil

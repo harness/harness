@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -590,17 +591,28 @@ func GetNPMArtifactFileDownloadCommand(
 }
 
 func GetRPMArtifactFileDownloadCommand(
-	regURL, filename string, setupDetailsAuthHeaderPrefix string, isAnonymous bool,
+	regURL, artifactName string,
+	versionWithArch string,
+	filename string,
+	setupDetailsAuthHeaderPrefix string,
+	isAnonymous bool,
 ) string {
 	var authHeader string
 	if !isAnonymous {
 		authHeader = commonAuthHeader
 	}
+
+	_, file, _ := paths.DisectLeaf(filename)
+	lastDotIndex := strings.LastIndex(versionWithArch, ".")
+	arch := versionWithArch[lastDotIndex+1:]
+	version := versionWithArch[:lastDotIndex]
+	downloadFilePath := fmt.Sprintf("/%s/%s/%s/%s", artifactName, version, arch, file)
+
 	downloadCommand := "curl --location '<HOSTNAME>/package<FILENAME>'" + authHeader +
 		" -J -o '<OUTPUT_FILE_NAME>'"
 	replacements := map[string]string{
 		"<HOSTNAME>":           regURL,
-		"<FILENAME>":           filename,
+		"<FILENAME>":           downloadFilePath,
 		"<AUTH_HEADER_PREFIX>": setupDetailsAuthHeaderPrefix,
 	}
 

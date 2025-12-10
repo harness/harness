@@ -17,6 +17,7 @@ package rpm
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	rpmtype "github.com/harness/gitness/registry/app/pkg/types/rpm"
@@ -34,7 +35,12 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 	}
 	info.Image = r.PathValue("name")
 	info.Arch = r.PathValue("architecture")
-	info.Version = r.PathValue("version") + "." + info.Arch
+	version, err := url.PathUnescape(r.PathValue("version"))
+	if err != nil {
+		h.HandleErrors(ctx, []error{fmt.Errorf("failed to decode version: %s", r.PathValue("version"))}, w)
+		return
+	}
+	info.Version = version + "." + info.Arch
 	info.FileName = r.PathValue("file")
 	info.PackagePath = r.PathValue("*")
 	response := h.controller.DownloadPackageFile(ctx, *info)
@@ -69,7 +75,7 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := commons.ServeContent(w, r, response.Body, info.FileName, response.ReadCloser)
+	err = commons.ServeContent(w, r, response.Body, info.FileName, response.ReadCloser)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Failed to serve content: %v", err)
 		h.HandleError(ctx, w, err)

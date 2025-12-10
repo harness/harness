@@ -16,6 +16,7 @@ package rpm
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -58,8 +59,28 @@ func downloadPackageFile(
 	info rpm.ArtifactInfo,
 	localBase base.LocalBase,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
-	lastDotIndex := strings.LastIndex(info.Version, ".")
-	versionPath := info.Version[:lastDotIndex] + "/" + info.Arch
+	var versionWithArch = info.Version
+	var epoch string
+	var versionPath string
+	var version string
+
+	epochSeparatorIndex := strings.Index(info.Version, ":")
+	if epochSeparatorIndex != -1 {
+		epoch = versionWithArch[:epochSeparatorIndex]
+		versionWithArch = versionWithArch[epochSeparatorIndex+1:]
+	}
+	lastDotIndex := strings.LastIndex(versionWithArch, ".")
+	if lastDotIndex == -1 {
+		return nil, nil, nil, "", fmt.Errorf("invalid version: %s", info.Version)
+	}
+	version = versionWithArch[:lastDotIndex]
+
+	if epoch != "" {
+		versionPath = version + "/" + info.Arch + "/" + epoch
+	} else {
+		versionPath = version + "/" + info.Arch
+	}
+
 	headers, fileReader, redirectURL, err := localBase.Download(
 		ctx, info.ArtifactInfo, versionPath, info.FileName,
 	)

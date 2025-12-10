@@ -64,9 +64,6 @@ func ParsePackage(r io.Reader) (*rpmtypes.Package, error) {
 	}
 
 	version := fmt.Sprintf("%s-%s", nevra.Version, nevra.Release)
-	if nevra.Epoch != "" && nevra.Epoch != "0" {
-		version = fmt.Sprintf("%s-%s", nevra.Epoch, version)
-	}
 
 	p := &rpmtypes.Package{
 		Name:    nevra.Name,

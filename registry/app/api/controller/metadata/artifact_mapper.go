@@ -315,7 +315,7 @@ func GetArtifactFilesMetadata(
 			downloadCommand = GetMavenArtifactFileDownloadCommand(registryURL, artifactName,
 				version, filename, setupDetailsAuthHeaderPrefix, isAnonymous)
 		case artifactapi.PackageTypeRPM:
-			downloadCommand = GetRPMArtifactFileDownloadCommand(registryURL, filename,
+			downloadCommand = GetRPMArtifactFileDownloadCommand(registryURL, artifactName, version, filename,
 				setupDetailsAuthHeaderPrefix, isAnonymous)
 			_, filename, _ = paths.DisectLeaf(filename)
 		case artifactapi.PackageTypeNUGET:

@@ -92,7 +92,8 @@ func (c *rpmPackageType) DeleteImage() error {
 	return fmt.Errorf("not implemented")
 }
 
-func (c *rpmPackageType) DeleteVersion(ctx context.Context,
+func (c *rpmPackageType) DeleteVersion(
+	ctx context.Context,
 	_ *types.RegistryRequestBaseInfo,
 	_ *types.Image,
 	_ string,
@@ -102,7 +103,8 @@ func (c *rpmPackageType) DeleteVersion(ctx context.Context,
 	return fmt.Errorf("not implemented")
 }
 
-func (c *rpmPackageType) ReportDeleteVersionEvent(ctx context.Context,
+func (c *rpmPackageType) ReportDeleteVersionEvent(
+	ctx context.Context,
 	_ int64,
 	_ int64,
 	_ string,
@@ -134,7 +136,8 @@ func (c *rpmPackageType) DeleteArtifact(
 	return nil
 }
 
-func (c *rpmPackageType) GetPackageURL(_ context.Context,
+func (c *rpmPackageType) GetPackageURL(
+	_ context.Context,
 	_ string,
 	_ string,
 ) string {
@@ -237,7 +240,14 @@ func (c *rpmPackageType) GetNodePathsForArtifact(
 		lastDotIndex := strings.LastIndex(version, ".")
 		rpmVersion := version[:lastDotIndex]
 		rpmArch := version[lastDotIndex+1:]
-		result[i] = path + "/" + rpmVersion + "/" + rpmArch
+		epochSeparatorDotIndex := strings.LastIndex(version, ":")
+		if epochSeparatorDotIndex > 0 {
+			epoch := rpmVersion[:epochSeparatorDotIndex]
+			rpmVersion = rpmVersion[epochSeparatorDotIndex+1:]
+			result[i] = path + "/" + rpmVersion + "/" + rpmArch + "/" + epoch
+		} else {
+			result[i] = path + "/" + rpmVersion + "/" + rpmArch
+		}
 	}
 	return result, nil
 }
