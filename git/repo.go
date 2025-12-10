@@ -19,9 +19,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path"
 	"runtime/debug"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,7 +31,9 @@ import (
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/hash"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
+	"github.com/harness/gitness/git/sharedrepo"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/rs/zerolog/log"
@@ -637,4 +641,113 @@ func (s *Service) convertRepoSource(source string) string {
 	}
 
 	return getFullPathForRepo(s.reposRoot, source)
+}
+
+type SyncRefsParams struct {
+	WriteParams
+	Source string
+	Refs   []string
+}
+
+type SyncRefsOutput struct {
+	Refs []hook.ReferenceUpdate
+}
+
+func (s *Service) SyncRefs(
+	ctx context.Context,
+	params *SyncRefsParams,
+) (*SyncRefsOutput, error) {
+	if err := params.Validate(); err != nil {
+		return nil, err
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	source := s.convertRepoSource(params.Source)
+
+	refs := slices.Clone(params.Refs)
+
+	slices.Sort(refs)
+	refs = slices.Compact(refs)
+
+	refRemoteMap, err := s.git.ListRemoteReferences(ctx, repoPath, source, refs...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list remote refs: %w", err)
+	}
+
+	refLocalMap, err := s.git.ListLocalReferences(ctx, repoPath, refs...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list local refs: %w", err)
+	}
+
+	refsRemote := slices.Collect(maps.Keys(refRemoteMap))
+	slices.Sort(refsRemote)
+	if len(refsRemote) != len(refs) {
+		notFound := func(all, found []string) (notFound []string) {
+			var idxFound, idxAll int
+			for ; idxFound < len(found) && idxAll < len(all); idxAll++ {
+				if all[idxAll] == found[idxFound] {
+					idxFound++
+					continue
+				}
+				notFound = append(notFound, all[idxAll])
+			}
+			for ; idxAll < len(all); idxAll++ {
+				notFound = append(notFound, all[idxAll])
+			}
+			return
+		}(refs, refsRemote)
+
+		return nil, errors.InvalidArgumentf("Could not find remote references: %v", notFound)
+	}
+
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create reference updater: %w", err)
+	}
+
+	refUpdates := make([]hook.ReferenceUpdate, 0, len(refs))
+	for _, ref := range refs {
+		oldSHA, ok := refLocalMap[ref]
+		if !ok {
+			oldSHA = sha.Nil
+		}
+
+		newSHA := refRemoteMap[ref]
+
+		if oldSHA == newSHA {
+			continue
+		}
+
+		refUpdates = append(refUpdates, hook.ReferenceUpdate{
+			Ref: ref,
+			Old: oldSHA,
+			New: newSHA,
+		})
+	}
+
+	if len(refUpdates) == 0 {
+		return &SyncRefsOutput{}, nil
+	}
+
+	err = sharedrepo.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
+		objects := slices.Collect(maps.Values(refRemoteMap))
+
+		if err := s.FetchObjects(ctx, source, objects); err != nil {
+			return fmt.Errorf("failed to fetch objects: %w", err)
+		}
+
+		err = refUpdater.Init(ctx, refUpdates)
+		if err != nil {
+			return fmt.Errorf("failed to init values of references (%v): %w", refUpdates, err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to sync references: %w", err)
+	}
+
+	return &SyncRefsOutput{
+		Refs: refUpdates,
+	}, nil
 }

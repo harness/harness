@@ -17,6 +17,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/harness/gitness/app/api/controller"
@@ -24,8 +25,11 @@ import (
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
-	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type LinkedSyncInput struct {
@@ -49,7 +53,14 @@ func (in *LinkedSyncInput) sanitize() error {
 		}
 	}
 
+	slices.Sort(in.Branches)
+	in.Branches = slices.Compact(in.Branches)
+
 	return nil
+}
+
+type LinkedSyncOutput struct {
+	Refs []hook.ReferenceUpdate `json:"branches"`
 }
 
 func (c *Controller) LinkedSync(
@@ -57,33 +68,28 @@ func (c *Controller) LinkedSync(
 	session *auth.Session,
 	repoRef string,
 	in *LinkedSyncInput,
-) error {
+) (*LinkedSyncOutput, error) {
 	if err := in.sanitize(); err != nil {
-		return err
+		return nil, err
 	}
 
 	repo, err := c.getRepoCheckAccessWithLinked(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if repo.Type != enum.RepoTypeLinked {
-		return errors.InvalidArgument("Repository is not a linked repository.")
+		return nil, errors.InvalidArgument("Repository is not a linked repository.")
 	}
 
-	refSpec := make([]string, len(in.Branches))
+	refs := make([]string, len(in.Branches))
 	for i := range in.Branches {
-		ref, err := git.GetRefPath(in.Branches[i], gitenum.RefTypeBranch)
-		if err != nil {
-			return fmt.Errorf("failed to get ref path for branch %s: %w", in.Branches[i], err)
-		}
-
-		refSpec[i] = ref + ":" + ref
+		refs[i] = api.BranchPrefix + in.Branches[i]
 	}
 
 	linkedRepo, err := c.linkedRepoStore.Find(ctx, repo.ID)
 	if err != nil {
-		return fmt.Errorf("failed to find linked repository: %w", err)
+		return nil, fmt.Errorf("failed to find linked repository: %w", err)
 	}
 
 	connector := importer.ConnectorDef{
@@ -94,24 +100,39 @@ func (c *Controller) LinkedSync(
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return fmt.Errorf("failed to create rpc internal write params: %w", err)
+		return nil, fmt.Errorf("failed to create rpc internal write params: %w", err)
 	}
 
 	cloneURLWithAuth, err := importer.ConnectorToURL(ctx, c.connectorService, connector)
 	if err != nil {
-		return errors.InvalidArgument("Failed to get access to repository.")
+		return nil, errors.InvalidArgument("Failed to get access to repository.")
 	}
 
-	_, err = c.git.SyncRepository(ctx, &git.SyncRepositoryParams{
-		WriteParams:       writeParams,
-		Source:            cloneURLWithAuth,
-		CreateIfNotExists: false,
-		RefSpecs:          refSpec,
-		DefaultBranch:     repo.DefaultBranch,
+	result, err := c.git.SyncRefs(ctx, &git.SyncRefsParams{
+		WriteParams: writeParams,
+		Source:      cloneURLWithAuth,
+		Refs:        refs,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to synchronize branches: %w", err)
+		return nil, fmt.Errorf("failed to synchronize branches: %w", err)
 	}
 
-	return nil
+	defaultRef := api.BranchPrefix + repo.DefaultBranch
+	updatedDefault := slices.ContainsFunc(result.Refs, func(u hook.ReferenceUpdate) bool {
+		return defaultRef == u.Ref
+	})
+
+	if updatedDefault {
+		repoFull, err := c.repoStore.Find(ctx, repo.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find repository: %w", err)
+		}
+
+		err = c.indexer.Index(ctx, repoFull)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to index repository")
+		}
+	}
+
+	return &LinkedSyncOutput{Refs: result.Refs}, nil
 }

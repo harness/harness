@@ -26,6 +26,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
@@ -323,6 +324,65 @@ func (g *Git) FetchObjects(
 	}
 
 	return nil
+}
+
+// ListRemoteReferences lists references from a remote repository.
+func (g *Git) ListRemoteReferences(
+	ctx context.Context,
+	repoPath string,
+	remote string,
+	refs ...string,
+) (map[string]sha.SHA, error) {
+	if repoPath == "" {
+		return nil, ErrRepositoryPathEmpty
+	}
+
+	cmd := command.New("ls-remote",
+		command.WithFlag("--refs"),
+		command.WithArg(remote),
+		command.WithPostSepArg(refs...),
+	)
+
+	stdout := bytes.NewBuffer(nil)
+
+	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(stdout)); err != nil {
+		return nil, fmt.Errorf("failed to list references from remote: %w", err)
+	}
+
+	result, err := parser.ReferenceList(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse references from remote: %w", err)
+	}
+
+	return result, nil
+}
+
+// ListLocalReferences lists references from the local repository.
+func (g *Git) ListLocalReferences(
+	ctx context.Context,
+	repoPath string,
+	refs ...string,
+) (map[string]sha.SHA, error) {
+	if repoPath == "" {
+		return nil, ErrRepositoryPathEmpty
+	}
+
+	cmd := command.New("show-ref",
+		command.WithPostSepArg(refs...),
+	)
+
+	stdout := bytes.NewBuffer(nil)
+
+	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(stdout)); err != nil {
+		return nil, fmt.Errorf("failed to list references: %w", err)
+	}
+
+	result, err := parser.ReferenceList(stdout)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse references: %w", err)
+	}
+
+	return result, nil
 }
 
 var reNotOurRef = regexp.MustCompile("upload-pack: not our ref ([a-fA-f0-9]+)$")

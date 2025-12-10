@@ -41,12 +41,12 @@ func HandleLinkedSync(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = repoCtrl.LinkedSync(ctx, session, repoRef, in)
+		result, err := repoCtrl.LinkedSync(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		render.JSON(w, http.StatusOK, result)
 	}
 }

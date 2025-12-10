@@ -49,6 +49,7 @@ type Interface interface {
 	UpdateRef(ctx context.Context, params UpdateRefParams) error
 
 	SyncRepository(ctx context.Context, params *SyncRepositoryParams) (*SyncRepositoryOutput, error)
+	SyncRefs(ctx context.Context, params *SyncRefsParams) (*SyncRefsOutput, error)
 	FetchObjects(ctx context.Context, params *FetchObjectsParams) (FetchObjectsOutput, error)
 
 	MatchFiles(ctx context.Context, params *MatchFilesParams) (*MatchFilesOutput, error)
