@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
@@ -268,6 +269,8 @@ func (r registryDao) GetAll(
 	if limit < 0 || offset < 0 {
 		return nil, fmt.Errorf("limit and offset must be non-negative")
 	}
+
+	// Step 1: Fetch base registry data.
 	selectFields := `
 		r.registry_id AS registry_id,
 		r.registry_parent_id AS parent_id,
@@ -276,45 +279,12 @@ func (r registryDao) GetAll(
 		r.registry_package_type AS package_type,
 		r.registry_type AS type,
 		r.registry_updated_at AS last_modified, 
-		COALESCE(u.upstream_proxy_config_url, '') AS url, 
-		COALESCE(artifact_count.count, 0) AS artifact_count,
-		CASE 
-			WHEN COALESCE(blob_sizes.total_size, 0) = 0 THEN COALESCE(generic_blob_sizes.total_size, 0)
-			ELSE COALESCE(blob_sizes.total_size, 0)
-		END AS size,
-		r.registry_labels,
+		COALESCE(u.upstream_proxy_config_url, '') AS url,
 		r.registry_config,
-		COALESCE(download_stats.download_count, 0) AS download_count
-	`
-
-	// Subqueries with optimizations for reduced joins and grouping
-	artifactCountSubquery := `
-		SELECT image_registry_id, COUNT(image_id) AS count
-		FROM images
-		WHERE image_enabled = TRUE
-		GROUP BY 1
-	`
-
-	blobSizesSubquery := `
-		SELECT rblob_registry_id AS rblob_registry_id, SUM(b.blob_size) AS total_size
-		FROM registry_blobs rb
-		JOIN blobs b ON rb.rblob_blob_id = b.blob_id
-		GROUP BY 1
-	`
-
-	genericBlobSizesSubquery := `
-		SELECT node_registry_id AS node_registry_id, SUM(gb.generic_blob_size) AS total_size
-		FROM nodes n
-		JOIN generic_blobs gb ON  n.node_is_file = TRUE AND gb.generic_blob_id = n.node_generic_blob_id
-		GROUP BY 1
-	`
-	downloadStatsSubquery := `
-		SELECT i.image_registry_id AS registry_id, COUNT(d.download_stat_id) AS download_count
-		FROM download_stats d
-		JOIN artifacts a ON d.download_stat_artifact_id = a.artifact_id
-		JOIN images i ON a.artifact_image_id = i.image_id
-		WHERE i.image_enabled = TRUE
-		GROUP BY 1
+		r.registry_labels,
+		0 AS artifact_count,
+		0 AS size,
+		0 AS download_count
 	`
 
 	var query sq.SelectBuilder
@@ -322,16 +292,8 @@ func (r registryDao) GetAll(
 		Select(selectFields).
 		From("registries r").
 		LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
-		LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
-			artifactCountSubquery)).
-		LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id",
-			blobSizesSubquery)).
-		//nolint:lll
-		LeftJoin(fmt.Sprintf("(%s) AS generic_blob_sizes ON r.registry_id = generic_blob_sizes.node_registry_id",
-			genericBlobSizesSubquery)).
-		LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id",
-			downloadStatsSubquery)).
 		Where(sq.Eq{"r.registry_parent_id": parentIDs})
+
 	// Apply search filter
 	if search != "" {
 		query = query.Where("r.registry_name LIKE ?", "%"+search+"%")
@@ -366,21 +328,228 @@ func (r registryDao) GetAll(
 		return nil, errors.Wrap(err, "Failed to convert query to SQL")
 	}
 
-	// Log the final query
-	finalQuery := util.ConstructQuery(sql, args)
-	log.Ctx(ctx).Debug().
-		Str("sql", finalQuery).
-		Msg("Executing query")
-
-	// Execute query
+	// Execute main query
 	db := dbtx.GetAccessor(ctx, r.db)
 	dst := []*RegistryMetadataDB{}
 	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing query")
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing main registry query")
+	}
+
+	// If no registries found, return empty list
+	if len(dst) == 0 {
+		return r.mapToRegistryMetadataList(ctx, dst)
+	}
+
+	// Extract registry IDs for subsequent queries
+	registryIDs := make([]int64, len(dst))
+	registryIDStrings := make([]string, len(dst))
+	for i, reg := range dst {
+		regID, err := strconv.ParseInt(reg.RegID, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse registry ID %s: %w", reg.RegID, err)
+		}
+		registryIDs[i] = regID
+		registryIDStrings[i] = reg.RegID
+	}
+
+	// Fetch aggregate data sequentially
+	artifactCounts, err := r.fetchArtifactCounts(ctx, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch artifact counts: %w", err)
+	}
+
+	ociSizes, err := r.fetchOCIBlobSizes(ctx, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch OCI blob sizes: %w", err)
+	}
+
+	genericSizes, err := r.fetchGenericBlobSizes(ctx, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch generic blob sizes: %w", err)
+	}
+
+	downloadCounts, err := r.fetchDownloadCounts(ctx, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch download counts: %w", err)
+	}
+
+	// Merge aggregate data into registry results
+	for _, reg := range dst {
+		regID, _ := strconv.ParseInt(reg.RegID, 10, 64)
+
+		// Set artifact count
+		if count, ok := artifactCounts[regID]; ok {
+			reg.ArtifactCount = count
+		}
+
+		// Set size (OCI takes precedence, fallback to generic)
+		if size, ok := ociSizes[regID]; ok && size > 0 {
+			reg.Size = size
+		} else if genericSize, ok := genericSizes[regID]; ok && genericSize > 0 {
+			reg.Size = genericSize
+		}
+
+		// Set download count
+		if count, ok := downloadCounts[regID]; ok {
+			reg.DownloadCount = count
+		}
 	}
 
 	// Map results to response type
 	return r.mapToRegistryMetadataList(ctx, dst)
+}
+
+// fetchArtifactCounts fetches artifact counts for given registry IDs.
+func (r registryDao) fetchArtifactCounts(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
+	if len(registryIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	query := `
+		SELECT image_registry_id, COUNT(images.image_id) AS count
+		FROM images
+		WHERE image_registry_id IN (?) AND image_enabled = TRUE
+		GROUP BY image_registry_id
+	`
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	sql, args, err := sqlx.In(query, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build artifact counts query: %w", err)
+	}
+	sql = db.Rebind(sql)
+
+	type result struct {
+		RegistryID int64 `db:"image_registry_id"`
+		Count      int64 `db:"count"`
+	}
+	var results []result
+	if err := db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, fmt.Errorf("failed to fetch artifact counts: %w", err)
+	}
+
+	counts := make(map[int64]int64, len(results))
+	for _, r := range results {
+		counts[r.RegistryID] = r.Count
+	}
+
+	return counts, nil
+}
+
+// fetchOCIBlobSizes fetches OCI blob sizes for given registry IDs.
+func (r registryDao) fetchOCIBlobSizes(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
+	if len(registryIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	query := `
+		SELECT rb.rblob_registry_id, COALESCE(SUM(blobs.blob_size), 0) AS total_size
+		FROM registry_blobs rb
+		LEFT JOIN blobs ON rb.rblob_blob_id = blobs.blob_id
+		WHERE rb.rblob_registry_id IN (?)
+		GROUP BY rb.rblob_registry_id
+	`
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	sql, args, err := sqlx.In(query, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build OCI blob sizes query: %w", err)
+	}
+	sql = db.Rebind(sql)
+
+	type result struct {
+		RegistryID int64 `db:"rblob_registry_id"`
+		TotalSize  int64 `db:"total_size"`
+	}
+	var results []result
+	if err := db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, fmt.Errorf("failed to fetch OCI blob sizes: %w", err)
+	}
+
+	sizes := make(map[int64]int64, len(results))
+	for _, r := range results {
+		sizes[r.RegistryID] = r.TotalSize
+	}
+
+	return sizes, nil
+}
+
+// fetchGenericBlobSizes fetches generic blob sizes for given registry IDs.
+func (r registryDao) fetchGenericBlobSizes(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
+	if len(registryIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	query := `
+		SELECT nodes.node_registry_id, COALESCE(SUM(generic_blobs.generic_blob_size), 0) AS total_size
+		FROM nodes
+		LEFT JOIN generic_blobs ON generic_blob_id = nodes.node_generic_blob_id
+		WHERE node_is_file AND generic_blob_id IS NOT NULL
+		  AND node_registry_id IN (?)
+		GROUP BY nodes.node_registry_id
+	`
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	sql, args, err := sqlx.In(query, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build generic blob sizes query: %w", err)
+	}
+	sql = db.Rebind(sql)
+
+	type result struct {
+		RegistryID int64 `db:"node_registry_id"`
+		TotalSize  int64 `db:"total_size"`
+	}
+	var results []result
+	if err := db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, fmt.Errorf("failed to fetch generic blob sizes: %w", err)
+	}
+
+	sizes := make(map[int64]int64, len(results))
+	for _, r := range results {
+		sizes[r.RegistryID] = r.TotalSize
+	}
+
+	return sizes, nil
+}
+
+// fetchDownloadCounts fetches download counts for given registry IDs.
+func (r registryDao) fetchDownloadCounts(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
+	if len(registryIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	query := `
+		SELECT i.image_registry_id, COUNT(d.download_stat_id) AS download_count
+		FROM download_stats d
+		LEFT JOIN artifacts a ON d.download_stat_artifact_id = a.artifact_id
+		LEFT JOIN images i ON a.artifact_image_id = i.image_id
+		WHERE i.image_registry_id IN (?) AND i.image_enabled = TRUE
+		GROUP BY i.image_registry_id
+	`
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	sql, args, err := sqlx.In(query, registryIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build download counts query: %w", err)
+	}
+	sql = db.Rebind(sql)
+
+	type result struct {
+		RegistryID    int64 `db:"image_registry_id"`
+		DownloadCount int64 `db:"download_count"`
+	}
+	var results []result
+	if err := db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, fmt.Errorf("failed to fetch download counts: %w", err)
+	}
+
+	counts := make(map[int64]int64, len(results))
+	for _, r := range results {
+		counts[r.RegistryID] = r.DownloadCount
+	}
+
+	return counts, nil
 }
 
 func (r registryDao) CountAll(
