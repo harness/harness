@@ -22,7 +22,7 @@ import { TableV2, type PaginationProps } from '@harnessio/uicore'
 import type { ListRegistry, RegistryMetadata } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { useParentHooks } from '@ar/hooks'
+import { useParentHooks, useV2Apis } from '@ar/hooks'
 import { useParentUtils } from '@ar/hooks/useParentUtils'
 import useGetScopeFromRegistryPath from '@ar/pages/repository-details/hooks/useGetScopeFromRegistryPath/useGetScopeFromRegistryPath'
 
@@ -59,6 +59,7 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
   const { routeToRegistryDetails } = useParentUtils()
   const { getString } = useStrings()
   const history = useHistory()
+  const shouldUseV2Apis = useV2Apis()
 
   const { registries, itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data
   const paginationProps = useDefaultPaginationProps({
@@ -117,19 +118,22 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         Header: getString('repositoryList.table.columns.size'),
         accessor: 'registrySize',
         Cell: RepositorySizeCell,
-        serverSortProps: getServerSortProps('registrySize')
+        serverSortProps: shouldUseV2Apis ? getServerSortProps('registrySize') : undefined,
+        disableSortBy: !shouldUseV2Apis
       },
       {
         Header: getString('repositoryList.table.columns.artifacts'),
         accessor: 'artifactsCount',
         Cell: RepositoryArtifactsCell,
-        serverSortProps: getServerSortProps('artifactsCount')
+        serverSortProps: shouldUseV2Apis ? getServerSortProps('artifactsCount') : undefined,
+        disableSortBy: !shouldUseV2Apis
       },
       {
         Header: getString('repositoryList.table.columns.downloads'),
         accessor: 'downloadsCount',
         Cell: RepositoryDownloadsCell,
-        serverSortProps: getServerSortProps('downloadsCount')
+        serverSortProps: shouldUseV2Apis ? getServerSortProps('downloadsCount') : undefined,
+        disableSortBy: !shouldUseV2Apis
       },
       {
         Header: getString('repositoryList.table.columns.lastModified'),
