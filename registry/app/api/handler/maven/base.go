@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
+	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/publicaccess"
@@ -227,7 +228,7 @@ func handleErrors(ctx context.Context, errs errcode.Errors, w http.ResponseWrite
 			code := e.Status
 			w.WriteHeader(code)
 		default:
-			w.WriteHeader(http.StatusInternalServerError)
+			render.TranslatedUserError(ctx, w, err)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(errs)

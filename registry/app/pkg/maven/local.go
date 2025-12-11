@@ -259,5 +259,5 @@ func processError(err error) (
 		strings.Contains(err.Error(), "http status code: 404") {
 		return responseHeaders, nil, nil, "", []error{commons.NotFoundError(err.Error(), err)}
 	}
-	return responseHeaders, nil, nil, "", []error{errcode.ErrCodeUnknown.WithDetail(err)}
+	return responseHeaders, nil, nil, "", []error{err}
 }
