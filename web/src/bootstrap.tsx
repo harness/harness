@@ -22,6 +22,7 @@ import { defaultCurrentUser } from 'AppContext'
 import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { useGetSettingValue } from 'hooks/useGetSettingValue'
 import { useGetAuthSettings } from 'hooks/useGetAuthSettings'
+import { useCodeOPAError } from 'hooks/useCodeOPAError'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
 import { defaultMultiTypeConnectorField } from 'components/FormMultiTypeConnectorField/FormMultiTypeConnectorField'
@@ -45,7 +46,8 @@ ReactDOM.render(
       useLogsStreaming: noop,
       useFeatureFlags,
       useGetSettingValue,
-      useGetAuthSettings
+      useGetAuthSettings,
+      useCodeOPAError
     }}
     currentUser={defaultCurrentUser}
     customComponents={{

@@ -85,6 +85,7 @@ export interface AppProps {
     useGetRepoURL?: Unknown
     getRepoURLPromise?: Unknown
     useGetConnector?: Unknown
+    useCodeOPAError?: Unknown
   }>
 
   currentUser: Required<TypesUser>

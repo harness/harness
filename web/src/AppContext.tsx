@@ -25,6 +25,7 @@ import type { TypesUser } from 'services/code'
 import { currentUserAtom } from 'atoms/currentUser'
 import { newCacheStrategy } from 'utils/CacheStrategy'
 import { useGetSettingValue } from 'hooks/useGetSettingValue'
+import { useCodeOPAError } from 'hooks/useCodeOPAError'
 import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { defaultDelegateSelectorsV2 } from 'components/DelegateSelector/DelegateSelector'
@@ -78,7 +79,7 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
   })
   const [currentUser, setCurrentUser] = useAtom(currentUserAtom)
   const [appStates, setAppStates] = useState<AppProps>(
-    merge({ hooks: { useFeatureFlags, useGetSettingValue } }, initialValue)
+    merge({ hooks: { useFeatureFlags, useGetSettingValue, useCodeOPAError } }, initialValue)
   )
 
   useEffect(() => {

@@ -99,6 +99,8 @@ export interface NewRepoModalButtonProps extends Omit<ButtonProps, 'onClick' | '
   onSubmit: (data: RepoRepositoryOutput & SpaceImportRepositoriesOutput) => void
   repoCreationType?: RepoCreationType
   customRenderer?: (onChange: (event: any) => void) => React.ReactNode
+  isOPAError?: (error: any) => boolean
+  handleOPAError?: (error: any) => void
 }
 
 export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
@@ -107,6 +109,8 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
   submitButtonTitle,
   cancelButtonTitle,
   onSubmit,
+  isOPAError,
+  handleOPAError,
   ...props
 }) => {
   const ModalComponent: React.FC = () => {
@@ -179,7 +183,11 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
             onSubmit(response)
           })
           .catch(_error => {
-            showError(getErrorMessage(_error), 0, getString('failedToCreateRepo'))
+            if (isOPAError && handleOPAError && isOPAError(_error.data)) {
+              handleOPAError(_error.data)
+            } else {
+              showError(getErrorMessage(_error), 0, getString('failedToCreateRepo'))
+            }
           })
       } catch (exception) {
         showError(getErrorMessage(exception), 0, getString('failedToCreateRepo'))
@@ -461,6 +469,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
   const [openModal, hideModal] = useModalHook(ModalComponent, [onSubmit, repoOption])
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
+
   const permResult = hooks?.usePermissionTranslate?.(
     {
       resource: {

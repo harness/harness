@@ -437,8 +437,13 @@ export default function RepositoriesListing() {
       setNameTextWidth((rowContainerRef.current.closest('div[role="cell"]') as HTMLDivElement)?.offsetWidth - 100)
     }
   }, [setNameTextWidth])
+  const { hooks } = useAppContext()
+  const { isOPAError, handleOPAError, OPAErrorModal } = hooks.useCodeOPAError()
+
   const NewRepoButton = (
     <NewRepoModalButton
+      isOPAError={isOPAError}
+      handleOPAError={handleOPAError}
       space={space}
       modalTitle={getString('createARepo')}
       text={getString('newRepo')}
@@ -559,6 +564,7 @@ export default function RepositoriesListing() {
             <ResourceListingPagination response={response} page={page} setPage={setPage} />
           </Container>
         </Layout.Horizontal>
+        <OPAErrorModal />
       </PageBody>
     </Container>
   )
