@@ -3044,6 +3044,9 @@ components:
           type: string
         value:
           type: string
+        masked:
+          type: boolean
+          default: false
       required:
         - key
         - value

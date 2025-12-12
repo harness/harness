@@ -13,6 +13,7 @@ export interface StringsMap {
   activeBranches: string
   add: string
   addComment: string
+  addCustomHeader: string
   addDescription: string
   addGitIgnore: string
   addLabel: string
@@ -235,6 +236,7 @@ export interface StringsMap {
   created: string
   creationDate: string
   customDay: string
+  customHeaders: string
   customHour: string
   customMin: string
   customSecond: string
@@ -405,6 +407,10 @@ export interface StringsMap {
   gitIgnore: string
   gitness: string
   goToDefaultBranch: string
+  headerKey: string
+  headerKeyPlaceholder: string
+  headerValue: string
+  headerValuePlaceholder: string
   heading: string
   help: string
   hideCommitHistory: string
@@ -559,6 +565,7 @@ export interface StringsMap {
   manageRepositories: string
   manageRepository: string
   markAsDraft: string
+  masked: string
   matchPassword: string
   mergeBranchTitle: string
   mergeCheckInProgress: string
@@ -1028,6 +1035,7 @@ export interface StringsMap {
   repositoryName: string
   reqChanges: string
   requestChanges: string
+  requestHeaders: string
   requestPayload: string
   required: string
   resetZoom: string

@@ -64,6 +64,11 @@ func (s *Service) sanitizeUpdateInput(in *types.WebhookUpdateInput) error {
 			return err
 		}
 	}
+	if in.ExtraHeaders != nil {
+		if err := CheckExtraHeaders(in.ExtraHeaders); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -118,6 +123,9 @@ func (s *Service) Update(
 	}
 	if in.Triggers != nil {
 		hook.Triggers = DeduplicateTriggers(in.Triggers)
+	}
+	if in.ExtraHeaders != nil {
+		hook.ExtraHeaders = in.ExtraHeaders
 	}
 
 	if err := s.webhookStore.Update(ctx, hook); err != nil {

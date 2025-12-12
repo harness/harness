@@ -152,6 +152,7 @@ export enum WebhookTabs {
 
 export enum ExecutionTabs {
   PAYLOAD = 'Payload',
+  REQUEST_HEADERS = 'Request Headers',
   SERVER_RESPONSE = 'Server Response'
 }
 

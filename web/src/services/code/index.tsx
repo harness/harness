@@ -746,6 +746,7 @@ export interface OpenapiUpdateRepoRequest {
 }
 
 export interface OpenapiUpdateRepoWebhookRequest {
+  extra_headers?: TypesExtraHeader[] | null
   description?: string | null
   display_name?: string | null
   enabled?: boolean | null
@@ -807,6 +808,7 @@ export interface OpenapiUserGroupReviewerAddRequest {
 export interface OpenapiWebhookType {
   created?: number
   created_by?: number
+  extra_headers?: TypesExtraHeader[] | null
   description?: string
   display_name?: string
   enabled?: boolean
@@ -1107,6 +1109,12 @@ export interface SystemUI {
 }
 
 export type TimeDuration = number | null
+
+export interface TypesExtraHeader {
+  key?: string
+  masked?: boolean
+  value?: string
+}
 
 export interface TypesBasicAuthCreds {
   password?: TypesSecretRef

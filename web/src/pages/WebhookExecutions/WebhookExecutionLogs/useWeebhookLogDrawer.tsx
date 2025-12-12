@@ -106,12 +106,82 @@ export function useWeebhookLogDrawer(refetchExecutionList: () => Promise<void>) 
     )
   }
 
+  const HeadersViewer = () => {
+    const headersRaw = executionData?.request?.headers ?? ''
+    // Parse HTTP headers (format: "Key: Value\r\n") into JSON object
+    const headersJson = useMemo(() => {
+      const result: Record<string, string> = {}
+      const lines = headersRaw.split(/\r?\n/)
+      for (const line of lines) {
+        const colonIndex = line.indexOf(':')
+        if (colonIndex > 0) {
+          const key = line.substring(0, colonIndex).trim()
+          const value = line.substring(colonIndex + 1).trim()
+          if (key) {
+            result[key] = value
+          }
+        }
+      }
+      return result
+    }, [headersRaw])
+    const formattedJson = JSON.stringify(headersJson, null, 2)
+
+    return (
+      <Container padding={'medium'} className={css.logsContainer}>
+        <CopyButton
+          content={formattedJson}
+          className={css.copyButton}
+          icon={CodeIcon.Copy}
+          color={Color.PRIMARY_7}
+          iconProps={{ size: 20 }}
+        />
+        <MonacoEditor
+          className={css.editor}
+          height={'100vh'}
+          language="json"
+          value={formattedJson}
+          data-testid="monaco-editor-headers"
+          theme="vs-dark"
+          options={{
+            fontFamily: "'Roboto Mono', monospace",
+            fontSize: 13,
+            scrollBeyondLastLine: true,
+            minimap: {
+              enabled: false
+            },
+            unicodeHighlight: {
+              ambiguousCharacters: false
+            },
+            lineNumbers: 'on',
+            glyphMargin: true,
+            folding: true,
+            lineDecorationsWidth: 60,
+            wordWrap: 'on',
+            scrollbar: {
+              verticalScrollbarSize: 0
+            },
+            renderLineHighlight: 'none',
+            wordWrapBreakBeforeCharacters: '',
+            lineNumbersMinChars: 0,
+            wordBasedSuggestions: 'off',
+            readOnly: true
+          }}
+        />
+      </Container>
+    )
+  }
+
   const tabListArray = useMemo(
     () => [
       {
         id: ExecutionTabs.PAYLOAD,
         title: ExecutionTabs.PAYLOAD,
         panel: <LogViewer data={JSON.parse(executionData?.request?.body ?? '{}')} />
+      },
+      {
+        id: ExecutionTabs.REQUEST_HEADERS,
+        title: getString('requestHeaders'),
+        panel: <HeadersViewer />
       },
       {
         id: ExecutionTabs.SERVER_RESPONSE,

@@ -16,6 +16,7 @@ package types
 
 import (
 	"encoding/json"
+	"slices"
 
 	"github.com/harness/gitness/types/enum"
 )
@@ -45,6 +46,7 @@ type Webhook struct {
 	Insecure              bool                         `json:"insecure" yaml:"insecure"`
 	Triggers              []enum.WebhookTrigger        `json:"triggers" yaml:"triggers"`
 	LatestExecutionResult *enum.WebhookExecutionResult `json:"latest_execution_result,omitempty" yaml:"-"`
+	ExtraHeaders          []ExtraHeader                `json:"extra_headers,omitempty" yaml:"-"`
 }
 
 // MarshalJSON overrides the default json marshaling for `Webhook` allowing us to inject the `HasSecret` field.
@@ -86,6 +88,9 @@ func (w Webhook) Clone() Webhook {
 		webhook.Triggers = triggers
 	}
 
+	// Deep copy the ExtraHeaders slice
+	webhook.ExtraHeaders = slices.Clone(w.ExtraHeaders)
+
 	return webhook
 }
 
@@ -94,13 +99,14 @@ type WebhookCreateInput struct {
 	UID        string `json:"uid" deprecated:"true"`
 	Identifier string `json:"identifier"`
 	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
-	DisplayName string                `json:"display_name"`
-	Description string                `json:"description"`
-	URL         string                `json:"url"`
-	Secret      string                `json:"secret"`
-	Enabled     bool                  `json:"enabled"`
-	Insecure    bool                  `json:"insecure"`
-	Triggers    []enum.WebhookTrigger `json:"triggers"`
+	DisplayName  string                `json:"display_name"`
+	Description  string                `json:"description"`
+	URL          string                `json:"url"`
+	Secret       string                `json:"secret"`
+	Enabled      bool                  `json:"enabled"`
+	Insecure     bool                  `json:"insecure"`
+	Triggers     []enum.WebhookTrigger `json:"triggers"`
+	ExtraHeaders []ExtraHeader         `json:"extra_headers,omitempty"`
 }
 
 type WebhookSignatureMetadata struct {
@@ -113,13 +119,14 @@ type WebhookUpdateInput struct {
 	UID        *string `json:"uid" deprecated:"true"`
 	Identifier *string `json:"identifier"`
 	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
-	DisplayName *string               `json:"display_name"`
-	Description *string               `json:"description"`
-	URL         *string               `json:"url"`
-	Secret      *string               `json:"secret"`
-	Enabled     *bool                 `json:"enabled"`
-	Insecure    *bool                 `json:"insecure"`
-	Triggers    []enum.WebhookTrigger `json:"triggers"`
+	DisplayName  *string               `json:"display_name"`
+	Description  *string               `json:"description"`
+	URL          *string               `json:"url"`
+	Secret       *string               `json:"secret"`
+	Enabled      *bool                 `json:"enabled"`
+	Insecure     *bool                 `json:"insecure"`
+	Triggers     []enum.WebhookTrigger `json:"triggers"`
+	ExtraHeaders []ExtraHeader         `json:"extra_headers,omitempty"`
 }
 
 // WebhookExecution represents a single execution of a webhook.
@@ -216,6 +223,7 @@ type WebhookExecutionCore struct {
 }
 
 type ExtraHeader struct {
-	Key   string `json:"key,omitempty"`
-	Value string `json:"value,omitempty"`
+	Key    string `json:"key,omitempty"`
+	Value  string `json:"value,omitempty"`
+	Masked bool   `json:"masked,omitempty"`
 }

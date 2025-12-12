@@ -14267,6 +14267,11 @@ components:
       type: object
     OpenapiUpdateRepoWebhookRequest:
       properties:
+        extra_headers:
+          items:
+            $ref: '#/components/schemas/TypesExtraHeader'
+          nullable: true
+          type: array
         description:
           nullable: true
           type: string
@@ -14409,6 +14414,11 @@ components:
           type: integer
         created_by:
           type: integer
+        extra_headers:
+          items:
+            $ref: '#/components/schemas/TypesExtraHeader'
+          nullable: true
+          type: array
         description:
           type: string
         display_name:
@@ -14911,6 +14921,15 @@ components:
     TimeDuration:
       nullable: true
       type: integer
+    TypesExtraHeader:
+      properties:
+        key:
+          type: string
+        masked:
+          type: boolean
+        value:
+          type: string
+      type: object
     TypesBasicAuthCreds:
       properties:
         password:

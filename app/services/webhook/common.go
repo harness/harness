@@ -18,6 +18,7 @@ import (
 	"context"
 	"net"
 	"net/url"
+	"strings"
 
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
@@ -33,6 +34,8 @@ const (
 	webhookMaxURLLength = 2048
 	// webhookMaxSecretLength defines the max allowed length of a webhook secret.
 	webhookMaxSecretLength = 4096
+	// webhookMaxExtraHeaders defines the max number of custom headers allowed per webhook.
+	webhookMaxExtraHeaders = 20
 )
 
 var ErrInternalWebhookOperationNotAllowed = errors.Forbidden("changes to internal webhooks are not allowed")
@@ -100,6 +103,28 @@ func CheckTriggers(triggers []enum.WebhookTrigger) error {
 	for _, trigger := range triggers {
 		if _, ok := trigger.Sanitize(); !ok {
 			return check.NewValidationErrorf("The provided webhook trigger '%s' is invalid.", trigger)
+		}
+	}
+
+	return nil
+}
+
+// CheckExtraHeaders validates the custom headers of a webhook.
+func CheckExtraHeaders(headers []types.ExtraHeader) error {
+	if len(headers) > webhookMaxExtraHeaders {
+		return check.NewValidationErrorf("A webhook can have at most %d custom headers.", webhookMaxExtraHeaders)
+	}
+
+	headerKeys := make(map[string]struct{}, len(headers))
+	for _, header := range headers {
+		if header.Key == "" {
+			return check.NewValidationError("Header key cannot be empty.")
+		}
+		// check for duplicate header keys (case insensitive)
+		for existingKey := range headerKeys {
+			if strings.EqualFold(existingKey, header.Key) {
+				return check.NewValidationErrorf("Duplicate header key '%s' detected.", header.Key)
+			}
 		}
 	}
 

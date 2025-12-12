@@ -498,8 +498,9 @@ type Error struct {
 
 // ExtraHeader Webhook Extra Header
 type ExtraHeader struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key    string `json:"key"`
+	Masked bool   `json:"masked,omitempty"`
+	Value  string `json:"value"`
 }
 
 // FileDetail File Detail

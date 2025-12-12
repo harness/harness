@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -69,6 +70,7 @@ type webhook struct {
 	Insecure              bool        `db:"webhook_insecure"`
 	Triggers              string      `db:"webhook_triggers"`
 	LatestExecutionResult null.String `db:"webhook_latest_execution_result"`
+	ExtraHeaders          null.String `db:"webhook_extra_headers"`
 }
 
 const (
@@ -90,7 +92,8 @@ const (
 		,webhook_triggers
 		,webhook_latest_execution_result
 		,webhook_type
-		,webhook_scope`
+		,webhook_scope
+		,webhook_extra_headers`
 
 	webhookSelectBase = `
 	SELECT` + webhookColumns + `
@@ -179,6 +182,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,webhook_latest_execution_result
 			,webhook_type
 			,webhook_scope
+			,webhook_extra_headers
 		) values (
 			:webhook_repo_id
 			,:webhook_space_id
@@ -196,6 +200,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,:webhook_latest_execution_result
 			,:webhook_type
 			,:webhook_scope
+			,:webhook_extra_headers
 		) RETURNING webhook_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -233,6 +238,7 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 			,webhook_insecure = :webhook_insecure
 			,webhook_triggers = :webhook_triggers
 			,webhook_latest_execution_result = :webhook_latest_execution_result
+			,webhook_extra_headers = :webhook_extra_headers
 		WHERE webhook_id = :webhook_id and webhook_version = :webhook_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -491,6 +497,7 @@ func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 		Triggers:              triggersFromString(hook.Triggers),
 		LatestExecutionResult: (*enum.WebhookExecutionResult)(hook.LatestExecutionResult.Ptr()),
 		Type:                  hook.Type,
+		ExtraHeaders:          extraHeadersFromString(hook.ExtraHeaders.String),
 	}
 
 	switch {
@@ -528,6 +535,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 		Triggers:              triggersToString(hook.Triggers),
 		LatestExecutionResult: null.StringFromPtr((*string)(hook.LatestExecutionResult)),
 		Type:                  hook.Type,
+		ExtraHeaders:          null.StringFrom(extraHeadersToString(hook.ExtraHeaders)),
 	}
 
 	switch hook.ParentType {
@@ -582,6 +590,30 @@ func triggersToString(triggers []enum.WebhookTrigger) string {
 	}
 
 	return strings.Join(rawTriggers, triggersSeparator)
+}
+
+// extraHeadersToString converts a slice of ExtraHeader to a JSON string.
+func extraHeadersToString(headers []types.ExtraHeader) string {
+	if len(headers) == 0 {
+		return ""
+	}
+	jsonData, err := json.Marshal(headers)
+	if err != nil {
+		return ""
+	}
+	return string(jsonData)
+}
+
+// extraHeadersFromString converts a JSON string back to a slice of ExtraHeader.
+func extraHeadersFromString(jsonStr string) []types.ExtraHeader {
+	if jsonStr == "" {
+		return nil
+	}
+	var headers []types.ExtraHeader
+	if err := json.Unmarshal([]byte(jsonStr), &headers); err != nil {
+		return nil
+	}
+	return headers
 }
 
 func applyWebhookFilter(

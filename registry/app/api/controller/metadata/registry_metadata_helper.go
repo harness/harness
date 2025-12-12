@@ -185,7 +185,7 @@ func (r *GitnessRegistryMetadataHelper) MapToWebhookCore(
 func mapToDTOHeaders(extraHeaders *[]api.ExtraHeader) []types.ExtraHeader {
 	var headers []types.ExtraHeader
 	for _, h := range *extraHeaders {
-		headers = append(headers, types.ExtraHeader{Key: h.Key, Value: h.Value})
+		headers = append(headers, types.ExtraHeader{Key: h.Key, Value: h.Value, Masked: h.Masked})
 	}
 	return headers
 }
@@ -296,7 +296,7 @@ func (r *GitnessRegistryMetadataHelper) MapToAPIWebhookTriggers(triggers []enum.
 func (r *GitnessRegistryMetadataHelper) MapToAPIExtraHeaders(headers []types.ExtraHeader) []api.ExtraHeader {
 	apiHeaders := make([]api.ExtraHeader, 0)
 	for _, h := range headers {
-		apiHeaders = append(apiHeaders, api.ExtraHeader{Key: h.Key, Value: h.Value})
+		apiHeaders = append(apiHeaders, api.ExtraHeader{Key: h.Key, Value: h.Value, Masked: h.Masked})
 	}
 	return apiHeaders
 }

@@ -69,6 +69,9 @@ func (s *Service) sanitizeCreateInput(in *types.WebhookCreateInput, internal boo
 	if err := CheckTriggers(in.Triggers); err != nil { //nolint:revive
 		return err
 	}
+	if err := CheckExtraHeaders(in.ExtraHeaders); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -121,6 +124,7 @@ func (s *Service) Create(
 		Insecure:              in.Insecure,
 		Triggers:              DeduplicateTriggers(in.Triggers),
 		LatestExecutionResult: nil,
+		ExtraHeaders:          in.ExtraHeaders,
 	}
 
 	err = s.webhookStore.Create(ctx, hook)

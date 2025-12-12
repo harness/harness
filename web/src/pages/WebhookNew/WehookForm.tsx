@@ -16,6 +16,7 @@
 
 import {
   ButtonVariation,
+  ButtonSize,
   Container,
   FlexExpander,
   Formik,
@@ -30,9 +31,15 @@ import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { FormGroup } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
+import { FieldArray } from 'formik'
 import * as yup from 'yup'
 import React from 'react'
-import type { OpenapiUpdateRepoWebhookRequest, EnumWebhookTrigger, OpenapiWebhookType } from 'services/code'
+import type {
+  OpenapiUpdateRepoWebhookRequest,
+  EnumWebhookTrigger,
+  OpenapiWebhookType,
+  TypesExtraHeader
+} from 'services/code'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { WebhookIndividualEvent, type GitInfoProps, WebhookEventType } from 'utils/GitUtils'
@@ -41,6 +48,12 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import css from './WehookForm.module.scss'
 
 const SECRET_MASK = '********'
+
+interface CustomHeader {
+  key: string
+  value: string
+  masked: boolean
+}
 
 interface FormData {
   name: string
@@ -67,6 +80,7 @@ interface FormData {
   prCommentStatusUpdated: boolean
   prCommentUpdated: boolean
   prReviewSubmitted: boolean
+  customHeaders: CustomHeader[]
 }
 
 interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -124,7 +138,12 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_STATUS_UPDATED) || false,
             prCommentUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_UPDATED) || false,
             prReviewSubmitted: webhook?.triggers?.includes(WebhookIndividualEvent.PR_REVIEW_SUBMITTED) || false,
-            events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL
+            events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL,
+            customHeaders: (webhook?.extra_headers || []).map(h => ({
+              key: h.key || '',
+              value: h.value || '',
+              masked: h.masked || false
+            }))
           }}
           formName="create-webhook-form"
           enableReinitialize={true}
@@ -199,6 +218,15 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
 
             const secret = (formData.secret || '').trim()
 
+            // Filter out empty custom headers
+            const customHeaders: TypesExtraHeader[] = formData.customHeaders
+              .filter(h => h.key.trim() !== '')
+              .map(h => ({
+                key: h.key,
+                value: h.value,
+                masked: h.masked
+              }))
+
             const data: OpenapiUpdateRepoWebhookRequest = {
               identifier: formData.name,
               description: formData.description,
@@ -206,7 +234,8 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               secret: secret !== SECRET_MASK ? secret : undefined,
               enabled: formData.enabled,
               insecure: !formData.secure,
-              triggers
+              triggers,
+              extra_headers: isEdit ? customHeaders : customHeaders.length > 0 ? customHeaders : undefined
             }
 
             mutate(data)
@@ -255,6 +284,60 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                   tooltipProps={{ dataTooltipId: 'secret' }}
                   inputGroup={{ type: 'password' }}
                 />
+
+                <FormGroup>
+                  <Text
+                    font={{ variation: FontVariation.FORM_LABEL, weight: 'bold' }}
+                    padding={{ bottom: 10 }}
+                    className="bp3-label">
+                    {getString('customHeaders')}
+                  </Text>
+                  <FieldArray
+                    name="customHeaders"
+                    render={({ push, remove, form }) => {
+                      const headers = form.values.customHeaders || []
+                      return (
+                        <Layout.Vertical spacing="small">
+                          {headers.map((header: CustomHeader, index: number) => (
+                            <Layout.Horizontal
+                              key={`${header.key}-${index}`}
+                              spacing="medium"
+                              flex={{ alignItems: 'center' }}>
+                              <FormInput.Text
+                                inline
+                                name={`customHeaders[${index}].key`}
+                                label={getString('headerKey')}
+                                placeholder={getString('headerKeyPlaceholder')}
+                              />
+                              <FormInput.Text
+                                inline
+                                name={`customHeaders[${index}].value`}
+                                label={getString('headerValue')}
+                                placeholder={getString('headerValuePlaceholder')}
+                              />
+                              <FormInput.CheckBox name={`customHeaders[${index}].masked`} label={getString('masked')} />
+                              <Button
+                                type="button"
+                                variation={ButtonVariation.ICON}
+                                icon="code-delete"
+                                onClick={() => remove(index)}
+                              />
+                            </Layout.Horizontal>
+                          ))}
+                          <Button
+                            type="button"
+                            size={ButtonSize.SMALL}
+                            icon="plus"
+                            variation={ButtonVariation.LINK}
+                            disabled={headers.length >= 20}
+                            onClick={() => push({ key: '', value: '', masked: false })}>
+                            {getString('addCustomHeader')}
+                          </Button>
+                        </Layout.Vertical>
+                      )
+                    }}
+                  />
+                </FormGroup>
 
                 <FormGroup className={css.eventRadioGroup}>
                   <FormInput.RadioGroup

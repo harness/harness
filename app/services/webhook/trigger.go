@@ -47,6 +47,9 @@ const (
 
 	// responseBodyBytesLimit defines the maximum number of bytes processed from the webhook response body.
 	responseBodyBytesLimit = 1024
+
+	// maskedHeaderValue is the value used to mask sensitive header values in execution history.
+	maskedHeaderValue = "******"
 )
 
 const (
@@ -342,6 +345,11 @@ func (w *WebhookExecutor) prepareHTTPRequest(
 		return nil, tErr
 	}
 
+	// Always add Extra headers first so that system headers are not overwritten
+	for _, h := range webhook.ExtraHeaders {
+		req.Header.Add(h.Key, h.Value)
+	}
+
 	// setup headers
 	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", w.config.UserAgentIdentity, version.Version))
 	req.Header.Add("Content-Type", "application/json")
@@ -352,12 +360,6 @@ func (w *WebhookExecutor) prepareHTTPRequest(
 	req.Header.Add(w.toXHeader("Webhook-Uid"), fmt.Sprint(webhook.Identifier))
 	req.Header.Add(w.toXHeader("Webhook-Identifier"), fmt.Sprint(webhook.Identifier))
 	req.Header.Add(w.toXHeader(w.source), string(triggerType))
-
-	if webhook.ExtraHeaders != nil {
-		for _, h := range webhook.ExtraHeaders {
-			req.Header.Add(h.Key, h.Value)
-		}
-	}
 
 	var secretValue string
 	//nolint:gocritic
@@ -388,8 +390,18 @@ func (w *WebhookExecutor) prepareHTTPRequest(
 		req.Header.Add(w.toXHeader("Signature"), hmac)
 	}
 
+	// Create a copy of headers for execution history with masked values
+	headersForExecution := req.Header.Clone()
+	if webhook.ExtraHeaders != nil {
+		for _, h := range webhook.ExtraHeaders {
+			if h.Masked {
+				headersForExecution.Set(h.Key, maskedHeaderValue)
+			}
+		}
+	}
+
 	hBuffer := &bytes.Buffer{}
-	err = req.Header.Write(hBuffer)
+	err = headersForExecution.Write(hBuffer)
 	if err != nil {
 		tErr := fmt.Errorf("failed to write request headers: %w", err)
 		execution.Error = tErr.Error()
@@ -573,6 +585,7 @@ func GitnessWebhookToWebhookCore(webhook *types.Webhook) *types.WebhookCore {
 		Insecure:              webhook.Insecure,
 		Triggers:              webhook.Triggers,
 		LatestExecutionResult: webhook.LatestExecutionResult,
+		ExtraHeaders:          webhook.ExtraHeaders,
 	}
 }
 
@@ -596,6 +609,7 @@ func CoreWebhookToGitnessWebhook(webhook *types.WebhookCore) *types.Webhook {
 		Insecure:              webhook.Insecure,
 		Triggers:              webhook.Triggers,
 		LatestExecutionResult: webhook.LatestExecutionResult,
+		ExtraHeaders:          webhook.ExtraHeaders,
 	}
 }
 

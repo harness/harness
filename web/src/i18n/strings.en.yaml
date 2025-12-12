@@ -468,6 +468,14 @@ webhookDetails: Webhook Details
 updateWebhook: Update Webhook
 webhookUpdated: Webhook updated successfully.
 webhookCreated: Webhook created successfully.
+customHeaders: Custom Headers
+headerKey: Key
+headerKeyPlaceholder: Enter header key
+headerValue: Value
+headerValuePlaceholder: Enter header value
+masked: Masked
+addCustomHeader: Add Custom Header
+requestHeaders: Request Headers
 oneMustBeSelected: At least one event must be selected
 webhookBranchCreated: Branch created
 webhookBranchUpdated: Branch updated
