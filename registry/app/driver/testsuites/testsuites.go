@@ -21,9 +21,9 @@ import (
 	"context"
 	crand "crypto/rand"
 	"crypto/sha256"
-	"errors"
+	"crypto/tls"
 	"io"
-	"math/big"
+	"math/rand"
 	"net/http"
 	"os"
 	"path"
@@ -34,15 +34,12 @@ import (
 
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 )
 
 // randomBytes pre-allocates all of the memory sizes needed for the test. If
 // anything panics while accessing randomBytes, just make this number bigger.
 var randomBytes = make([]byte, 128<<20)
-
-const suffix = "suffix"
 
 func init() {
 	_, _ = crand.Read(randomBytes) // always returns len(randomBytes) and nil error
@@ -63,17 +60,17 @@ type DriverSuite struct {
 	Constructor DriverConstructor
 	Teardown    DriverTeardown
 	storagedriver.StorageDriver
-	ctx context.Context
+	ctx        context.Context
+	skipVerify bool
 }
 
 // Driver runs [DriverSuite] for the given [DriverConstructor].
-func Driver(t *testing.T, driverConstructor DriverConstructor) {
-	suite.Run(
-		t, &DriverSuite{
-			Constructor: driverConstructor,
-			ctx:         context.Background(),
-		},
-	)
+func Driver(t *testing.T, driverConstructor DriverConstructor, skipVerify bool) {
+	suite.Run(t, &DriverSuite{
+		Constructor: driverConstructor,
+		ctx:         context.Background(),
+		skipVerify:  skipVerify,
+	})
 }
 
 // SetupSuite implements [suite.SetupAllSuite] interface.
@@ -145,7 +142,7 @@ func (suite *DriverSuite) TestValidPaths() {
 func (suite *DriverSuite) deletePath(path string) {
 	for tries := 2; tries > 0; tries-- {
 		err := suite.StorageDriver.Delete(suite.ctx, path)
-		if ok := errors.As(err, &storagedriver.PathNotFoundError{}); ok {
+		if _, ok := err.(storagedriver.PathNotFoundError); ok { //nolint:errorlint
 			err = nil
 		}
 		suite.Require().NoError(err)
@@ -332,11 +329,8 @@ func (suite *DriverSuite) TestReaderWithOffset() {
 	contentsChunk2 := randomContents(chunkSize)
 	contentsChunk3 := randomContents(chunkSize)
 
-	err := suite.StorageDriver.PutContent(
-		suite.ctx,
-		filename,
-		append(append(contentsChunk1, contentsChunk2...), contentsChunk3...),
-	)
+	err := suite.StorageDriver.PutContent(suite.ctx, filename,
+		append(append(contentsChunk1, contentsChunk2...), contentsChunk3...))
 	suite.Require().NoError(err)
 
 	reader, err := suite.StorageDriver.Reader(suite.ctx, filename, 0)
@@ -367,11 +361,9 @@ func (suite *DriverSuite) TestReaderWithOffset() {
 
 	// Ensure we get invalid offset for negative offsets.
 	reader, err = suite.StorageDriver.Reader(suite.ctx, filename, -1)
-	var invalidOffsetErr storagedriver.InvalidOffsetError
-	errors.As(err, &invalidOffsetErr)
 	suite.Require().IsType(err, storagedriver.InvalidOffsetError{})
-	suite.Require().Equal(int64(-1), invalidOffsetErr.Offset)
-	suite.Require().Equal(filename, invalidOffsetErr.Path)
+	suite.Require().Equal(int64(-1), err.(storagedriver.InvalidOffsetError).Offset) //nolint:errorlint,errcheck
+	suite.Require().Equal(filename, err.(storagedriver.InvalidOffsetError).Path)    //nolint:errorlint,errcheck
 	suite.Require().Nil(reader)
 	suite.Require().Contains(err.Error(), suite.Name())
 
@@ -426,31 +418,28 @@ func (suite *DriverSuite) testContinueStreamAppend(chunkSize int64) {
 	filename := randomPath(32)
 	defer suite.deletePath(firstPart(filename))
 
-	contentsChunk1 := randomContents(chunkSize)
-	contentsChunk2 := randomContents(chunkSize)
-	contentsChunk3 := randomContents(chunkSize)
-
-	fullContents := append(append(contentsChunk1, contentsChunk2...), contentsChunk3...)
+	var fullContents bytes.Buffer
+	contents := io.TeeReader(newRandReader(chunkSize*3), &fullContents)
 
 	writer, err := suite.StorageDriver.Writer(suite.ctx, filename, false)
 	suite.Require().NoError(err)
-	nn, err := io.Copy(writer, bytes.NewReader(contentsChunk1))
+	nn, err := io.CopyN(writer, contents, chunkSize)
 	suite.Require().NoError(err)
-	suite.Require().Equal(int64(len(contentsChunk1)), nn)
+	suite.Require().Equal(chunkSize, nn)
 
 	err = writer.Close()
 	suite.Require().NoError(err)
 
 	curSize := writer.Size()
-	suite.Require().Equal(int64(len(contentsChunk1)), curSize)
+	suite.Require().Equal(chunkSize, curSize)
 
 	writer, err = suite.StorageDriver.Writer(suite.ctx, filename, true)
 	suite.Require().NoError(err)
 	suite.Require().Equal(curSize, writer.Size())
 
-	nn, err = io.Copy(writer, bytes.NewReader(contentsChunk2))
+	nn, err = io.CopyN(writer, contents, chunkSize)
 	suite.Require().NoError(err)
-	suite.Require().Equal(int64(len(contentsChunk2)), nn)
+	suite.Require().Equal(chunkSize, nn)
 
 	err = writer.Close()
 	suite.Require().NoError(err)
@@ -462,9 +451,9 @@ func (suite *DriverSuite) testContinueStreamAppend(chunkSize int64) {
 	suite.Require().NoError(err)
 	suite.Require().Equal(curSize, writer.Size())
 
-	nn, err = io.Copy(writer, bytes.NewReader(fullContents[curSize:]))
+	nn, err = io.CopyN(writer, contents, chunkSize)
 	suite.Require().NoError(err)
-	suite.Require().Equal(int64(len(fullContents[curSize:])), nn)
+	suite.Require().Equal(chunkSize, nn)
 
 	err = writer.Commit(context.Background())
 	suite.Require().NoError(err)
@@ -473,7 +462,7 @@ func (suite *DriverSuite) testContinueStreamAppend(chunkSize int64) {
 
 	received, err := suite.StorageDriver.GetContent(suite.ctx, filename)
 	suite.Require().NoError(err)
-	suite.Require().Equal(fullContents, received)
+	suite.Require().Equal(fullContents.Bytes(), received)
 }
 
 // TestReadNonexistentStream tests that reading a stream for a nonexistent path
@@ -601,34 +590,20 @@ func (suite *DriverSuite) TestWriteZeroByteContentThenAppend() {
 
 // TestList checks the returned list of keys after populating a directory tree.
 func (suite *DriverSuite) TestList() {
-	c, e := crand.Int(crand.Reader, big.NewInt(int64(100)))
-	if e != nil {
-		log.Warn().Msgf("Error in securing random no: %s", e)
-	}
-	rootDirectory := "/" + randomFilename(c.Int64())
+	rootDirectory := "/" + randomFilename(int64(8+rand.Intn(8))) //nolint:gosec
 	defer suite.deletePath(rootDirectory)
 
 	doesnotexist := path.Join(rootDirectory, "nonexistent")
 	_, err := suite.StorageDriver.List(suite.ctx, doesnotexist)
-	suite.Require().Equal(
-		err, storagedriver.PathNotFoundError{
-			Path:       doesnotexist,
-			DriverName: suite.StorageDriver.Name(),
-		},
-	)
+	suite.Require().Equal(err, storagedriver.PathNotFoundError{
+		Path:       doesnotexist,
+		DriverName: suite.StorageDriver.Name(),
+	})
 
-	c1, e1 := crand.Int(crand.Reader, big.NewInt(int64(100)))
-	if e1 != nil {
-		log.Warn().Msgf("Error in securing random no: %s", e1)
-	}
-	parentDirectory := rootDirectory + "/" + randomFilename(c1.Int64())
+	parentDirectory := rootDirectory + "/" + randomFilename(int64(8+rand.Intn(8))) //nolint:gosec
 	childFiles := make([]string, 50)
-	for i := range childFiles {
-		c2, e2 := crand.Int(crand.Reader, big.NewInt(int64(100)))
-		if e2 != nil {
-			log.Warn().Msgf("Error in securing random no: %s", e2)
-		}
-		childFile := parentDirectory + "/" + randomFilename(c2.Int64())
+	for i := 0; i < len(childFiles); i++ {
+		childFile := parentDirectory + "/" + randomFilename(int64(8+rand.Intn(8))) //nolint:gosec
 		childFiles[i] = childFile
 		err := suite.StorageDriver.PutContent(suite.ctx, childFile, randomContents(32))
 		suite.Require().NoError(err)
@@ -744,7 +719,7 @@ func (suite *DriverSuite) TestMoveInvalid() {
 
 	// Now try to move a non-existent file under it.
 	err = suite.StorageDriver.Move(suite.ctx, "/notadir/foo", "/notadir/bar")
-	suite.Require().Error(err) // non-nil error.
+	suite.Require().Error(err) // non-nil error
 }
 
 // TestDelete checks that the delete operation removes data from the storage
@@ -778,13 +753,23 @@ func (suite *DriverSuite) TestRedirectURL() {
 	err := suite.StorageDriver.PutContent(suite.ctx, filename, contents)
 	suite.Require().NoError(err)
 
-	url, err := suite.StorageDriver.RedirectURL(suite.ctx, "", filename, "")
+	url, err := suite.StorageDriver.RedirectURL(suite.ctx, http.MethodGet, filename, filename)
 	if url == "" && err == nil {
 		return
 	}
-	client := &http.Client{}
 	suite.Require().NoError(err)
-	req, _ := http.NewRequestWithContext(suite.ctx, http.MethodGet, url, nil)
+
+	client := http.DefaultClient
+	if suite.skipVerify {
+		httpTransport := http.DefaultTransport.(*http.Transport).Clone()      //nolint:errcheck
+		httpTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec
+		client = &http.Client{
+			Transport: httpTransport,
+		}
+	}
+
+	req, err := http.NewRequestWithContext(suite.ctx, http.MethodGet, url, nil)
+	suite.Require().NoError(err)
 
 	response, err := client.Do(req)
 	suite.Require().NoError(err)
@@ -794,7 +779,7 @@ func (suite *DriverSuite) TestRedirectURL() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(contents, read)
 
-	url, err = suite.StorageDriver.RedirectURL(suite.ctx, "", filename, "")
+	url, err = suite.StorageDriver.RedirectURL(suite.ctx, http.MethodHead, filename, filename)
 	if url == "" && err == nil {
 		return
 	}
@@ -883,13 +868,13 @@ func (suite *DriverSuite) TestDeleteOnlyDeletesSubpaths() {
 	err := suite.StorageDriver.PutContent(suite.ctx, path.Join(dirname, filename), contents)
 	suite.Require().NoError(err)
 
-	err = suite.StorageDriver.PutContent(suite.ctx, path.Join(dirname, filename+suffix), contents)
+	err = suite.StorageDriver.PutContent(suite.ctx, path.Join(dirname, filename+"suffix"), contents)
 	suite.Require().NoError(err)
 
 	err = suite.StorageDriver.PutContent(suite.ctx, path.Join(dirname, dirname, filename), contents)
 	suite.Require().NoError(err)
 
-	err = suite.StorageDriver.PutContent(suite.ctx, path.Join(dirname, dirname+suffix, filename), contents)
+	err = suite.StorageDriver.PutContent(suite.ctx, path.Join(dirname, dirname+"suffix", filename), contents)
 	suite.Require().NoError(err)
 
 	err = suite.StorageDriver.Delete(suite.ctx, path.Join(dirname, filename))
@@ -900,7 +885,7 @@ func (suite *DriverSuite) TestDeleteOnlyDeletesSubpaths() {
 	suite.Require().IsType(err, storagedriver.PathNotFoundError{})
 	suite.Require().Contains(err.Error(), suite.Name())
 
-	_, err = suite.StorageDriver.GetContent(suite.ctx, path.Join(dirname, filename+suffix))
+	_, err = suite.StorageDriver.GetContent(suite.ctx, path.Join(dirname, filename+"suffix"))
 	suite.Require().NoError(err)
 
 	err = suite.StorageDriver.Delete(suite.ctx, path.Join(dirname, dirname))
@@ -911,7 +896,7 @@ func (suite *DriverSuite) TestDeleteOnlyDeletesSubpaths() {
 	suite.Require().IsType(err, storagedriver.PathNotFoundError{})
 	suite.Require().Contains(err.Error(), suite.Name())
 
-	_, err = suite.StorageDriver.GetContent(suite.ctx, path.Join(dirname, dirname+suffix, filename))
+	_, err = suite.StorageDriver.GetContent(suite.ctx, path.Join(dirname, dirname+"suffix", filename))
 	suite.Require().NoError(err)
 }
 
@@ -1029,20 +1014,17 @@ func (suite *DriverSuite) TestConcurrentStreamReads() {
 
 	readContents := func() {
 		defer wg.Done()
-		offset, e := crand.Int(crand.Reader, big.NewInt(int64(len(contents))))
-		if e != nil {
-			log.Warn().Msgf("Error in securing random no: %s", e)
-		}
-		reader, err := suite.StorageDriver.Reader(suite.ctx, filename, offset.Int64())
+		offset := rand.Int63n(int64(len(contents))) //nolint:gosec
+		reader, err := suite.StorageDriver.Reader(suite.ctx, filename, offset)
 		suite.Require().NoError(err)
 
 		readContents, err := io.ReadAll(reader)
 		suite.Require().NoError(err)
-		suite.Require().Equal(contents[offset.Int64():], readContents)
+		suite.Require().Equal(contents[offset:], readContents)
 	}
 
 	wg.Add(10)
-	for range 10 {
+	for i := 0; i < 10; i++ {
 		go readContents()
 	}
 	wg.Wait()
@@ -1211,6 +1193,7 @@ func (s *DriverBenchmarkSuite) benchmarkListFiles(b *testing.B, numFiles int64) 
 		s.Suite.Require().NoError(err)
 	}
 
+	b.ResetTimer()
 	for b.Loop() {
 		files, err := s.StorageDriver.List(s.ctx, parentDir)
 		s.Suite.Require().NoError(err)
@@ -1229,18 +1212,18 @@ func (s *DriverBenchmarkSuite) BenchmarkDelete50Files(b *testing.B) {
 }
 
 func (s *DriverBenchmarkSuite) benchmarkDeleteFiles(b *testing.B, numFiles int64) {
-	for b.Loop() {
+	for i := 0; i < b.N; i++ {
 		parentDir := randomPath(8)
 		defer s.deletePath(firstPart(parentDir))
 
 		b.StopTimer()
-		for range numFiles {
+		for j := int64(0); j < numFiles; j++ {
 			err := s.StorageDriver.PutContent(s.ctx, path.Join(parentDir, randomPath(32)), nil)
 			s.Suite.Require().NoError(err)
 		}
 		b.StartTimer()
 
-		// This is the operation we're benchmarking.
+		// This is the operation we're benchmarking
 		err := s.StorageDriver.Delete(s.ctx, firstPart(parentDir))
 		s.Suite.Require().NoError(err)
 	}
@@ -1324,17 +1307,14 @@ func (suite *DriverSuite) writeReadCompareStreams(filename string, contents []by
 
 var (
 	filenameChars  = []byte("abcdefghijklmnopqrstuvwxyz0123456789")
-	separatorChars = []byte("._-")
+	separatorChars = []byte("-")
 )
 
 func randomPath(length int64) string {
 	path := "/"
 	for int64(len(path)) < length {
-		chunkLength, e := crand.Int(crand.Reader, big.NewInt(int64(len(filenameChars))))
-		if e != nil {
-			log.Warn().Msgf("Error in securing random no: %s", e)
-		}
-		chunk := randomFilename(chunkLength.Int64())
+		chunkLength := rand.Int63n(length-int64(len(path))) + 1 //nolint:gosec
+		chunk := randomFilename(chunkLength)
 		path += chunk
 		remaining := length - int64(len(path))
 		if remaining == 1 {
@@ -1350,23 +1330,11 @@ func randomFilename(length int64) string {
 	b := make([]byte, length)
 	wasSeparator := true
 	for i := range b {
-		c, e := crand.Int(crand.Reader, big.NewInt(int64(4)))
-		if e != nil {
-			log.Warn().Msgf("Error in securing random no: %s", e)
-		}
-		if !wasSeparator && i < len(b)-1 && c.Int64() == 0 {
-			c1, e1 := crand.Int(crand.Reader, big.NewInt(int64(len(separatorChars))))
-			if e1 != nil {
-				log.Warn().Msgf("Error in securing random no: %s", e1)
-			}
-			b[i] = separatorChars[c1.Int64()]
+		if !wasSeparator && i < len(b)-1 && rand.Intn(4) == 0 { //nolint:gosec
+			b[i] = separatorChars[rand.Intn(len(separatorChars))] //nolint:gosec
 			wasSeparator = true
 		} else {
-			c2, e2 := crand.Int(crand.Reader, big.NewInt(int64(len(separatorChars))))
-			if e2 != nil {
-				log.Warn().Msgf("Error in securing random no: %s", e2)
-			}
-			b[i] = filenameChars[c2.Int64()]
+			b[i] = filenameChars[rand.Intn(len(filenameChars))] //nolint:gosec
 			wasSeparator = false
 		}
 	}
@@ -1386,7 +1354,10 @@ func (rr *randReader) Read(p []byte) (n int, err error) {
 	rr.m.Lock()
 	defer rr.m.Unlock()
 
-	toread := min(int64(len(p)), rr.r)
+	toread := int64(len(p))
+	if toread > rr.r {
+		toread = rr.r
+	}
 	n = copy(p, randomContents(toread))
 	rr.r -= int64(n)
 

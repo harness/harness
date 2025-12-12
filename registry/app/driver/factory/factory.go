@@ -17,6 +17,7 @@
 package factory
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/harness/gitness/registry/app/driver"
@@ -39,7 +40,7 @@ type StorageDriverFactory interface {
 	// Create returns a new storagedriver.StorageDriver with the given parameters
 	// Parameters will vary by driver and may be ignored
 	// Each parameter key must only consist of lowercase letters and numbers
-	Create(parameters map[string]any) (driver.StorageDriver, error)
+	Create(ctx context.Context, parameters map[string]any) (driver.StorageDriver, error)
 }
 
 // Register makes a storage driver available by the provided name.
@@ -62,12 +63,12 @@ func Register(name string, factory StorageDriverFactory) {
 // parameters. To use a driver, the StorageDriverFactory must first be
 // registered with the given name. If no drivers are found, an
 // InvalidStorageDriverError is returned.
-func Create(name string, parameters map[string]any) (driver.StorageDriver, error) {
+func Create(ctx context.Context, name string, parameters map[string]any) (driver.StorageDriver, error) {
 	driverFactory, ok := driverFactories[name]
 	if !ok {
 		return nil, InvalidStorageDriverError{name}
 	}
-	return driverFactory.Create(parameters)
+	return driverFactory.Create(ctx, parameters)
 }
 
 // InvalidStorageDriverError records an attempt to construct an unregistered storage driver.

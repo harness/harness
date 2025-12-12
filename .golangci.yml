@@ -367,6 +367,15 @@ linters:
         path: ^registry/app/driver/s3-aws/s3.go
       - linters:
           - goheader
+        path: ^registry/app/driver/gcs/doc.go
+      - linters:
+          - goheader
+        path: ^registry/app/driver/gcs/gcs.go
+      - linters:
+          - goheader
+        path: ^registry/app/driver/gcs/gcs_test.go
+      - linters:
+          - goheader
         path: ^registry/app/driver/s3-aws/s3_v2_signer.go
       - linters:
           - goheader

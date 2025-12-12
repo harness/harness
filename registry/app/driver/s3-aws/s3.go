@@ -173,15 +173,18 @@ func init() {
 }
 
 // TODO: figure-out why init is not called automatically
-func Register() {
-	log.Ctx(context.Background()).Info().Msgf("registering s3 driver")
+func Register(ctx context.Context) {
+	log.Ctx(ctx).Info().Msgf("registering s3 driver")
 }
 
 // s3DriverFactory implements the factory.StorageDriverFactory interface.
 type s3DriverFactory struct{}
 
-func (factory *s3DriverFactory) Create(parameters map[string]any) (storagedriver.StorageDriver, error) {
-	return FromParameters(parameters)
+func (factory *s3DriverFactory) Create(ctx context.Context, parameters map[string]any) (
+	storagedriver.StorageDriver,
+	error,
+) {
+	return FromParameters(ctx, parameters)
 }
 
 var _ storagedriver.StorageDriver = &driver{}
@@ -272,7 +275,8 @@ func (d *driver) performMultipartCopy(
 			if lastByte >= objectSize {
 				lastByte = objectSize - 1
 			}
-			log.Ctx(ctx).Trace().Msgf("[AWS] [%d] UploadPartCopy: %s/%s -> %s/%s", i, srcBucket, srcKey, destBucket, destKey)
+			log.Ctx(ctx).Trace().Msgf("[AWS] [%d] UploadPartCopy: %s/%s -> %s/%s", i, srcBucket, srcKey, destBucket,
+				destKey)
 			uploadResp, err := d.S3.UploadPartCopyWithContext(
 				ctx, &s3.UploadPartCopyInput{
 					Bucket:          aws.String(destBucket),
@@ -388,7 +392,7 @@ type Driver struct {
 // - encrypt.
 //
 //nolint:gocognit
-func FromParameters(parameters map[string]any) (*Driver, error) {
+func FromParameters(ctx context.Context, parameters map[string]any) (*Driver, error) {
 	// Providing no values for these is valid in case the user is authenticating
 	// with an IAM on an ec2 instance (in which case the instance credentials will
 	// be summoned when GetAuth is called).
@@ -673,10 +677,10 @@ func FromParameters(parameters map[string]any) (*Driver, error) {
 		fmt.Sprint(sessionToken),
 		useDualStackBool,
 		accelerateBool,
-		getS3LogLevelFromParam(parameters["loglevel"]),
+		getS3LogLevelFromParam(parameters["loglevel"]), //nolint:contextcheck
 	}
 
-	return New(params)
+	return New(ctx, params)
 }
 
 func getS3LogLevelFromParam(param any) aws.LogLevelType {
@@ -752,7 +756,7 @@ func getParameterAsInt64(
 
 // New constructs a new Driver with the given AWS credentials, region, encryption flag, and
 // bucketName.
-func New(params DriverParameters) (*Driver, error) {
+func New(_ context.Context, params DriverParameters) (*Driver, error) {
 	if !params.V4Auth &&
 		(params.RegionEndpoint == "" ||
 			strings.Contains(params.RegionEndpoint, "s3.amazonaws.com")) {

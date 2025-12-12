@@ -58,8 +58,8 @@ type DriverParameters struct {
 }
 
 // TODO: figure-out why init is not called automatically
-func Register() {
-	log.Info().Msgf("registering filesystem driver")
+func Register(ctx context.Context) {
+	log.Ctx(ctx).Info().Msgf("registering filesystem driver")
 }
 
 func init() {
@@ -69,7 +69,10 @@ func init() {
 // filesystemDriverFactory implements the factory.StorageDriverFactory interface.
 type filesystemDriverFactory struct{}
 
-func (factory *filesystemDriverFactory) Create(parameters map[string]any) (storagedriver.StorageDriver, error) {
+func (factory *filesystemDriverFactory) Create(
+	_ context.Context,
+	parameters map[string]any,
+) (storagedriver.StorageDriver, error) {
 	return FromParameters(parameters)
 }
 

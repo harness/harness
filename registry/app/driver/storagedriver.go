@@ -127,11 +127,6 @@ type StorageDriver interface {
 	// CopyObject performs a server-side copy of an object from one location to another.
 	// For S3-compatible storage, this uses the efficient CopyObject API call instead of download-then-upload.
 	CopyObject(ctx context.Context, srcKey, destBucket, destKey string) error
-
-	// BatchCopyObjects copies multiple objects from one bucket to another concurrently.
-	// The concurrency parameter controls how many objects are copied simultaneously.
-	// This is optimized for S3-compatible storage using server-side copy operations.
-	BatchCopyObjects(ctx context.Context, destBucket string, keys []string, concurrency int) error
 }
 
 // StorageDeleter defines methods that a Storage Driver must implement to delete objects.

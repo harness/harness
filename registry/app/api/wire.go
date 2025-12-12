@@ -15,6 +15,8 @@
 package api
 
 import (
+	"context"
+
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
@@ -39,7 +41,7 @@ import (
 	ocihandler "github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
 	pypi2 "github.com/harness/gitness/registry/app/api/handler/python"
-	rpm "github.com/harness/gitness/registry/app/api/handler/rpm"
+	"github.com/harness/gitness/registry/app/api/handler/rpm"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/router"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
@@ -79,20 +81,20 @@ type RegistryApp struct {
 	AppRouter router.AppRouter
 }
 
-func BlobStorageProvider(c *types.Config) (storagedriver.StorageDriver, error) {
+func BlobStorageProvider(ctx context.Context, c *types.Config) (storagedriver.StorageDriver, error) {
 	var d storagedriver.StorageDriver
 	var err error
 
 	if c.Registry.Storage.StorageType == "filesystem" {
-		filesystem.Register()
-		d, err = factory.Create("filesystem", config.GetFilesystemParams(c))
+		filesystem.Register(ctx)
+		d, err = factory.Create(ctx, "filesystem", config.GetFilesystemParams(c))
 		if err != nil {
 			log.Fatal().Stack().Err(err).Msgf("")
 			panic(err)
 		}
 	} else {
-		s3.Register()
-		d, err = factory.Create("s3aws", config.GetS3StorageParameters(c))
+		s3.Register(ctx)
+		d, err = factory.Create(ctx, "s3aws", config.GetS3StorageParameters(c))
 		if err != nil {
 			log.Error().Stack().Err(err).Msg("failed to init s3 Blob storage ")
 			panic(err)

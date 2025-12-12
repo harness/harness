@@ -543,7 +543,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	migrateLabel := migrate.ProvideLabelImporter(transactor, labelStore, labelValueStore, spaceStore)
 	migrateController := migrate2.ProvideController(authorizer, publicaccessService, gitInterface, provider, pullReq, rule, migrateWebhook, migrateLabel, resourceLimiter, auditService, repoIdentifier, transactor, spaceStore, repoStore, spaceFinder, repoFinder, eventsReporter)
 	openapiService := openapi.ProvideOpenAPIService()
-	storageDriver, err := api2.BlobStorageProvider(config)
+	storageDriver, err := api2.BlobStorageProvider(ctx, config)
 	if err != nil {
 		return nil, err
 	}
