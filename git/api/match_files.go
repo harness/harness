@@ -35,7 +35,7 @@ func (g *Git) MatchFiles(
 	pattern string,
 	maxSize int,
 ) ([]FileContent, error) {
-	nodes, err := lsDirectory(ctx, repoPath, rev, treePath, false, false)
+	nodes, err := lsDirectory(ctx, repoPath, rev, treePath, false, false, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list files in match files: %w", err)
 	}

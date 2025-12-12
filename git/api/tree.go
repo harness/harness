@@ -135,6 +135,7 @@ func lsTree(
 	rev string,
 	treePath string,
 	fetchSizes bool,
+	recursive bool,
 ) ([]TreeNode, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
@@ -146,6 +147,9 @@ func lsTree(
 	)
 	if fetchSizes {
 		cmd.Add(command.WithFlag("-l"))
+	}
+	if recursive {
+		cmd.Add(command.WithFlag("-r"))
 	}
 
 	output := &bytes.Buffer{}
@@ -229,6 +233,7 @@ func lsDirectory(
 	treePath string,
 	fetchSizes bool,
 	flattenDirectories bool,
+	recursive bool,
 ) ([]TreeNode, error) {
 	treePath = path.Clean(treePath)
 	if treePath == "" {
@@ -237,7 +242,7 @@ func lsDirectory(
 		treePath += "/"
 	}
 
-	nodes, err := lsTree(ctx, repoPath, rev, treePath, fetchSizes)
+	nodes, err := lsTree(ctx, repoPath, rev, treePath, fetchSizes, recursive)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +272,7 @@ func lsFile(
 ) (TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	list, err := lsTree(ctx, repoPath, rev, treePath, fetchSize)
+	list, err := lsTree(ctx, repoPath, rev, treePath, fetchSize, false)
 	if err != nil {
 		return TreeNode{}, fmt.Errorf("failed to ls file: %w", err)
 	}
@@ -290,7 +295,7 @@ func flattenDirectory(
 
 	// Go in depth for as long as there are subdirectories with just one subdirectory.
 	for len(nodes) == 1 && nodes[0].NodeType == TreeNodeTypeTree {
-		nodesTemp, err := lsTree(ctx, repoPath, rev, nodes[0].Path+"/", fetchSizes)
+		nodesTemp, err := lsTree(ctx, repoPath, rev, nodes[0].Path+"/", fetchSizes, false)
 		if err != nil {
 			return fmt.Errorf("failed to peek dir entries for flattening: %w", err)
 		}
@@ -373,9 +378,26 @@ func ListTreeNodes(
 	repoPath, rev, treePath string,
 	fetchSizes, flattenDirectories bool,
 ) ([]TreeNode, error) {
-	list, err := lsDirectory(ctx, repoPath, rev, treePath, fetchSizes, flattenDirectories)
+	list, err := lsDirectory(
+		ctx, repoPath, rev, treePath, fetchSizes, flattenDirectories, false,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tree nodes: %w", err)
+	}
+
+	return list, nil
+}
+
+func ListTreeNodesRecursive(
+	ctx context.Context,
+	repoPath, rev, treePath string,
+	fetchSizes, flattenDirectories bool,
+) ([]TreeNode, error) {
+	list, err := lsDirectory(
+		ctx, repoPath, rev, treePath, fetchSizes, flattenDirectories, true,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list tree nodes recursive: %w", err)
 	}
 
 	return list, nil
