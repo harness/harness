@@ -118,23 +118,28 @@ format: tools # Format go code and error if any changes are made
 	@gci write --skip-generated --custom-order -s standard -s "prefix(github.com/harness/gitness)" -s default -s blank -s dot .
 	@echo "Formatting complete"
 
-modernize:
-	@echo "Modernizing ..."
+modernize: # Report modernization suggestions (use modernize-fix to auto-apply)
+	@echo "Checking for modernization suggestions ..."
+	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
+
+modernize-fix: # Auto-apply modernization fixes (review changes carefully!)
+	@echo "Applying modernization fixes ..."
 	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
+
 
 sec:
 	@echo "Vulnerability detection $(1)"
 	@govulncheck ./...
 
-lint: tools generate # lint the golang code - CI
+lint: tools # lint the golang code - CI
 	@echo "Linting $(1)"
 	@golangci-lint run --timeout=5m --verbose --new-from-rev=HEAD~ --whole-files
 
-lint-full: tools generate # full linting the golang code
+lint-full: tools # full linting the golang code
 	@echo "Linting $(1)"
 	@golangci-lint run --timeout=5m --verbose
 
-lint-local: tools generate # lint the golang code - only untracked and staged changes
+lint-local: tools # lint the golang code - only untracked and staged changes
 	@echo "Linting $(1)"
 	@golangci-lint run --new-from-merge-base=main --new --timeout=5m --verbose --whole-files
 
