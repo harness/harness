@@ -17,12 +17,12 @@ package diff
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/enum"
 )
 
@@ -249,17 +249,25 @@ func (p *Parser) parseFileHeader() (*File, error) {
 
 	// NOTE: In case file name is surrounded by double quotes (it happens only in
 	// git-shell). e.g. diff --git "a/xxx" "b/xxx"
-	hasQuote := line[len(diffHead)] == '"' || line[len(line)-1] == '"'
+	aHasQuote := line[len(diffHead)] == '"'
+	bHasQuote := line[len(line)-1] == '"'
+
 	middle := strings.Index(line, ` b/`)
-	if hasQuote {
+	if middle == -1 && bHasQuote {
 		middle = strings.Index(line, ` "b/`)
+	}
+
+	if middle == -1 {
+		return nil, errors.InvalidArgumentf("malformed header line: %s", line)
 	}
 
 	beg := len(diffHead)
 	a := line[beg+2 : middle]
-	b := line[middle+3:]
-	if hasQuote {
+	if aHasQuote {
 		a = string(UnescapeChars([]byte(a[1 : len(a)-1])))
+	}
+	b := line[middle+3:]
+	if bHasQuote {
 		b = string(UnescapeChars([]byte(b[1 : len(b)-1])))
 	}
 
