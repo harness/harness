@@ -535,7 +535,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 		Triggers:              triggersToString(hook.Triggers),
 		LatestExecutionResult: null.StringFromPtr((*string)(hook.LatestExecutionResult)),
 		Type:                  hook.Type,
-		ExtraHeaders:          null.StringFrom(extraHeadersToString(hook.ExtraHeaders)),
+		ExtraHeaders:          extraHeadersToNullString(hook.ExtraHeaders),
 	}
 
 	switch hook.ParentType {
@@ -592,16 +592,18 @@ func triggersToString(triggers []enum.WebhookTrigger) string {
 	return strings.Join(rawTriggers, triggersSeparator)
 }
 
-// extraHeadersToString converts a slice of ExtraHeader to a JSON string.
-func extraHeadersToString(headers []types.ExtraHeader) string {
+// extraHeadersToNullString converts a slice of ExtraHeader to a null.String.
+// Returns an invalid null.String (NULL) when headers is empty to avoid
+// inserting an empty string into PostgreSQL JSONB columns.
+func extraHeadersToNullString(headers []types.ExtraHeader) null.String {
 	if len(headers) == 0 {
-		return ""
+		return null.String{}
 	}
 	jsonData, err := json.Marshal(headers)
 	if err != nil {
-		return ""
+		return null.String{}
 	}
-	return string(jsonData)
+	return null.StringFrom(string(jsonData))
 }
 
 // extraHeadersFromString converts a JSON string back to a slice of ExtraHeader.
