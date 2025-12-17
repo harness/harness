@@ -131,16 +131,9 @@ func TestMigrationFilesNumbering(t *testing.T) {
 			fileName := file.Name()
 
 			// Extract version number
-			parts := strings.Split(fileName, "_")
-			if len(parts) < 2 {
-				t.Fatalf("File %s in %s directory has invalid naming format", fileName, dir)
-			}
-
-			versionStr := parts[0]
-
-			versionInt, err := strconv.Atoi(versionStr)
+			versionStr, versionInt, _, err := extractVersion(fileName)
 			if err != nil {
-				t.Errorf("File %s in %s directory has invalid version number: %v", fileName, dir, err)
+				t.Errorf("File %s in %s directory has invalid version: %v", fileName, dir, err)
 				continue
 			}
 			allVersions[versionInt] = true
@@ -192,16 +185,108 @@ func TestMigrationFilesNumbering(t *testing.T) {
 	}
 }
 
+// getFileParts extracts the name and extension from a migration filename.
+// It handles both formats:
+// - {version}_{description}.{up|down}.sql → name="description", ext="up.sql"
+// - {version}.{up|down}.sql → name="", ext="up.sql".
 func getFileParts(filename string) (name, ext string, err error) {
 	parts := strings.SplitN(filename, "_", 2)
-	if len(parts) != 2 {
+	if len(parts) == 2 {
+		// Format: {version}_{description}.{up|down}.sql
+		parts2 := strings.SplitN(parts[1], ".", 2)
+		if len(parts2) != 2 {
+			return "", "", fmt.Errorf("invalid versioning %s", filename)
+		}
+		return parts2[0], parts2[1], nil
+	}
+
+	// Format: {version}.{up|down}.sql (no description suffix)
+	dotIndex := strings.Index(filename, ".")
+	if dotIndex == -1 {
 		return "", "", fmt.Errorf("invalid filename %s", filename)
 	}
-	parts2 := strings.SplitN(parts[1], ".", 2)
-	if len(parts2) != 2 {
-		return "", "", fmt.Errorf("invalid versioning %s", filename)
+	return "", filename[dotIndex+1:], nil
+}
+
+// extractVersion extracts the version string and integer from a migration filename.
+// It handles both formats:
+// - {version}_{description}.{up|down}.sql (e.g., 0156_add_feature.up.sql)
+// - {version}.{up|down}.sql (e.g., 0157.up.sql)
+// Returns versionStr, versionInt, hasSuffix (true if file has description suffix), and error.
+func extractVersion(fileName string) (versionStr string, versionInt int, hasSuffix bool, err error) {
+	parts := strings.Split(fileName, "_")
+	if len(parts) >= 2 {
+		// Format: {version}_{description}.{up|down}.sql
+		versionStr = parts[0]
+		hasSuffix = true
+	} else {
+		// Format: {version}.{up|down}.sql
+		dotIndex := strings.Index(fileName, ".")
+		if dotIndex == -1 {
+			return "", 0, false, fmt.Errorf("invalid filename format: %s", fileName)
+		}
+		versionStr = fileName[:dotIndex]
+		hasSuffix = false
 	}
-	return parts2[0], parts2[1], nil
+
+	versionInt, err = strconv.Atoi(versionStr)
+	if err != nil {
+		return "", 0, false, fmt.Errorf("invalid version number in %s: %w", fileName, err)
+	}
+
+	return versionStr, versionInt, hasSuffix, nil
+}
+
+// TestMigrationFilesNoSuffix checks that new migration files (after a certain version)
+// don't have any suffix after the version number. This ensures git can detect conflicts
+// when multiple developers try to add the same migration version.
+// Example: 0157.up.sql is valid, 0157_add_feature.up.sql is not.
+func TestMigrationFilesNoSuffix(t *testing.T) {
+	// Version threshold - files at or after this version should not have a suffix
+	// (only {version}.up.sql and {version}.down.sql are allowed)
+	const versionThreshold = 157
+
+	for _, dir := range dirs {
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatalf("Failed to read directory %s: %v", dir, err)
+		}
+
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+
+			fileName := file.Name()
+
+			// Extract version number using common helper
+			versionStr, versionInt, hasSuffix, err := extractVersion(fileName)
+			if err != nil {
+				continue
+			}
+
+			// Check if this is a new migration file
+			if versionInt >= versionThreshold {
+				// Version string should be 4 characters (e.g., "0157" not "157")
+				if len(versionStr) != 4 {
+					t.Errorf("Migration file %s in %s directory has version string %q with length %d, expected length 4",
+						fileName, dir, versionStr, len(versionStr))
+				}
+
+				// File should be named {version}.up.sql or {version}.down.sql
+				// Not {version}_description.up.sql
+				if hasSuffix {
+					expectedUpName := fmt.Sprintf("%04d.up.sql", versionInt)
+					expectedDownName := fmt.Sprintf("%04d.down.sql", versionInt)
+
+					t.Errorf("Migration file %s in %s directory should not have a suffix. "+
+						"Expected %s or %s to ensure git can detect conflicts when multiple "+
+						"developers add the same migration version",
+						fileName, dir, expectedUpName, expectedDownName)
+				}
+			}
+		}
+	}
 }
 
 // TestMigrationFilesExistInBothDatabases checks that the same migration files
