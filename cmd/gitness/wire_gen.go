@@ -308,7 +308,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	connectorService := importer.ProvideConnectorService()
-	jobRepositoryLink, err := importer.ProvideJobRepositoryLink(ctx, config, encrypter, jobScheduler, executor, importerImporter, provider, gitInterface, repoFinder, linkedRepoStore, indexer, connectorService)
+	jobRepositoryLink, err := importer.ProvideJobRepositoryLink(ctx, config, jobScheduler, executor, provider, gitInterface, connectorService, repoStore, linkedRepoStore, repoFinder, streamer, indexer, eventsReporter)
 	if err != nil {
 		return nil, err
 	}

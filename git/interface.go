@@ -52,6 +52,11 @@ type Interface interface {
 	SyncRefs(ctx context.Context, params *SyncRefsParams) (*SyncRefsOutput, error)
 	FetchObjects(ctx context.Context, params *FetchObjectsParams) (FetchObjectsOutput, error)
 
+	GetRemoteDefaultBranch(
+		ctx context.Context,
+		params *GetRemoteDefaultBranchParams,
+	) (*GetRemoteDefaultBranchOutput, error)
+
 	MatchFiles(ctx context.Context, params *MatchFilesParams) (*MatchFilesOutput, error)
 
 	/*

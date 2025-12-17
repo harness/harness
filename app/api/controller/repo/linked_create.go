@@ -21,11 +21,14 @@ import (
 
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/bootstrap"
+	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -81,28 +84,20 @@ func (c *Controller) LinkedCreate(
 		return nil, errPublicRepoCreationDisabled
 	}
 
-	connector := in.Connector
-
-	// The importer job requires provider for execution.
-	provider, err := c.connectorService.AsProvider(ctx, connector)
+	defaultBranch, err := c.verifyConnectorAccess(ctx, in.Connector)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert connector to provider: %w", err)
+		return nil, errors.InvalidArgument("Failed to use connector to access the remote repository.")
 	}
 
-	// From connector info we need to get remote repository info and importer.Provider.
-	// Repository info we need to create repository in the DB.
-	remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, provider, connector.Repo)
-	if err != nil {
-		return nil, errors.InvalidArgument("Failed to get access to the remote repository.")
-	}
-
-	repo, isPublic := remoteRepository.ToRepo(
+	repo := importer.NewRepo(
 		parentSpace.ID,
 		parentSpace.Path,
 		in.Identifier,
 		in.Description,
 		&session.Principal,
+		defaultBranch,
 	)
+
 	repo.Type = enum.RepoTypeLinked
 
 	now := time.Now().UnixMilli()
@@ -131,18 +126,12 @@ func (c *Controller) LinkedCreate(
 			LastFullSync:        now,
 			ConnectorPath:       in.Connector.Path,
 			ConnectorIdentifier: in.Connector.Identifier,
-			ConnectorRepo:       in.Connector.Repo,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create linked repository: %w", err)
 		}
 
-		err = c.importLinked.Run(ctx,
-			provider,
-			repo,
-			isPublic,
-			remoteRepository.CloneURL,
-		)
+		err = c.importLinked.Run(ctx, repo.ID, in.IsPublic)
 		if err != nil {
 			return fmt.Errorf("failed to start link repository job: %w", err)
 		}
@@ -190,4 +179,73 @@ func (c *Controller) LinkedCreate(
 	}
 
 	return repoOutput, nil
+}
+
+func (c *Controller) verifyConnectorAccess(ctx context.Context, connector importer.ConnectorDef) (string, error) {
+	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
+	gitIdentity := identityFromPrincipal(systemPrincipal)
+
+	accessInfo, err := c.connectorService.GetAccessInfo(ctx, connector)
+	if err != nil {
+		return "", fmt.Errorf("failed to get repository access info from connector: %w", err)
+	}
+
+	urlWithCredentials, err := accessInfo.URLWithCredentials()
+	if err != nil {
+		return "", fmt.Errorf("failed to get repository URL: %w", err)
+	}
+
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		c.urlProvider.GetInternalAPIURL(ctx),
+		0,
+		systemPrincipal.ID,
+		true,
+		true,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	}
+
+	now := time.Now()
+	resp, err := c.git.CreateRepository(ctx, &git.CreateRepositoryParams{
+		Actor:         *gitIdentity,
+		EnvVars:       envVars,
+		DefaultBranch: "main",
+		Files:         nil,
+		Author:        gitIdentity,
+		AuthorDate:    &now,
+		Committer:     gitIdentity,
+		CommitterDate: &now,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create repository: %w", err)
+	}
+
+	gitUID := resp.UID
+
+	writeParams := git.WriteParams{
+		Actor:   *gitIdentity,
+		RepoUID: gitUID,
+		EnvVars: envVars,
+	}
+
+	defer func() {
+		if errDel := c.git.DeleteRepository(context.WithoutCancel(ctx), &git.DeleteRepositoryParams{
+			WriteParams: writeParams,
+		}); errDel != nil {
+			log.Warn().Err(errDel).
+				Msg("failed to delete temporary git repository")
+		}
+	}()
+
+	respDefBranch, err := c.git.GetRemoteDefaultBranch(ctx, &git.GetRemoteDefaultBranchParams{
+		ReadParams: git.ReadParams{RepoUID: gitUID},
+		Source:     urlWithCredentials,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to get repository default branch: %w", err)
+	}
+
+	return respDefBranch.BranchName, nil
 }

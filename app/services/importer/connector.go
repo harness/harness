@@ -15,41 +15,28 @@
 package importer
 
 import (
-	"context"
 	"fmt"
 	"net/url"
-
-	"github.com/harness/gitness/errors"
 )
 
 type ConnectorDef struct {
 	Path       string `json:"path"`
 	Identifier string `json:"identifier"`
-	Repo       string `json:"repo"`
 }
 
-func ConnectorToURL(
-	ctx context.Context,
-	s ConnectorService,
-	c ConnectorDef,
-) (string, error) {
-	provider, err := s.AsProvider(ctx, c)
+type AccessInfo struct {
+	Username string
+	Password string
+	URL      string
+}
+
+func (info AccessInfo) URLWithCredentials() (string, error) {
+	repoURL, err := url.Parse(info.URL)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert linked repo to repository info: %w", err)
+		return "", fmt.Errorf("failed to parse repository clone url, %q: %w", info.URL, err)
 	}
 
-	remoteRepository, provider, err := LoadRepositoryFromProvider(ctx, provider, c.Repo)
-	if err != nil {
-		return "", errors.InvalidArgument("Failed to get access to the remote repository.")
-	}
-
-	repoURL, err := url.Parse(remoteRepository.CloneURL)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse repository clone url, %q: %w",
-			remoteRepository.CloneURL, err)
-	}
-
-	repoURL.User = url.UserPassword(provider.Username, provider.Password)
+	repoURL.User = url.UserPassword(info.Username, info.Password)
 	cloneURLWithAuth := repoURL.String()
 
 	return cloneURLWithAuth, nil

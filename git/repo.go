@@ -632,6 +632,31 @@ func (s *Service) FetchObjects(
 	return FetchObjectsOutput{}, nil
 }
 
+type GetRemoteDefaultBranchParams struct {
+	ReadParams
+	Source string
+}
+
+type GetRemoteDefaultBranchOutput struct {
+	BranchName string
+}
+
+func (s *Service) GetRemoteDefaultBranch(
+	ctx context.Context,
+	params *GetRemoteDefaultBranchParams,
+) (*GetRemoteDefaultBranchOutput, error) {
+	source := s.convertRepoSource(params.Source)
+
+	branch, err := s.git.GetRemoteDefaultBranch(ctx, source)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch git objects from source repo: %w", err)
+	}
+
+	return &GetRemoteDefaultBranchOutput{
+		BranchName: branch,
+	}, nil
+}
+
 // convertRepoSource converts the source in Git operations like SyncRepository or FetchObjects.
 // If the source string contains no slash, we assume it's a GitUID and create a full path out of it.
 // If it does contain a slash, we assume it's a URL and leave it intact.

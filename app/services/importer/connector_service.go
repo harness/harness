@@ -21,11 +21,11 @@ import (
 )
 
 type ConnectorService interface {
-	AsProvider(ctx context.Context, connector ConnectorDef) (Provider, error)
+	GetAccessInfo(ctx context.Context, c ConnectorDef) (AccessInfo, error)
 }
 
 type connectorServiceNoop struct{}
 
-func (connectorServiceNoop) AsProvider(context.Context, ConnectorDef) (Provider, error) {
-	return Provider{}, errors.InvalidArgument("This feature is not supported.")
+func (connectorServiceNoop) GetAccessInfo(context.Context, ConnectorDef) (AccessInfo, error) {
+	return AccessInfo{}, errors.InvalidArgument("This feature is not supported.")
 }

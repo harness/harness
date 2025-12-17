@@ -95,7 +95,6 @@ func (c *Controller) LinkedSync(
 	connector := importer.ConnectorDef{
 		Path:       linkedRepo.ConnectorPath,
 		Identifier: linkedRepo.ConnectorIdentifier,
-		Repo:       linkedRepo.ConnectorRepo,
 	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
@@ -103,7 +102,12 @@ func (c *Controller) LinkedSync(
 		return nil, fmt.Errorf("failed to create rpc internal write params: %w", err)
 	}
 
-	cloneURLWithAuth, err := importer.ConnectorToURL(ctx, c.connectorService, connector)
+	accessInfo, err := c.connectorService.GetAccessInfo(ctx, connector)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get access info: %w", err)
+	}
+
+	cloneURLWithAuth, err := accessInfo.URLWithCredentials()
 	if err != nil {
 		return nil, errors.InvalidArgument("Failed to get access to repository.")
 	}

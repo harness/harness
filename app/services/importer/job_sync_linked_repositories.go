@@ -157,12 +157,17 @@ func (r *JobSyncLinkedRepositories) Handle(
 		connector := ConnectorDef{
 			Path:       linkedRepo.ConnectorPath,
 			Identifier: linkedRepo.ConnectorIdentifier,
-			Repo:       linkedRepo.ConnectorRepo,
 		}
 
-		cloneURLWithAuth, err := ConnectorToURL(ctx, r.connectorService, connector)
+		accessInfo, err := r.connectorService.GetAccessInfo(ctx, connector)
 		if err != nil {
-			log.Warn().Err(err).Msg("failed to get clone URL from connector")
+			log.Warn().Err(err).Msg("failed to access info from connector")
+			continue
+		}
+
+		cloneURLWithAuth, err := accessInfo.URLWithCredentials()
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to get clone URL from connector's access info")
 			continue
 		}
 
@@ -176,7 +181,6 @@ func (r *JobSyncLinkedRepositories) Handle(
 			Source:            cloneURLWithAuth,
 			CreateIfNotExists: false,
 			RefSpecs:          refSpec,
-			DefaultBranch:     repo.DefaultBranch,
 		})
 		if err != nil {
 			return "", fmt.Errorf("failed to sync repository: %w", err)

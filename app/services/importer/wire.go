@@ -103,22 +103,30 @@ func ProvideJobRepositoryImport(
 func ProvideJobRepositoryLink(
 	ctx context.Context,
 	config *types.Config,
-	encrypter encrypt.Encrypter,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
-	importer *Importer,
 	urlProvider url.Provider,
 	git git.Interface,
-	repoFinder refcache.RepoFinder,
-	linkedRepoStore store.LinkedRepoStore,
-	indexer keywordsearch.Indexer,
 	connectorService ConnectorService,
+	repoStore store.RepoStore,
+	linkedRepoStore store.LinkedRepoStore,
+	repoFinder refcache.RepoFinder,
+	sseStreamer sse.Streamer,
+	indexer keywordsearch.Indexer,
+	eventReporter *repoevents.Reporter,
 ) (*JobRepositoryLink, error) {
-	j := &JobRepositoryLink{
-		encrypter: encrypter,
-		scheduler: scheduler,
-		importer:  importer,
-	}
+	j := NewJobRepositoryLink(
+		scheduler,
+		urlProvider,
+		git,
+		connectorService,
+		repoStore,
+		linkedRepoStore,
+		repoFinder,
+		sseStreamer,
+		indexer,
+		eventReporter,
+	)
 
 	if err := executor.Register(jobTypeRepositoryLink, j); err != nil {
 		return nil, err
