@@ -3,18 +3,18 @@
 # =============================================================================
 # Stage 1: Base tools installation (rarely changes, excellent caching)
 # =============================================================================
-FROM mcr.microsoft.com/devcontainers/go:1-1.23 as tools
+FROM mcr.microsoft.com/devcontainers/go:1-1.23 AS tools
 
 # Install system packages in single layer for better caching
-RUN sudo apt update && sudo apt install -y \
+RUN apt update && apt install -y \
     nodejs \
     lsb-release \
     curl \
     gpg \
     protobuf-compiler \
     git-lfs \
-    && sudo apt-get clean \
-    && sudo rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Go tools (these rarely change), separately to avoid memory issues
 RUN export GOMAXPROCS=1 && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1
@@ -25,36 +25,36 @@ ENV PATH="${PATH}:$(go env GOPATH)/bin"
 # =============================================================================
 # Stage 2: External services installation (moderate caching)
 # =============================================================================
-FROM tools as services
+FROM tools AS services
 
 ARG TARGETARCH
 
 # Install redis
-RUN curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
-    sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list && \
-    sudo apt-get update -y && \
-    sudo apt-get install redis -y && \
-    sudo apt-get clean && \
-    sudo rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
+    chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/redis.list && \
+    apt-get update -y && \
+    apt-get install redis -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install gcloud and kubectl
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
-    sudo apt-get update && \
-    sudo apt-get install -y \
+    apt-get update && \
+    apt-get install -y \
         google-cloud-cli \
         kubectl \
         google-cloud-cli-gke-gcloud-auth-plugin \
-    && sudo apt-get clean \
-    && sudo rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install binary tools with architecture support
 RUN curl -fsSL https://raw.githubusercontent.com/metalbear-co/mirrord/main/scripts/install.sh | bash
 
 # Install yq with architecture detection
 RUN curl -Lo /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.34.1/yq_linux_${TARGETARCH} && \
-    sudo chmod +x /usr/local/bin/yq
+    chmod +x /usr/local/bin/yq
 
 # Configure Go to handle private modules
 RUN go env -w GOPRIVATE=$(go env GOPRIVATE),git0.harness.io
@@ -62,7 +62,7 @@ RUN go env -w GOPRIVATE=$(go env GOPRIVATE),git0.harness.io
 # =============================================================================
 # Stage 3: Code preparation and build (secure - credentials cleaned in same layer)
 # =============================================================================
-FROM services as builder
+FROM services AS builder
 
 ARG BRANCH
 
