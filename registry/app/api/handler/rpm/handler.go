@@ -53,7 +53,11 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	if err != nil {
 		return nil, err
 	}
-	info.Image = r.PathValue("name")
+	image, err := url.PathUnescape(r.PathValue("name"))
+	if err != nil {
+		return nil, err
+	}
+	info.Image = image
 	var version string
 	if r.PathValue("version") != "" && r.PathValue("architecture") != "" {
 		v, err := url.PathUnescape(r.PathValue("version"))

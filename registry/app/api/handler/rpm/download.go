@@ -33,7 +33,12 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 		h.HandleErrors(ctx, []error{fmt.Errorf("failed to fetch info from context")}, w)
 		return
 	}
-	info.Image = r.PathValue("name")
+	image, err := url.PathUnescape(r.PathValue("name"))
+	if err != nil {
+		h.HandleErrors(ctx, []error{fmt.Errorf("failed to decode package name: %s", r.PathValue("name"))}, w)
+		return
+	}
+	info.Image = image
 	info.Arch = r.PathValue("architecture")
 	version, err := url.PathUnescape(r.PathValue("version"))
 	if err != nil {
@@ -41,8 +46,18 @@ func (h *handler) DownloadPackageFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	info.Version = version + "." + info.Arch
-	info.FileName = r.PathValue("file")
-	info.PackagePath = r.PathValue("*")
+	file, err := url.PathUnescape(r.PathValue("file"))
+	if err != nil {
+		h.HandleErrors(ctx, []error{fmt.Errorf("failed to decode file name: %s", r.PathValue("file"))}, w)
+		return
+	}
+	info.FileName = file
+	packagePath, err := url.PathUnescape(r.PathValue("*"))
+	if err != nil {
+		h.HandleErrors(ctx, []error{fmt.Errorf("failed to decode package path: %s", r.PathValue("*"))}, w)
+		return
+	}
+	info.PackagePath = packagePath
 	response := h.controller.DownloadPackageFile(ctx, *info)
 	if response == nil {
 		h.HandleErrors(ctx, []error{fmt.Errorf("failed to get response from controller")}, w)
