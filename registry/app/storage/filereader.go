@@ -148,7 +148,7 @@ func (fr *FileReader) reader() (io.Reader, error) {
 	return fr.brd, nil
 }
 
-// resetReader resets the reader, forcing the read method to open up a new
+// reset resets the reader, forcing the read method to open up a new
 // connection and rebuild the buffered reader. This should be called when the
 // offset and the reader will become out of sync, such as during a seek
 // operation.
