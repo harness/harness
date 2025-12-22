@@ -53,7 +53,12 @@ export interface ReviewerSelectProps extends Omit<ButtonProps, 'onSelect'> {
   standalone?: boolean
 }
 
-export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, onSelect, ...props }) => {
+export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({
+  pullRequestMetadata,
+  onSelect,
+  standalone,
+  ...props
+}) => {
   const { getString } = useStrings()
   return (
     <Button
@@ -62,7 +67,13 @@ export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({ pullRequestMetad
       variation={ButtonVariation.TERTIARY}
       minimal
       size={ButtonSize.SMALL}
-      tooltip={<PopoverContent pullRequestMetadata={pullRequestMetadata} onSelect={onSelect} />}
+      tooltip={
+        <PopoverContent
+          pullRequestMetadata={pullRequestMetadata}
+          onSelect={onSelect}
+          standalone={standalone}
+        />
+      }
       tooltipProps={{
         interactionKind: 'click',
         usePortal: true,
