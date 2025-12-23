@@ -17,6 +17,7 @@ package metadata
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -57,6 +58,13 @@ func (c *APIController) GetArtifactDetails(
 		session,
 		permissionChecks...,
 	); err != nil {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
+			return artifact.GetArtifactDetails401JSONResponse{
+				UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, err.Error()),
+				),
+			}, nil
+		}
 		return artifact.GetArtifactDetails403JSONResponse{
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
