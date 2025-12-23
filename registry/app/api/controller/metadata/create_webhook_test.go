@@ -302,7 +302,7 @@ func TestCreateWebhook(t *testing.T) {
 				// Mock authorizer with manual response
 				mockAuthorizer := new(mocks.Authorizer)
 				mockAuthorizer.On("CheckAll", mock.Anything, (*auth.Session)(nil), permissionCheck).Return(false,
-					apiauth.ErrUnauthorized)
+					apiauth.ErrForbidden)
 				c.Authorizer = mockAuthorizer
 			},
 			request: api.CreateWebhookRequestObject{
@@ -318,7 +318,7 @@ func TestCreateWebhook(t *testing.T) {
 			expectedResp: api.CreateWebhook403JSONResponse{
 				UnauthorizedJSONResponse: api.UnauthorizedJSONResponse{
 					Code:    "403",
-					Message: "unauthorized",
+					Message: "forbidden",
 				},
 			},
 		},
@@ -386,7 +386,7 @@ func TestCreateWebhook(t *testing.T) {
 				mockRegistryMetadataHelper.On("GetPermissionChecks", space, "reg", enum.PermissionRegistryEdit).
 					Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, (*auth.Session)(nil), permissionChecks[0]).
-					Return(false, fmt.Errorf("unauthorized"))
+					Return(false, apiauth.ErrForbidden)
 
 				c.SpaceFinder = mockSpaceFinder
 				c.RegistryMetadataHelper = mockRegistryMetadataHelper
@@ -405,7 +405,7 @@ func TestCreateWebhook(t *testing.T) {
 			expectedResp: api.CreateWebhook403JSONResponse{
 				UnauthorizedJSONResponse: api.UnauthorizedJSONResponse{
 					Code:    "403",
-					Message: "unauthorized",
+					Message: "forbidden",
 				},
 			},
 		},

@@ -92,10 +92,19 @@ func (c *APIController) CreateRegistry(
 		gitnessenum.ResourceTypeRegistry,
 		gitnessenum.PermissionRegistryEdit,
 	); err != nil {
+		statusCode, message := HandleAuthError(err)
+		if statusCode == http.StatusUnauthorized {
+			//nolint:nilerr
+			return artifact.CreateRegistry401JSONResponse{
+				UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, message),
+				),
+			}, nil
+		}
 		//nolint:nilerr
 		return artifact.CreateRegistry403JSONResponse{
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
-				*GetErrorResponse(http.StatusForbidden, err.Error()),
+				*GetErrorResponse(http.StatusForbidden, message),
 			),
 		}, nil
 	}

@@ -62,9 +62,17 @@ func (c *APIController) UpdateArtifactLabels(
 		session,
 		permissionChecks...,
 	); err != nil {
+		statusCode, message := HandleAuthError(err)
+		if statusCode == http.StatusUnauthorized {
+			return artifact.UpdateArtifactLabels401JSONResponse{
+				UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, message),
+				),
+			}, nil
+		}
 		return artifact.UpdateArtifactLabels403JSONResponse{
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
-				*GetErrorResponse(http.StatusForbidden, err.Error()),
+				*GetErrorResponse(http.StatusForbidden, message),
 			),
 		}, nil
 	}

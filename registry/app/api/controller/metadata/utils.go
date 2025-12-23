@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net/http"
 	"net/url"
 	"regexp"
 	"slices"
@@ -26,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -748,4 +750,17 @@ func CleanURLPath(input *string) {
 
 	// Update the input string with the cleaned URL string representation
 	*input = u.String()
+}
+
+// - 401: Authentication is required but missing or invalid
+// - 403: Authentication succeeded but user lacks required permissions.
+func HandleAuthError(err error) (statusCode int, message string) {
+	if errors.Is(err, apiauth.ErrUnauthorized) {
+		return http.StatusUnauthorized, err.Error()
+	}
+	if errors.Is(err, apiauth.ErrForbidden) {
+		return http.StatusForbidden, err.Error()
+	}
+	// Default to forbidden for other auth-related errors
+	return http.StatusForbidden, err.Error()
 }

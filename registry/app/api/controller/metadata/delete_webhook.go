@@ -50,9 +50,17 @@ func (c *APIController) DeleteWebhook(
 		session,
 		permissionChecks...,
 	); err != nil {
+		statusCode, message := HandleAuthError(err)
+		if statusCode == http.StatusUnauthorized {
+			return api.DeleteWebhook401JSONResponse{
+				UnauthenticatedJSONResponse: api.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, message),
+				),
+			}, nil
+		}
 		return api.DeleteWebhook403JSONResponse{
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
-				*GetErrorResponse(http.StatusForbidden, err.Error()),
+				*GetErrorResponse(http.StatusForbidden, message),
 			),
 		}, nil
 	}

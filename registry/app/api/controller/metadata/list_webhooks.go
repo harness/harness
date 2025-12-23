@@ -53,9 +53,17 @@ func (c *APIController) ListWebhooks(
 	); err != nil {
 		log.Ctx(ctx).Error().Msgf("permission check failed while listing webhook for registry: %s, error: %v",
 			regInfo.RegistryIdentifier, err)
+		statusCode, message := HandleAuthError(err)
+		if statusCode == http.StatusUnauthorized {
+			return api.ListWebhooks401JSONResponse{
+				UnauthenticatedJSONResponse: api.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, message),
+				),
+			}, nil
+		}
 		return api.ListWebhooks403JSONResponse{
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
-				*GetErrorResponse(http.StatusForbidden, err.Error()),
+				*GetErrorResponse(http.StatusForbidden, message),
 			),
 		}, nil
 	}

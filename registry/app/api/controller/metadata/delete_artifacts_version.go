@@ -65,11 +65,19 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 		enum.ResourceTypeRegistry,
 		enum.PermissionArtifactsDelete,
 	); err != nil {
+		statusCode, message := HandleAuthError(err)
+		if statusCode == http.StatusUnauthorized {
+			return artifact.DeleteArtifactVersion401JSONResponse{
+				UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, message),
+				),
+			}, nil
+		}
 		return artifact.DeleteArtifactVersion403JSONResponse{
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
-				*GetErrorResponse(http.StatusForbidden, err.Error()),
+				*GetErrorResponse(http.StatusForbidden, message),
 			),
-		}, err
+		}, nil
 	}
 
 	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)

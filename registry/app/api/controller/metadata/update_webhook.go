@@ -51,9 +51,17 @@ func (c *APIController) UpdateWebhook(
 	); err != nil {
 		log.Ctx(ctx).Error().Msgf("permission check failed while updating webhook for registry: %s, error: %v",
 			regInfo.RegistryIdentifier, err)
+		statusCode, message := HandleAuthError(err)
+		if statusCode == http.StatusUnauthorized {
+			return api.UpdateWebhook401JSONResponse{
+				UnauthenticatedJSONResponse: api.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, message),
+				),
+			}, nil
+		}
 		return api.UpdateWebhook403JSONResponse{
 			UnauthorizedJSONResponse: api.UnauthorizedJSONResponse(
-				*GetErrorResponse(http.StatusForbidden, err.Error()),
+				*GetErrorResponse(http.StatusForbidden, message),
 			),
 		}, nil
 	}
