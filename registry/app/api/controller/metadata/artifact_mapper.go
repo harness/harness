@@ -83,10 +83,14 @@ func GetMavenArtifactDetail(
 ) artifactapi.ArtifactDetail {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.UpdatedAt)
-	var size int64
-	for _, file := range mavenMetadata.Files {
-		size += file.Size
+
+	size := mavenMetadata.Size
+	if size == 0 && len(mavenMetadata.Files) > 0 {
+		for _, file := range mavenMetadata.Files {
+			size += file.Size
+		}
 	}
+
 	sizeVal := GetSize(size)
 	artifactDetail := &artifactapi.ArtifactDetail{
 		CreatedAt:  &createdAt,

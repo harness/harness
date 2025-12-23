@@ -24,4 +24,22 @@ type GenericMetadata struct {
 type MavenMetadata struct {
 	Files     []File `json:"files"`
 	FileCount int64  `json:"file_count"`
+	Size      int64  `json:"size"`
+}
+
+func (m *MavenMetadata) GetFiles() []File {
+	return m.Files
+}
+
+func (m *MavenMetadata) SetFiles(files []File) {
+	m.Files = files
+	m.FileCount = int64(len(files))
+}
+
+func (m *MavenMetadata) GetSize() int64 {
+	return m.Size
+}
+
+func (m *MavenMetadata) UpdateSize(size int64) {
+	m.Size += size
 }
