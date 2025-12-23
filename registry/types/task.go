@@ -47,8 +47,10 @@ type Task struct {
 	Key       string
 	Kind      TaskKind
 	Payload   json.RawMessage
+	Output    json.RawMessage
 	Status    TaskStatus
 	RunAgain  bool
+	CreatedBy int64
 	UpdatedAt time.Time
 }
 
@@ -77,21 +79,21 @@ type SourceRef struct {
 
 type BuildRegistryIndexTaskPayload struct {
 	Key         string `json:"key"`
-	RegistryID  int64  `json:"registry_id"`
-	PrincipalID int64  `json:"principal_id"` // TODO: setting service principal ID to run the task
+	RegistryID  int64  `json:"registry_id"`  //nolint:tagliatelle
+	PrincipalID int64  `json:"principal_id"` //nolint:tagliatelle // TODO: setting service principal ID to run the task
 }
 
 type BuildPackageIndexTaskPayload struct {
 	Key         string `json:"key"`
-	RegistryID  int64  `json:"registry_id"`
+	RegistryID  int64  `json:"registry_id"` //nolint:tagliatelle
 	Image       string `json:"image"`
-	PrincipalID int64  `json:"principal_id"` // TODO: setting service principal ID to run the task
+	PrincipalID int64  `json:"principal_id"` //nolint:tagliatelle // TODO: setting service principal ID to run the task
 }
 
 type BuildPackageMetadataTaskPayload struct {
 	Key         string `json:"key"`
-	RegistryID  int64  `json:"registry_id"`
+	RegistryID  int64  `json:"registry_id"` //nolint:tagliatelle
 	Image       string `json:"image"`
 	Version     string `json:"version"`
-	PrincipalID int64  `json:"principal_id"`
+	PrincipalID int64  `json:"principal_id"` //nolint:tagliatelle // TODO: setting service principal ID to run the task
 }

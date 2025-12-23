@@ -46,8 +46,8 @@ type taskStore struct {
 // Find returns a task by its key.
 func (s *taskStore) Find(ctx context.Context, key string) (*types.Task, error) {
 	stmt := databaseg.Builder.
-		Select("registry_task_key", "registry_task_kind", "registry_task_payload", "registry_task_status",
-			"registry_task_run_again", "registry_task_updated_at").
+		Select("registry_task_key", "registry_task_kind", "registry_task_payload", "registry_task_output",
+			"registry_task_status", "registry_task_run_again", "registry_task_created_by", "registry_task_updated_at").
 		From("registry_tasks").
 		Where("registry_task_key = ?", key)
 
@@ -67,8 +67,9 @@ func (s *taskStore) UpsertTask(ctx context.Context, task *types.Task) error {
 	now := time.Now().UnixMilli()
 	stmt := databaseg.Builder.
 		Insert("registry_tasks").
-		Columns("registry_task_key", "registry_task_kind", "registry_task_payload", "registry_task_updated_at").
-		Values(task.Key, task.Kind, task.Payload, now).
+		Columns("registry_task_key", "registry_task_kind", "registry_task_payload", "registry_task_created_by",
+			"registry_task_updated_at").
+		Values(task.Key, task.Kind, task.Payload, task.CreatedBy, now).
 		Suffix("ON CONFLICT (registry_task_key) DO UPDATE " +
 			"SET registry_task_updated_at = EXCLUDED.registry_task_updated_at")
 
@@ -134,14 +135,25 @@ func (s *taskStore) LockForUpdate(ctx context.Context, task *types.Task) (types.
 	return types.TaskStatus(result), nil
 }
 
-// CompleteTask updates the task status and returns if it should run again.
-func (s *taskStore) CompleteTask(ctx context.Context, key string, status types.TaskStatus) (bool, error) {
+// CompleteTask updates the task status, output data and returns if it should run again.
+func (s *taskStore) CompleteTask(
+	ctx context.Context,
+	key string,
+	status types.TaskStatus,
+	output json.RawMessage,
+) (bool, error) {
 	now := time.Now().UnixMilli()
 	stmt := databaseg.Builder.
 		Update("registry_tasks").
 		Set("registry_task_status", status).
-		Set("registry_task_updated_at", now).
-		Where("registry_task_key = ?", key).
+		Set("registry_task_updated_at", now)
+
+	// Update output data if provided
+	if len(output) > 0 {
+		stmt = stmt.Set("registry_task_output", output)
+	}
+
+	stmt = stmt.Where("registry_task_key = ?", key).
 		Suffix("RETURNING registry_task_run_again")
 
 	query, args, err := stmt.ToSql()
@@ -159,8 +171,8 @@ func (s *taskStore) CompleteTask(ctx context.Context, key string, status types.T
 // ListPendingTasks lists tasks with pending status.
 func (s *taskStore) ListPendingTasks(ctx context.Context, limit int) ([]*types.Task, error) {
 	stmt := databaseg.Builder.
-		Select("registry_task_key", "registry_task_kind", "registry_task_payload", "registry_task_status",
-			"registry_task_run_again", "registry_task_updated_at").
+		Select("registry_task_key", "registry_task_kind", "registry_task_payload", "registry_task_output",
+			"registry_task_status", "registry_task_run_again", "registry_task_created_by", "registry_task_updated_at").
 		From("registry_tasks").
 		Where("registry_task_status = ?", string(types.TaskStatusPending)).
 		OrderBy("registry_task_updated_at").
@@ -187,22 +199,30 @@ func (s *taskStore) ListPendingTasks(ctx context.Context, limit int) ([]*types.T
 
 // TaskDB represents a database entity for task processing.
 type TaskDB struct {
-	Key       string          `db:"registry_task_key"`
-	Kind      string          `db:"registry_task_kind"`
-	Payload   json.RawMessage `db:"registry_task_payload"`
-	Status    string          `db:"registry_task_status"`
-	RunAgain  bool            `db:"registry_task_run_again"`
-	UpdatedAt int64           `db:"registry_task_updated_at"`
+	Key       string           `db:"registry_task_key"`
+	Kind      string           `db:"registry_task_kind"`
+	Payload   json.RawMessage  `db:"registry_task_payload"`
+	Output    *json.RawMessage `db:"registry_task_output"`
+	Status    string           `db:"registry_task_status"`
+	RunAgain  bool             `db:"registry_task_run_again"`
+	CreatedBy int64            `db:"registry_task_created_by"`
+	UpdatedAt int64            `db:"registry_task_updated_at"`
 }
 
 // ToTask converts a database task entity to a DTO.
 func (t *TaskDB) ToTask() *types.Task {
+	var output json.RawMessage
+	if t.Output != nil {
+		output = *t.Output
+	}
 	return &types.Task{
 		Key:       t.Key,
 		Kind:      types.TaskKind(t.Kind),
 		Payload:   t.Payload,
+		Output:    output,
 		Status:    types.TaskStatus(t.Status),
 		RunAgain:  t.RunAgain,
+		CreatedBy: t.CreatedBy,
 		UpdatedAt: time.UnixMilli(t.UpdatedAt),
 	}
 }

@@ -45,6 +45,9 @@ const (
 	eventsReaderGroupName = "registry:postprocessing"
 )
 
+// TaskHandler is a function type for handling tasks.
+type TaskHandler func(ctx context.Context, task *types.Task, eventID string) (json.RawMessage, error)
+
 type Service struct {
 	tx                      dbtx.Transactor
 	rpmRegistryHelper       RpmHelper
@@ -58,6 +61,7 @@ type Service struct {
 	innerReporter           *events.GenericReporter
 	postProcessingReporter  *asyncprocessing.Reporter
 	packageWrapper          interfaces.PackageWrapper
+	taskHandlers            map[types.TaskKind]TaskHandler
 }
 
 func NewService(
@@ -97,6 +101,7 @@ func NewService(
 		innerReporter:           innerReporter,
 		postProcessingReporter:  postProcessingReporter,
 		packageWrapper:          packageWrapper,
+		taskHandlers:            make(map[types.TaskKind]TaskHandler),
 	}
 	_, err = artifactsReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *asyncprocessing.Reader) error {
@@ -174,6 +179,7 @@ func (s *Service) handleEventExecuteAsyncTask(
 	}
 
 	var processingErr error
+	var outputData json.RawMessage
 	//nolint:nestif
 	switch task.Kind {
 	case types.TaskKindBuildRegistryIndex:
@@ -192,10 +198,17 @@ func (s *Service) handleEventExecuteAsyncTask(
 			processingErr = fmt.Errorf("failed to build package metadata: %w", err)
 		}
 	default:
-		processingErr = fmt.Errorf("unsupported task kind [%s] for task [%s]", task.Kind, task.Key)
+		if handler, exists := s.taskHandlers[task.Kind]; exists {
+			outputData, err = handler(ctx, task, e.ID)
+			if err != nil {
+				processingErr = fmt.Errorf("failed to handle task kind [%s]: %w", task.Kind, err)
+			}
+		} else {
+			processingErr = fmt.Errorf("unsupported task kind [%s] for task [%s]", task.Kind, task.Key)
+		}
 	}
 
-	runAgain, err := s.finalStatusUpdate(ctx, e, task, processingErr)
+	runAgain, err := s.finalStatusUpdate(ctx, e, task, outputData, processingErr)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to update final status for task [%s]: %v", task.Key, err)
 	}
@@ -342,6 +355,7 @@ func (s *Service) finalStatusUpdate(
 	ctx context.Context,
 	e *events.Event[*asyncprocessing.ExecuteAsyncTaskPayload],
 	task *types.Task,
+	outputData json.RawMessage,
 	processingErr error,
 ) (bool, error) {
 	var runAgain bool
@@ -358,7 +372,7 @@ func (s *Service) finalStatusUpdate(
 				if err != nil {
 					return err
 				}
-				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusFailure)
+				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusFailure, nil)
 				if err != nil {
 					return err
 				}
@@ -367,7 +381,7 @@ func (s *Service) finalStatusUpdate(
 				if err != nil {
 					return err
 				}
-				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusSuccess)
+				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusSuccess, outputData)
 				if err != nil {
 					return err
 				}
@@ -379,6 +393,11 @@ func (s *Service) finalStatusUpdate(
 			e.ID, task.Key, err)
 	}
 	return runAgain, nil
+}
+
+// RegisterTaskHandler registers a custom handler for a specific task kind.
+func (s *Service) RegisterTaskHandler(kind types.TaskKind, handler TaskHandler) {
+	s.taskHandlers[kind] = handler
 }
 
 func (s *Service) ProcessingStatusUpdate(ctx context.Context, task *types.Task, runID string) error {

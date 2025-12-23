@@ -29,7 +29,7 @@ import (
 const ExecuteAsyncTask events.EventType = "execute_async_task"
 
 type ExecuteAsyncTaskPayload struct {
-	TaskKey string `json:"task_key"`
+	TaskKey string `json:"task_key"` //nolint:tagliatelle
 }
 
 func (r *Reporter) BuildRegistryIndex(ctx context.Context, registryID int64, sources []types.SourceRef) {
@@ -54,12 +54,13 @@ func (r *Reporter) BuildRegistryIndexWithPrincipal(
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
 	task := &types.Task{
-		Key:     key,
-		Kind:    types.TaskKindBuildRegistryIndex,
-		Payload: payload,
+		Key:       key,
+		Kind:      types.TaskKindBuildRegistryIndex,
+		Payload:   payload,
+		CreatedBy: principalID,
 	}
 	sources = append(sources, types.SourceRef{Type: types.SourceTypeRegistry, ID: registryID})
-	err = r.upsertAndSendEvent(ctx, task, sources)
+	err = r.UpsertAndSendEvent(ctx, task, sources)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
@@ -85,14 +86,15 @@ func (r *Reporter) BuildPackageIndexWithPrincipal(
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
 	task := &types.Task{
-		Key:     key,
-		Kind:    types.TaskKindBuildPackageIndex,
-		Payload: payload,
+		Key:       key,
+		Kind:      types.TaskKindBuildPackageIndex,
+		Payload:   payload,
+		CreatedBy: principalID,
 	}
 
 	sources := make([]types.SourceRef, 0)
 	sources = append(sources, types.SourceRef{Type: types.SourceTypeRegistry, ID: registryID})
-	err = r.upsertAndSendEvent(ctx, task, sources)
+	err = r.UpsertAndSendEvent(ctx, task, sources)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
@@ -122,20 +124,21 @@ func (r *Reporter) BuildPackageMetadataWithPrincipal(
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
 	task := &types.Task{
-		Key:     key,
-		Kind:    types.TaskKindBuildPackageMetadata,
-		Payload: payload,
+		Key:       key,
+		Kind:      types.TaskKindBuildPackageMetadata,
+		Payload:   payload,
+		CreatedBy: principalID,
 	}
 
 	sources := make([]types.SourceRef, 0)
 	sources = append(sources, types.SourceRef{Type: types.SourceTypeRegistry, ID: registryID})
-	err = r.upsertAndSendEvent(ctx, task, sources)
+	err = r.UpsertAndSendEvent(ctx, task, sources)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
 }
 
-func (r *Reporter) upsertAndSendEvent(
+func (r *Reporter) UpsertAndSendEvent(
 	ctx context.Context,
 	task *types.Task,
 	sources []types.SourceRef,
