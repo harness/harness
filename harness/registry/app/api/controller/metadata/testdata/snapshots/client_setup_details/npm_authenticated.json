@@ -1,0 +1,61 @@
+{
+  "mainHeader": "NPM Client Setup",
+  "secHeader": "Follow these instructions to install/use NPM packages from this registry.",
+  "sections": [
+    {
+      "header": "Configure Authentication",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "registry=https://example.com/registry/test-registry/NPM/"
+            },
+            {
+              "value": "//example.com/registry/test-registry/NPM/:_authToken=\u003cTOKEN\u003e"
+            }
+          ],
+          "header": "Create or update your ~/.npmrc file with the following content:",
+          "type": "Static"
+        },
+        {
+          "header": "Generate an identity token for authentication",
+          "type": "GenerateToken"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Publish Package",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "npm run build\n"
+            },
+            {
+              "value": "npm publish"
+            }
+          ],
+          "header": "Build and publish your package:",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Install Package",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "npm install test-artifact@v1.0.0"
+            }
+          ],
+          "header": "Install a package using npm",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+.DS_Store
+NOTES*
+__debug_bin
+_research
+.env
+*.sqlite
+*.sqlite3
+web/node_modules
+web/dist
+web/coverage
+web/.yalc
+web/yalc.lock
+yarn-error*
+release
+.idea
+.vscode/settings.json
+coverage.out
+gitness.session.sql
+web/cypress/node_modules
+*.rsa
+*.rsa.pub
+node_modules/
+dist
+.yalc
+yalc.lock
+node_modules
+.cursor
+
+# ignore any executables we build
+/gitness
+/registry/logs/*
+/distribution-spec
+/registry/distribution-spec
+/app/store/database/test.db
+
+# adding support for .http files
+http-client.private.env.json

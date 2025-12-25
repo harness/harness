@@ -1,0 +1,18 @@
+page: Version List Page
+table:
+  noVersionsTitle: There are no versions available.
+  columns:
+    version: Version
+    size: '{{ $.digestList.table.columns.size }}'
+    digests: Digests
+    fileCount: File Count
+    pullCommand: Download Command
+    activelyDeployed: Actively Deployed
+    downloads: '{{ $.repositoryList.table.columns.downloads }}'
+    publishedByAt: '{{ $.versionDetails.artifactDetails.layers.lastPush }}'
+    deployments: '{{ $.versionDetails.tabs.deployments }}'
+    tags: Tags
+actions:
+  deleteVersion: Delete Version
+  quarantine: Quarantine
+  removeQuarantine: Remove From Quarantine

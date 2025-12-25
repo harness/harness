@@ -1,0 +1,150 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.searchModal {
+  --modal-width: min(1254px, 80vw);
+
+  width: var(--modal-width);
+  padding: var(--spacing-medium) var(--spacing-xlarge) var(--spacing-xlarge);
+
+  > span:first-of-type {
+    display: none;
+  }
+
+  .layout {
+    width: 100%;
+
+    .searchContainer {
+      position: relative;
+      width: 100%;
+
+      .searchCtn {
+        &[data-search-mode='keyword'] {
+          .toggleRegexIconContainer {
+            position: absolute;
+            right: -23px !important;
+            top: 3.8px !important;
+            z-index: 1;
+
+            .img {
+              position: unset !important;
+              right: unset;
+              top: unset;
+            }
+          }
+        }
+      }
+    }
+
+    .searchIcon {
+      position: absolute;
+      left: 12px;
+      top: 11px;
+      z-index: 1;
+    }
+
+    img {
+      position: absolute;
+      right: 58px;
+      top: 3px;
+    }
+  }
+
+  .sectionHeader {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.237px;
+    color: var(--grey-300) !important;
+    text-transform: uppercase;
+  }
+
+  .sampleKeywordSearchQuery {
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover,
+    &.selected {
+      background-color: var(--grey-100);
+    }
+  }
+
+  .sampleSemanticSearchQuery {
+    cursor: pointer;
+    height: 44px;
+    background-color: var(--grey-50);
+    color: var(--grey-500) !important;
+    border-radius: 4px;
+    padding-left: 32px;
+    margin-bottom: 12px;
+    position: relative;
+
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    line-height: 19px !important;
+    letter-spacing: 0.23749999701976776px;
+    display: flex;
+    align-items: center;
+
+    background-image: url('data:image/svg+xml,%3Csvg%20fill%3D%22none%22%20viewBox%3D%220%200%2017%2017%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22m9.91699%208.50004h3.54171c.1878%200%20.368.07463.5008.20747.1329.13283.2075.313.2075.50086v2.47913c0%20.1879-.0746.3681-.2075.5009-.1328.1328-.313.2075-.5008.2075h-2.8334c-.1878%200-.368-.0747-.5008-.2075-.13288-.1328-.20751-.313-.20751-.5009zm0%200c0-1.77083.70831-2.83333%202.83331-3.89583m-9.91664%203.89583h3.54167c.18786%200%20.36802.07463.50086.20747.13284.13283.20747.313.20747.50086v2.47913c0%20.1879-.07463.3681-.20747.5009s-.313.2075-.50086.2075h-2.83334c-.18786%200-.36803-.0747-.50087-.2075-.13283-.1328-.20746-.313-.20746-.5009zm0%200c0-1.77083.70833-2.83333%202.83333-3.89583%22%20stroke%3D%22%23dad0f6%22%20stroke-linecap%3D%22round%22%2F%3E%3Cg%20fill%3D%22%23dad0f6%22%3E%3Cpath%20d%3D%22m10%209h4v3h-4z%22%2F%3E%3Cpath%20d%3D%22m3%209h4v3h-4z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-size: 16px;
+    background-position: left 12px top 7px;
+
+    &:hover,
+    &.selected {
+      background-color: var(--grey-100);
+    }
+
+    &.selected svg {
+      visibility: visible;
+    }
+
+    svg {
+      position: absolute;
+      top: 14px;
+      right: 15px;
+      color: var(--grey-300);
+      visibility: hidden;
+    }
+  }
+}
+
+.searchBox {
+  cursor: pointer;
+
+  input,
+  input:focus {
+    border: 1px solid var(--grey-200) !important;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  input {
+    width: 350px !important;
+  }
+}
+
+.backdrop {
+  background-color: rgb(16 22 26 / 25%);
+}
+
+.portal {
+  :global {
+    .bp3-dialog-container.bp3-overlay-content {
+      align-items: flex-start !important;
+    }
+  }
+}

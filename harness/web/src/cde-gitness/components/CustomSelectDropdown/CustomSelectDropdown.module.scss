@@ -1,0 +1,28 @@
+.customLabel {
+  padding-bottom: var(--spacing-xsmall) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.customSelect {
+  width: 100%;
+
+  .searchButton {
+    width: 100%;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    color: silver !important;
+  }
+}
+
+.mb15 {
+  margin-bottom: 15px !important;
+}
+
+.errorClass {
+  width: 100%;
+
+  [class='bp3-input'] {
+    border: 1px solid var(--red-600) !important;
+  }
+}

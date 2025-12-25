@@ -1,0 +1,120 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.mainCtn {
+  height: var(--page-height);
+  background-color: var(--primary-bg) !important;
+
+  .pageCtn {
+    padding: var(--spacing-xxlarge) var(--spacing-xlarge) !important;
+
+    .table {
+      border-radius: 4px;
+      background: var(--white);
+      box-shadow: 0px 0.5px 2px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.08);
+
+      :global {
+        [class*='TableV2--row'] {
+          padding: var(--spacing-4) var(--spacing-medium);
+        }
+      }
+    }
+
+    .profileCard {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      padding: var(--spacing-xxlarge) 60px !important;
+      min-height: 186px;
+
+      :global {
+        [class*='TextInput--main'] {
+          margin-bottom: 0 !important;
+        }
+      }
+
+      .avatar {
+        cursor: initial !important ;
+      }
+
+      .detailsCtn {
+        display: flex;
+        flex-direction: column;
+
+        .detailField {
+          align-items: center !important;
+          height: 32px;
+        }
+      }
+
+      .editableTextWrapper {
+        flex-grow: 1;
+
+        .textInput {
+          width: 100%;
+        }
+      }
+    }
+
+    .logoutCard {
+      width: 100%;
+      margin-top: var(--spacing-medium);
+    }
+    .containerCard {
+      background-color: var(--grey-0) !important;
+      padding: var(--spacing-large) var(--spacing-xlarge) !important;
+      border-radius: 4px;
+      box-shadow: 0px 0.5px 2px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.08);
+    }
+  }
+}
+
+.icon {
+  > svg {
+    fill: var(--primary-7) !important;
+
+    > path {
+      fill: var(--primary-7) !important;
+    }
+  }
+}
+
+.popover {
+  padding: var(--spacing-medium) !important;
+}
+
+.textAreaContainer {
+  :global {
+    .bp3-popover-wrapper {
+      margin-top: 2px !important;
+      .bp3-icon {
+        > svg {
+          fill: var(--primary-7) !important;
+
+          > path {
+            fill: var(--primary-7) !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+.iconContainer {
+  margin-top: 8px !important;
+  background: var(--primary-2) !important;
+  border-radius: 4px !important;
+  margin-right: var(--spacing-3) !important;
+}

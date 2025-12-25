@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "name": "test-artifact-1.0.0.jar",
+      "size": "1.00 KB",
+      "createdAt": "1704067200",
+      "checksums": [
+        "sha256:abc123def456..."
+      ],
+      "downloadCommand": "curl --location 'https://registry.example.com/root/test-registry/maven/com/example/test-artifact/v1.0.0/test-artifact-1.0.0.jar' --header 'Authorization: <IDENTITY_TOKEN>' -o 'test-artifact-1.0.0.jar'"
+    }
+  ],
+  "itemCount": 1,
+  "pageCount": 1,
+  "pageNumber": 1,
+  "pageSize": 10,
+  "status": "SUCCESS"
+}

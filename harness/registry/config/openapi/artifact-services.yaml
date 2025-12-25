@@ -1,0 +1,10 @@
+package: artifact
+generate:
+  strict-server: true
+  chi-server: true
+  embedded-spec: true
+output: ./registry/app/api/openapi/contracts/artifact/services.gen.go
+compatibility:
+  old-aliasing: true
+  old-enum-conflicts: true
+  old-merge-schemas: true

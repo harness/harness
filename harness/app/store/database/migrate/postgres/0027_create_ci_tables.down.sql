@@ -1,0 +1,10 @@
+DROP TABLE pipelines;
+DROP TABLE executions;
+DROP TABLE stages;
+DROP TABLE secrets;
+DROP TABLE steps;
+DROP TABLE logs;
+DROP TABLE plugins;
+DROP TABLE connectors;
+DROP TABLE templates;
+DROP TABLE triggers;
