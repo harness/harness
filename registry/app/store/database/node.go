@@ -78,7 +78,7 @@ func (n NodeDao) FindByPathsAndRegistryID(ctx context.Context, paths []string, r
 	return &nodes, nil
 }
 
-func (n NodeDao) Get(ctx context.Context, id int64) (*types.Node, error) {
+func (n NodeDao) Get(ctx context.Context, id string) (*types.Node, error) {
 	q := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(Nodes{}), ",")).
 		From("nodes").
@@ -93,7 +93,7 @@ func (n NodeDao) Get(ctx context.Context, id int64) (*types.Node, error) {
 	}
 
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find node with id %d", id)
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find node with id %s", id)
 	}
 
 	return n.mapToNode(ctx, dst)

@@ -511,6 +511,7 @@ type ImageRepository interface {
 }
 
 type ArtifactRepository interface {
+	Get(ctx context.Context, id int64) (*types.Artifact, error)
 	// Get an Artifact specified by ID
 	GetByName(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
 	// Get an Artifact specified by RegistryID, image name and version
@@ -659,7 +660,7 @@ type GCManifestTaskRepository interface {
 
 type NodesRepository interface {
 	// Get a node specified by ID
-	Get(ctx context.Context, id int64) (*types.Node, error)
+	Get(ctx context.Context, id string) (*types.Node, error)
 	// Get a node specified by node Name and registry id
 	GetByNameAndRegistryID(
 		ctx context.Context, registryID int64,
@@ -804,6 +805,8 @@ type TaskRepository interface {
 }
 
 type TaskSourceRepository interface {
+	FindByTaskKeyAndSourceType(ctx context.Context, key string, sourceType string) (*types.TaskSource, error)
+
 	InsertSource(ctx context.Context, key string, source types.SourceRef) error
 
 	ClaimSources(ctx context.Context, key string, runID string) error

@@ -61,6 +61,25 @@ type artifactDB struct {
 	UpdatedBy int64            `db:"artifact_updated_by"`
 }
 
+func (a ArtifactDao) Get(ctx context.Context, id int64) (*types.Artifact, error) {
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
+		From("artifacts").
+		Where("artifact_id = ?", id)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	dst := new(artifactDB)
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact")
+	}
+	return a.mapToArtifact(ctx, dst)
+}
+
 func (a ArtifactDao) GetByName(ctx context.Context, imageID int64, version string) (*types.Artifact, error) {
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
 		From("artifacts").

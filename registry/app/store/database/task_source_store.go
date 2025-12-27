@@ -40,6 +40,30 @@ func NewTaskSourceStore(db *sqlx.DB, tx dbtx.Transactor) store.TaskSourceReposit
 	}
 }
 
+// FindByTaskKeyAndSourceType returns a task source by its task key and source type.
+func (s *taskSourceStore) FindByTaskKeyAndSourceType(
+	ctx context.Context, key string, sourceType string,
+) (*types.TaskSource, error) {
+	stmt := databaseg.Builder.
+		Select(
+			"registry_task_source_key", "registry_task_source_type", "registry_task_source_id",
+			"registry_task_source_error", "registry_task_source_run_id", "registry_task_source_updated_at").
+		From("registry_task_sources").
+		Where("registry_task_source_key = ?", key).
+		Where("registry_task_source_type = ?", sourceType)
+
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build query: %w", err)
+	}
+
+	taskSourceDB := &TaskSourceDB{}
+	if err := s.db.GetContext(ctx, taskSourceDB, query, args...); err != nil {
+		return nil, fmt.Errorf("failed to find task with key %s: %w", key, err)
+	}
+	return taskSourceDB.ToTaskSource(), nil
+}
+
 // InsertSource inserts a source for a task.
 func (s *taskSourceStore) InsertSource(ctx context.Context, key string, source types.SourceRef) error {
 	now := time.Now().UnixMilli()

@@ -251,6 +251,7 @@ func (m *mockImageDAO) DeleteByImageNameIfNoLinkedArtifacts(context.Context, int
 }
 
 type mockArtifactDAO struct {
+	get                     func(ctx context.Context, id int64) (*types.Artifact, error)
 	getByName               func(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
 	getByRegistryIDAndImage func(ctx context.Context, registryID int64, image string) (*[]types.Artifact, error)
 	searchLatestByName      func(
@@ -351,6 +352,12 @@ func (m *mockArtifactDAO) GetByRegistryIDAndImage(
 	registryID int64, image string,
 ) (*[]types.Artifact, error) {
 	return m.getByRegistryIDAndImage(ctx, registryID, image)
+}
+func (m *mockArtifactDAO) Get(
+	ctx context.Context,
+	id int64,
+) (*types.Artifact, error) {
+	return m.get(ctx, id)
 }
 func (m *mockArtifactDAO) DeleteByImageNameAndRegistryID(context.Context, int64, string) error {
 	return nil //nolint:nilnil

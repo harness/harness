@@ -19,6 +19,34 @@ type ArtifactRepository struct {
 	mock.Mock
 }
 
+// Get provides a mock function with given fields: ctx, id
+func (_m *ArtifactRepository) Get(ctx context.Context, id int64) (*types.Artifact, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Get")
+	}
+
+	var r0 *types.Artifact
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (*types.Artifact, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) *types.Artifact); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(*types.Artifact)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Count provides a mock function with given fields: ctx
 func (_m *ArtifactRepository) Count(ctx context.Context) (int64, error) {
 	ret := _m.Called(ctx)
