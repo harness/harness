@@ -151,6 +151,9 @@ lint-local: tools # lint the golang code - only untracked and staged changes
 # the source file has changed.
 ###############################################################################
 
+generate-mocks:
+	@go tool -modfile=go.tool.mod mockery --config ./registry/app/api/controller/.mockery.yaml
+
 generate: wire
 	@echo "Generated Code"
 
