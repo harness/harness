@@ -348,9 +348,9 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("git service pack failed")
-		_, err = io.Copy(session.Stderr(), strings.NewReader(err.Error()))
-		if err != nil {
-			log.Error().Err(err).Msg("error writing to session stderr")
+		_, writeErr := io.Copy(session.Stderr(), strings.NewReader(err.Error()))
+		if writeErr != nil && !errors.Is(writeErr, io.ErrClosedPipe) {
+			log.Warn().Err(writeErr).Msg("error writing to session stderr")
 		}
 	}
 }
