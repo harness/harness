@@ -47,10 +47,8 @@ type Task struct {
 	Key       string
 	Kind      TaskKind
 	Payload   json.RawMessage
-	Output    json.RawMessage
 	Status    TaskStatus
 	RunAgain  bool
-	CreatedBy int64
 	UpdatedAt time.Time
 }
 

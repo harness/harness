@@ -799,7 +799,7 @@ type TaskRepository interface {
 
 	UpdateStatus(ctx context.Context, taskKey string, status types.TaskStatus) error
 
-	CompleteTask(ctx context.Context, key string, status types.TaskStatus, output json.RawMessage) (bool, error)
+	CompleteTask(ctx context.Context, key string, status types.TaskStatus) (bool, error)
 
 	ListPendingTasks(ctx context.Context, limit int) ([]*types.Task, error)
 }

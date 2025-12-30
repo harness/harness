@@ -46,7 +46,7 @@ const (
 )
 
 // TaskHandler is a function type for handling tasks.
-type TaskHandler func(ctx context.Context, task *types.Task, eventID string) (json.RawMessage, error)
+type TaskHandler func(ctx context.Context, task *types.Task, eventID string) error
 
 type Service struct {
 	tx                      dbtx.Transactor
@@ -179,7 +179,6 @@ func (s *Service) handleEventExecuteAsyncTask(
 	}
 
 	var processingErr error
-	var outputData json.RawMessage
 	//nolint:nestif
 	switch task.Kind {
 	case types.TaskKindBuildRegistryIndex:
@@ -199,7 +198,7 @@ func (s *Service) handleEventExecuteAsyncTask(
 		}
 	default:
 		if handler, exists := s.taskHandlers[task.Kind]; exists {
-			outputData, err = handler(ctx, task, e.ID)
+			err = handler(ctx, task, e.ID)
 			if err != nil {
 				processingErr = fmt.Errorf("failed to handle task kind [%s]: %w", task.Kind, err)
 			}
@@ -208,7 +207,7 @@ func (s *Service) handleEventExecuteAsyncTask(
 		}
 	}
 
-	runAgain, err := s.finalStatusUpdate(ctx, e, task, outputData, processingErr)
+	runAgain, err := s.finalStatusUpdate(ctx, e, task, processingErr)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to update final status for task [%s]: %v", task.Key, err)
 	}
@@ -355,7 +354,6 @@ func (s *Service) finalStatusUpdate(
 	ctx context.Context,
 	e *events.Event[*asyncprocessing.ExecuteAsyncTaskPayload],
 	task *types.Task,
-	outputData json.RawMessage,
 	processingErr error,
 ) (bool, error) {
 	var runAgain bool
@@ -372,7 +370,7 @@ func (s *Service) finalStatusUpdate(
 				if err != nil {
 					return err
 				}
-				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusFailure, nil)
+				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusFailure)
 				if err != nil {
 					return err
 				}
@@ -381,7 +379,7 @@ func (s *Service) finalStatusUpdate(
 				if err != nil {
 					return err
 				}
-				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusSuccess, outputData)
+				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusSuccess)
 				if err != nil {
 					return err
 				}

@@ -54,10 +54,9 @@ func (r *Reporter) BuildRegistryIndexWithPrincipal(
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
 	task := &types.Task{
-		Key:       key,
-		Kind:      types.TaskKindBuildRegistryIndex,
-		Payload:   payload,
-		CreatedBy: principalID,
+		Key:     key,
+		Kind:    types.TaskKindBuildRegistryIndex,
+		Payload: payload,
 	}
 	sources = append(sources, types.SourceRef{Type: types.SourceTypeRegistry, ID: registryID})
 	err = r.UpsertAndSendEvent(ctx, task, sources)
@@ -86,10 +85,9 @@ func (r *Reporter) BuildPackageIndexWithPrincipal(
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
 	task := &types.Task{
-		Key:       key,
-		Kind:      types.TaskKindBuildPackageIndex,
-		Payload:   payload,
-		CreatedBy: principalID,
+		Key:     key,
+		Kind:    types.TaskKindBuildPackageIndex,
+		Payload: payload,
 	}
 
 	sources := make([]types.SourceRef, 0)
@@ -124,10 +122,9 @@ func (r *Reporter) BuildPackageMetadataWithPrincipal(
 		log.Ctx(ctx).Err(err).Msgf("failed to send execute async task event")
 	}
 	task := &types.Task{
-		Key:       key,
-		Kind:      types.TaskKindBuildPackageMetadata,
-		Payload:   payload,
-		CreatedBy: principalID,
+		Key:     key,
+		Kind:    types.TaskKindBuildPackageMetadata,
+		Payload: payload,
 	}
 
 	sources := make([]types.SourceRef, 0)
