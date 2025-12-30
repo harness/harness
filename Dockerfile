@@ -18,7 +18,7 @@ RUN yarn && yarn build && yarn cache clean
 # ---------------------------------------------------------#
 #                   Build Harness image                    #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM golang:1.24.9-alpine3.22 as builder
+FROM --platform=$BUILDPLATFORM golang:1.24.11-alpine3.22 as builder
 
 RUN apk update \
     && apk add --no-cache protoc build-base git
@@ -62,14 +62,17 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CC=$CC go build -ldflags="$LDFLAGS" -o ./gitness ./cmd/gitness
 
 ### Pull CA Certs
-FROM --platform=$BUILDPLATFORM alpine:latest as cert-image
+FROM --platform=$BUILDPLATFORM alpine:3.22 as cert-image
 
-RUN apk --update add ca-certificates
+RUN apk --update add ca-certificates openssl>=3.3.5-r0
 
 # ---------------------------------------------------------#
 #                   Create final image                     #
 # ---------------------------------------------------------#
 FROM --platform=$TARGETPLATFORM alpine/git:2.49.1 as final
+
+# Update openssl to fix CVE-2025-9230 (requires >= 3.3.5-r0)
+RUN apk --update upgrade openssl
 
 # setup app dir and its content
 WORKDIR /app

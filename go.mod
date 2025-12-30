@@ -1,6 +1,6 @@
 module github.com/harness/gitness
 
-go 1.24.3
+go 1.24.11
 
 require (
 	cloud.google.com/go/storage v1.43.0
@@ -224,3 +224,6 @@ require (
 )
 
 replace github.com/harness/gitness/registry => ./registry
+
+// Force containerd to a secure version to fix CVE-2024-25621 (requires >= v1.7.29)
+replace github.com/containerd/containerd => github.com/containerd/containerd v1.7.29
