@@ -63,6 +63,27 @@ type imageLabelDB struct {
 	Labels sql.NullString `db:"labels"`
 }
 
+func (i ImageDao) GetByUUID(ctx context.Context, uuid string) (*types.Image, error) {
+	stmt := databaseg.Builder.
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
+		From("images").
+		Where("image_uuid = ?", uuid)
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	dst := new(imageDB)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find image by uuid")
+	}
+
+	return i.mapToImage(ctx, dst)
+}
+
 func (i ImageDao) Get(ctx context.Context, id int64) (*types.Image, error) {
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
 		From("images").

@@ -61,6 +61,27 @@ type artifactDB struct {
 	UpdatedBy int64            `db:"artifact_updated_by"`
 }
 
+func (a ArtifactDao) GetByUUID(ctx context.Context, uuid string) (*types.Artifact, error) {
+	stmt := databaseg.Builder.
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
+		From("artifacts").
+		Where("artifact_uuid = ?", uuid)
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	dst := new(artifactDB)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find artifact by uuid")
+	}
+
+	return a.mapToArtifact(ctx, dst)
+}
+
 func (a ArtifactDao) Get(ctx context.Context, id int64) (*types.Artifact, error) {
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
 		From("artifacts").

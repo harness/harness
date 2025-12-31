@@ -226,6 +226,9 @@ func (m *mockImageDAO) DuplicateImage(
 	return nil, nil //nolint:nilnil
 }
 
+func (m *mockImageDAO) GetByUUID(context.Context, string) (*types.Image, error) {
+	return nil, nil //nolint:nilnil
+}
 func (m *mockImageDAO) Get(context.Context, int64) (*types.Image, error) { return nil, nil } //nolint:nilnil
 func (m *mockImageDAO) GetByName(context.Context, int64, string) (*types.Image, error) {
 	return nil, nil //nolint:nilnil
@@ -251,6 +254,7 @@ func (m *mockImageDAO) DeleteByImageNameIfNoLinkedArtifacts(context.Context, int
 }
 
 type mockArtifactDAO struct {
+	getByUUID               func(ctx context.Context, uuid string) (*types.Artifact, error)
 	get                     func(ctx context.Context, id int64) (*types.Artifact, error)
 	getByName               func(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
 	getByRegistryIDAndImage func(ctx context.Context, registryID int64, image string) (*[]types.Artifact, error)
@@ -275,6 +279,13 @@ func (m *mockArtifactDAO) GetLatestArtifactsByRepo(
 ) (*[]types.ArtifactMetadata, error) {
 	// TODO implement me
 	panic("implement me")
+}
+
+func (m *mockArtifactDAO) GetByUUID(
+	ctx context.Context,
+	uuid string,
+) (*types.Artifact, error) {
+	return m.getByUUID(ctx, uuid)
 }
 
 func (m *mockArtifactDAO) GetByName(

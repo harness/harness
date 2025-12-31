@@ -11,7 +11,9 @@
         "pullCommand": "go get test-artifact@v1.0.0",
         "registryIdentifier": "",
         "registryPath": "",
-        "size": "0.00B"
+        "registryUUID": "",
+        "size": "0.00B",
+        "uuid": ""
       }
     ],
     "itemCount": 1,

@@ -424,6 +424,65 @@ func (_c *RegistryRepository_FetchUpstreamProxyKeys_Call) RunAndReturn(run func(
 	return _c
 }
 
+// GetByUUID provides a mock function with given fields: ctx, uuid
+func (_m *RegistryRepository) GetByUUID(ctx context.Context, uuid string) (*types.Registry, error) {
+	ret := _m.Called(ctx, uuid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByUUID")
+	}
+
+	var r0 *types.Registry
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*types.Registry, error)); ok {
+		return rf(ctx, uuid)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *types.Registry); ok {
+		r0 = rf(ctx, uuid)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.Registry)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, uuid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RegistryRepository_GetByUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByUUID'
+type RegistryRepository_GetByUUID_Call struct {
+	*mock.Call
+}
+
+// GetByUUID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - uuid string
+func (_e *RegistryRepository_Expecter) GetByUUID(ctx interface{}, uuid interface{}) *RegistryRepository_GetByUUID_Call {
+	return &RegistryRepository_GetByUUID_Call{Call: _e.mock.On("GetByUUID", ctx, uuid)}
+}
+
+func (_c *RegistryRepository_GetByUUID_Call) Run(run func(ctx context.Context, uuid string)) *RegistryRepository_GetByUUID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *RegistryRepository_GetByUUID_Call) Return(registry *types.Registry, err error) *RegistryRepository_GetByUUID_Call {
+	_c.Call.Return(registry, err)
+	return _c
+}
+
+func (_c *RegistryRepository_GetByUUID_Call) RunAndReturn(run func(context.Context, string) (*types.Registry, error)) *RegistryRepository_GetByUUID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function with given fields: ctx, id
 func (_m *RegistryRepository) Get(ctx context.Context, id int64) (*types.Registry, error) {
 	ret := _m.Called(ctx, id)

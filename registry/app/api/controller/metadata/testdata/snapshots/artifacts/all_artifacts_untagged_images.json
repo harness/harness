@@ -17,6 +17,8 @@
         "pullCommand": "docker pull registry.example.com/root/test-registry/test-artifact-1@sha256:0000000000000000000000000000000000000000000000000000000000000001",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "sha256:0000000000000000000000000000000000000000000000000000000000000001"
       },
       {
@@ -35,6 +37,8 @@
         "pullCommand": "helm pull oci://registry.example.com/root/test-registry/test-artifact-2@sha256:0000000000000000000000000000000000000000000000000000000000000002",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "sha256:0000000000000000000000000000000000000000000000000000000000000002"
       },
       {
@@ -47,6 +51,8 @@
         "pullCommand": "",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v3.0.0"
       },
       {
@@ -59,6 +65,8 @@
         "pullCommand": "curl --location 'https://registry.example.com/root/test-registry/test-artifact-4/v4.0.0/\u003cFILENAME\u003e' --header ' \u003cAPI_KEY\u003e' -J -o '\u003cOUTPUT_FILE_NAME\u003e'",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v4.0.0"
       },
       {
@@ -71,6 +79,8 @@
         "pullCommand": "pip install test-artifact-5==v5.0.0 ",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v5.0.0"
       },
       {
@@ -83,6 +93,8 @@
         "pullCommand": "npm install test-artifact-6@v6.0.0 ",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v6.0.0"
       },
       {
@@ -95,6 +107,8 @@
         "pullCommand": "yum install test-artifact-7-v7.0.0",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v7.0.0"
       },
       {
@@ -107,6 +121,8 @@
         "pullCommand": "nuget install test-artifact-8 -Version v8.0.0 -Source \u003cSOURCE\u003e",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v8.0.0"
       },
       {
@@ -119,6 +135,8 @@
         "pullCommand": "go get test-artifact-9@v9.0.0",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v9.0.0"
       },
       {
@@ -132,6 +150,8 @@
         "pullCommand": "curl --location 'https://registry.example.com/root/test-registry/model/test-artifact-10/resolve/v10.0.0/\u003cFILENAME\u003e' --header ' \u003cAPI_KEY\u003e' -J -o '\u003cOUTPUT_FILE_NAME\u003e'",
         "registryIdentifier": "test-registry",
         "registryPath": "",
+        "registryUUID": "",
+        "uuid": "",
         "version": "v10.0.0"
       }
     ],

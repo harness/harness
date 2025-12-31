@@ -83,6 +83,27 @@ type registryNameID struct {
 	Name string `db:"registry_name"`
 }
 
+func (r registryDao) GetByUUID(ctx context.Context, uuid string) (*types.Registry, error) {
+	stmt := databaseg.Builder.
+		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
+		From("registries").
+		Where("registry_uuid = ?", uuid)
+
+	db := dbtx.GetAccessor(ctx, r.db)
+
+	dst := new(registryDB)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find registry by uuid")
+	}
+
+	return r.mapToRegistry(ctx, dst)
+}
+
 func (r registryDao) Get(ctx context.Context, id int64) (*types.Registry, error) {
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).

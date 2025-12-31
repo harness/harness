@@ -19,6 +19,34 @@ type ArtifactRepository struct {
 	mock.Mock
 }
 
+// GetByUUID provides a mock function with given fields: ctx, uuid
+func (_m *ArtifactRepository) GetByUUID(ctx context.Context, uuid string) (*types.Artifact, error) {
+	ret := _m.Called(ctx, uuid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByUUID")
+	}
+
+	var r0 *types.Artifact
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*types.Artifact, error)); ok {
+		return rf(ctx, uuid)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *types.Artifact); ok {
+		r0 = rf(ctx, uuid)
+	} else {
+		r0 = ret.Get(0).(*types.Artifact)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, uuid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Get provides a mock function with given fields: ctx, id
 func (_m *ArtifactRepository) Get(ctx context.Context, id int64) (*types.Artifact, error) {
 	ret := _m.Called(ctx, id)

@@ -11,7 +11,9 @@
         "pullCommand": "nuget install test-artifact -Version v1.0.0 -Source \u003cSOURCE\u003e",
         "registryIdentifier": "",
         "registryPath": "",
-        "size": "0.00B"
+        "registryUUID": "",
+        "size": "0.00B",
+        "uuid": ""
       }
     ],
     "itemCount": 1,

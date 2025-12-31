@@ -11,7 +11,9 @@
         "pullCommand": "curl --location 'https://registry.example.com/root/test-registry/test-artifact/v1.0.0/\u003cFILENAME\u003e' --header ' \u003cAPI_KEY\u003e' -J -o '\u003cOUTPUT_FILE_NAME\u003e'",
         "registryIdentifier": "",
         "registryPath": "",
-        "size": "0.00B"
+        "registryUUID": "",
+        "size": "0.00B",
+        "uuid": ""
       }
     ],
     "itemCount": 1,

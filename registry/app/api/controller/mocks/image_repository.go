@@ -287,6 +287,65 @@ func (_c *ImageRepository_DuplicateImage_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
+// GetByUUID provides a mock function with given fields: ctx, uuid
+func (_m *ImageRepository) GetByUUID(ctx context.Context, uuid string) (*types.Image, error) {
+	ret := _m.Called(ctx, uuid)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByUUID")
+	}
+
+	var r0 *types.Image
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*types.Image, error)); ok {
+		return rf(ctx, uuid)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *types.Image); ok {
+		r0 = rf(ctx, uuid)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.Image)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, uuid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ImageRepository_GetByUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByUUID'
+type ImageRepository_GetByUUID_Call struct {
+	*mock.Call
+}
+
+// GetByUUID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - uuid string
+func (_e *ImageRepository_Expecter) GetByUUID(ctx interface{}, uuid interface{}) *ImageRepository_GetByUUID_Call {
+	return &ImageRepository_GetByUUID_Call{Call: _e.mock.On("GetByUUID", ctx, uuid)}
+}
+
+func (_c *ImageRepository_GetByUUID_Call) Run(run func(ctx context.Context, uuid string)) *ImageRepository_GetByUUID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *ImageRepository_GetByUUID_Call) Return(image *types.Image, err error) *ImageRepository_GetByUUID_Call {
+	_c.Call.Return(image, err)
+	return _c
+}
+
+func (_c *ImageRepository_GetByUUID_Call) RunAndReturn(run func(context.Context, string) (*types.Image, error)) *ImageRepository_GetByUUID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function with given fields: ctx, id
 func (_m *ImageRepository) Get(ctx context.Context, id int64) (*types.Image, error) {
 	ret := _m.Called(ctx, id)

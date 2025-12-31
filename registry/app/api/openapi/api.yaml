@@ -1198,7 +1198,7 @@ paths:
         - $ref: "#/components/parameters/artifactTypeParam"
       responses:
         200:
-          $ref:  "#/components/responses/Success"
+          $ref: "#/components/responses/Success"
         400:
           $ref: "#/components/responses/BadRequest"
         401:
@@ -2218,12 +2218,15 @@ components:
           type: string
         isPublic:
           type: boolean
+        uuid:
+          type: string
       required:
         - type
         - packageType
         - identifier
         - url
         - isPublic
+        - uuid
     ClientSetupDetails:
       type: object
       description: Client Setup Details
@@ -2331,12 +2334,18 @@ components:
           $ref: "#/components/schemas/ArtifactType"
         metadata:
           $ref: "#/components/schemas/ArtifactEntityMetadata"
+        uuid:
+          type: string
+        registryUUID:
+          type: string
       required:
         - name
         - registryIdentifier
         - latestVersion
         - registryPath
         - packageType
+        - uuid
+        - registryUUID
     RegistryArtifactMetadata:
       type: object
       description: Artifact Metadata
@@ -2366,6 +2375,10 @@ components:
           $ref: "#/components/schemas/PackageType"
         artifactType:
           $ref: "#/components/schemas/ArtifactType"
+        uuid:
+          type: string
+        registryUUID:
+          type: string
       required:
         - name
         - registryIdentifier
@@ -2373,6 +2386,8 @@ components:
         - registryPath
         - packageType
         - isPublic
+        - uuid
+        - registryUUID
     ArtifactVersionMetadata:
       type: object
       description: Artifact Version Metadata
@@ -2407,12 +2422,18 @@ components:
           $ref: "#/components/schemas/ArtifactType"
         metadata:
           $ref: "#/components/schemas/ArtifactEntityMetadata"
+        uuid:
+          type: string
+        registryUUID:
+          type: string
       required:
         - name
         - registryIdentifier
         - latestVersion
         - registryPath
         - packageType
+        - uuid
+        - registryUUID
     OciArtifactTag:
       type: object
       description: OCI Artifact Tag info
@@ -2464,6 +2485,8 @@ components:
           type: string
         isPublic:
           type: boolean
+        uuid:
+          type: string
       required:
         - name
         - identifier
@@ -2471,6 +2494,7 @@ components:
         - url
         - packageType
         - isPublic
+        - uuid
     ArtifactDetail:
       type: object
       description: Artifact Detail
@@ -2853,9 +2877,15 @@ components:
           type: string
         modifiedAt:
           type: string
+        uuid:
+          type: string
+        registryUUID:
+          type: string
       required:
         - imageName
         - packageType
+        - uuid
+        - registryUUID
     ArtifactVersionSummary:
       type: object
       description: Docker Artifact Version Summary
@@ -2872,10 +2902,16 @@ components:
           $ref: "#/components/schemas/PackageType"
         artifactType:
           $ref: "#/components/schemas/ArtifactType"
+        uuid:
+          type: string
+        registryUUID:
+          type: string
       required:
         - imageName
         - version
         - packageType
+        - uuid
+        - registryUUID
     DockerArtifactManifest:
       type: object
       description: Docker Artifact Manifest
