@@ -16,12 +16,14 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -68,6 +70,13 @@ func (c *APIController) UpdateWebhook(
 	existingWebhook, err := c.WebhooksRepository.GetByRegistryAndIdentifier(ctx,
 		regInfo.RegistryID, webhookRequest.Identifier)
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return api.UpdateWebhook404JSONResponse{
+				NotFoundJSONResponse: api.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook '%s' not found", webhookRequest.Identifier)),
+				),
+			}, nil
+		}
 		log.Ctx(ctx).Error().Msgf("failed to get existing webhook: %s with error: %v",
 			webhookRequest.Identifier, err)
 		return updateWebhookInternalErrorResponse(fmt.Errorf("failed to get existing webhook"))

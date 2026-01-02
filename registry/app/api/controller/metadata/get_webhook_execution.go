@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -23,6 +24,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -74,6 +76,13 @@ func (c *APIController) GetWebhookExecution(
 
 	w, err := c.WebhooksExecutionRepository.Find(ctx, webhookExecutionID)
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return api.GetWebhookExecution404JSONResponse{
+				NotFoundJSONResponse: api.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook execution '%d' not found", webhookExecutionID)),
+				),
+			}, nil
+		}
 		log.Ctx(ctx).Error().Msgf(getWebhookErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
 		return getWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to find webhook execution: %w", err))
 	}

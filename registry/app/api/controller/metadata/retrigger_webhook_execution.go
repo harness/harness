@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -23,6 +24,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -71,6 +73,13 @@ func (c *APIController) ReTriggerWebhookExecution(
 	}
 	result, err := c.WebhookService.ReTriggerWebhookExecution(ctx, webhookExecutionID)
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return api.ReTriggerWebhookExecution404JSONResponse{
+				NotFoundJSONResponse: api.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook execution '%d' not found", webhookExecutionID)),
+				),
+			}, nil
+		}
 		return getReTriggerWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to re-trigger execution: %w", err))
 	}
 	webhookExecution, err := MapToWebhookExecutionResponseEntity(*result.Execution)

@@ -156,7 +156,10 @@ func (r *GitnessRegistryMetadataHelper) MapToWebhookCore(
 	}
 
 	if webhookRequest.Triggers != nil {
-		triggers := r.MapToInternalWebhookTriggers(*webhookRequest.Triggers)
+		triggers, err := r.MapToInternalWebhookTriggers(*webhookRequest.Triggers)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map to internal webhook triggers: %w", err)
+		}
 		webhook.Triggers = deduplicateTriggers(triggers)
 	}
 
@@ -185,7 +188,11 @@ func (r *GitnessRegistryMetadataHelper) MapToWebhookCore(
 func mapToDTOHeaders(extraHeaders *[]api.ExtraHeader) []types.ExtraHeader {
 	var headers []types.ExtraHeader
 	for _, h := range *extraHeaders {
-		headers = append(headers, types.ExtraHeader{Key: h.Key, Value: h.Value, Masked: h.Masked})
+		masked := false
+		if h.Masked != nil {
+			masked = *h.Masked
+		}
+		headers = append(headers, types.ExtraHeader{Key: h.Key, Value: h.Value, Masked: masked})
 	}
 	return headers
 }
@@ -251,17 +258,26 @@ func (r *GitnessRegistryMetadataHelper) MapToWebhookResponseEntity(
 
 func (r *GitnessRegistryMetadataHelper) MapToInternalWebhookTriggers(
 	triggers []api.Trigger,
-) []enum.WebhookTrigger {
+) ([]enum.WebhookTrigger, error) {
 	var webhookTriggers = make([]enum.WebhookTrigger, 0)
+	var invalidTriggers []string
+
 	for _, trigger := range triggers {
 		switch trigger {
 		case api.TriggerARTIFACTCREATION:
 			webhookTriggers = append(webhookTriggers, enum.WebhookTriggerArtifactCreated)
 		case api.TriggerARTIFACTDELETION:
 			webhookTriggers = append(webhookTriggers, enum.WebhookTriggerArtifactDeleted)
+		default:
+			invalidTriggers = append(invalidTriggers, string(trigger))
 		}
 	}
-	return webhookTriggers
+
+	if len(invalidTriggers) > 0 {
+		return nil, fmt.Errorf("invalid webhook triggers: %v", invalidTriggers)
+	}
+
+	return webhookTriggers, nil
 }
 
 func (r *GitnessRegistryMetadataHelper) MapToAPIExecutionResult(
@@ -296,7 +312,8 @@ func (r *GitnessRegistryMetadataHelper) MapToAPIWebhookTriggers(triggers []enum.
 func (r *GitnessRegistryMetadataHelper) MapToAPIExtraHeaders(headers []types.ExtraHeader) []api.ExtraHeader {
 	apiHeaders := make([]api.ExtraHeader, 0)
 	for _, h := range headers {
-		apiHeaders = append(apiHeaders, api.ExtraHeader{Key: h.Key, Value: h.Value, Masked: h.Masked})
+		masked := h.Masked
+		apiHeaders = append(apiHeaders, api.ExtraHeader{Key: h.Key, Value: h.Value, Masked: &masked})
 	}
 	return apiHeaders
 }

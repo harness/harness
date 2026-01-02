@@ -478,9 +478,10 @@ func TestMapToInternalWebhookTriggers(t *testing.T) {
 	helper := &GitnessRegistryMetadataHelper{}
 
 	tests := []struct {
-		name     string
-		triggers []api.Trigger
-		expected []gitnessenum.WebhookTrigger
+		name      string
+		triggers  []api.Trigger
+		expected  []gitnessenum.WebhookTrigger
+		expectErr bool
 	}{
 		{
 			name: "success_case",
@@ -492,18 +493,32 @@ func TestMapToInternalWebhookTriggers(t *testing.T) {
 				gitnessenum.WebhookTriggerArtifactCreated,
 				gitnessenum.WebhookTriggerArtifactDeleted,
 			},
+			expectErr: false,
 		},
 		{
-			name:     "empty_triggers",
-			triggers: []api.Trigger{},
-			expected: []gitnessenum.WebhookTrigger{},
+			name:      "empty_triggers",
+			triggers:  []api.Trigger{},
+			expected:  []gitnessenum.WebhookTrigger{},
+			expectErr: false,
+		},
+		{
+			name:      "invalid_trigger",
+			triggers:  []api.Trigger{"INVALID_TRIGGER"},
+			expected:  nil,
+			expectErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := helper.MapToInternalWebhookTriggers(tt.triggers)
-			assert.Equal(t, tt.expected, result, "triggers should match")
+			result, err := helper.MapToInternalWebhookTriggers(tt.triggers)
+			if tt.expectErr {
+				assert.Error(t, err, "should return error for invalid triggers")
+				assert.Nil(t, result, "result should be nil on error")
+			} else {
+				assert.NoError(t, err, "should not return error")
+				assert.Equal(t, tt.expected, result, "triggers should match")
+			}
 		})
 	}
 }

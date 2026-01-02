@@ -55,7 +55,7 @@ type RegistryMetadataHelper interface {
 	// MapToInternalWebhookTriggers maps webhook triggers to internal type.
 	MapToInternalWebhookTriggers(
 		triggers []api.Trigger,
-	) []enum.WebhookTrigger
+	) ([]enum.WebhookTrigger, error)
 
 	// MapToAPIWebhookTriggers maps webhook triggers to API type.
 	MapToAPIWebhookTriggers(

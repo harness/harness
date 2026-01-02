@@ -287,7 +287,7 @@ func (_m *RegistryMetadataHelper) MapToAPIWebhookTriggers(triggers []enum.Webhoo
 }
 
 // MapToInternalWebhookTriggers provides a mock function with given fields: triggers
-func (_m *RegistryMetadataHelper) MapToInternalWebhookTriggers(triggers []api.Trigger) []enum.WebhookTrigger {
+func (_m *RegistryMetadataHelper) MapToInternalWebhookTriggers(triggers []api.Trigger) ([]enum.WebhookTrigger, error) {
 	ret := _m.Called(triggers)
 
 	if len(ret) == 0 {
@@ -295,6 +295,10 @@ func (_m *RegistryMetadataHelper) MapToInternalWebhookTriggers(triggers []api.Tr
 	}
 
 	var r0 []enum.WebhookTrigger
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]api.Trigger) ([]enum.WebhookTrigger, error)); ok {
+		return rf(triggers)
+	}
 	if rf, ok := ret.Get(0).(func([]api.Trigger) []enum.WebhookTrigger); ok {
 		r0 = rf(triggers)
 	} else {
@@ -303,7 +307,13 @@ func (_m *RegistryMetadataHelper) MapToInternalWebhookTriggers(triggers []api.Tr
 		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func([]api.Trigger) error); ok {
+		r1 = rf(triggers)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // MapToWebhookCore provides a mock function with given fields: ctx, webhookRequest, regInfo

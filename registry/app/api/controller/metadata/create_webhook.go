@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -34,6 +36,35 @@ func (c *APIController) CreateWebhook(
 	r api.CreateWebhookRequestObject,
 ) (api.CreateWebhookResponseObject, error) {
 	webhookRequest := api.WebhookRequest(*r.Body)
+
+	// Validate required fields
+	if webhookRequest.Identifier == "" {
+		return createWebhookBadRequestErrorResponse(fmt.Errorf("webhook identifier is required"))
+	}
+	if webhookRequest.Name == "" {
+		return createWebhookBadRequestErrorResponse(fmt.Errorf("webhook name is required"))
+	}
+	if webhookRequest.Url == "" {
+		return createWebhookBadRequestErrorResponse(fmt.Errorf("webhook url is required"))
+	}
+
+	// Validate URL format
+	parsedURL, err := url.Parse(webhookRequest.Url)
+	if err != nil {
+		return createWebhookBadRequestErrorResponse(fmt.Errorf("invalid webhook url format: %w", err))
+	}
+	if parsedURL.Scheme == "" || parsedURL.Host == "" {
+		return createWebhookBadRequestErrorResponse(fmt.Errorf("webhook url must be a valid URL with scheme and host"))
+	}
+	// Only allow http and https schemes (case-insensitive whitelist)
+	allowedSchemes := map[string]bool{
+		"http":  true,
+		"https": true,
+	}
+	if !allowedSchemes[strings.ToLower(parsedURL.Scheme)] {
+		return createWebhookBadRequestErrorResponse(fmt.Errorf("webhook url must use http or https scheme"))
+	}
+
 	if webhookRequest.Identifier == internalWebhookIdentifier {
 		return createWebhookBadRequestErrorResponse(
 			fmt.Errorf("webhook identifier %s is reserved", internalWebhookIdentifier),
