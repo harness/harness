@@ -437,13 +437,14 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 	parentID int64, latestVersion bool, registryIDs *[]string,
 	packageTypes []string, search string,
 ) sq.SelectBuilder {
+	// TODO: update query to return correct artifact uuid
 	q2 := databaseg.Builder.Select(
 		`r.registry_name as repo_name,
 		r.registry_uuid as registry_uuid,
 		t.tag_image_name as name, 
 		r.registry_package_type as package_type, 
 		t.tag_name as version, 
-		ar.artifact_uuid as uuid,
+		i.image_uuid as uuid,
 		t.tag_updated_at as modified_at, 
 		i.image_labels as labels, 
 		COALESCE(t2.download_count,0) as download_count,
@@ -457,9 +458,6 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		Join(
 			"images i ON i.image_registry_id = t.tag_registry_id AND"+
 				" i.image_name = t.tag_image_name",
-		).
-		Join(
-			"artifacts ar ON ar.artifact_image_id = i.image_id",
 		).
 		LeftJoin(
 			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
