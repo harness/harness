@@ -112,6 +112,8 @@ func (c *APIController) getImageMetadata(
 	}
 	imgMetadata := &types.ImageMetadata{
 		Name:          image,
+		RegistryUUID:  registry.UUID,
+		UUID:          img.UUID,
 		DownloadCount: downloadCount,
 		RepoName:      registry.Name,
 		PackageType:   registry.PackageType,

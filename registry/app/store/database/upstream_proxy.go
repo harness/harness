@@ -79,6 +79,7 @@ type upstreamProxyConfigDB struct {
 
 type upstreamProxyDB struct {
 	ID                       int64                `db:"id"`
+	RegistryUUID             string               `db:"registry_uuid"`
 	RegistryID               int64                `db:"registry_id"`
 	RepoKey                  string               `db:"repo_key"`
 	ParentID                 string               `db:"parent_id"`
@@ -104,6 +105,7 @@ type upstreamProxyDB struct {
 func getUpstreamProxyQuery() squirrel.SelectBuilder {
 	return databaseg.Builder.Select(
 		" u.upstream_proxy_config_id as id," +
+			" r.registry_uuid as registry_uuid," +
 			" r.registry_id as registry_id," +
 			" r.registry_name as repo_key," +
 			" r.registry_parent_id as parent_id," +
@@ -445,6 +447,7 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 
 	return &types.UpstreamProxy{
 		ID:                       dst.ID,
+		RegistryUUID:             dst.RegistryUUID,
 		RegistryID:               dst.RegistryID,
 		RepoKey:                  dst.RepoKey,
 		ParentID:                 dst.ParentID,

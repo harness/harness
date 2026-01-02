@@ -42,6 +42,7 @@ type UpstreamProxyConfig struct {
 
 type UpstreamProxy struct {
 	ID                       int64
+	RegistryUUID             string
 	RegistryID               int64
 	RepoKey                  string
 	ParentID                 string

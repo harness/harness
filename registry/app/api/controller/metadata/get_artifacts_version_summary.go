@@ -34,7 +34,8 @@ func (c *APIController) GetArtifactVersionSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
 ) (artifact.GetArtifactVersionSummaryResponseObject, error) {
-	image, version, pkgType, isQuarantined, quarantineReason, artifactType, err := c.FetchArtifactSummary(ctx, r)
+	image, version, pkgType, isQuarantined, quarantineReason,
+		artifactType, artifactUUID, registryUUID, err := c.FetchArtifactSummary(ctx, r)
 	if err != nil {
 		return artifact.GetArtifactVersionSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -45,7 +46,7 @@ func (c *APIController) GetArtifactVersionSummary(
 
 	return artifact.GetArtifactVersionSummary200JSONResponse{
 		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image,
-			pkgType, version, isQuarantined, quarantineReason, artifactType),
+			pkgType, version, isQuarantined, quarantineReason, artifactType, artifactUUID, registryUUID),
 	}, nil
 }
 
@@ -53,16 +54,16 @@ func (c *APIController) GetArtifactVersionSummary(
 func (c *APIController) FetchArtifactSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
-) (string, string, artifact.PackageType, bool, string, *artifact.ArtifactType, error) {
+) (string, string, artifact.PackageType, bool, string, *artifact.ArtifactType, string, string, error) {
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
 	if err != nil {
-		return "", "", "", false, "", nil, fmt.Errorf("failed to get registry request base info: %w", err)
+		return "", "", "", false, "", nil, "", "", fmt.Errorf("failed to get registry request base info: %w", err)
 	}
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
-		return "", "", "", false, "", nil, err
+		return "", "", "", false, "", nil, "", "", err
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -74,7 +75,7 @@ func (c *APIController) FetchArtifactSummary(
 		session,
 		permissionChecks...,
 	); err != nil {
-		return "", "", "", false, "", nil, err
+		return "", "", "", false, "", nil, "", "", err
 	}
 
 	image := string(r.Artifact)
@@ -91,14 +92,14 @@ func (c *APIController) FetchArtifactSummary(
 
 	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
 	if err != nil {
-		return "", "", "", false, "", nil, err
+		return "", "", "", false, "", nil, "", "", err
 	}
 
 	var artifactType *artifact.ArtifactType
 	if r.Params.ArtifactType != nil {
 		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
 		if err != nil {
-			return "", "", "", false, "", nil, err
+			return "", "", "", false, "", nil, "", "", err
 		}
 	}
 
@@ -122,23 +123,24 @@ func (c *APIController) FetchArtifactSummary(
 		if c.UntaggedImagesEnabled(ctx) {
 			ociVersion, err = c.TagStore.GetOCIVersionMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
 			if err != nil {
-				return "", "", "", false, "", nil, err
+				return "", "", "", false, "", nil, "", "", err
 			}
 		} else {
 			ociVersion, err = c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
 			if err != nil {
-				return "", "", "", false, "", nil, err
+				return "", "", "", false, "", nil, "", "", err
 			}
 		}
 
-		return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason, nil, nil
+		return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason, nil, "", "", nil
 	}
 	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
 		version, artifactType)
 
 	if err != nil {
-		return "", "", "", false, "", nil, err
+		return "", "", "", false, "", nil, "", "", err
 	}
 
-	return image, art.Name, art.PackageType, isQuarantined, quarantineReason, art.ArtifactType, nil
+	return image, art.Name, art.PackageType, isQuarantined, quarantineReason,
+		art.ArtifactType, art.UUID, registry.UUID, nil
 }

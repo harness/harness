@@ -36,6 +36,8 @@ type Tag struct {
 
 type ArtifactMetadata struct {
 	ID               int64
+	UUID             string
+	RegistryUUID     string
 	Name             string
 	RepoName         string
 	DownloadCount    int64
@@ -54,6 +56,8 @@ type ArtifactMetadata struct {
 
 type ImageMetadata struct {
 	Name          string
+	RegistryUUID  string
+	UUID          string
 	RepoName      string
 	DownloadCount int64
 	PackageType   artifact.PackageType

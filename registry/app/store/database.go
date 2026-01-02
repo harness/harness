@@ -382,6 +382,7 @@ type UpstreamProxyConfigRepository interface {
 }
 
 type RegistryMetadata struct {
+	RegUUID       string
 	RegID         string
 	ParentID      int64
 	RegIdentifier string

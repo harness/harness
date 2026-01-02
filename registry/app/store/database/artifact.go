@@ -657,7 +657,8 @@ func (a ArtifactDao) GetArtifactsByRepo(
 	artifactType *artifact.ArtifactType,
 ) (*[]types.ArtifactMetadata, error) {
 	q := databaseg.Builder.Select(
-		`r.registry_name as repo_name, i.image_name as name, 
+		`r.registry_name as repo_name, i.image_name as name, i.image_uuid as uuid,
+		r.registry_uuid as registry_uuid,
 		r.registry_package_type as package_type, a.artifact_version as latest_version, 
 		a.artifact_updated_at as modified_at, i.image_labels as labels, i.image_type as artifact_type,
 		COALESCE(t2.download_count, 0) as download_count`,
@@ -887,6 +888,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 	q := databaseg.Builder.
 		Select(`
         a.artifact_id as id,
+				a.artifact_uuid as uuid,
         a.artifact_version AS name, 
         a.artifact_metadata ->> 'size' AS size, 
         a.artifact_metadata ->> 'file_count' AS file_count,
@@ -899,6 +901,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 	if a.db.DriverName() == SQLITE3 {
 		q = databaseg.Builder.Select(`
         a.artifact_id as id,
+				a.artifact_uuid as uuid,
         a.artifact_version AS name, 
         json_extract(a.artifact_metadata, '$.size') AS size,
         json_extract(a.artifact_metadata, '$.file_count') AS file_count,
@@ -1045,8 +1048,8 @@ func (a ArtifactDao) GetArtifactMetadata(
 	artifactType *artifact.ArtifactType,
 ) (*types.ArtifactMetadata, error) {
 	q := databaseg.Builder.Select(
-		"r.registry_package_type as package_type, a.artifact_version as name,"+
-			"a.artifact_updated_at as modified_at, "+
+		"r.registry_package_type as package_type, a.artifact_version as name, a.artifact_uuid as uuid,"+
+			"a.artifact_updated_at as modified_at, r.registry_uuid as registry_uuid, "+
 			"COALESCE(COUNT(dc.download_stat_id), 0) as download_count").
 		From("artifacts a").
 		Join("images i ON i.image_id = a.artifact_image_id").
@@ -1056,7 +1059,8 @@ func (a ArtifactDao) GetArtifactMetadata(
 			"r.registry_parent_id = ? AND r.registry_name = ?"+
 				" AND i.image_name = ? AND a.artifact_version = ?", id, identifier, image, version,
 		).
-		GroupBy("r.registry_package_type, a.artifact_version, a.artifact_updated_at")
+		GroupBy("r.registry_package_type, a.artifact_version, a.artifact_updated_at, " +
+			"a.artifact_uuid, r.registry_uuid")
 
 	if artifactType != nil && *artifactType != "" {
 		q = q.Where("i.image_type = ?", *artifactType)
@@ -1222,6 +1226,8 @@ func (a ArtifactDao) mapToArtifactMetadata(
 ) (*types.ArtifactMetadata, error) {
 	artifactMetadata := &types.ArtifactMetadata{
 		ID:               dst.ID,
+		UUID:             dst.UUID,
+		RegistryUUID:     dst.RegistryUUID,
 		Name:             dst.Name,
 		RepoName:         dst.RepoName,
 		DownloadCount:    dst.DownloadCount,
@@ -1255,6 +1261,7 @@ func (a ArtifactDao) mapToNonOCIMetadata(
 	}
 	return &types.NonOCIArtifactMetadata{
 		Name:             dst.Name,
+		UUID:             dst.UUID,
 		DownloadCount:    dst.DownloadCount,
 		PackageType:      dst.PackageType,
 		Size:             size,
@@ -1279,6 +1286,7 @@ func (a ArtifactDao) mapToNonOCIMetadataList(
 
 type nonOCIArtifactMetadataDB struct {
 	ID               string                 `db:"id"`
+	UUID             string                 `db:"uuid"`
 	Name             string                 `db:"name"`
 	Size             *string                `db:"size"`
 	PackageType      artifact.PackageType   `db:"package_type"`

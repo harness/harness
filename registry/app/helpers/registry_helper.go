@@ -204,6 +204,8 @@ func (r *registryHelper) GetArtifactMetadata(
 	lastModified := GetTimeInMs(artifact.ModifiedAt)
 	return &artifactapi.ArtifactMetadata{
 		RegistryIdentifier: artifact.RepoName,
+		RegistryUUID:       artifact.RegistryUUID,
+		Uuid:               artifact.UUID,
 		Name:               artifact.Name,
 		Version:            &artifact.Version,
 		Labels:             &artifact.Labels,
@@ -230,6 +232,7 @@ func (r *registryHelper) GetArtifactVersionMetadata(
 		PackageType:      artifactapi.PackageType(packageType),
 		FileCount:        &fileCount,
 		Name:             tag.Name,
+		Uuid:             tag.UUID,
 		Size:             &size,
 		LastModified:     &modifiedAt,
 		PullCommand:      &pullCommand,

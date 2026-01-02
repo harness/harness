@@ -78,7 +78,9 @@ type tagDB struct {
 
 type artifactMetadataDB struct {
 	ID               int64                  `db:"artifact_id"`
+	UUID             string                 `db:"uuid"`
 	Name             string                 `db:"name"`
+	RegistryUUID     string                 `db:"registry_uuid"`
 	RepoName         string                 `db:"repo_name"`
 	DownloadCount    int64                  `db:"download_count"`
 	PackageType      artifact.PackageType   `db:"package_type"`
@@ -400,7 +402,8 @@ func (t tagDao) GetAllArtifactsByParentID(
 	// Combine q1 and q2 with UNION ALL
 	finalQuery := fmt.Sprintf(`
     SELECT repo_name, name, package_type, version, modified_at,
-           labels, download_count, is_quarantined, quarantine_reason, artifact_type
+           labels, download_count, is_quarantined, quarantine_reason, artifact_type,
+		   registry_uuid, uuid
     FROM (%s UNION ALL %s) AS combined
 `, q1SQL, q2SQL)
 
@@ -435,10 +438,12 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 	packageTypes []string, search string,
 ) sq.SelectBuilder {
 	q2 := databaseg.Builder.Select(
-		`r.registry_name as repo_name, 
+		`r.registry_name as repo_name,
+		r.registry_uuid as registry_uuid,
 		t.tag_image_name as name, 
 		r.registry_package_type as package_type, 
 		t.tag_name as version, 
+		ar.artifact_uuid as uuid,
 		t.tag_updated_at as modified_at, 
 		i.image_labels as labels, 
 		COALESCE(t2.download_count,0) as download_count,
@@ -452,6 +457,9 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		Join(
 			"images i ON i.image_registry_id = t.tag_registry_id AND"+
 				" i.image_name = t.tag_image_name",
+		).
+		Join(
+			"artifacts ar ON ar.artifact_image_id = i.image_id",
 		).
 		LeftJoin(
 			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
@@ -557,6 +565,8 @@ func (t tagDao) getCoreArtifactsQuery(
 ) sq.SelectBuilder {
 	query := databaseg.Builder.Select(
 		`ar.artifact_id,
+		ar.artifact_uuid as uuid,
+		r.registry_uuid as registry_uuid,
 		r.registry_name as repo_name, 
 		i.image_name as name, 
 		r.registry_package_type as package_type,
@@ -761,9 +771,11 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 	}
 	q1 := databaseg.Builder.Select(
 		`r.registry_name as repo_name, 
-		i.image_name as name, 
+		r.registry_uuid as registry_uuid,
+		i.image_name as name,
 		r.registry_package_type as package_type,
-		ar.artifact_version as version, 
+		ar.artifact_version as version,
+		ar.artifact_uuid as uuid, 
 		ar.artifact_updated_at as modified_at, 
 		i.image_labels as labels, 
 		COALESCE(t2.download_count, 0) as download_count,
@@ -1840,6 +1852,8 @@ func (t tagDao) mapToArtifactMetadata(
 
 	artifactMetadata := &types.ArtifactMetadata{
 		Name:             dst.Name,
+		UUID:             dst.UUID,
+		RegistryUUID:     dst.RegistryUUID,
 		RepoName:         dst.RepoName,
 		DownloadCount:    dst.DownloadCount,
 		PackageType:      dst.PackageType,

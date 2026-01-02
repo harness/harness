@@ -261,6 +261,7 @@ func (r registryDao) GetByIDIn(ctx context.Context, ids []int64) (*[]types.Regis
 }
 
 type RegistryMetadataDB struct {
+	RegUUID       string                `db:"registry_uuid"`
 	RegID         string                `db:"registry_id"`
 	ParentID      int64                 `db:"parent_id"`
 	RegIdentifier string                `db:"reg_identifier"`
@@ -293,6 +294,7 @@ func (r registryDao) GetAll(
 
 	// Step 1: Fetch base registry data.
 	selectFields := `
+		r.registry_uuid AS registry_uuid,
 		r.registry_id AS registry_id,
 		r.registry_parent_id AS parent_id,
 		r.registry_name AS reg_identifier,
@@ -887,6 +889,7 @@ func (r registryDao) mapToRegistryMetadata(ctx context.Context, dst *RegistryMet
 	}
 
 	return &store.RegistryMetadata{
+		RegUUID:       dst.RegUUID,
 		RegID:         dst.RegID,
 		ParentID:      dst.ParentID,
 		RegIdentifier: dst.RegIdentifier,

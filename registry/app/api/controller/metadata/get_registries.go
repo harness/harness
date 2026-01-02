@@ -256,6 +256,7 @@ func (c *APIController) GetRegistryMetadata(
 			log.Ctx(ctx).Error().Msgf("error in fetching public access for registry %s: %v", path, err)
 		}
 		repoMetadata := artifact.RegistryMetadata{
+			Uuid:           reg.RegUUID,
 			Identifier:     reg.RegIdentifier,
 			Description:    &description,
 			PackageType:    reg.PackageType,
