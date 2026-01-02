@@ -111,7 +111,7 @@ func (r *GitnessRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 
 		reg, getRegistryErr := r.registryRepository.GetByParentIDAndName(ctx, parentID, regIdentifier)
 		if getRegistryErr != nil {
-			return nil, fmt.Errorf("registry not found: %w", err)
+			return nil, fmt.Errorf("registry not found: %w", getRegistryErr)
 		}
 
 		baseInfo.RegistryRef = regRef

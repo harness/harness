@@ -75,6 +75,16 @@ func (c *APIController) GetAllArtifacts(
 			),
 		}, nil
 	}
+
+	// Validate pagination parameters
+	if regInfo.limit < 0 || regInfo.offset < 0 {
+		return artifact.GetAllArtifacts400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, "page and size must be non-negative"),
+			),
+		}, nil
+	}
+
 	latestVersion := false
 	if r.Params.LatestVersion != nil {
 		latestVersion = bool(*r.Params.LatestVersion)

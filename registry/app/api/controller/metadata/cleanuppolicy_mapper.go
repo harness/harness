@@ -17,6 +17,7 @@ package metadata
 import (
 	"time"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
 )
@@ -24,19 +25,23 @@ import (
 func CreateCleanupPolicyEntity(
 	config *artifact.ModifyRegistryJSONRequestBody,
 	repoID int64,
-) *[]types.CleanupPolicy {
+) (*[]types.CleanupPolicy, error) {
 	if config == nil || config.CleanupPolicy == nil {
-		return nil
+		emptySlice := make([]types.CleanupPolicy, 0)
+		return &emptySlice, nil
 	}
 
 	var cleanupPolicyEntities []types.CleanupPolicy
 	cleanupPolicyDto := *config.CleanupPolicy
 
 	for _, value := range cleanupPolicyDto {
-		cleanupPolicyEntity := getCleanupPolicyEntity(value, repoID)
+		cleanupPolicyEntity, err := getCleanupPolicyEntity(value, repoID)
+		if err != nil {
+			return nil, err
+		}
 		cleanupPolicyEntities = append(cleanupPolicyEntities, *cleanupPolicyEntity)
 	}
-	return &cleanupPolicyEntities
+	return &cleanupPolicyEntities, nil
 }
 
 func CreateCleanupPolicyResponse(
@@ -54,7 +59,21 @@ func CreateCleanupPolicyResponse(
 func getCleanupPolicyEntity(
 	cleanupPolicy artifact.CleanupPolicy,
 	repoID int64,
-) *types.CleanupPolicy {
+) (*types.CleanupPolicy, error) {
+	// Validate required fields
+	if cleanupPolicy.ExpireDays == nil {
+		return nil, usererror.BadRequest("expireDays is required for cleanup policy")
+	}
+	if cleanupPolicy.Name == nil {
+		return nil, usererror.BadRequest("name is required for cleanup policy")
+	}
+	if cleanupPolicy.VersionPrefix == nil {
+		return nil, usererror.BadRequest("versionPrefix is required for cleanup policy")
+	}
+	if cleanupPolicy.PackagePrefix == nil {
+		return nil, usererror.BadRequest("packagePrefix is required for cleanup policy")
+	}
+
 	expireTime := time.Duration(*cleanupPolicy.ExpireDays) * 24 * time.Hour
 	return &types.CleanupPolicy{
 		Name:          *cleanupPolicy.Name,
@@ -62,7 +81,7 @@ func getCleanupPolicyEntity(
 		PackagePrefix: *cleanupPolicy.PackagePrefix,
 		ExpiryTime:    expireTime.Milliseconds(),
 		RegistryID:    repoID,
-	}
+	}, nil
 }
 
 func getCleanupPolicyDto(

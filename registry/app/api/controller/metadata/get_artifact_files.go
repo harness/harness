@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/api/utils"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -62,6 +64,13 @@ func (c *APIController) GetArtifactFiles(
 		session,
 		permissionChecks...,
 	); err != nil {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
+			return artifact.GetArtifactFiles401JSONResponse{
+				UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, err.Error()),
+				),
+			}, nil
+		}
 		return artifact.GetArtifactFiles403JSONResponse{
 			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
 				*GetErrorResponse(http.StatusForbidden, err.Error()),
@@ -95,6 +104,13 @@ func (c *APIController) GetArtifactFiles(
 	img, err := c.ImageStore.GetByNameAndType(ctx, reqInfo.RegistryID, image, artifactType)
 
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return artifact.GetArtifactFiles404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, "Artifact not found"),
+				),
+			}, nil
+		}
 		return artifact.GetArtifactFiles500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
@@ -104,6 +120,13 @@ func (c *APIController) GetArtifactFiles(
 	art, err := c.ArtifactStore.GetByName(ctx, img.ID, version)
 
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return artifact.GetArtifactFiles404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, "Artifact version not found"),
+				),
+			}, nil
+		}
 		return artifact.GetArtifactFiles500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError, err.Error()),

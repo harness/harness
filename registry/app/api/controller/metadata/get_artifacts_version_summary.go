@@ -16,6 +16,7 @@ package metadata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -37,6 +38,20 @@ func (c *APIController) GetArtifactVersionSummary(
 	image, version, pkgType, isQuarantined, quarantineReason,
 		artifactType, artifactUUID, registryUUID, err := c.FetchArtifactSummary(ctx, r)
 	if err != nil {
+		if errors.Is(err, apiauth.ErrUnauthorized) {
+			return artifact.GetArtifactVersionSummary401JSONResponse{
+				UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, err.Error()),
+				),
+			}, nil
+		}
+		if errors.Is(err, apiauth.ErrForbidden) {
+			return artifact.GetArtifactVersionSummary403JSONResponse{
+				UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
+					*GetErrorResponse(http.StatusForbidden, err.Error()),
+				),
+			}, nil
+		}
 		return artifact.GetArtifactVersionSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError, err.Error()),

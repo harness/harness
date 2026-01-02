@@ -74,6 +74,15 @@ func (c *APIController) GetAllArtifactsByRegistry(
 		}, nil
 	}
 
+	// Validate pagination parameters
+	if regInfo.limit < 0 || regInfo.offset < 0 {
+		return artifact.GetAllArtifactsByRegistry400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, "page and size must be non-negative"),
+			),
+		}, nil
+	}
+
 	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, space.ID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return artifact.GetAllArtifactsByRegistry500JSONResponse{

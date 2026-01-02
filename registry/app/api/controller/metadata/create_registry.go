@@ -382,6 +382,14 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		return nil, nil, e
 	}
 
+	// Validate URL is present before proceeding (only for sources that require URL)
+	if config.Source != nil &&
+		c.PackageWrapper.IsURLRequiredForUpstreamSource(string(dto.PackageType), string(*config.Source)) {
+		if config.Url == nil {
+			return nil, nil, usererror.BadRequest("URL is required for upstream repository")
+		}
+	}
+
 	registryConfig := &registrytypes.RegistryConfig{}
 	if config.RemoteUrlSuffix != nil {
 		registryConfig.RemoteUrlSuffix = *config.RemoteUrlSuffix
@@ -400,8 +408,10 @@ func (c *APIController) CreateUpstreamProxyEntity(
 	}
 	CleanURLPath(config.Url)
 	upstreamProxyConfigEntity := &registrytypes.UpstreamProxyConfig{
-		URL:      *config.Url,
 		AuthType: string(config.AuthType),
+	}
+	if config.Url != nil {
+		upstreamProxyConfigEntity.URL = *config.Url
 	}
 	if config.Source != nil && len(string(*config.Source)) > 0 {
 		ok := c.PackageWrapper.ValidateUpstreamSource(string(dto.PackageType), string(*config.Source))

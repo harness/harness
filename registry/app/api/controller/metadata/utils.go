@@ -186,10 +186,13 @@ func ValidateUpstream(
 	if err != nil {
 		return err
 	}
-	if !commons.IsEmpty(config.Type) && config.Type == a.RegistryTypeUPSTREAM &&
-		packageWrapper.IsURLRequiredForUpstreamSource(string(packageType), string(*upstreamConfig.Source)) {
-		if commons.IsEmpty(upstreamConfig.Url) {
-			return usererror.BadRequest("URL is required for upstream repository")
+	if !commons.IsEmpty(config.Type) && config.Type == a.RegistryTypeUPSTREAM {
+		// Check if Source is nil before dereferencing
+		if upstreamConfig.Source != nil &&
+			packageWrapper.IsURLRequiredForUpstreamSource(string(packageType), string(*upstreamConfig.Source)) {
+			if commons.IsEmpty(upstreamConfig.Url) {
+				return usererror.BadRequest("URL is required for upstream repository")
+			}
 		}
 	}
 	return nil

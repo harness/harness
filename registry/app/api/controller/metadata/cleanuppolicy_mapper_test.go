@@ -29,8 +29,10 @@ func TestCreateCleanupPolicyEntity_FunctionExists(t *testing.T) {
 		assert.NotNil(t, CreateCleanupPolicyEntity)
 
 		// Check it can be called with nil safely
-		result := CreateCleanupPolicyEntity(nil, 123)
-		assert.Nil(t, result)
+		result, err := CreateCleanupPolicyEntity(nil, 123)
+		assert.Nil(t, err)
+		assert.NotNil(t, result) // Now returns empty slice, not nil
+		assert.Len(t, *result, 0)
 	})
 }
 
@@ -62,7 +64,8 @@ func TestGetCleanupPolicyEntity_FunctionExists(t *testing.T) {
 			ExpireDays:    &expireDays,
 		}
 
-		entity := getCleanupPolicyEntity(input, 42)
+		entity, err := getCleanupPolicyEntity(input, 42)
+		assert.Nil(t, err)
 		assert.NotNil(t, entity)
 		assert.Equal(t, name, entity.Name)
 		assert.Equal(t, []string{"v1."}, entity.VersionPrefix)
