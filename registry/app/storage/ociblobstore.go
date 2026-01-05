@@ -176,6 +176,31 @@ func (bs *ociBlobStore) ServeBlobInternal(
 	return br, "", size, err
 }
 
+func (bs *ociBlobStore) GetBlobInternal(
+	ctx context.Context,
+	pathPrefix string,
+	dgst digest.Digest,
+) (*FileReader, int64, error) {
+	desc, err := bs.Stat(ctx, pathPrefix, dgst)
+	if err != nil {
+		return nil, 0, err
+	}
+	size := desc.Size
+	path, err := bs.pathFn(pathPrefix, desc.Digest)
+	if err != nil {
+		return nil, size, err
+	}
+
+	br, err := NewFileReader(ctx, bs.driver, path, desc.Size)
+	if err != nil {
+		if br != nil {
+			br.Close()
+		}
+		return nil, size, err
+	}
+	return br, size, err
+}
+
 func (bs *ociBlobStore) Get(
 	ctx context.Context, pathPrefix string,
 	dgst digest.Digest,

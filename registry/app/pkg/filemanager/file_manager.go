@@ -134,6 +134,14 @@ func (f *FileManager) GetBlobsContext(
 	return ctx
 }
 
+func (f *FileManager) GetOCIBlobStore(
+	ctx context.Context,
+	registryIdentifier string,
+	rootIdentifier string,
+) storage.OciBlobStore {
+	return f.storageService.OciBlobsStore(ctx, registryIdentifier, rootIdentifier)
+}
+
 func (f *FileManager) dbSaveFile(
 	ctx context.Context,
 	filePath string,

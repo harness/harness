@@ -134,6 +134,12 @@ type OciBlobStore interface {
 		method string,
 	) (*FileReader, string, int64, error)
 
+	GetBlobInternal(
+		ctx context.Context,
+		pathPrefix string,
+		dgst digest.Digest,
+	) (*FileReader, int64, error)
+
 	Delete(ctx context.Context, pathPrefix string, dgst digest.Digest) error
 
 	// Stat provides metadata about a blob identified by the digest. If the
