@@ -25,6 +25,7 @@ table:
     editRepository: Edit Registry
     deleteRepository: Delete Registry
     deleteArtifact: Delete Artifact
+    download: Download
     VulnerabilityStatus:
       scanned: Scanned
       nonScanned: Not Scanned

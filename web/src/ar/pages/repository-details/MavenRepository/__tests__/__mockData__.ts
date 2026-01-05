@@ -49,7 +49,9 @@ export const MockGetMavenArtifactsByRegistryResponse: GetAllArtifactsByRegistryO
           packageType: 'MAVEN',
           registryIdentifier: 'maven-repo',
           registryPath: '',
-          isPublic: false
+          isPublic: false,
+          registryUUID: 'uuid',
+          uuid: 'uuid'
         }
       ],
       itemCount: 0,
@@ -352,7 +354,8 @@ export const MockGetMavenUpstreamRegistryResponseWithMavenCentralSourceAllData =
       packageType: 'MAVEN',
       labels: ['label1', 'label2', 'label3', 'label4'],
       url: '',
-      isPublic: false
+      isPublic: false,
+      uuid: 'uuid'
     },
     status: 'SUCCESS'
   }

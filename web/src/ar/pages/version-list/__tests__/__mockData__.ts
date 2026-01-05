@@ -31,7 +31,9 @@ export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
       registryIdentifier: '',
       size: '8.63KB',
       downloadsCount: 0,
-      registryPath: ''
+      registryPath: '',
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -55,7 +57,9 @@ export const mockHelmNoPullCmdVersionListTableData: ListArtifactVersion = {
       registryIdentifier: '',
       registryPath: '',
       size: '8.63KB',
-      downloadsCount: 0
+      downloadsCount: 0,
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -79,7 +83,9 @@ export const mockHelmOldVersionListTableData: ListArtifactVersion = {
       registryIdentifier: '',
       registryPath: '',
       size: '8.63KB',
-      downloadsCount: 0
+      downloadsCount: 0,
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -102,7 +108,9 @@ export const mockDockerNoPullCmdVersionListTableData: ListArtifactVersion = {
       pullCommand: '',
       registryIdentifier: '',
       registryPath: '',
-      size: '69.56MB'
+      size: '69.56MB',
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -125,7 +133,9 @@ export const mockDockerLatestVersionListTableData: ListArtifactVersion = {
       pullCommand: 'docker pull pkg.qa.harness.io/iwnhltqp7q/docker-repo/podinfo-artifact:1.0.0',
       registryIdentifier: '',
       registryPath: '',
-      size: '69.56MB'
+      size: '69.56MB',
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -148,7 +158,9 @@ export const mockDockerOldVersionListTableData: ListArtifactVersion = {
       pullCommand: 'docker pull pkg.qa.harness.io/iwnhltzp7q/docker-repo/podinfo-artifact:1.0.0',
       registryIdentifier: '',
       registryPath: '',
-      size: '69.56MB'
+      size: '69.56MB',
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,

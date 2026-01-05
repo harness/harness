@@ -342,7 +342,8 @@ describe('Verify configuration form', () => {
             packageType: 'HELM',
             cleanupPolicy: [],
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -380,7 +381,8 @@ describe('Verify configuration form', () => {
             packageType: 'HELM',
             cleanupPolicy: [],
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -423,7 +425,8 @@ describe('Verify configuration form', () => {
             packageType: 'HELM',
             cleanupPolicy: [],
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })

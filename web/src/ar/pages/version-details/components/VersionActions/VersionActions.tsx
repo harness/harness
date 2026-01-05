@@ -17,7 +17,7 @@
 import React, { useState } from 'react'
 import { get } from 'lodash-es'
 
-import { useAppStore, useFeatureFlags, useRoutes } from '@ar/hooks'
+import { useAppStore, useBulkDownloadFile, useFeatureFlags, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 import CopyMenuItem from '@ar/components/MenuItemTypes/CopyMenuItem'
@@ -30,6 +30,7 @@ import DeleteVersionMenuItem from './DeleteVersionMenuItem'
 import { type VersionActionProps, VersionAction } from './types'
 import { VersionDetailsTab } from '../VersionDetailsTabs/constants'
 import RemoveQurantineMenuItem from './RemoveQurantineMenuItem'
+import DownloadVersionMenuItem from './DownloadVersionMenuItem'
 
 export default function VersionActions({
   data,
@@ -48,6 +49,7 @@ export default function VersionActions({
   const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
   const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
+  const isBulkDownloadFileEnabled = useBulkDownloadFile()
 
   const isAllowed = (action: VersionAction): boolean => {
     if (!allowedActions) return true
@@ -134,6 +136,20 @@ export default function VersionActions({
             }}
           />
         )}
+      {isBulkDownloadFileEnabled && isAllowed(VersionAction.Download) && (
+        <DownloadVersionMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={digest ?? versionKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
     </ActionButton>
   )
 }

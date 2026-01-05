@@ -49,7 +49,9 @@ export const MockGetHelmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOk
           packageType: 'HELM',
           registryIdentifier: 'helm-repo',
           registryPath: '',
-          isPublic: false
+          isPublic: false,
+          registryUUID: 'uuid',
+          uuid: 'uuid'
         }
       ],
       itemCount: 1,
@@ -131,7 +133,8 @@ export const MockGetHelmUpstreamRegistryResponseWithCustomSourceAllData = {
       packageType: 'HELM',
       labels: ['label1', 'label2', 'label3', 'label4'],
       url: '',
-      isPublic: false
+      isPublic: false,
+      uuid: 'uuid'
     },
     status: 'SUCCESS'
   }

@@ -16,13 +16,14 @@
 
 import React, { useState } from 'react'
 
-import { useAppStore } from '@ar/hooks'
+import { useAppStore, useBulkDownloadFile } from '@ar/hooks'
 import { PageType } from '@ar/common/types'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
 import SetupClientMenuItem from './SetupClientMenuItem'
 import { ArtifactActionProps, ArtifactActionsEnum } from './types'
 import DeleteArtifactMenuItem from './DeleteArtifactMenuItem'
+import DownloadArtifactMenuItem from './DownloadArtifactMenuItem'
 
 export default function ArtifactActions({
   data,
@@ -35,6 +36,7 @@ export default function ArtifactActions({
 }: ArtifactActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const { isCurrentSessionPublic } = useAppStore()
+  const isBulkDownloadFileEnabled = useBulkDownloadFile()
 
   const isSupportedAction = (action: ArtifactActionsEnum) => {
     if (!allowedActions) {
@@ -59,6 +61,16 @@ export default function ArtifactActions({
       )}
       {pageType === PageType.Table && isSupportedAction(ArtifactActionsEnum.SetupClient) && (
         <SetupClientMenuItem
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => setOpen(false)}
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+        />
+      )}
+      {isBulkDownloadFileEnabled && isSupportedAction(ArtifactActionsEnum.Download) && (
+        <DownloadArtifactMenuItem
           data={data}
           pageType={pageType}
           readonly={readonly}

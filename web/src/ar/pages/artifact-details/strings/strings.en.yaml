@@ -4,6 +4,7 @@ artifactLabelInputPlaceholder: Type input and hit enter
 labelsUpdated: Artifact labels updated successfully!
 totalDownloads: Total Downloads
 artifactDeleted: Artifact deleted successfully!
+createdAsyncDownloadRequest: Download request created successfully! Please do not close the window.
 deleteArtifactModal:
   title: Delete Artifact
   contentText: Are you sure you want to delete the artifact?

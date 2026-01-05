@@ -25,7 +25,8 @@ export const mockRepositoryListApiResponse: GetAllRegistriesOkResponse = {
           packageType: 'DOCKER',
           type: 'VIRTUAL',
           url: 'space/repo1',
-          isPublic: false
+          isPublic: false,
+          uuid: 'uuid'
         },
         {
           identifier: 'repo2',
@@ -37,14 +38,16 @@ export const mockRepositoryListApiResponse: GetAllRegistriesOkResponse = {
           downloadsCount: 100,
           registrySize: '100 MB',
           artifactsCount: 100,
-          isPublic: false
+          isPublic: false,
+          uuid: 'uuid'
         },
         {
           identifier: 'upstream_1',
           packageType: 'DOCKER',
           type: 'UPSTREAM',
           url: 'space/upstream_1',
-          isPublic: false
+          isPublic: false,
+          uuid: 'uuid'
         }
       ],
       itemCount: 2,

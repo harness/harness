@@ -49,7 +49,9 @@ export const MockGetNpmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOkR
           packageType: 'NPM',
           registryIdentifier: 'npm-repo',
           registryPath: '',
-          isPublic: false
+          isPublic: false,
+          registryUUID: 'uuid',
+          uuid: 'uuid'
         }
       ],
       itemCount: 0,
@@ -352,7 +354,8 @@ export const MockGetNpmUpstreamRegistryResponseWithNpmJsSourceAllData = {
       description: 'test description',
       packageType: 'NPM',
       labels: ['label1', 'label2', 'label3', 'label4'],
-      url: ''
+      url: '',
+      uuid: 'uuid'
     },
     status: 'SUCCESS'
   }

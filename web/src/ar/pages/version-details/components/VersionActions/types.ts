@@ -36,5 +36,6 @@ export enum VersionAction {
   SetupClient = 'setupClient',
   DownloadCommand = 'downloadCommand',
   ViewVersionDetails = 'viewVersionDetails',
-  Quarantine = 'quarantine'
+  Quarantine = 'quarantine',
+  Download = 'download'
 }

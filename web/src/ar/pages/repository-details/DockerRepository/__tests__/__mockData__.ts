@@ -51,7 +51,9 @@ export const MockGetArtifactsByRegistryResponse: GetAllArtifactsByRegistryOkResp
           packageType: 'DOCKER',
           registryIdentifier: 'docker-repo',
           registryPath: '',
-          isPublic: false
+          isPublic: false,
+          registryUUID: 'uuid',
+          uuid: 'uuid'
         }
       ],
       itemCount: 1,
@@ -143,7 +145,8 @@ export const MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData = {
       labels: ['label1', 'label2', 'label3', 'label4'],
       url: '',
       scanners: [{ name: 'AQUA_TRIVY' }],
-      isPublic: false
+      isPublic: false,
+      uuid: 'uuid'
     },
     status: 'SUCCESS'
   }

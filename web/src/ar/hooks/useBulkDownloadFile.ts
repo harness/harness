@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-import type { ArtifactSummary } from '@harnessio/react-har-service-client'
-import type { PackageMetadata } from '@harnessio/react-har-service-v2-client'
-import type { PageType } from '@ar/common/types'
+import { Parent } from '@ar/common/types'
+import { useAppStore } from './useAppStore'
+import { useFeatureFlags } from './useFeatureFlag'
 
-export enum ArtifactActionsEnum {
-  Delete = 'delete',
-  SetupClient = 'setupClient',
-  Download = 'download'
-}
-
-export interface ArtifactActionProps {
-  data: ArtifactSummary | PackageMetadata
-  artifactKey: string
-  repoKey: string
-  pageType: PageType
-  readonly?: boolean
-  onClose?: () => void
-  allowedActions?: ArtifactActionsEnum[]
+export function useBulkDownloadFile() {
+  const { parent, isCurrentSessionPublic } = useAppStore()
+  const { HAR_BULK_DOWNLOAD_FILE } = useFeatureFlags()
+  return !isCurrentSessionPublic && HAR_BULK_DOWNLOAD_FILE && parent === Parent.Enterprise
 }

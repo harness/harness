@@ -14,22 +14,28 @@
  * limitations under the License.
  */
 
-import type { ArtifactSummary } from '@harnessio/react-har-service-client'
-import type { PackageMetadata } from '@harnessio/react-har-service-v2-client'
-import type { PageType } from '@ar/common/types'
-
-export enum ArtifactActionsEnum {
-  Delete = 'delete',
-  SetupClient = 'setupClient',
-  Download = 'download'
+.requestsContainer {
+  position: fixed;
+  bottom: 100px;
+  left: 5%;
+  right: 5%;
 }
 
-export interface ArtifactActionProps {
-  data: ArtifactSummary | PackageMetadata
-  artifactKey: string
-  repoKey: string
-  pageType: PageType
-  readonly?: boolean
-  onClose?: () => void
-  allowedActions?: ArtifactActionsEnum[]
+.requestContainer {
+  min-width: 400px !important;
+  max-width: 80% !important;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.requestKey {
+  max-width: 300px;
+}
+
+.cardContainer {
+  background: white !important;
+  box-shadow: 0 1px 5px -4px var(--black);
+  border-radius: 4px;
+  padding: var(--spacing-small) !important;
+  margin-bottom: var(--spacing-medium) !important;
 }

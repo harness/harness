@@ -32,6 +32,7 @@ import PageNotPublic from '@ar/__mocks__/components/PageNotPublic'
 import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
 import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
+import AsyncDownloadRequestsProvider from '@ar/contexts/AsyncDownloadRequestsProvider/AsyncDownloadRequestsProvider'
 
 import useOpenApiClient from './useOpenApiClient'
 import '@ar/utils/customYupValidators'
@@ -118,14 +119,16 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
               <ModalProvider>
                 {props.children ?? (
                   <NavComponent>
-                    <Suspense
-                      fallback={
-                        <Page.Body className={css.pageBody}>
-                          <Page.Spinner fixed={false} />
-                        </Page.Body>
-                      }>
-                      <RouteDestinations />
-                    </Suspense>
+                    <AsyncDownloadRequestsProvider>
+                      <Suspense
+                        fallback={
+                          <Page.Body className={css.pageBody}>
+                            <Page.Spinner fixed={false} />
+                          </Page.Body>
+                        }>
+                        <RouteDestinations />
+                      </Suspense>
+                    </AsyncDownloadRequestsProvider>
                   </NavComponent>
                 )}
               </ModalProvider>

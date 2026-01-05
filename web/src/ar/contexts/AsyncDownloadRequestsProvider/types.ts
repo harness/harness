@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-import type { ArtifactSummary } from '@harnessio/react-har-service-client'
-import type { PackageMetadata } from '@harnessio/react-har-service-v2-client'
-import type { PageType } from '@ar/common/types'
-
-export enum ArtifactActionsEnum {
-  Delete = 'delete',
-  SetupClient = 'setupClient',
-  Download = 'download'
+export type AsyncRequest = {
+  key: string
+  registryId: string
+  accountId: string
+  time: number
 }
 
-export interface ArtifactActionProps {
-  data: ArtifactSummary | PackageMetadata
-  artifactKey: string
-  repoKey: string
-  pageType: PageType
-  readonly?: boolean
-  onClose?: () => void
-  allowedActions?: ArtifactActionsEnum[]
+export enum BulkDownloadRequestStatusEnum {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  SUCCESS = 'success',
+  FAILED = 'failed'
 }

@@ -73,10 +73,15 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.SetupClient,
     VersionAction.DownloadCommand,
     VersionAction.ViewVersionDetails,
-    VersionAction.Quarantine
+    VersionAction.Quarantine,
+    VersionAction.Download
   ]
 
-  protected allowedActionsOnVersionDetailsPage = [VersionAction.Delete, VersionAction.Quarantine]
+  protected allowedActionsOnVersionDetailsPage = [
+    VersionAction.Delete,
+    VersionAction.Quarantine,
+    VersionAction.Download
+  ]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {
     return <VersionListTable {...props} columnConfigs={this.versionListTableColumnConfig} />

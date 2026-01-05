@@ -25,7 +25,8 @@ export const MockGetDockerRegistryResponseWithMinimumData = {
       packageType: 'DOCKER',
       url: 'https://pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo',
       cleanupPolicy: [],
-      isPublic: false
+      isPublic: false,
+      uuid: 'uuid'
     },
     status: 'SUCCESS'
   }

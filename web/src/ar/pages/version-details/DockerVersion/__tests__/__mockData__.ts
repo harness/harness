@@ -40,7 +40,9 @@ export const mockDockerLatestVersionListTableData: ListArtifactVersion = {
       pullCommand: 'docker pull pkg.qa.harness.io/iwnhltqp7q/docker-repo/podinfo-artifact:1.0.0',
       registryIdentifier: '',
       registryPath: '',
-      size: '69.56MB'
+      size: '69.56MB',
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -83,7 +85,9 @@ export const mockDockerVersionSummary: ArtifactVersionSummaryResponseResponse = 
     sscaArtifactSourceId: '67a5dccf6d75916b0c3ea1b5',
     stoExecutionId: 'Tbi7s6nETjmOMKU3Qrnm7A',
     stoPipelineId: 'HARNESS_ARTIFACT_SCAN_PIPELINE',
-    version: '1.0.0'
+    version: '1.0.0',
+    uuid: 'uuid',
+    registryUUID: 'uuid'
   },
   status: 'SUCCESS'
 }
@@ -92,7 +96,9 @@ export const mockDockerVersionSummaryWithoutSscaAndStoData: ArtifactVersionSumma
   data: {
     imageName: 'maven-app',
     packageType: 'DOCKER',
-    version: '1.0.0'
+    version: '1.0.0',
+    uuid: 'uuid',
+    registryUUID: 'uuid'
   },
   status: 'SUCCESS'
 }
@@ -113,7 +119,9 @@ export const mockDockerVersionList: ListArtifactVersionResponseResponse = {
         pullCommand: 'docker pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.0',
         registryIdentifier: '',
         registryPath: '',
-        size: '246.43MB'
+        size: '246.43MB',
+        uuid: 'uuid',
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -128,7 +136,9 @@ export const mockDockerVersionList: ListArtifactVersionResponseResponse = {
         pullCommand: 'docker pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.1',
         registryIdentifier: '',
         registryPath: '',
-        size: '246.89MB'
+        size: '246.89MB',
+        uuid: 'uuid',
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -143,7 +153,9 @@ export const mockDockerVersionList: ListArtifactVersionResponseResponse = {
         pullCommand: 'docker pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.2',
         registryIdentifier: '',
         registryPath: '',
-        size: '246.89MB'
+        size: '246.89MB',
+        uuid: 'uuid',
+        registryUUID: 'uuid'
       }
     ],
     itemCount: 3,

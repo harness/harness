@@ -31,7 +31,9 @@ export const mockMavenLatestVersionListTableData: ListArtifactVersion = {
       packageType: 'MAVEN',
       registryIdentifier: '',
       registryPath: '',
-      size: '69.56MB'
+      size: '69.56MB',
+      uuid: 'uuid',
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -44,7 +46,9 @@ export const mockMavenVersionSummary: ArtifactVersionSummaryResponseResponse = {
   data: {
     imageName: 'maven-app',
     packageType: 'MAVEN',
-    version: '1.0.0'
+    version: '1.0.0',
+    uuid: 'uuid',
+    registryUUID: 'uuid'
   },
   status: 'SUCCESS'
 }
@@ -65,7 +69,9 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         pullCommand: 'helm pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.0',
         registryIdentifier: '',
         registryPath: '',
-        size: '246.43MB'
+        size: '246.43MB',
+        uuid: 'uuid',
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -80,7 +86,9 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         pullCommand: 'helm pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.1',
         registryIdentifier: '',
         registryPath: '',
-        size: '246.89MB'
+        size: '246.89MB',
+        uuid: 'uuid',
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -95,7 +103,9 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         pullCommand: 'helm pull pkg.qa.harness.io/iwnhltqot7gft7r-f_zp7q/docker-repo/maven-app:1.0.2',
         registryIdentifier: '',
         registryPath: '',
-        size: '246.89MB'
+        size: '246.89MB',
+        uuid: 'uuid',
+        registryUUID: 'uuid'
       }
     ],
     itemCount: 3,

@@ -12,6 +12,7 @@
 export interface StringsMap {
   'artifactDetails.artifactDeleted': string
   'artifactDetails.artifactLabelInputPlaceholder': string
+  'artifactDetails.createdAsyncDownloadRequest': string
   'artifactDetails.deleteArtifactModal.contentText': string
   'artifactDetails.deleteArtifactModal.title': string
   'artifactDetails.downloadsThisWeek': string
@@ -30,6 +31,7 @@ export interface StringsMap {
   'artifactList.table.actions.VulnerabilityStatus.scanned': string
   'artifactList.table.actions.deleteArtifact': string
   'artifactList.table.actions.deleteRepository': string
+  'artifactList.table.actions.download': string
   'artifactList.table.actions.editRepository': string
   'artifactList.table.allRepositories': string
   'artifactList.table.allVersions': string

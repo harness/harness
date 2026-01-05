@@ -432,7 +432,8 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'MAVEN',
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -469,7 +470,8 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'MAVEN',
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -506,7 +508,8 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'MAVEN',
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })

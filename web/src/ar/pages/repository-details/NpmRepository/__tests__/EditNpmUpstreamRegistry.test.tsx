@@ -434,7 +434,8 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'NPM',
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -471,7 +472,8 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'NPM',
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -508,7 +510,8 @@ describe('Verify configuration form', () => {
             labels: ['label1', 'label2', 'label3', 'label4'],
             packageType: 'NPM',
             url: '',
-            isPublic: false
+            isPublic: false,
+            uuid: 'uuid'
           },
           registry_ref: 'undefined/abcd/+'
         })
