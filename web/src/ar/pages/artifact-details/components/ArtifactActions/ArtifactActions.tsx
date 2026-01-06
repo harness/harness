@@ -17,7 +17,7 @@
 import React, { useState } from 'react'
 
 import { useAppStore, useBulkDownloadFile } from '@ar/hooks'
-import { PageType } from '@ar/common/types'
+import { PageType, RepositoryPackageType } from '@ar/common/types'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
 import SetupClientMenuItem from './SetupClientMenuItem'
@@ -36,7 +36,9 @@ export default function ArtifactActions({
 }: ArtifactActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const { isCurrentSessionPublic } = useAppStore()
-  const isBulkDownloadFileEnabled = useBulkDownloadFile()
+  const isBulkDownloadFileEnabled =
+    useBulkDownloadFile() &&
+    ![RepositoryPackageType.DOCKER, RepositoryPackageType.HELM].includes(data.packageType as RepositoryPackageType)
 
   const isSupportedAction = (action: ArtifactActionsEnum) => {
     if (!allowedActions) {

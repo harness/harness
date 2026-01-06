@@ -16,21 +16,29 @@
 
 import React, { useContext } from 'react'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
+import { createBulkDownloadRequestV1 } from '@harnessio/react-har-service-client'
 import { useCreateBulkDownloadRequestMutation } from '@harnessio/react-har-service-v2-client'
 
-import { useAppStore, useParentComponents } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef, useParentComponents, useV2Apis } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
+import { RepositoryPackageType } from '@ar/common/types'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import { AsyncDownloadRequestsContext } from '@ar/contexts/AsyncDownloadRequestsProvider/AsyncDownloadRequestsProvider'
 
 import type { VersionActionProps } from './types'
 
 export default function DownloadVersionMenuItem(props: VersionActionProps) {
-  const { artifactKey, readonly, onClose, data } = props
+  const { artifactKey, repoKey, versionKey, readonly, onClose, data } = props
   const { RbacMenuItem } = useParentComponents()
   const { scope } = useAppStore()
   const { getString } = useStrings()
   const { addRequest } = useContext(AsyncDownloadRequestsContext)
+  const shouldUseV2Apis = useV2Apis()
+  const registryRef = useGetSpaceRef(repoKey)
+  const isOCIPackageType = [RepositoryPackageType.DOCKER, RepositoryPackageType.HELM].includes(
+    data.packageType as RepositoryPackageType
+  )
 
   const { showSuccess, showError } = useToaster()
 
@@ -56,11 +64,33 @@ export default function DownloadVersionMenuItem(props: VersionActionProps) {
     }
   }
 
+  const handleDownloadV1 = async () => {
+    try {
+      const response = await createBulkDownloadRequestV1({
+        registry_ref: registryRef,
+        artifact: encodeRef(artifactKey),
+        version: versionKey
+      })
+      const downloadId = response.content.data.downloadId
+      showSuccess(getString('artifactDetails.createdAsyncDownloadRequest'))
+      addRequest(downloadId, data.registryUUID)
+      onClose?.()
+    } catch (error) {
+      showError(getErrorInfoFromErrorObject(error as Error) || getString('failedToLoadData'))
+    }
+  }
+
   return (
     <RbacMenuItem
       icon="download-box"
       text={getString('artifactList.table.actions.download')}
-      onClick={handleDownload}
+      onClick={() => {
+        if (shouldUseV2Apis || !isOCIPackageType) {
+          handleDownload()
+        } else {
+          handleDownloadV1()
+        }
+      }}
       disabled={readonly}
       permission={{
         resource: {

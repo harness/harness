@@ -101,7 +101,11 @@ export default function AsyncDownloadRequest({ requestKey, onRemove }: AsyncDown
       <Layout.Horizontal spacing="small">
         {response.downloadUrl && (
           <Button
-            href={response.downloadUrl}
+            href={
+              typeof window.getApiBaseUrl === 'function'
+                ? window.getApiBaseUrl(response.downloadUrl)
+                : response.downloadUrl
+            }
             target="_blank"
             variation={ButtonVariation.ICON}
             small

@@ -25,5 +25,5 @@ export enum BulkDownloadRequestStatusEnum {
   PENDING = 'pending',
   PROCESSING = 'processing',
   SUCCESS = 'success',
-  FAILED = 'failed'
+  FAILED = 'failure'
 }
