@@ -165,6 +165,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/rpm"
 	publicaccess2 "github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
+	storage2 "github.com/harness/gitness/registry/app/storage"
 	cache2 "github.com/harness/gitness/registry/app/store/cache"
 	database2 "github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/app/utils/cargo"
@@ -549,7 +550,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	storageDeleter := gc.StorageDeleterProvider(storageDriver)
 	blobRepository := database2.ProvideBlobDao(db, mediaTypesRepository)
-	storageService := docker.StorageServiceProvider(config, storageDriver)
+	driverProvider := storage2.NewStaticDriverProvider(storageDriver)
+	storageService := docker.StorageServiceProvider(config, driverProvider)
 	gcService := gc.ServiceProvider()
 	ociBlobStoreFactory := docker.ProvideOciBlobStore(storageService)
 	bucketService := docker.ProvideBucketService(ociBlobStoreFactory)

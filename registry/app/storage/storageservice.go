@@ -19,8 +19,6 @@ package storage
 import (
 	"context"
 
-	"github.com/harness/gitness/registry/app/driver"
-
 	"github.com/opencontainers/go-digest"
 )
 
@@ -28,7 +26,7 @@ type Service struct {
 	deleteEnabled          bool
 	resumableDigestEnabled bool
 	redirect               bool
-	driver                 driver.StorageDriver
+	driverProvider         DriverProvider
 }
 
 // Option is the type used for functional options for NewRegistry.
@@ -48,10 +46,10 @@ func EnableDelete(registry *Service) error {
 	return nil
 }
 
-func NewStorageService(driver driver.StorageDriver, options ...Option) (*Service, error) {
+func NewStorageService(provider DriverProvider, options ...Option) (*Service, error) {
 	registry := &Service{
 		resumableDigestEnabled: true,
-		driver:                 driver,
+		driverProvider:         provider,
 	}
 
 	for _, option := range options {
@@ -67,7 +65,7 @@ func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootP
 	return &ociBlobStore{
 		repoKey:                repoKey,
 		ctx:                    ctx,
-		driver:                 storage.driver,
+		driver:                 storage.driverProvider.GetDriver(ctx, DriverSelector{}),
 		pathFn:                 PathFn,
 		redirect:               storage.redirect,
 		deleteEnabled:          storage.deleteEnabled,
@@ -76,9 +74,9 @@ func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootP
 	}
 }
 
-func (storage *Service) GenericBlobsStore(rootParentRef string) GenericBlobStore {
+func (storage *Service) GenericBlobsStore(ctx context.Context, rootParentRef string) GenericBlobStore {
 	return &genericBlobStore{
-		driver:        storage.driver,
+		driver:        storage.driverProvider.GetDriver(ctx, DriverSelector{}),
 		redirect:      storage.redirect,
 		rootParentRef: rootParentRef,
 	}

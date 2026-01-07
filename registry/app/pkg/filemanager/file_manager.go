@@ -132,7 +132,7 @@ func (f *FileManager) GetBlobsContext(
 	}
 
 	// For default flows
-	ctx.genericBlobStore = f.storageService.GenericBlobsStore(rootIdentifier)
+	ctx.genericBlobStore = f.storageService.GenericBlobsStore(c, rootIdentifier)
 	return ctx
 }
 

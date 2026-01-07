@@ -74,7 +74,7 @@ func (app *App) StorageService() *registrystorage.Service {
 	return app.storageService
 }
 
-func GetStorageService(cfg *types.Config, driver storagedriver.StorageDriver) *registrystorage.Service {
+func GetStorageService(cfg *types.Config, provider registrystorage.DriverProvider) *registrystorage.Service {
 	options := registrystorage.GetRegistryOptions()
 	if cfg.Registry.Storage.S3Storage.Delete {
 		options = append(options, registrystorage.EnableDelete)
@@ -86,7 +86,7 @@ func GetStorageService(cfg *types.Config, driver storagedriver.StorageDriver) *r
 		log.Info().Msg("backend redirection disabled")
 	}
 
-	storageService, err := registrystorage.NewStorageService(driver, options...)
+	storageService, err := registrystorage.NewStorageService(provider, options...)
 	if err != nil {
 		panic("could not create storage service: " + err.Error())
 	}
@@ -129,10 +129,13 @@ func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID
 		OciBlobStore: nil,
 	}
 
+	// For reads and lazy replication
 	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobID,
 		digest.Digest(info.Digest).String()); result != nil {
 		ctx.OciBlobStore = result.OciStore
 	}
+
+	// Default read/write
 	if ctx.OciBlobStore == nil {
 		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier)
 	}

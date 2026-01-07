@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/events/replication"
@@ -115,8 +114,8 @@ func DBStoreProvider(
 	return NewDBStore(blobRepo, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, manifestDao, quarantineDao)
 }
 
-func StorageServiceProvider(cfg *types.Config, driver storagedriver.StorageDriver) *storage.Service {
-	return GetStorageService(cfg, driver)
+func StorageServiceProvider(cfg *types.Config, driverProvider storage.DriverProvider) *storage.Service {
+	return GetStorageService(cfg, driverProvider)
 }
 
 func ProvideReporter() event.Reporter {
@@ -192,4 +191,5 @@ var OpenSourceWireSet = wire.NewSet(
 	WireSet,
 	OciBlobStoreSet,
 	BucketServiceSet,
+	storage.NewStaticDriverProvider,
 )
