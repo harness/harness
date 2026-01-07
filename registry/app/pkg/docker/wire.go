@@ -49,12 +49,11 @@ func LocalRegistryProvider(
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
 	replicationReporter replication.Reporter,
-	bucketService BucketService,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
-		gcService, tx, quarantineArtifactDao, bucketService, replicationReporter,
+		gcService, tx, quarantineArtifactDao, replicationReporter,
 	).(*LocalRegistry)
 	if !ok {
 		return nil

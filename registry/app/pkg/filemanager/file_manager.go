@@ -122,6 +122,7 @@ func (f *FileManager) GetBlobsContext(
 ) *Context {
 	ctx := &Context{Context: c}
 
+	// For reads and Lazy Replication
 	if f.bucketService != nil && blobID != "" {
 		if result := f.bucketService.GetBlobStore(c, registryIdentifier, rootIdentifier, blobID,
 			sha256); result != nil {
@@ -129,7 +130,8 @@ func (f *FileManager) GetBlobsContext(
 			return ctx
 		}
 	}
-	// use blob store from the default bucket
+
+	// For default flows
 	ctx.genericBlobStore = f.storageService.GenericBlobsStore(rootIdentifier)
 	return ctx
 }

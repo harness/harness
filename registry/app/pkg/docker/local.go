@@ -119,7 +119,7 @@ func NewLocalRegistry(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
-	bucketService BucketService, replicationReporter replication.Reporter,
+	replicationReporter replication.Reporter,
 ) Registry {
 	return &LocalRegistry{
 		App:                   app,
@@ -137,7 +137,6 @@ func NewLocalRegistry(
 		gcService:             gcService,
 		tx:                    tx,
 		quarantineArtifactDao: quarantineArtifactDao,
-		bucketService:         bucketService,
 		replicationReporter:   replicationReporter,
 	}
 }
@@ -158,7 +157,6 @@ type LocalRegistry struct {
 	gcService             gc.Service
 	tx                    dbtx.Transactor
 	quarantineArtifactDao store.QuarantineArtifactRepository
-	bucketService         BucketService
 	replicationReporter   replication.Reporter
 }
 
@@ -1643,7 +1641,8 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 	// Emit blob create event
 	if created {
 		destinations := []replication.CloudLocation{}
-		r.replicationReporter.ReportEventAsync(ctx.Context, ctx.OciBlobStore.Path(), replication.BlobCreate, storedBlob.ID,
+		r.replicationReporter.ReportEventAsync(ctx.Context, ctx.OciBlobStore.Path(), replication.BlobCreate,
+			storedBlob.ID,
 			"", digestVal, r.App.Config, destinations)
 	}
 	return nil
