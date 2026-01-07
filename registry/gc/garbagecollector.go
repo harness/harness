@@ -19,7 +19,7 @@ import (
 	"time"
 
 	corestore "github.com/harness/gitness/app/store"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
@@ -31,11 +31,7 @@ func New() Service {
 	return &Noop{}
 }
 
-func (s *Noop) Start(
-	context.Context, corestore.SpaceStore,
-	store.BlobRepository, storagedriver.StorageDeleter,
-	*types.Config,
-) {
+func (s *Noop) Start(context.Context, corestore.SpaceStore, store.BlobRepository, *storage.Service, *types.Config) {
 	// NOOP
 }
 

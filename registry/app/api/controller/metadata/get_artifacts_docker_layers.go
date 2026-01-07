@@ -97,7 +97,8 @@ func (c *APIController) GetDockerArtifactLayers(
 		return getLayersErrorResponse(ctx, err)
 	}
 
-	mConfig, err := getManifestConfig(ctx, m.Configuration.Digest, regInfo.RootIdentifier, c.StorageDriver)
+	mConfig, err := getManifestConfig(ctx, m.Configuration.Digest, regInfo.RootIdentifier,
+		c.StorageService.OciBlobsStore(ctx, regInfo.RegistryRef, regInfo.RootIdentifier))
 	if err != nil {
 		return getLayersErrorResponse(ctx, err)
 	}

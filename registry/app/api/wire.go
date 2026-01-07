@@ -81,7 +81,7 @@ type RegistryApp struct {
 	AppRouter router.AppRouter
 }
 
-func BlobStorageProvider(ctx context.Context, c *types.Config) (storagedriver.StorageDriver, error) {
+func DefaultStorageProvider(ctx context.Context, c *types.Config) (storagedriver.StorageDriver, error) {
 	var d storagedriver.StorageDriver
 	var err error
 
@@ -240,7 +240,7 @@ func NewGoPackageHandlerProvider(
 }
 
 var WireSet = wire.NewSet(
-	BlobStorageProvider,
+	DefaultStorageProvider,
 	NewHandlerProvider,
 	NewMavenHandlerProvider,
 	NewGenericHandlerProvider,

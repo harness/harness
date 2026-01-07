@@ -40,13 +40,13 @@ import (
 	mavenRouter "github.com/harness/gitness/registry/app/api/router/maven"
 	"github.com/harness/gitness/registry/app/api/router/oci"
 	packagerrouter "github.com/harness/gitness/registry/app/api/router/packages"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
@@ -74,7 +74,6 @@ func APIHandlerProvider(
 	manifestDao store.ManifestRepository,
 	cleanupPolicyDao store.CleanupPolicyRepository,
 	imageDao store.ImageRepository,
-	driver storagedriver.StorageDriver,
 	spaceFinder refcache.SpaceFinder,
 	tx dbtx.Transactor,
 	authenticator authn.Authenticator,
@@ -99,42 +98,14 @@ func APIHandlerProvider(
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.CacheService,
 	quarantineFinder quarantine.Finder,
+	storageService *storage.Service,
 ) harness.APIHandler {
-	return harness.NewAPIHandler(
-		repoDao,
-		fileManager,
-		upstreamproxyDao,
-		tagDao,
-		manifestDao,
-		cleanupPolicyDao,
-		imageDao,
-		driver,
-		config.APIURL,
-		spaceFinder,
-		tx,
-		authenticator,
-		urlProvider,
-		authorizer,
-		auditService,
-		artifactStore,
-		webhooksRepository,
-		webhooksExecutionRepository,
-		*webhookService,
-		spacePathStore,
-		*artifactEventReporter,
-		downloadStatRepository,
-		gitnessConfig,
-		registryBlobsDao,
-		regFinder,
-		postProcessingReporter,
-		cargoRegistryHelper,
-		spaceController,
-		quarantineArtifactRepository,
-		spaceStore,
-		packageWrapper,
-		publicAccess,
-		quarantineFinder,
-	)
+	return harness.NewAPIHandler(repoDao, fileManager, upstreamproxyDao, tagDao, manifestDao, cleanupPolicyDao,
+		imageDao, config.APIURL, spaceFinder, tx, authenticator, urlProvider, authorizer, auditService, artifactStore,
+		webhooksRepository, webhooksExecutionRepository, *webhookService, spacePathStore, *artifactEventReporter,
+		downloadStatRepository, gitnessConfig, registryBlobsDao, regFinder, postProcessingReporter, cargoRegistryHelper,
+		spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, publicAccess, quarantineFinder,
+		storageService)
 }
 
 func OCIHandlerProvider(handlerV2 *hoci.Handler) oci.RegistryOCIHandler {

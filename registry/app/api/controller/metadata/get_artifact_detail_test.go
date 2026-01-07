@@ -273,14 +273,10 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
 
-	return metadata.NewAPIController(
-		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, mockDownloadStatRepo, "",
-		nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
+		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil, mockRegistryMetadataHelper, nil,
+		eventReporter, mockDownloadStatRepo, "", nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
+		func(_ context.Context) bool { return false }, nil, nil)
 }
 
 func setupControllerWithError(_ *testing.T, errorType string) *metadata.APIController {
@@ -320,14 +316,9 @@ func setupControllerWithError(_ *testing.T, errorType string) *metadata.APIContr
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
 
-	return metadata.NewAPIController(
-		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, mockSpaceFinder, nil,
+		nil, mockAuthorizer, nil, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil, nil, nil,
+		nil, nil, nil, nil, nil, func(_ context.Context) bool { return false }, nil, nil)
 }
 
 // TestGetArtifactDetailsSnapshot tests that the generated artifact details
@@ -479,14 +470,10 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
 
-	return metadata.NewAPIController(
-		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, mockDownloadStatRepo, "",
-		nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
+		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil, mockRegistryMetadataHelper, nil,
+		eventReporter, mockDownloadStatRepo, "", nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
+		func(_ context.Context) bool { return false }, nil, nil)
 }
 
 // verifyArtifactSnapshot compares the actual artifact detail data with a stored snapshot.

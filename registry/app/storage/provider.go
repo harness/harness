@@ -26,6 +26,7 @@ type DriverSelector struct {
 // DriverProvider interface is for provider storage drivers dynamically.
 type DriverProvider interface {
 	GetDriver(ctx context.Context, selector DriverSelector) driver.StorageDriver
+	GetDeleteDriver(ctx context.Context, selector DriverSelector) driver.StorageDeleter
 }
 
 // StaticDriverProvider is a simple implementation of StorageDriverProvider
@@ -40,5 +41,9 @@ func NewStaticDriverProvider(d driver.StorageDriver) DriverProvider {
 
 // GetDriver returns the static driver.
 func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) driver.StorageDriver {
+	return p.driver
+}
+
+func (p *StaticDriverProvider) GetDeleteDriver(_ context.Context, _ DriverSelector) driver.StorageDeleter {
 	return p.driver
 }

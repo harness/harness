@@ -338,14 +338,10 @@ func setupFilesController(_ *testing.T, packageType artifact.PackageType) *metad
 		mock.Anything, mock.Anything, mock.Anything).
 		Return(&artifact.FileDetail{})
 
-	return metadata.NewAPIController(
-		mockRegistryRepo, mockFileManager, nil, mockGenericBlobRepo, nil, nil, nil, nil, mockImageStore, nil,
-		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, mockArtifactStore, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		mockPackageWrapper, nil,
-	)
+	return metadata.NewAPIController(mockRegistryRepo, mockFileManager, nil, mockGenericBlobRepo, nil, nil, nil, nil,
+		mockImageStore, nil, mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, mockArtifactStore, nil, nil,
+		mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil, nil, nil, nil, nil, nil, nil, nil,
+		func(_ context.Context) bool { return false }, mockPackageWrapper, nil, nil)
 }
 
 func setupFilesControllerWithError(_ *testing.T, errorType string) *metadata.APIController {
@@ -385,14 +381,9 @@ func setupFilesControllerWithError(_ *testing.T, errorType string) *metadata.API
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
 
-	return metadata.NewAPIController(
-		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, mockSpaceFinder, nil,
+		nil, mockAuthorizer, nil, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil, nil, nil,
+		nil, nil, nil, nil, nil, func(_ context.Context) bool { return false }, nil, nil)
 }
 
 func setupFilesSnapshotController(t *testing.T, packageType artifact.PackageType) *metadata.APIController {

@@ -137,7 +137,8 @@ func TestGetAllArtifactsSnapshot(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := setupArtifactsSnapshotController(t, tt.includeQuarantine, tt.untaggedImagesEnabled, tt.packageTypes)
+			controller := setupArtifactsSnapshotController(t, tt.includeQuarantine, tt.untaggedImagesEnabled,
+				tt.packageTypes)
 
 			ctx := context.Background()
 			session := &auth.Session{
@@ -218,14 +219,9 @@ func setupArtifactsControllerWithError(_ *testing.T, errorType string) *metadata
 	eventReporter := createEventReporter()
 	fileManager := createFileManager()
 
-	return metadata.NewAPIController(
-		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, mockSpaceFinder, nil,
+		nil, mockAuthorizer, nil, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil, nil, nil,
+		nil, nil, nil, nil, nil, func(_ context.Context) bool { return false }, nil, nil)
 }
 
 func setupArtifactsSnapshotController(
@@ -356,14 +352,10 @@ func setupArtifactsSnapshotController(
 	eventReporter := createEventReporter()
 	fileManager := createFileManager()
 
-	return metadata.NewAPIController(
-		mockRegistryRepo, fileManager, nil, nil, nil, mockTagStore, nil, nil, nil, nil,
-		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, nil, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return untaggedImagesEnabled },
-		mockPackageWrapper, nil,
-	)
+	return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, mockTagStore, nil, nil, nil, nil,
+		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, nil, nil, nil, mockRegistryMetadataHelper, nil,
+		eventReporter, nil, "", nil, nil, nil, nil, nil, nil, nil, nil,
+		func(_ context.Context) bool { return untaggedImagesEnabled }, mockPackageWrapper, nil)
 }
 
 // verifyArtifactsSnapshot compares the actual artifacts list data with a stored snapshot.

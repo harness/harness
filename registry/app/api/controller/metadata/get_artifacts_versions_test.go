@@ -294,14 +294,10 @@ func setupVersionsController(_ *testing.T, packageType artifact.PackageType) *me
 	mockPackageWrapper.On("GetArtifactVersionMetadata", mock.Anything, mock.Anything, mock.Anything).
 		Return((*artifact.ArtifactVersionMetadata)(nil))
 
-	return metadata.NewAPIController(
-		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
+	return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
 		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, mockArtifactStore, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		mockPackageWrapper, nil,
-	)
+		mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil, nil, nil, nil, nil, nil, nil, nil,
+		func(_ context.Context) bool { return false }, mockPackageWrapper, nil)
 }
 
 func setupVersionsControllerWithError(_ *testing.T, errorType string) *metadata.APIController {
@@ -347,14 +343,9 @@ func setupVersionsControllerWithError(_ *testing.T, errorType string) *metadata.
 
 	fileManager := createFileManager()
 
-	return metadata.NewAPIController(
-		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, mockSpaceFinder, nil,
+		nil, mockAuthorizer, nil, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil, nil, nil,
+		nil, nil, nil, nil, nil, func(_ context.Context) bool { return false }, nil, nil)
 }
 
 func setupVersionsSnapshotController(t *testing.T, packageType artifact.PackageType) *metadata.APIController {

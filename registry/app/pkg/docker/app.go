@@ -24,7 +24,6 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg"
 	registrystorage "github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -52,9 +51,11 @@ type App struct {
 
 // NewApp takes a configuration and returns a configured app.
 func NewApp(
-	ctx context.Context, storageDeleter storagedriver.StorageDeleter,
-	blobRepo store.BlobRepository, spaceStore corestore.SpaceStore,
-	cfg *types.Config, storageService *registrystorage.Service,
+	ctx context.Context,
+	blobRepo store.BlobRepository,
+	spaceStore corestore.SpaceStore,
+	cfg *types.Config,
+	storageService *registrystorage.Service,
 	gcService gc.Service,
 	bucketService BucketService,
 ) *App {
@@ -65,7 +66,7 @@ func NewApp(
 		bucketService:  bucketService,
 	}
 	app.configureSecret(cfg) //nolint:contextcheck
-	gcService.Start(ctx, spaceStore, blobRepo, storageDeleter, cfg)
+	gcService.Start(ctx, spaceStore, blobRepo, storageService, cfg)
 	return app
 }
 

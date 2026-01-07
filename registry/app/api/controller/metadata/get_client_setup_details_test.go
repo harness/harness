@@ -553,15 +553,11 @@ func TestGenerateClientSetupDetails_WithUntaggedImages(t *testing.T) {
 			fileManager := createFileManager()
 			eventReporter := createEventReporter()
 
-			controller := metadata.NewAPIController(
-				nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-				mockURLProvider, nil, nil, nil, nil, nil, nil, nil, eventReporter, nil, "",
-				nil, nil, nil, nil, nil, nil, nil, nil,
-				func(_ context.Context) bool {
+			controller := metadata.NewAPIController(nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				mockURLProvider, nil, nil, nil, nil, nil, nil, nil, eventReporter, nil, "", nil, nil, nil, nil, nil,
+				nil, nil, nil, func(_ context.Context) bool {
 					return tt.untaggedImagesEnabled
-				},
-				nil, nil,
-			)
+				}, nil, nil, nil, nil)
 
 			ctx := context.Background()
 			session := &auth.Session{
@@ -601,13 +597,9 @@ func TestGenerateClientSetupDetails_MavenWithGroupID(t *testing.T) {
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
 
-	controller := metadata.NewAPIController(
-		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockURLProvider, nil, nil, nil, nil, nil, nil, nil, eventReporter, nil, "",
-		nil, nil, nil, nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	controller := metadata.NewAPIController(nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+		mockURLProvider, nil, nil, nil, nil, nil, nil, nil, eventReporter, nil, "", nil, nil, nil, nil, nil, nil, nil,
+		nil, func(_ context.Context) bool { return false }, nil, nil)
 
 	ctx := context.Background()
 	session := &auth.Session{
@@ -707,14 +699,10 @@ func setupControllerForPackageType(_ *testing.T, packageType artifact.PackageTyp
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
 
-	return metadata.NewAPIController(
-		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, nil, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "Authorization: Bearer", nil, nil, nil,
-		nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
+		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, nil, nil, nil, mockRegistryMetadataHelper, nil,
+		eventReporter, nil, "Authorization: Bearer", nil, nil, nil, nil, nil, nil, nil, nil,
+		func(_ context.Context) bool { return false }, nil, nil)
 }
 
 func setupControllerForError(_ *testing.T, errorType string) *metadata.APIController {
@@ -770,14 +758,9 @@ func setupControllerForError(_ *testing.T, errorType string) *metadata.APIContro
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
 
-	return metadata.NewAPIController(
-		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
-		mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil, nil, nil,
-		nil, nil, nil, nil, nil,
-		func(_ context.Context) bool { return false },
-		nil, nil,
-	)
+	return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
+		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter,
+		nil, "", nil, nil, nil, nil, nil, nil, nil, nil, func(_ context.Context) bool { return false }, nil, nil)
 }
 
 // TestGenerateClientSetupDetailsSnapshot tests that the generated client setup details
@@ -897,13 +880,9 @@ func TestGenerateClientSetupDetailsSnapshot(t *testing.T) {
 			fileManager := createFileManager()
 			eventReporter := createEventReporter()
 
-			controller := metadata.NewAPIController(
-				nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-				mockURLProvider, nil, nil, nil, nil, nil, nil, nil, eventReporter, nil, "Authorization: Bearer",
-				nil, nil, nil, nil, nil, nil, nil, nil,
-				func(_ context.Context) bool { return false },
-				nil, nil,
-			)
+			controller := metadata.NewAPIController(nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				mockURLProvider, nil, nil, nil, nil, nil, nil, nil, eventReporter, nil, "Authorization: Bearer", nil,
+				nil, nil, nil, nil, nil, nil, nil, func(_ context.Context) bool { return false }, nil, nil)
 
 			ctx := context.Background()
 			session := &auth.Session{

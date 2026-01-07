@@ -15,17 +15,11 @@
 package gc
 
 import (
-	storagedriver "github.com/harness/gitness/registry/app/driver"
-
 	"github.com/google/wire"
 )
-
-func StorageDeleterProvider(driver storagedriver.StorageDriver) storagedriver.StorageDeleter {
-	return driver
-}
 
 func ServiceProvider() Service {
 	return New()
 }
 
-var WireSet = wire.NewSet(StorageDeleterProvider, ServiceProvider)
+var WireSet = wire.NewSet(ServiceProvider)

@@ -193,7 +193,8 @@ func TestCreateRegistry(t *testing.T) {
 				mockRegistryRepo.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
 				mockRegFinder.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
 				mockSpaceFinder.On("FindByID", mock.Anything, mock.Anything).Return(space, nil).Once()
-				mockPublicAccessService.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+				mockPublicAccessService.On("Set", mock.Anything, mock.Anything, mock.Anything,
+					mock.Anything).Return(nil).Once()
 				mockPublicAccessService.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(false, nil).Once()
 
 				// 6. Mock cleanup policy retrieval.
@@ -239,44 +240,12 @@ func TestCreateRegistry(t *testing.T) {
 				packageWrapper := helpers.NewPackageWrapper(packageFactory, mockRegFinder)
 
 				// Create controller with updated signature.
-				return metadata.NewAPIController(
-					mockRegistryRepo,
-					fileManager,
-					nil, // blobStore.
-					nil, // genericBlobStore.
-					nil, // upstreamProxyStore.
-					nil, // tagStore.
-					nil, // manifestStore.
-					mockCleanupPolicyRepo,
-					nil, // imageStore.
-					nil, // driver.
-					mockSpaceFinder,
-					mockTransactor,
-					mockURLProvider,
-					mockAuthorizer,
-					mockAuditService,
-					nil, // artifactStore.
-					nil, // webhooksRepository.
-					nil, // webhooksExecutionRepository.
-					mockRegistryMetadataHelper,
-					nil, // webhookService.
-					eventReporter,
-					nil, //
-					"",  // downloadStatRepository.
-					nil,
-					mockRegFinder,
-					nil, // PostProcessingReporter - not needed for this test.
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					func(_ context.Context) bool {
+				return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil,
+					mockCleanupPolicyRepo, nil, mockSpaceFinder, mockTransactor, mockURLProvider, mockAuthorizer,
+					mockAuditService, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil,
+					mockRegFinder, nil, nil, nil, nil, nil, nil, func(_ context.Context) bool {
 						return true
-					},
-					packageWrapper,
-					mockPublicAccessService,
-				)
+					}, packageWrapper, mockPublicAccessService, nil)
 			},
 		},
 		{
@@ -311,7 +280,8 @@ func TestCreateRegistry(t *testing.T) {
 				// Setup error case mock.
 				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "invalid", "").
 					Return(nil, fmt.Errorf("space not found")).Once()
-				mockPublicAccessService.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+				mockPublicAccessService.On("Set", mock.Anything, mock.Anything, mock.Anything,
+					mock.Anything).Return(nil).Once()
 
 				fileManager := filemanager.NewFileManager(
 					mockRegistryRepo,
@@ -324,44 +294,11 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // bucketService - not needed for this test.
 				)
 
-				return metadata.NewAPIController(
-					mockRegistryRepo,
-					fileManager,
-					nil, // blobStore.
-					nil, // genericBlobStore.
-					nil, // upstreamProxyStore.
-					nil, // tagStore.
-					nil, // manifestStore.
-					nil, // cleanupPolicyStore
-					nil, // imageStore.
-					nil, // driver.
-					nil, // spaceFinder
-					mockTransactor,
-					nil, // urlProvider.
-					nil, // authorizer.
-					nil, // auditService.
-					nil, // artifactStore.
-					nil, // webhooksRepository.
-					nil, // webhooksExecutionRepository.
-					mockRegistryMetadataHelper,
-					nil, // webhookService.
-					eventReporter,
-					nil, //
-					"",  // downloadStatRepository.
-					nil,
-					mockRegFinder,
-					nil, // PostProcessingReporter - not needed for this test.
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					func(_ context.Context) bool {
+				return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
+					nil, mockTransactor, nil, nil, nil, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter,
+					nil, "", nil, mockRegFinder, nil, nil, nil, nil, nil, nil, func(_ context.Context) bool {
 						return true
-					},
-					nil,
-					mockPublicAccessService,
-				)
+					}, nil, nil)
 			},
 		},
 	}

@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
@@ -152,15 +151,11 @@ func getManifestConfig(
 	ctx context.Context,
 	digest digest.Digest,
 	rootRef string,
-	driver storagedriver.StorageDriver,
+	store storage.OciBlobStore,
 ) (*manifestConfig, error) {
 	var config manifestConfig
-	path, err := storage.PathFn(strings.ToLower(rootRef), digest)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get path: %w", err)
-	}
 
-	content, err := driver.GetContent(ctx, path)
+	content, err := store.Get(ctx, strings.ToLower(rootRef), digest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get content for image config: %w", err)
 	}

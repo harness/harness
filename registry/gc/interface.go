@@ -19,7 +19,7 @@ import (
 	"time"
 
 	corestore "github.com/harness/gitness/app/store"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
@@ -27,8 +27,10 @@ import (
 
 type Service interface {
 	Start(
-		ctx context.Context, spaceStore corestore.SpaceStore,
-		blobRepo store.BlobRepository, storageDeleter storagedriver.StorageDeleter,
+		ctx context.Context,
+		spaceStore corestore.SpaceStore,
+		blobRepo store.BlobRepository,
+		storageDeleter *storage.Service,
 		config *types.Config,
 	)
 	BlobFindAndLockBefore(ctx context.Context, blobID int64, date time.Time) (*registrytypes.GCBlobTask, error)
