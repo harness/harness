@@ -1,0 +1,1 @@
+ALTER TABLE infra_provider_configs ADD COLUMN ipconf_metadata JSONB;

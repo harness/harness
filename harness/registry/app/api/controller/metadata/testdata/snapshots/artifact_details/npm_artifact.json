@@ -1,0 +1,15 @@
+{
+  "createdAt": "1704067200000",
+  "downloadCount": 100,
+  "isQuarantined": false,
+  "metadata": {
+    "description": "Test artifact for NPM",
+    "name": "test-artifact",
+    "version": "v1.0.0"
+  },
+  "modifiedAt": "1704067200000",
+  "name": "test-artifact",
+  "packageType": "NPM",
+  "size": "0",
+  "version": "v1.0.0"
+}

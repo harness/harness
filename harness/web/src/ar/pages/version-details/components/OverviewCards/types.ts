@@ -1,0 +1,6 @@
+export enum VersionOverviewCard {
+  DEPLOYMENT = 'DEPLOYMENT',
+  BUILD = 'BUILD',
+  SUPPLY_CHAIN = 'SUPPLY_CHAIN',
+  SECURITY_TESTS = 'SECURITY_TESTS'
+}

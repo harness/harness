@@ -1,0 +1,50 @@
+{
+  "mainHeader": "Helm Client Setup",
+  "secHeader": "Follow these instructions to install/use Helm artifacts or compatible packages.",
+  "sections": [
+    {
+      "header": "Login to Helm",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "helm registry login example.com"
+            },
+            {
+              "label": "Username: test@example.com",
+              "value": "test@example.com"
+            },
+            {
+              "label": "Password: *see step 2*",
+              "value": ""
+            }
+          ],
+          "header": "Run this Helm command in your terminal to authenticate the client.",
+          "type": "Static"
+        },
+        {
+          "header": "For the Password field above, generate an identity token",
+          "type": "GenerateToken"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Pull a version",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "helm pull oci://example.com/test-registry/test-artifact --version v1.0.0"
+            }
+          ],
+          "header": "Run this Helm command in your terminal to pull a specific chart version.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}

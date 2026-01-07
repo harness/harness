@@ -1,0 +1,44 @@
+page: Upstream Porxy Details
+form:
+  title: Upstream Proxy Definition
+createForm:
+  title: Create a New Upstream Proxy
+  packageType: Package Type
+  key: Upstream Proxy Key
+  url: Remote Registry URL
+  urlPlaceholder: Specify URL
+  source:
+    title: Source
+    dockerHub: Docker Hub
+    ecr: AWS ECR
+    custom: Custom
+    mavenCentral: Maven Central
+    npmjs: npmjs
+    pypi: PyPI
+    nugetOrg: NuGet.org
+    crates: Crates.io
+    goproxy: GoProxy
+    huggingface: Huggingface
+  authentication:
+    title: Authentication
+    userNameAndPassword: Username and Password
+    accessKeyAndSecretKey: Access Key and Secret Key
+    anonymous: Anonymous
+    anonymousSubLabel: (No credentials required)
+    username: Username
+    password: Password
+    secretKey: Secret Key
+    accessKey: Access Key
+  create: Create Upstream Proxy
+editForm:
+  title: Update Upstream Proxy
+  update: '{{ $.upstreamProxyDetails.editForm.title }}'
+  enterpriseAdvancedOptionsSubTitle: 'Configure {{entities}} for the Artifact Registry.'
+actions:
+  delete:
+    title: Delete Upstream Registry
+    contentText: Are you sure you want to delete the upstream registry?
+    repositoryDeleted: Upstream registry deleted successfully
+  createUpdateModal:
+    createSuccessMessage: Upstream proxy created successfully
+    updateSuccessMessage: Upstream proxy updated successfully

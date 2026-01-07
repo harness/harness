@@ -1,0 +1,28 @@
+GET {{baseurl}}/repos/root/{{repo}}/+/diff/{{targetBranch}}...{{sourceBranch}}
+Accept: text/plain
+Authorization: {{token}}
+
+### Get diff ignore white space
+GET {{baseurl}}/repos/root/{{repo}}/+/diff/{{targetBranch}}...{{sourceBranch}}?ignore_whitespace=true
+Accept: text/plain
+Authorization: {{token}}
+
+### Get diff with hidden white spaces
+GET {{baseurl}}/repos/root/{{repo}}/+/commits/{{commit}}/diff
+Accept: text/plain
+Authorization: {{token}}
+
+### Get commit diff ignore white space
+GET {{baseurl}}/repos/root/{{repo}}/+/commits/{{commit}}/diff?ignore_whitespace=true
+Accept: text/plain
+Authorization: {{token}}
+
+### Get diff stats
+GET {{baseurl}}/repos/root/{{repo}}/+/diff-stats/{{targetBranch}}...{{sourceBranch}}
+Accept: text/plain
+Authorization: {{token}}
+
+### Get diff stats ignore white space
+GET {{baseurl}}/repos/root/{{repo}}/+/diff-stats/{{targetBranch}}...{{sourceBranch}}?ignore_whitespace=true
+Accept: text/plain
+Authorization: {{token}}

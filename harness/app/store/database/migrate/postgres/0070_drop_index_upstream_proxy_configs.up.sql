@@ -1,0 +1,2 @@
+alter table upstream_proxy_configs
+    drop constraint fk_layers_secret_identifier_and_secret_space_id;

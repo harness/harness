@@ -1,0 +1,2 @@
+ALTER TABLE infra_provider_resources DROP COLUMN ipreso_gateway_host;
+ALTER TABLE infra_provider_resources DROP COLUMN ipreso_gateway_port;

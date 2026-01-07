@@ -1,0 +1,35 @@
+.machineTypeCard {
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--spacing-xsmall);
+  padding: var(--spacing-small) 12px !important;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.machineTypeItem {
+  align-items: flex-start;
+  gap: var(--spacing-small);
+}
+
+.machineTypeCheckbox {
+  flex: 0 0 auto;
+  margin: 0;
+  margin-top: 2px;
+}
+
+.machineTypeInfo {
+  flex: 1;
+
+  p:first-child {
+    margin-bottom: 4px;
+  }
+
+  p:last-child {
+    margin: 0;
+  }
+}

@@ -1,0 +1,181 @@
+.customPopover {
+  :global(.bp3-popover) {
+    max-width: 500px !important;
+  }
+  :global(.bp3-menu) {
+    max-height: 400px !important;
+    overflow: auto !important;
+  }
+
+  :global(.bp3-control-indicator) {
+    flex-shrink: 0;
+  }
+}
+
+.popover {
+  :global(.bp3-popover-content) {
+    padding: 0 !important;
+  }
+}
+
+.popoverContent {
+  width: 500px;
+  max-height: 600px;
+  overflow: hidden;
+}
+
+.dropdownButton {
+  --background-color: var(--primary-bg) !important;
+  --background-color-hover: var(--primary-bg) !important;
+  --background-color-active: var(--primary-bg) !important;
+  --border: 1px solid var(--grey-200) !important;
+  --box-shadow: none !important;
+
+  border-radius: var(--spacing-2) !important;
+  padding: 0 var(--spacing-4) !important;
+  height: var(--spacing-8) !important;
+  min-width: 200px !important;
+  justify-content: space-between !important;
+  min-height: var(--spacing-8) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.buttonText {
+  font-size: var(--font-size-small) !important;
+  font-weight: 500 !important;
+  color: var(--grey-800) !important;
+}
+
+.countText {
+  color: var(--white) !important;
+  font-size: var(--font-size-small) !important;
+  font-weight: 500 !important;
+}
+
+.dropdownContent {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.organizationContainer {
+  cursor: pointer;
+  padding: var(--spacing-4) !important;
+  box-sizing: border-box;
+  border: 1px solid transparent !important;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &.selected {
+    background-color: var(--primary-1);
+    border: 1px solid var(--primary-3) !important;
+  }
+}
+
+.actionContainer {
+  cursor: pointer;
+  padding: var(--spacing-xsmall) !important;
+  box-sizing: border-box;
+  border: 1px solid transparent !important;
+  border-radius: 4px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.searchContainer {
+  padding: var(--spacing-4) !important;
+  border-bottom: 1px solid var(--grey-100);
+}
+
+.emptyContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.organizationsContainer {
+  padding: var(--spacing-small) !important;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.checkbox {
+  border-radius: 2px;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.countBadge {
+  background-color: var(--primary-7) !important;
+  color: var(--white) !important;
+  border-radius: var(--spacing-small) !important;
+  padding: 2px 6px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  min-width: 28px !important;
+  height: fit-content !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.orgItemHorizontal {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.orgIcon {
+  padding: var(--spacing-xsmall);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+}
+
+.orgIconSelected {
+  background: var(--purple-700) !important;
+}
+
+.orgIconUnselected {
+  background: var(--purple-50) !important;
+}
+
+.loadingContainer {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.searchWidth {
+  width: 250px;
+}
+
+.sortWidth {
+  width: 220px;
+}
+
+.noResultsTitle {
+  margin-bottom: var(--spacing-xsmall);
+}

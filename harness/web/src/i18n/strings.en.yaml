@@ -1,0 +1,1396 @@
+gitness: Gitness
+pageNotFound: Page Not Found
+signIn: Sign In
+signUp: Sign Up
+email: Email
+emailUser: Email / User ID
+password: Password
+confirmPassword: Confirm Password
+noAccount: No Account
+existingAccount: Existing Account
+public: Public
+private: Private
+cancel: Cancel
+cancelImport: Cancel Import
+deleteImport: Delete Import
+cancelledImport: Cancelled Import
+deletedImport: Deleted Import
+failedToCancelImport: Failed to cancel import
+failedToDeleteImport: Failed to delete import
+name: Name
+value: Value
+help: help
+search: Search
+description: Description
+repositories: Repositories
+files: Files
+commit: Commit
+committed: committed
+commits: Commits
+lastCommit: Last Commit
+lastCommitDate: Last Commit Date
+commitChanges: Commit changes
+pullRequests: Pull Requests
+settings: Settings
+patterns: Patterns
+manageRepository: Manage Repository
+manageRepositories: Manage Repositories
+selectRepositories: Select Repositories
+newFile: New File
+editFile: Edit File
+prev: Prev
+next: Next
+newFolder: New Folder
+content: Content
+history: History
+newRepo: New Repository
+createARepo: Create a repository
+createRepo: Create Repository
+enterRepoName: Enter Repository Name
+enterDescription: Enter a description (optional)
+enterRepoDescription: Enter repository description
+addDescription: Add a description
+addLicense: Add License
+none: None
+create: Create
+clone: Clone
+copy: Copy
+defaultBranch: Default
+defaultBranchTitle: Default branch
+switchBranch: Switch Branch
+confirmDefaultBranch:
+  title: Change the default branch
+  message: 'Are you sure you want to update the default branch to <strong style="color: var(--primary-7)">{{currentGitRef}}</strong> ?'
+  points: 'Open pull requests will still point to the previous default branch, Branch rules using pattern matching may need to be updated, Cloning the repository will now clone the new default branch'
+in: in
+ok: OK
+at: at
+on: On
+off: Off
+loading: Loading...
+title: Title
+accessControl: Access Control
+permissions: Members
+permissionsFor: Members for {{name}}
+addGitIgnore: Add a .gitignore
+addReadMe: Add a README file
+failedToCreateRepo: Failed to create Repository. Please try again.
+status: Status
+commitsOn: Commits on {{date}}
+viewCommitDetails: View commit details
+copyCommitSHA: Copy commit SHA
+branches: Branches
+branch: Branch
+activeBranches: Active Branches
+inactiveBranches: Inactive Branches
+yourBranches: Your Branches
+allBranches: All Branches
+newBranch: New Branch
+createBranch: Create Branch
+createTag: Create Tag
+tagDescription: Enter tag description here
+findBranch: Find a branch
+searchBranches: Search branches
+updated: Updated
+lastUpdated: Last Updated
+updatedDate: Updated Date
+cloneHTTPS: Git clone URL
+nameYourFile: Name your file...
+noResultTitle: Sorry, no result found
+noResultMessage: What you searched was unfortunately not found or doesn’t exist
+noFilterResultMessage: No results were found based on the applied filters
+pageTitle:
+  signin: Sign In
+  register: Register a new account
+  accessControl: Access Control
+  spaceSettings: Project Settings
+  compare: Pull Request Compare
+  pullRequest: Pull Request
+  pullRequests: Pull Requests
+  createWebhook: Create Webhook
+  webhooks: Webhooks
+  repositorySettings: Repository Settings
+  repositories: Repositories
+  branches: Branches
+  tags: Tags
+  editFileLocation: Editing {{{path}}}
+  repository: Repository
+  home: Home
+  users: Users
+  userProfile: User Profile
+  changePassword: Change Password
+  pipelines: Pipelines
+  secrets: Secrets
+  executions: Executions
+  search: Search powered by AI
+  artifactRegistries: Artifact Registries
+repos:
+  name: Repository Name
+  data: Repo Data
+  activities: Monthly Activities
+  lastChange: Last Change
+  lastPush: Last Push
+  noDataMessage: There are no repositories in this project.
+  createNewRepoMessage: Create a new repository, or import an existing Git repository by clicking below.
+  enterBranchName: Enter a branch name
+  confirmSelection: Confirm Selection
+  specificRepositories: specific repositories
+createRepoModal:
+  branchLabel: 'Your repository will be initialized with a '
+  branch: ' branch.'
+  publicLabel: Anyone who can view the repository can clone it.
+  privateLabel: You choose who can see and commit to this repository.
+  publicWarning: Please note that anyone who can view the repository can clone it.
+validation:
+  repoNamePatternIsNotValid: Registry name should be 1~255 characters long with lower case characters, numbers and ._- and must be start with numbers or characters
+  gitBranchNameInvalid: Branch name is invalid.
+  gitTagNameInvalid: Tag name is invalid.
+  uidInvalid: User ID can only contain alphanumerics, '-', '_', '.', and '$'
+  nameInvalid: Name can only contain alphanumerics, '-', '_', '.', and '$'
+  emailInvalid: Please input valid email address
+  emailRequired: Email is required
+  uidRequired: User ID is required
+  nameIsRequired: Name is required
+  pathIsRequired: Path is required
+  imagePathIsRequired: Image path is required
+  invalidImage: "Invalid image expression: the wildcard character '*' can appear at most once and only at the end."
+  connectorRequired: Connector is required
+  expirationDateRequired: Expiration date is required
+  newPasswordRequired: New password is a required field
+  confirmPasswordRequired: Confirm Password is a required field
+  spaceNamePatternIsNotValid: "Name has to start with a letter or '_' and only contain alphanumerics"
+  nameLogic: Name must start with a letter or _ and only contain [a-zA-Z0-9-_.]
+  nameTooLong: Name is too long
+  nameTooShort: Name is too short
+  key: Key cannot be empty
+commitMessage: Commit message
+optionalExtendedDescription: Optional extended description
+optional: Optional
+commitDirectlyTo: 'Commit directly to the <strong style="color: var(--primary-7)">{{gitRef}}</strong> branch'
+commitToNewBranch: Create a <strong>new branch</strong> for this commit and start a pull request
+enterNewBranchName: New branch name
+onDate: on {{date}}
+deleteFile: Delete file __path__
+confirm: Confirm
+createABranch: Create a branch
+createATag: Create a tag
+delete: Delete
+edit: Edit
+archive: Archive
+unarchive: Unarchive
+archived: Archived
+cautionZone: Caution Zone
+editAsText: Edit as Text
+branchName: Branch name
+enterBranchPlaceholder: Enter the branch name here
+nameYourBranch: Name your branch
+nameYourTag: Name your tag
+enterTagPlaceholder: Enter the tag name here
+branchSource: Branch source
+branchSourceDesc: Choose a source branch
+basedOn: Based on
+failedToCreateBranch: Failed to create Branch. Please try again.
+branchCreated: Branch {branch} created.
+tagCreated: Tag {{tag}} created.
+confirmation: Confirmation
+deleteBranch: Delete Branch
+restoreBranch: Restore Branch
+deleteTag: Delete Tag
+deleteTagConfirm: Are you sure you want to delete tag <strong>{{name}}</strong>? You can't undo this action.
+deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
+cancelImportConfirm: Are you sure you want to abort import for <strong>{{name}}</strong>? You can't undo this action.
+deleteFailedImport: Are you sure you want to delete <strong>{{name}}</strong>?
+browse: Browse
+browseFiles: Browse Files
+compare: Compare
+commitString: 'Commit  {commit}'
+repoDeleted: Repository {{repo}} deleted.
+branchDeleted: Branch {branch} deleted.
+branchRestored: Branch {branch} restored.
+tagDeleted: Tag {tag} deleted.
+failedToDeleteBranch: Failed to delete branch. Please try again.
+deleteBranchDryRunFailed: Dry run failed while trying to delete branch. Please try again.
+deleteTagDryRunFailed: Dry run failed while trying to delete tag. Please try again.
+createFile: Create __path__
+updateFile: Update __path__
+renameFile: Rename __path__ to __newPath__
+switchBranchesTags: Switch branches/tags
+tag: Tag
+tags: Tags
+findOrCreateBranch: Find or create a branch
+findATag: Find a tag
+viewAllBranches: View all branches
+viewAllTags: View all tags
+createBranchFromBranch: "Create branch: <strong>{{newBranch}}</strong> from <strong>'{{target}}'</strong>"
+createBranchFromTag: "Create branch: <strong>{{newBranch}}</strong> from tag <strong>'{{target}}'</strong>"
+tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'
+branchNotFound: 'Branch <strong>{{branch}}</strong> not found.'
+branchUpToDate: Up to date with {{defaultBranch}}
+branchUpToDateWith: Branch is up to date with
+unableToGetDivergence: Unable to get divergence
+branchCommitCount: '{count} {count|1:commit,commits}'
+behindDivergence: '{behindCommits} {behindCommits|1:commit,commits} behind '
+aheadDivergence: '{aheadCommits} {aheadCommits|1:commit,commits} ahead'
+branchDivergenceBehind: '{behind} {behindCommits|1:commit,commits} behind {defaultBranch}'
+branchDivergenceAhead: '{ahead} {aheadCommits|1:commit,commits} ahead {defaultBranch}'
+branchDivergenceAheadBehind: '{ahead} {aheadCommits|1:commit,commits} ahead, {behind} {behindCommits|1:commit,commits} behind {defaultBranch}'
+noWebHooks: 'Here is no Webhook. Try to'
+deleteNotAllowed: You must be on a branch to delete this file
+editNotAllowed: You must be on a branch to edit this file
+newFileNotAllowed: You must be on a branch to create a new file
+fileDeleted: '__path__ successfully deleted.'
+newPullRequest: New Pull Request
+pullRequestEmpty: There are no pull requests in your repo. Click the button below to create a pull request.
+pullRequestNotFoundforFilter: No pull requests match the applied filters
+comparingChanges: Comparing Changes
+compareAndPullRequest: Compare & pull request
+selectToViewMore: Select branch to view more here.
+createPullRequest: Create pull request
+prefixBase: 'base: '
+prefixCompare: 'compare: '
+selectBranchPlaceHolder: select a branch here
+pullMustBeMadeFromBranches: Pull Request can only be created from two different branches
+prMustSelectSourceAndTargetBranches: You must select source and target branches
+prSourceAndTargetMustBeDifferent: Source and target branches must be different
+payloadUrl: 'Payload URL'
+samplePayloadUrl: 'https://examples.com/harness'
+payloadUrlLabel: 'Payload URL'
+secret: 'Secret'
+webhookEventsLabel: 'Which events do you like to trigger this webhook'
+webhookSelectPushEvents: 'Just the push event'
+webhookSelectAllEvents: 'Send me everything'
+webhookSelectIndividualEvents: 'Let me select individual events'
+webhookAllEventsSelected: 'All Events'
+branchTagCreation: 'Branch or tag creation'
+branchTagDeletion: 'Branch or tag deletion'
+branchProtectionRules: 'Branch protection rules'
+ruleBlockedMessage: 'All branch updates are blocked'
+pushBlockedMessage: 'All branch pushes are blocked'
+checkRuns: 'Check runs'
+checkSuites: 'Check suites'
+scanAlerts: 'Code scanning alerts'
+botAlerts: 'Dependabot alerts'
+security: 'Security'
+deployKeys: 'Deploy keys'
+sslVerificationLabel: 'SSL verification'
+enableSSLVerification: 'Enable SSL verification'
+newWebhook: New Webhook
+createAWebhook: Create a Webhook
+createWebhook: Create Webhook
+webhook: Webhook
+diff: Diff
+draft: Draft
+conversation: Conversation
+commandLine: command line
+include: Include
+exclude: Exclude
+pr:
+  toggleComments: Toggle comments
+  suggestedChange: Suggested change
+  addSuggestion: Add suggestion to batch
+  removeSuggestion: Remove suggestion from batch
+  commitSuggestions: 'Commit {count|1:suggestion,suggestions}'
+  commitSuggestion: Commit suggestion
+  applySuggestions: 'Apply {count|1:suggestion,suggestions} from code review'
+  suggestionApplied: Suggestion applied
+  commentLineNumbers: Comment on line {{start}} to {{end}}
+  moreComments: '{num} {count|0:Show more,1:1 more comment,more comments}'
+  copyLinkToComment: Copy link to comment
+  expandFullFile: Expand all
+  collapseFullFile: Collapse expanded lines
+  ableToMerge: Able to merge.
+  useCmdLineToResolveConflicts: Use the {cmd} to resolve conflicts
+  cantBeMerged: This branch has conflicts with the {{name}} branch.
+  cantMerge: Can't be merged. You can still create the pull request.
+  failedToCreate: Failed to create Pull Request.
+  titlePlaceHolder: Enter the pull request title
+  descriptionPlaceHolder: Add Pull Request description here.
+  modalTitle: Open a pull request
+  createDraftPR: Create draft pull request
+  metaLine: '{user} {state|merged:merged,wants to merge} {commits} {commitsCount|1:commit,commits} into {target} from {source}'
+  executionState: '{state|success:Success,failed:Failed}'
+  state: '{state|closed:Closed,merged:Merged,rejected:Rejected,draft:Draft,Open}'
+  statusLine: '#{number} {state|merged:merged,closed:closed,rejected:rejected,opened} {time} by {user}'
+  updatedLine: 'last updated {time}'
+  diffStatus: '{status|deleted:Deleted,new:Added,renamed:Renamed,copied:Copied,Changed}'
+  showDiff: Show Diff
+  fileDeleted: This file was deleted.
+  fileUnchanged: File without changes.
+  diffTooLarge: Large diffs are not rendered by default.
+  fileBinary: Binary file not shown.
+  showLink: '{count} changed {count|1:file,files}'
+  diffStatsLabel: 'Showing {changedFilesLink} with {addedLines} {addedLines|1:addition,additions} and {deletedLines} {deletedLines|1:deletion,deletions} {configuration}'
+  diffView: Diff View
+  split: Split
+  unified: Unified
+  reviewChanges: Review changes
+  mergePR: Merge pull request
+  branchHasNoConflicts: Pull request can be merged
+  rebaseMergePossible: Pull request can be merged after rebase
+  checkingToMerge: Checking for ability to merge automatically...
+  prCanBeMerged: Mergeing can be performed automatically.
+  enterDesc: Enter description here
+  failedToUpdate: Failed to update Pull Request. Please try again.
+  failedToUpdateTitle: Failed to update Pull Request title. Please try again.
+  failedToSaveComment: Failed to save comment. Please try again.
+  failedToDeleteComment: Failed to delete comment. Please try again.
+  failedToUpdateCommentStatus: Failed to update comment status. Please try again.
+  prMerged: This Pull Request was merged
+  prClosed: This Pull Request was closed.
+  closedPrBranchDelete: '{source} branch has unmerged changes.'
+  createPRBannerInfo: 'You pushed to {branch} {time}'
+  reviewSubmitted: Review submitted.
+  requestSubmitted: Request for changes submitted.
+  requestedChanges: '{{user}} requested changes to the pull request'
+  prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} this pull request.  {time}'
+  prMergedBannerInfo: '{user} {mergeMethod} branch {source} into {target} {time}'
+  prMergedBannerInfoWithBypassingRules: '{user} bypassed branch rules and {mergeMethod} branch {source} into {target} {time}'
+  prMergedInfo: '{user} {mergeMethod} branch {source} into {target} as {mergeSha} {time}'
+  prMergedInfoWithBypassingRules: '{user} bypassed branch rules and {mergeMethod} branch {source} into {target} as {mergeSha} {time}'
+  prBranchPushInfo: '{user} pushed a new commit {commit}'
+  prBranchForcePushInfo: '{user} force-pushed from {oldCommit} to {newCommit}'
+  prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
+  prBranchRestoreInfo: '{user} restored the source branch with latest commit {commit}'
+  prStateChanged: '{user} changed pull request state from {old} to {new}.'
+  prStateChangedDraft: '{user} {changedToDraft|true:marked pull request as draft.,opened pull request for review.}'
+  titleChanged: '{user} changed title from {old} to {new}.'
+  titleChangedTable: |
+    ### Other title changes in history
+    | Author      | Old Name | New Name | Date |
+    | ----------- | -------- | -------- | ---- |
+  readyForReview: Ready for review
+  openForReview: Open for review
+  openForReviewSuccess: PR state changed to Open
+  authorCommentedPR: '{author} submitted this pull request {time}'
+  mergeOptions:
+    squashAndMerge: Squash and merge
+    squashAndMergeDesc: All commits from this branch will be combined into one commit in the base branch.
+    createMergeCommit: Merge pull request
+    createMergeCommitDesc: All commits from this branch will be added to the base branch via a merge commit.
+    rebaseAndMerge: Rebase and merge
+    rebaseAndMergeDesc: All commits from this branch will be rebased and added to the base branch.
+    fastForwardMerge: Fast-forward merge
+    fastForwardMergeDesc: All commits from this branch will be added to the base branch without a merge commit. Rebase may be required.
+    close: Close pull request
+    closeDesc: Close this pull request. You can still re-open the request after closing.
+    createAMergeCommit: Create a merge commit
+  outdated: Outdated
+  titleIsRequired: Pull Request title is required.
+  descIsRequired: Pull Request description is required.
+  descIsTooLong: 'Description is too long ({{len}}/{{max}} characters).'
+  descHasTooLongLine: 'Some lines in the description exceed the maximum length of {{max}} characters, potentially causing performance issues. Consider dividing them into smaller segments.'
+  draftOpenForReview:
+    title: Ready for review
+    desc: Open this pull request for review.
+  status: Pull Request Checks Status
+  checks: Checks
+  checksFailure: '{failedCount}/{total} checks failed'
+  addDescription: Add Description
+  reviewRequested: Review Requested
+  changesRequested: Changes Requested
+  myPRs: My Pull Requests
+  titleUpdated: Pull request title updated
+  targetBranchUpdated: Target branch updated to {{branch}}
+  titleAndBranchUpdated: 'Pull request updated: Title and target branch ({{branch}})'
+  revert: Revert
+  createRevertPR: Create a new pull request to revert changes
+  revertBranchSuccess: Revert branch {{branch}} created
+  revertOpFailed: Revert operation failed
+prState:
+  draftHeading: This pull request is still a work in progress
+  draftDesc: Draft pull requests cannot be merged.
+prChecks:
+  error: '{count}/{total} {count|1:check,checks} errored out.'
+  failure: '{count}/{total} {count|1:check,checks} failed.'
+  running: '{count}/{total} {count|1:check,checks} running.'
+  pending: '{count}/{total} {count|1:check,checks} pending.'
+  skipped: '{count}/{total} {count|1:check,checks} skipped.'
+  success: '{count}/{total} {count|1:check,checks} succeeded.'
+  killed: '{count}/{total} {count|1:check,checks} killed.'
+  failureIgnored: '{count}/{total} {count|1:check,checks} failure ignored.'
+  notFound: No pipelines or external checks found for this repository.
+  viewExternal: View Details
+prReview:
+  assigned: '{author} assigned {reviewer} as a reviewer'
+  requested: '{author} requested a review from {reviewer}'
+  selfAssigned: '{reviewer} self-requested a review'
+  removed: '{author} removed the request for review from {reviewer}'
+  ugRemoved: '{author} removed the request for review from user group {reviewer}'
+  selfRemoved: '{author} removed their request for review'
+  filterByReviews: Filter by Reviews
+  codeowners: '{author} requested review from {codeowners} as {count|1:code owner,code owners}'
+  defaultReviewers: '{author} requested review from {reviewers} as {count|1:default reviewer,default reviewers}'
+  ugCodeowners: '{author} requested review from {count|1:user group,user groups} {codeowners} as {count|1:code owner,code owners}'
+  ugDefaultReviewers: '{author} requested review from {count|1:user group,user groups} {reviewers} as {count|1:default reviewer,default reviewers}'
+  labelsAssigned: '{count|0:label,labels}'
+  targetBranchChange: '{user} changed the target branch from {old} to {new}'
+webhookListingContent: 'create,delete,deployment ...'
+general: 'General'
+generalSetting:
+  features: Features
+  gitLFSEnable: Git Large File Storage (LFS)
+  gitLFSEnableDesc: Manage large files using Git LFS.
+webhooks: 'Webhooks'
+open: Open
+merged: Merged
+enabled: Enabled
+closed: Closed
+close: Close
+reject: Reject
+rejected: Rejected
+yours: Yours
+all: All
+scrollToTop: Scroll to top
+filesChanged: Changes
+viewed: Viewed
+changedSinceLastView: Changed since last view
+comment: Comment
+addComment: Add comment
+replyHere: Reply here...
+reply: Reply
+replyAndResolve: Reply & Resolve
+replyAndReactivate: Reply & Reactivate
+leaveAComment: Leave a comment...
+lineBreaks: Line Breaks
+quote: Quote
+deleteCommentConfirm: Are you sure you want to delete this comment?
+write: Write
+preview: Preview
+save: Save
+edited: edited
+deleted: deleted
+commentDeleted: This comment was deleted.
+enterSecret: Enter secret
+confirmDeleteWebhook: Are you sure you want to delete this webhook?
+webhookDeleted: Webhook deleted.
+failedToDeleteWebhook: Failed to delete Webhook. Please try again.
+webhookDetails: Webhook Details
+updateWebhook: Update Webhook
+webhookUpdated: Webhook updated successfully.
+webhookCreated: Webhook created successfully.
+oneMustBeSelected: At least one event must be selected
+webhookBranchCreated: Branch created
+webhookBranchUpdated: Branch updated
+webhookBranchDeleted: Branch deleted
+webhookTagCreated: Tag created
+webhookTagUpdated: Tag updated
+webhookTagDeleted: Tag deleted
+webhookPRBranchUpdated: PR branch updated
+webhookPRCreated: PR created
+webhookPRUpdated: PR updated
+webhookPRReopened: PR reopened
+webhookPRClosed: PR closed
+webhookPRCommentCreated: PR comment created
+webhookPRCommentStatusUpdated: PR comment status updated
+webhookPRCommentUpdated: PR comment updated
+webhookPRMerged: PR merged
+webhookPRLabelAssigned: PR label assigned
+webhookPRReviewSubmitted: PR review submitted
+nameYourWebhook: Name your webhook
+noExecutionsFound: No Executions found
+noExecutionsFoundForWebhook: No executions found for the given webhook
+executionHistory: Execution History
+serverResponse: Server Response
+requestPayload: Request Payload
+triggeredEvent: Triggered Event
+event: Event
+lastTriggeredAt: Last Triggered At
+executionId: Execution ID
+submitReview: Submit Review
+webhookPage: Webhook page
+webhookTabs: WebhookTabs
+reTriggeredExecution: Re-triggered Execution
+retriggerExecution: Re-trigger Execution
+atSubTitle: At
+notRetriggerableMessage: This webhook execution cannot be re-triggered
+approve: Approve
+requestChanges: Changes Requested
+repoEmptyMarkdown: |
+  ## This repository is empty
+
+  ### Get started by
+
+  Creating [a new file](NEW_FILE_URL).
+repoEmptyMarkdownClone: |
+  ### Or you can clone this repository
+
+  Clone with HTTPS
+  ```sh
+  git clone REPO_URL
+  ```
+repoEmptyMarkdownClonePush: |
+  Then push some content into it.
+
+  ```sh
+  cd REPO_NAME
+  git branch -M DEFAULT_BRANCH
+  echo "# Hello World" >> README.md
+  git add README.md
+  git commit -m "Initial commit"
+  git push -u origin DEFAULT_BRANCH
+  ```
+repoEmptyMarkdownExisting: |
+  ### Or you can push an existing repository
+
+  ```sh
+  git remote add origin REPO_URL
+  git branch -M DEFAULT_BRANCH
+  git push -u origin DEFAULT_BRANCH
+  ```
+
+  You might need [to create an API token](CREATE_API_TOKEN_URL) in order to pull from or push into this repository.
+webhookEmpty: There are no webhooks in your repo. Click the button below to create a webhook.
+compareEmptyDiffTitle: There isn't anything to compare
+compareEmptyDiffMessage: Two branches are identical.
+noCommits: There are no commits
+noCommitsMessage: This repository does not have any commits yet.
+noCommitsPR: This Pull Request does not have commit history.
+noChanges: There are no changes
+noChangesPR: This Pull Request does not have any changes.
+noChangesCompare: Source and target are identical.
+pageLoading: Loading, please wait...
+repoCloneHeader: Or you can clone this repository
+repoCloneLabel: Clone with HTTPS
+emptyRepoHeader: This repository is empty. Let's get started...
+addNewFile: + New File
+emptyRepoInclude: We recommend every repository include a {README}, {LICENSE}, and {GITIGNORE}.
+readMe: README,
+license: LICENSE
+gitIgnore: .gitignore
+and: and
+error404Text: This is not the web page that you are looking for
+branchNotFoundError: Branch not found
+branchNotFoundMessage: The branch '{{gitRef}}' is missing or deleted
+goToDefaultBranch: Go to Default Branch
+branchDoesNotHaveFile: The "{repoName}" repository doesn't contain the "{fileName}" path in the "{branchName}" branch
+webhookDialogTitle: Turn ON/OFF Webhook
+webhookDialogContent: Please confirm you want to on/off this webhook
+pullRequestalreadyExists: Pull request {prLink} already exists.
+makeRequired: Make Required
+makeOptional: Make Optional
+remove: Remove
+required: Required
+isRequired: is required
+noneYet: None Yet
+noOptionalReviewers: No Optional Reviewers
+noRequiredReviewers: No Required Reviewers
+reviewers: Reviewers
+refresh: Refresh
+enableWebhookTitle: Enable the Webhook
+disableWebhookTitle: Disable the Webhook
+enableWebhookContent: Please confirm that you wanted to turn on {name}.
+disableWebhookContent: Please confirm that you wanted to turn off {name}.
+ascending: Ascending
+descending: Descending
+active: Active
+pending: Pending
+resolved: Resolved
+showEverything: Show Everything
+allComments: All comments
+whatsNew: What's new
+myComments: My comments/replies
+resolvedComments: Resolved comments
+unrsolvedComment: Unresolved comment
+resetZoom: Reset Zoom
+zoomIn: Zoom In
+zoomOut: Zoom Out
+checks: Checks
+blameCommitLine: '{author} committed {timestamp}'
+filterByAuthor: Filter by Author
+includeSubspacePR: Include sub-space PRs
+tooltipRepoEdit: You are not authorized to {PERMS}
+missingPerms: 'You are missing the following permission:'
+createRepoPerms: 'Create / Edit Repository'
+missingPermsContent: '"{PERMS}" in project "{PROJECT}"'
+repositoryName: Repository name
+deleteRepo: Delete this repository
+deleteRepoMsg: Once a repository is deleted, it cannot be recovered. Proceed with caution.
+dangerDeletePipeline: Danger, are you sure you want to delete this pipeline?
+dangerDeleteProject: Danger, are you sure you want to delete this project?
+repoUpdate: Repository Updated
+deleteRepoText: Are you sure you want to delete repository '{REPONAME}'?
+deleteRepoTitle: Delete the repository
+resolve: Resolve
+reactivate: Reactivate
+generateCloneCred: + Generate Clone Credential
+generateCloneText: 'Please generate clone credential if it’s your first time'
+getMyCloneTitle: Generate Clone Credential
+cloneText: Your clone credentials have been generated. Please make sure to copy and store your password somewhere safe, you won't be able to see it again.
+manageApiToken: Manage API Token
+userName: User Name
+passwordApi: Password (API Token)
+firstTimeTitle: Please generate Git Credentials if it’s your first time cloning the repository
+manageCredText: You can also manage your git credential {URL}
+blame: Blame
+blameEmpty: File is empty. No blame information available.
+viewRaw: View Raw
+download: Download
+changes: Changes
+contents: Contents
+unsavedChanges:
+  title: Close without saving?
+  message: 'You have unsaved changes. Are you sure you want to leave this page without saving?'
+  leave: Leave this Page
+  stay: Stay on this Page
+creationDate: Creation Date
+viewFiles: View Files
+tagger: Tagger
+confirmDelete: Confirm delete
+tagEmpty: There are no tags in your repo. Click the button below to create a tag.
+newTag: New Tag
+overview: Overview
+fileTooLarge: File is too large to open. {download}
+lfsInfo: Stored with Git LFS
+clickHereToDownload: Click here to download.
+viewFileHistory: View the file at this point in the history
+viewRepo: View the repository at this point in the history
+hideCommitHistory: Renamed from {file} - Hide History
+showCommitHistory: Renamed from {file} - Show History
+noReviewers: No Reviewers
+assignPeople: Assign people
+add: Add +
+addLabel: Add
+updateLabel: Update
+users: Users
+findAUser: Find a user
+findAUserOrUserGroup: Find a user or user group
+noUsersFound: No users found
+spaces: Projects
+space: Project
+selectSpace: Select project here
+copyBranch: Copy Branch Name
+noAccount?: No Account?
+alreadyHaveAccount: Already have an account?
+privacyPolicy: Privacy Policy
+termsOfUse: Terms of Use
+bySigningIn: By signing up, you agree to our {policy} and our {terms}
+userId: User ID
+characterLimit: 6+ characters
+enterUser: Enter user id here ...
+userNameRequired: Username is required
+passwordRequired: Password is required
+emailRequired: Email is required
+minPassLimit: Password is too short - should be 6 chars minimum.
+confirmPassRequired: Confirm Password is required
+matchPassword: Passwords must match
+userCreated: User was created
+admin: Admin
+removeAdmin: Remove admin
+setAsAdmin: Set as admin
+createUser: Create User
+editUser: Edit user
+updateUser: Update user
+deleteUser: Delete user
+createNewUser: Create a user
+displayName: Display Name
+accountEmail: Account Email
+changePassword: Change Password
+logoutMsg: Do you want to log out your current account?
+logOut: Log out
+enterNewPassword: Enter the <b>NEW</b> password
+confirmNewPassword: Confirm the <b>NEW</b> password
+accountSetting: Account Setting
+nDays: '{{number}} Days'
+expiration: Expiration
+noExpiration: No Expiration
+noExpirationDate: The token will never expire!
+token: Token
+expired: Expired
+expirationDate: Expiration Date
+created: Created
+thisRefHas: 'This {isTag|true:tag,branch} has'
+changePasswordSuccessfully: Password changed successfully
+applyChanges: Apply Changes
+showMore: View more
+showLess: View less
+createNewToken: Create a token
+newToken:
+  text: New Token
+  namePlaceholder: Enter the name
+  expireOn: Token will expire on {{date}}
+  generateToken: Generate Token
+  tokenHelptext:
+    Your token has been generated. Please make sure to copy and store your token somewhere safe, you wont be
+    able to see it again.
+deleteToken: Delete token
+deleteTokenMsg: Token deleted successfully
+userProfile:
+  deleteTokenMsg: Are you sure you want to delete this token?
+profile: Profile
+userManagement:
+  text: User Management
+  newUser: New User
+  deleteUser: Delete user
+  deleteUserMsg: Are you sure to delete {avatar} {{displayName}} (user ID:{{userId}})?
+  resetPassword: Reset password
+  resetPasswordMsg: Are you sure you want to reset password for {avatar} {{displayName}} (user ID:{{userId}})?
+  removeAdminMsg: Are you sure you want to remove {avatar} {{displayName}} (user ID:{{userId}}) as an admin?
+  setAsAdminMsg: Are you sure you want to set {avatar} {{displayName}} (user ID:{{userId}}) as an admin?
+newUserModal:
+  uidPlaceholder: 'Enter the user ID here'
+  uidWarning: User ID cannot be changed once created
+  emailPlaceholder: Enter the email here
+  displayNamePlaceholder: Enter the display name here
+  passwordHelptext:
+    Your password has been generated. Please make sure to copy and store your password somewhere safe, you wont be
+    able to see it again.
+  userCreated: User created successfully
+  userUpdated: User updated successfully
+  userDeleted: User '{{name}}' deleted successfully
+selectSpaceText: Select a Project
+user: User
+role: Role
+addMember: Add Member
+addUserToSpace2: Add member to this Project
+spaceMemberships:
+  addMember: Add a member to {{name}}
+  changeRole: Change Role
+  removeMember: Remove Member
+  removeMembershipMsg: Are you sure you want to remove this member?
+  removeMembershipToast: Member removed successfully
+  memberUpdated: Member updated successfully.
+  memberAdded: Member added successfully.
+failedToCreateSpace: Failed to create Project. Please try again.
+failedToImportSpace: Failed to import Project. Please try again.
+failedToCreatePipeline: Failed to create Pipeline. Please try again.
+failedToSavePipeline: Failed to save Pipeline. Please try again.
+enterName: Enter the name
+createASpace: Create a project
+createSpace: Create Project
+newSpace: New Project
+emptySpaceText: "It's empty now, please create a new project"
+homepage:
+  welcomeText: Welcome {{currentUser}}, let's get you started with Gitness!
+  firstStep: Projects contain your repositories and pipelines.  Create a new project to get started with Gitness
+  selectSpaceTitle: Select a project to get started
+  selectSpaceContent: Projects contain your repositories and pipelines. To start using Gitness, select a project or create a new one.
+  selectSpace: Select Project
+deleteSpace: Delete Project
+spaceSetting:
+  intentText: This will permanently delete the project named '{{space}}', and everything contained in it. All repositories in this project will be deleted.
+  deleteWarning: Unexpected bad things will happen if you don’t read this
+  deleteConfirm1: This will permanently delete the "{{space}}" project and everything contained in it.  All repositories in this project will be deleted.
+  deleteConfirmButton1: I want to delete this project
+  deleteConfirm2: To confirm, type "{{space}}" in the box below
+  deleteConfirmButton2: Delete this project
+  deleteToastSuccess: Project deleted successfully
+  settings: Settings
+contributor: Contributor
+reader: Reader
+executor: Executor
+owner: Owner
+changeRole: Change role
+running: Running
+success: Success
+failed: Failed
+error: Error
+skipped: Skipped
+killed: Killed
+failureIgnored: Success (Failure Ignored)
+repoDelete:
+  title: Delete Repository
+  deleteConfirm1: This will permanently delete the "{{repo}}" repository.
+  deleteConfirmButton1: I want to delete this repository
+  deleteConfirm2: To confirm, type "{{repo}}" in the box below
+  deleteToastSuccess: Repository deleted successfully
+  deleteConfirmButton2: Delete this repository
+repoArchive:
+  titleArchive: Archive Repository
+  titleUnarchive: Unarchive Repository
+  confirmButton: I understand, {archiveVerb} the repository.
+  archiveWarning: Archiving this repository will mark it as inactive and set it to read-only. Users can still view and clone the repository, but no new changes or contributions will be allowed.
+  unarchiveWarning: This repository will no longer be archived and will be restored to an active state. All users and groups with permissions can contribute as usual.
+  archive: Archive this repository
+  archiveInfo: Set this repository to archived and restrict it to read-only access.
+  unarchive: Unarchive this repository
+  unarchiveInfo: Set this repository to unarchived and make it read-write.
+  infoText: This repository has been archived on {{date}}. It is now read-only.
+pipelines:
+  noData: There are no pipelines
+  import: Import Pipelines
+  newPipelineButton: New Pipeline
+  name: Pipeline Name
+  createNewPipeline: Create New Pipeline
+  enterPipelineName: Enter pipeline name
+  yamlPath: YAML Path
+  enterYAMLPath: Enter YAML path
+  failedToCreatePipeline: Failed to create pipeline
+  saveAndRun: Save and Run
+  editPipeline: Edit pipeline {{pipeline}}
+  edit: Edit pipeline
+  run: Run pipeline
+  time: Time
+  lastExecution: Last Execution
+  created: Pipeline created successfully
+  updated: Pipeline updated successfully
+  executionStarted: Pipeline execution started successfully
+  executionCouldNotStart: Failure while starting pipeline execution
+  deletePipelineWarning: This will permanently delete the {{pipeline}} pipeline and all executions.
+  deletePipelineButton: Delete pipeline
+  deletePipelineConfirm: Are you sure you want to delete the pipeline <strong>{{pipeline}}</strong>? You can't undo this action.
+  deletePipelineSuccess: Pipeline {{pipeline}} deleted.
+  deletePipelineError: Failed to delete Pipeline. Please try again.
+  updatePipelineSuccess: Pipeline {{pipeline}} updated.
+  failedToUpdatePipeline: Failed to update Pipeline. Please try again.
+  settings: Pipeline Settings
+  executionCancelled: Pipeline execution cancelled.
+  executionCouldNotCancel: Failure while cancelling Pipeline execution.
+  failedToFindPath: failed to find path
+  failedToGenerate: Failed to generate pipeline
+executions:
+  noData: There are no executions
+  newExecutionButton: Run Pipeline
+  name: Execution Name
+  description: Description
+  time: Time
+  completedTime: completed {{timeString}} ago
+  canceledTime: canceled {{timeString}} ago
+  started: Execution started
+  failed: Failed to start build
+  newExecution: Run Pipeline
+selectRange: Shift-click to select a range
+allCommits: All Commits
+secrets:
+  noData: There are no secrets
+  newSecretButton: New Secret
+  create: Create a secret
+  name: Secret Name
+  failedToCreate: Failed to create Secret. Please try again.
+  enterSecretName: Enter Secret name
+  enterSecretValue: Enter Secret value
+  createSecret: Create Secret
+  createSuccess: Secret created successfully
+  secretDeleted: Secret {uid} deleted.
+  secretUpdated: Secret {uid} updated.
+  deleteSecretConfirm: Are you sure you want to delete secret <strong>{{uid}}</strong>? You can't undo this action.
+  failedToDeleteSecret: Failed to delete Secret. Please try again.
+  failedToUpdateSecret: Failed to update Secret. Please try again.
+  deleteSecret: Delete secret
+  updateSecret: Update secret
+  showValue: Show Value
+userUpdateSuccess: 'User updated successfully'
+viewFile: View File
+searchResult: 'Search Result {count}'
+aiSearch: AIDA SEARCH
+enableAISearch: Enable AI Search
+enableAIDAPRDescription: Auto generate PR description
+enableAIDAPRMessange: To generate a PR description using Harness AIDA, you need to enable it in the Project Settings.
+enableAIDAMessage: In order to use Harness AIDA Search, you will need to enable it in the Project Settings
+reviewProjectSettings: Review Project Settings
+turnOnSemanticSearch: Turn on semantic search
+AIDA: AIDA
+keywordSearch:
+  sampleQueries:
+    searchForClass: Search for class
+    searchForFilesWithCMD: Search for class in files starting with cmd
+    searchForPattern: Include only results from file paths matching the given search pattern
+    searchForInitialCommit: Search for exact phrase initial commit
+keywordSearchPlaceholder: Search for code or files...
+codeSearch: Code Search
+codeSearchModal: Begin search by describing what you are looking for
+searchHeader: 'Here are a few examples to help you get started:'
+startSearching: Begin search by describing what you are looking for.
+poweredByAI: Unlock the power of AI with Semantic Code search. Try phrases like "Locate the code for authentication".
+semanticSearch:
+  sampleQueries: Where is the code that handles authentication?,Where is the application entry point?,Where do we configure the logger?
+failedToFetchFileContent: 'ERROR: Failed to fetch file content.'
+run: Run
+plugins:
+  title: Plugins
+  stepLabel: step
+  select: Select a plugin
+pluginsPanel:
+  plugins:
+    helptext: Run a plugin step
+  run:
+    helptext: Run a container or a shell command
+    script: Script
+    shell: Shell
+    sh: Sh
+    bash: Bash
+    powershell: Powershell
+    pwsh: Pwsh
+    image: Image
+    credentials: Credentials
+    username: Username
+    password: Password
+    pull: Pull
+    entrypoint: Entrypoint
+    network: Network
+    networkMode: Network Mode
+    privileged: Privileged
+    path: Path
+    always: Always
+    never: Never
+    ifNotExists: If not exists
+createNewRepo: Create New repository
+importGitRepo: Import Repository
+importGitRepos: Import Repositories
+importRepo:
+  title: Import Repository
+  url: Host URL
+  org: Organization
+  workspace: Workspace
+  project: Project
+  group: Group
+  repo: Repository
+  urlPlaceholder: Enter the Host URL
+  repoPlaceholder: Enter the Repository name
+  orgPlaceholder: Enter the Organization name
+  workspacePlaceholder: Enter the Workspace name
+  projectPlaceholder: Enter the Project name
+  groupPlaceholder: Enter the Group name
+  reqAuth: Requires Authorization
+  userPlaceholder: Enter Username
+  passToken: Token
+  passTokenPlaceholder: Enter Token
+  appPassword: App Password
+  appPasswordPlaceholder: Enter App Password
+  failedToImportRepo: Failed to import repository. Please try again.
+  validation: Invalid GitHub or GitLab URL
+  required: Repository URL is required
+  spaceNameReq: Enter a name for the new project
+  usernameReq: Username is required
+  passwordReq: Password is required
+importRepos:
+  title: Import Repositories
+  content: Import multiple repositories from GitLab Group, GitHub Org or Bitbucket Project to this project.
+importSpace:
+  title: Import Project
+  createASpace: Create a project
+  authorization: Authorization
+  content: Import a GitLab Group, GitHub Org or Bitbucket Project to a new Project. Entities at the top level will be imported to the project.
+  next: Next step
+  details: Details of target to import
+  organizationName: Organization Name
+  orgNamePlaceholder: Enter the org name here
+  spaceName: Project Name
+  description: Description (optional)
+  descPlaceholder: Enter the description
+  importLabel: What to import
+  providerRequired: Git Provider is required
+  orgRequired: Organization name is required
+  spaceNameRequired: Project name is required
+  gitProvider: Git Provider
+  invalidUrl: Invalid GitHub or GitLab URL
+  githubOrg: GitHub Organization Name
+  gitlabGroup: GitLab Group Name
+importProgress: 'Import in progress...'
+triggers:
+  newTrigger: New Trigger
+  createTrigger: Create a Trigger
+  createSuccess: Trigger created successfully
+  failedToCreate: Failed to create Trigger. Please try again.
+  enterTriggerName: Enter Trigger name
+  actions: Actions
+  updateSuccess: Trigger updated successfully
+  failedToUpdate: Failed to update Trigger. Please try again.
+  deleteTrigger: Delete trigger
+  disableTrigger: Disable trigger
+  deleteTriggerConfirm: Are you sure you want to delete trigger <strong>{{name}}</strong>? You can't undo this action.
+  deleteTriggerSuccess: Trigger {{name}} deleted.
+  deleteTriggerError: Failed to delete Trigger. Please try again.
+step:
+  select: Select a step
+stepCategory:
+  select: Select step category
+exportSpace:
+  harness: Harness
+  accIdRequired: Account ID is required
+  accesstokenReq: Access token is required
+  accIdLabel: 'Harness Account ID'
+  accIdPlaceholder: 'Enter the Harness Account ID'
+  tokenLabel: 'Harness Account Token'
+  tokenPlaceholder: 'Enter the access token here'
+  organization: Organization ID
+  orgIdPlaceholder: Enter the organization ID here
+  projectName: Project ID
+  projectIdPlaceholder: Enter the project ID here
+  entitiesLabel: Entities to upgrade
+  projectOrg: Project Organization
+  repoToConvert: '{length} {length|1:repository,repositories} to be upgraded'
+  startUpgrade: Start Upgrade
+  upgradeHarness: Upgrade to Harness
+  newProject: Harness Project Details
+  upgradeConfirmation: Upgrade Confirmation
+  upgradeTitle: Upgrade this project to the Harness Software Delivery platform
+  upgrade: Upgrade to Harness
+  upgradeContent: The upgrade will import all repositories into an existing organization and project in Harness Code. Learn more about Harness Code here.
+  upgradeProgress: 'Upgrading in progress'
+  upgradeFailed: 'Upgrade Failed! Please validate your credentials and try again.'
+  exportCompleted: Upgrade Completed
+  exportFailed: Upgrade Failed
+  exportRepoCompleted: Upgraded {repoCount} {repoCount|1:repository,repositories}
+  exportRepo: Upgrading {repoCount} {repoCount|1:repository,repositories}
+spaceUpdate: Project Updated
+generate: Generate
+generateHelptext: Let Harness build your Pipeline for you.
+enterAddress: Enter Address
+enterGitlabPlaceholder: https://gitlab.com/
+enterGithubPlaceholder: https://api.github.com/
+enterBitbucketPlaceholder: https://bitbucket.org/
+changeRepoVis: Change repository visibility
+changeRepoVisContent: Are you sure you want to make this repository {repoVis}?
+confirmRepoVisButton: Yes, make the repository {repoVis}
+repoVisibility: Repository visibility
+visibility: Visibility
+attachText: Attach images & videos by dragging & dropping, selecting or pasting them.
+key: Key
+setting: Setting
+mergeCommit: Merge commit
+squashMerge: Squash and merge
+rebaseMerge: Rebase and merge
+fastForwardMerge: Fast-forward merge
+Enable: Enable
+imageUpload:
+  title: Upload attachment
+  readyToUpload: Ready for upload
+  upload: Upload
+  text: Drag and drop a file here or click browse to select a file.
+protectionRules:
+  namePlaceholder: Enter the rule name here
+  descPlaceholder: Enter the description here
+  title: Rules
+  edit: Edit {{ruleType}} Rule
+  create: Create {{ruleType}} Rule
+  targetRepositories: Target Repositories
+  targetPatterns: Target Patterns
+  targetPlaceholder: Enter the {{target}} patterns
+  targetPatternHint: Match {{target}} using globstar patterns (e.g. "golden", "feature-*", "releases/**")
+  repoSelectionHint: If no repositories are selected, the rule applies to all
+  defaultBranch: Default branch
+  bypassList: Bypass List
+  defaultReviewersList: Default Reviewers List
+  newRule: New {{ruleType}} rule
+  allRepoOwners: Allow users with edit permission on the repository to bypass
+  protectionSelectAll: 'Rules: Select all that apply'
+  requireMinReviewersTitle: Require a minimum number of reviewers
+  requireMinReviewersContent: Require approval on pull requests from a minimum number of reviewers
+  minNumber: Minimum number
+  minNumberPlaceholder: Enter the minimum number
+  numberOfRulesApplied: '{{count}} {{type}} {{rulesLabel}} applied'
+  addCodeownersToReviewTitle: Add Code Owners as reviewers
+  addCodeownersToReviewText: Automatically add relevant Code Owners as reviewers
+  reqReviewFromCodeOwnerTitle: Require review from code owners
+  reqReviewFromCodeOwnerText: Require approval on pull requests from one reviewer for each Code Owner rule
+  reqNewChangesTitle: Require approval of new changes
+  reqResOfChanges: Require resolution of change requests
+  reqResOfChangesText: All change requests on a pull request must be resolved before it can be merged
+  reqNewChangesText: Require re-approval when there are new changes in the pull request
+  reqCommentResolutionTitle: Require comment resolution
+  reqCommentResolutionText: All comments on a pull request must be resolved before it can be merged
+  reqStatusChecksTitle: Require status checks to pass
+  reqStatusChecksText: Selected status checks must pass before a pull request can be merged
+  statusCheck: Status checks
+  limitMergeStrategies: Limit merge strategies
+  limitMergeStrategiesText: Limit which merge strategies are available to merge a pull request
+  autoDeleteTitle: Auto delete branch on merge
+  autoDeleteText: Automatically delete the source branch of a pull request after it is merged
+  blockCreation: Block {{ruleType}} creation
+  blockUpdate: Block {{ruleType}} update
+  blockUpdateText: Only allow users with bypass permission to update matching {{refs}}
+  blockCreationText: Only allow users with bypass permission to create matching {{refs}}
+  blockDeletion: Block {{ruleType}} deletion
+  blockDeletionText: Only allow users with bypass permission to delete matching {{refs}}
+  blockForcePush: Block force push
+  blockForcePushText: Only allow users with bypass permission to force push to matching {{refs}}
+  editRule: Edit Rule
+  saveRule: Save Rule
+  deleteRule: Delete Rule
+  ruleDeleted: Rule Deleted
+  ruleEmpty: There are no rules in your repo. Click the button below to create a rule.
+  showRulesScope: Show rules from parent scopes
+  createRule: Create rule
+  deleteProtectionRule: Delete protection rule
+  deleteText: "Are you sure to delete the rule, '{{rule}}'?"
+  disableTheRule: Disable the Rule
+  ruleUpdated: '{{ruleType}} Rule updated'
+  enableTheRule: Enable the Rule
+  ruleCreated: '{{ruleType}} Rule created'
+  requirePr: Require pull request
+  requirePrText: Do not allow any changes to matching branches without a pull request
+  prFailedText: 'Cannot merge pull request'
+  mergePrAlertTitle: Merge pull request alert
+  mergePrAlertText: 'Merge cannot be completed. {{ruleCount}} branch rules failed: '
+  mergeCheckboxAlert: Bypass and merge anyway
+  createRefAlertBtn: Bypass rules and create {{ref}}
+  createRefAlertText: Some rules will be bypassed while creating {{ref}}
+  createRefBlockText: Some rules don't allow you to create {{ref}}
+  deleteRefAlertBtn: Bypass rule and confirm delete
+  deleteRefAlertText: Some rules will be bypassed while deleting {{ref}}
+  deleteRefBlockText: Some rules don't allow you to delete {{ref}}
+  commitNewBranchAlertBtn: Bypass rules and commit via new branch
+  commitNewBranchAlertText: Some rules will be bypassed to commit by creating branch
+  commitNewBranchBlockText: Some rules don't allow you to create new branch for commit
+  commitDirectlyBlockText: Some rules don't allow you to commit directly
+  commitDirectlyAlertText: Some rules will be bypassed to commit directly
+  commitDirectlyAlertBtn: Bypass rules and commit directly
+  enableDefaultReviewersTitle: Enable default reviewers
+  enableDefaultReviewersText: Require approval from default reviewer for each pull request
+  requireMinDefaultReviewersTitle: Require a minimum number of default reviewers
+  requireMinDefaultReviewersContent: Require approval on pull requests from a minimum number of default reviewers
+  atLeastMinReviewers: 'Select at least {{count}} default reviewers'
+  atLeastMinReviewer: 'Select at least {{count}} default reviewer'
+codeOwner:
+  title: Code Owner
+  changesRequested: '{count} {count|1:change,changes} requested'
+  waitToApprove: '{count} pending {count|1:approval,approvals} '
+  approvalCompleted: '{count}/{total} approvals completed'
+  pendingLatestApprovals: '{count} {count|1:approval,approvals} pending on latest changes'
+approved: Approved
+comingSoon: Coming soon...
+enterANumber: Enter a number
+selectUsers: Select Users
+selectReviewers: Select Reviewers
+selectUsersAndUserGroups: Select Users and User Groups
+selectUsersAndServiceAcc: Select Users and Service Accounts
+selectUsersUserGroupsAndServiceAcc: Select Users, User Groups and Service Accounts
+selectStatuses: Select Statuses
+featureRoadmap: Feature Roadmap
+pipelineConfig:
+  label: Pipeline Configuration
+  yamlUpdated: It looks like the YAML got modified. Refresh changes?
+discard: Discard
+language: Language
+selectLanguagePlaceholder: '- Select language here -'
+selectRepositoryPlaceholder: '- Select repository here -'
+results: Results
+showNMoreMatches: Show {{ n }} more matches
+showLessMatches: Show less
+clear: Clear
+searchExamples: Search Examples
+nMoreMatches: This file contains {{ n }} more matches not shown.
+seeNMoreMatches: See all {{ n }} matches in the full file
+bottom: Bottom
+top: Top
+customTime: '{{days}} {{hours}} {{minutes}} {{seconds}}'
+customDay: '{{days}}d'
+customHour: '{{hours}}h'
+customMin: '{{minutes}}m'
+customSecond: '{{seconds}}s'
+reqChanges: 'Request changes'
+summary: Summary
+prGenSummary: AIDA generate PR summary, insert at the cursor or replace selected text only.
+aidaGenSummary: 'AIDA is generating a summary...'
+generateSummary: Generate PR Summary
+invalidResponse: Invalid summary response generated
+allCommentsResolved: All comments resolved
+resolveComments: There are {{n}} unresolved comments
+view: View
+mergeCheckInProgress: Merge check in progress...
+allConflictsNeedToBeResolved: All conflicts have to be resolved before merging
+conflictsFoundInThisBranch: Conflicts found in this branch
+details: Details
+showCheckAll: Show all checks
+showLessCheck: Show less checks
+markAsDraft: Mark as draft
+mergeSetting: Merge setting
+deleteBranchText: Delete the branch after merging
+customizeMergeCommitMessage: Customize merge commit message
+mergeStrategy: Merge strategy
+selectMergeStrat: Select merge strategy
+writeDownCommit: Write down commit message here
+prHasNoConflicts: This branch has no conflicts with {name} branch
+checkStatus:
+  succeeded: Succeeded in {time}
+  failed: Failed in {time}
+  running: Running...
+  pending: Pending...
+  error: Errored in {time}
+changesSection:
+  prMergeBlockedTitle: Base branch does not allow updates
+  prMergeBlockedMessage: Read about Protected Branches
+  reqChangeFromCodeOwners: Changes requested by code owner
+  codeOwnerReqChanges: Code owner requested changes
+  pendingAppFromCodeOwners: Approvals pending from code owners
+  pendingLatestApprovalCodeOwners: Latest changes are pending approval from code owners
+  waitingOnCodeOwner: Changes are pending approval from code owners
+  pendingLatestApprovalDefaultReviewers: Latest changes are pending approval from default reviewers
+  waitingOnDefaultReviewers: Changes are pending approval from default reviewers
+  waitingOnReviewers: Changes are pending approval from required reviewers
+  waitingOnLatestCodeOwner: Waiting on code owner reviews of latest changes
+  waitingOnLatestDefaultReviewers: Waiting on default reviewer's reviews of latest changes
+  approvalPending: Approvals pending
+  changesApproved: Changes approved
+  noReviewsReq: No reviews required
+  noCodeOwnerReviewsReq: No codeowner reviews
+  pullReqWithoutAnyReviews: Pull request can be merged without any reviews
+  changesAppByRev: Changes were approved by reviewers
+  changesApprovedByXReviewers: Changes were approved by {length} {length|1:reviewer,reviewers}
+  latestChangesApprovedByXReviewers: Latest changes were approved by {length} {length|1:reviewer,reviewers}
+  latestChangesWereAppByCodeOwner: Latest changes were approved by code owners
+  latestChangesWereAppByDefaultReviewers: Latest changes were approved by default reviewers
+  latestChangesPendingReqRev: Latest changes are pending approval from required reviewers
+  changesWereAppByCodeOwner: Changes were approved by code owners
+  changesWereAppByDefaultReviewers: Changes were approved by default reviewers
+  defaultReviewersStatus: Default reviewers were added to the PR
+  changesWereAppByLatestReqRev: Changes were approved by required reviewers
+  latestChangesWereApprovedByReq: Latest changes were approved by required reviewers
+  someChangesWereAppByCodeOwner: Some changes were approved by code owners
+  xApprovalsArePending: '{approved}/{min} approvals are pending'
+  codeOwnerReqChangesToPr: Code owners requested changes to the pull request
+  defaultReviewersChangesToPr: Default reviewers requested changes to the pull request
+checkSection:
+  someReqChecksFailed: Some required checks have failed
+  someReqChecksPending: Some required checks are pending
+  someReqChecksRunning: Some required checks are running
+  someChecksNotComplete: Some checks haven’t been completed yet
+  allChecksSucceeded: All checks have succeeded
+  allReqChecksPassed: All required checks passed
+  someChecksFailed: Some checks have failed
+  someChecksRunning: Some checks are running
+rebaseSource:
+  title: This branch is out-of-date with the base branch
+  message: Merge the latest changes from {target} into {source}
+importFailed: Import Failed
+uploadAFileError: There is no image or video uploaded. Please upload an image or video.
+securitySettings:
+  scanningSecret: Secret Scanning
+  scanningSecretDesc: Block commits containing secrets like passwords, API keys, and tokens
+  vulnerabilityScanning: Vulnerability Scanning
+  vulnerabilityScanningDesc: Scan incoming commits for known vulnerabilities
+  verifyCommitterIdentity: Verify Committer Identity
+  verifyCommitterIdentityDesc: Block commits not committed by the user pushing the changes
+  failedToUpdate: Failed to update security settings
+  updateSuccess: Updated security settings
+  detect: Detect
+  detectDesc: passive vulnerability will report errors but not block
+  block: Block
+  blockDesc: active vulnerability blocks commit if any vulnerability is found
+suggestion: 'Add a suggestion, <Ctrl-g>'
+heading: Heading
+bold: Bold
+italic: Italic
+upload: Upload
+unorderedList: Unordered list
+checklist: Check list
+code: Code
+approvedBy: Approved By
+ownersHeading: OWNERS
+defaultReviewers: DEFAULT REVIEWERS
+changesRequestedBy: Changes Requested By
+changesRequested: changesRequested
+owners: Owners
+showMoreText: Show More
+addOptionalCommitMessage: Add (optional) commit message
+confirmStrat: 'Confirm {{strat}}'
+waiting: Waiting
+mergeBranchTitle: Merge branch {{branchName}} of {{repoPath}} (#{{prNum}})
+http: HTTP
+ssh: SSH
+stepNum: STEP {{num}}
+cmdlineInfo:
+  title: Resolve conflicts via command line
+  content: If the conflicts on this branch are too complex to resolve in the web editor, you can check it out via command line to resolve the conflicts
+  stepOne: Clone the repository or update your local repository with the latest changes
+  stepOneSub: git pull origin {target}
+  stepTwo: Switch to the head branch of the pull request
+  stepTwoSub: git checkout {source}
+  stepThree: Merge the base branch into the head branch
+  stepThreeSub: git merge {target}
+  stepFour: Fix the conflicts and commit the result
+  stepFourSub: See Resolving a merge conflict using the command line for step-by-step instruction on resolving merge conflicts
+  stepFive: Push the changes
+  stepFiveSub: git push -u origin {source}
+sshCard:
+  newSshKey: New SSH Key
+  sshkey: SSH Key
+  publicKey: Public Key
+  noSshKeyText: There are no SSH Keys associated with this account
+  mySshKeys: My SSH Keys
+  sshContent: SSH keys allow you to establish a secure connection to your code repository.
+  beginsWithContent: Begins with 'ssh-rsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521', 'ssh-ed25519', 'sk-ecdsa-sha2-nistp256@openssh.com', or 'sk-ssh-ed25519@openssh.com'.
+  deleteSshTitle: Delete SSH Key
+  deleteSshMsg: Are you sure you want to delete this SSH Key?
+  successSshKeyMsg: SSH Key deleted successfully
+  addedOn: Added On
+  personalAccessToken: Personal Access Token
+  noTokensText: There are no personal access tokens associated with this account
+  lastUsed: Last Used
+artifacts: Artifacts
+recursiveSearchTooltip: Disabling recursive search will only search at the account level and exclude organization and project repositories.
+recursiveSearchLabel: 'Recursive search: show results across Repositories within {account} Organization and Projects'
+accounts: "Account's"
+scope: Scope
+searchScope:
+  base: 'Search scope: {scope}'
+  allScopes: Account, organizations and projects
+  accOnly: Account only
+  orgOnly: Organizations only
+  orgAndProj: Organizations and projects
+  title: Search scope
+regex:
+  tooltip: '{regex} search {enable}. Click to {disable}'
+  enable: enable
+  disable: disable
+  enabled: enabled
+  disabled: disabled
+  string: RegEx
+labels:
+  labels: Labels
+  newLabel: New Label
+  labelName: Label Name
+  labelValue: Label Value
+  labelNotFound: ' label not found'
+  allowDynamic: Allow users to add values
+  addNewValue: 'Add new value  '
+  addValue: 'Add value'
+  removeLabel: Remove Label
+  deleteLabel: Delete Label
+  deletedLabel: 'Deleted Label : {tag}'
+  provideLabelName: Provide Label name
+  labelCreated: Label created
+  labelUpdated: Label updated
+  labelNameReq: Label Name is required
+  labelValueReq: Label Value is required
+  noLabels: No Labels
+  updated: 'updated '
+  applied: 'applied '
+  label: ' label'
+  labelTo: ' label to '
+  removed: 'removed '
+  anyValue: 'anyvalue'
+  anyValueOption: '(any value)'
+  failedToDeleteLabel: Failed to delete Label
+  findALabel: Find a label
+  canbeAddedByUsers: '*can be added by users*'
+  removedLabel: Removed '{label}' label
+  showLabelsScope: Show labels from parent scopes
+  createLabel: Create Label
+  updateLabel: Update Label
+  appliedLabel: Create a <strong>new branch</strong> for this commit and start a pull request
+  labelsApplied: '{labelCount|1:Label,Labels} Applied'
+  createdIn: Created In
+  labelCreationFailed: Failed to create label
+  labelUpdateFailed: Failed to update label
+  noLabelsFound: No Labels found. Click on the button below to create a Label.
+  noRepoLabelsFound: There are no Labels in your repo. Click the button below to create a Label.
+  noScopeLabelsFound: There are no Labels present in current scope. Click the button below to create a Label.
+  scopeMessage: (Showing labels created at current scope or higher)
+  deleteLabelConfirm: Are you sure you want to delete label <strong>{{name}}</strong>? You can't undo this action.
+  intentText: Editing/deleting a label or its values will impact all the areas it has been used.
+  prCount: 'Showing {count} {count|1:result,results}'
+  failedtoFetchLabels: Failed to fetch labels
+  failedtoFetchValues: Failed to fetch label values
+  noResults: No results found
+  labelPreview: Label Preview
+  filterByLabels: Filter by Label/s
+  provideLabelValue: 'Provide label value'
+  findaValue: Find a value
+  findOrAdd: Find or add a new value
+  labelValuesOptional: 'Label Value/s (Optional)'
+  descriptionOptional: 'Description (Optional)'
+  placeholderDescription: Enter a short description for the label
+  addaValue: Add a value
+  stringMax: '{entity} must be 50 characters or less'
+  noNewLine: '{entity} cannot contain new lines'
+rebase: Rebase
+rebaseBranch: Rebase branch
+updateWithRebase: Update with rebase
+updatedBranchMessageRebase: Updated branch with rebase
+onLatestChanges: on latest changes
+favorite:
+  add: Add to Favorites
+  remove: Remove from Favorites
+  errorFavorite: Failed to mark this entity as a favorite.
+  errorUnFavorite: Failed to remove this entity from your favorites.
