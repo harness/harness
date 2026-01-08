@@ -27,7 +27,7 @@
         {
           "commands": [
             {
-              "value": "hc artifact push go test-registry \u003cARTIFACT_VERSION\u003e --pkg-url example.com"
+              "value": "hc artifact push go test-registry . --pkg-url example.com --version \u003cARTIFACT_VERSION\u003e"
             }
           ],
           "header": "To deploy a Go package into a Harness registry, \n\t\t\t\tyou need to run the following Harness CLI command from your project’s root directory:",
