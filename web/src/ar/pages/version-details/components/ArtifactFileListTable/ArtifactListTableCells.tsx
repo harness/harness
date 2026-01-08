@@ -23,6 +23,7 @@ import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { useAppStore, useGetDownloadFileURL } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import { VersionFilesContext } from '../../context/VersionFilesProvider'
 
@@ -93,7 +94,16 @@ export const FileDownloadCommandCell: CellType = ({ value, row }) => {
     <Layout.Horizontal spacing="medium">
       <TableCells.CopyTextCell value={downloadCommand}>{getString('copy')}</TableCells.CopyTextCell>
       {parent === Parent.Enterprise && (
-        <TableCells.DownloadCell href={fileURL} target="_blank">
+        <TableCells.DownloadCell
+          href={fileURL}
+          target="_blank"
+          permission={{
+            permission: PermissionIdentifier.DOWNLOAD_ARTIFACT,
+            resource: {
+              resourceType: ResourceType.ARTIFACT_REGISTRY,
+              resourceIdentifier: repositoryIdentifier
+            }
+          }}>
           {getString('download')}
         </TableCells.DownloadCell>
       )}

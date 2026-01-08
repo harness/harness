@@ -41,7 +41,8 @@ export default function DownloadArtifactMenuItem(props: ArtifactActionProps) {
       const response = await createBulkDownloadRequest({
         body: {
           packages: [data.uuid],
-          registryId: data.registryUUID
+          registryId: data.registryUUID,
+          outputFileName: `${artifactKey}.zip`
         },
         queryParams: {
           account_identifier: scope.accountId as string

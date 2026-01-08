@@ -49,7 +49,8 @@ export default function DownloadVersionMenuItem(props: VersionActionProps) {
       const response = await createBulkDownloadRequest({
         body: {
           versions: [data.uuid],
-          registryId: data.registryUUID
+          registryId: data.registryUUID,
+          outputFileName: `${artifactKey}/${versionKey}.zip`
         },
         queryParams: {
           account_identifier: scope.accountId as string
