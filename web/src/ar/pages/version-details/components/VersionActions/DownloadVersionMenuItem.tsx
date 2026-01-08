@@ -19,6 +19,7 @@ import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { createBulkDownloadRequestV1 } from '@harnessio/react-har-service-client'
 import { useCreateBulkDownloadRequestMutation } from '@harnessio/react-har-service-v2-client'
 
+import { encodeFileName } from '@ar/common/utils'
 import { useAppStore, useGetSpaceRef, useParentComponents, useV2Apis } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
@@ -50,7 +51,7 @@ export default function DownloadVersionMenuItem(props: VersionActionProps) {
         body: {
           versions: [data.uuid],
           registryId: data.registryUUID,
-          outputFileName: `${artifactKey}/${versionKey}.zip`
+          outputFileName: encodeFileName(`${artifactKey}/${versionKey}.zip`)
         },
         queryParams: {
           account_identifier: scope.accountId as string

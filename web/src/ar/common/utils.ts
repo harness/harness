@@ -19,6 +19,8 @@ import type { FormikProps } from 'formik'
 import { isEmpty } from 'lodash-es'
 import type { FormikFowardRef, RepositoryPackageType } from './types'
 
+const INVALID_FILENAME_CHARS = /[/\\:*?"<>|]/g
+
 export function setFormikRef<T = unknown, U = unknown>(ref: FormikFowardRef<T>, formik: FormikProps<U>): void {
   if (!ref) return
 
@@ -40,4 +42,8 @@ export function killEvent(e: React.MouseEvent<any> | SyntheticEvent<HTMLElement,
 
 export function getPackageTypesForApiQueryParams(packageTypes: RepositoryPackageType[]): string | undefined {
   return isEmpty(packageTypes) ? undefined : packageTypes.join(',')
+}
+
+export const encodeFileName = (fileName: string): string => {
+  return fileName.replace(INVALID_FILENAME_CHARS, '_')
 }

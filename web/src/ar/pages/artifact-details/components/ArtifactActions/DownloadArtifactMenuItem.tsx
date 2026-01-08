@@ -18,6 +18,7 @@ import React, { useContext } from 'react'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { useCreateBulkDownloadRequestMutation } from '@harnessio/react-har-service-v2-client'
 
+import { encodeFileName } from '@ar/common/utils'
 import { useAppStore, useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
@@ -42,7 +43,7 @@ export default function DownloadArtifactMenuItem(props: ArtifactActionProps) {
         body: {
           packages: [data.uuid],
           registryId: data.registryUUID,
-          outputFileName: `${artifactKey}.zip`
+          outputFileName: encodeFileName(`${artifactKey}.zip`)
         },
         queryParams: {
           account_identifier: scope.accountId as string
