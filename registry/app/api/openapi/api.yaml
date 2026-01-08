@@ -2230,6 +2230,12 @@ components:
           type: boolean
         uuid:
           type: string
+        deletedAt:
+          type: string
+          description: Timestamp in milliseconds when the registry was soft-deleted
+        isDeleted:
+          type: boolean
+          description: True if the registry is soft-deleted
       required:
         - type
         - packageType
@@ -2237,6 +2243,7 @@ components:
         - url
         - isPublic
         - uuid
+        - isDeleted
     ClientSetupDetails:
       type: object
       description: Client Setup Details
@@ -2348,6 +2355,12 @@ components:
           type: string
         registryUUID:
           type: string
+        deletedAt:
+          type: string
+          description: Timestamp in milliseconds when the registry was soft-deleted
+        isDeleted:
+          type: boolean
+          description: True if the registry is soft-deleted
       required:
         - name
         - registryIdentifier
@@ -2356,6 +2369,7 @@ components:
         - packageType
         - uuid
         - registryUUID
+        - isDeleted
     RegistryArtifactMetadata:
       type: object
       description: Artifact Metadata
@@ -2389,6 +2403,12 @@ components:
           type: string
         registryUUID:
           type: string
+        deletedAt:
+          type: string
+          description: Timestamp in milliseconds when the registry was soft-deleted
+        isDeleted:
+          type: boolean
+          description: True if the registry is soft-deleted
       required:
         - name
         - registryIdentifier
@@ -2398,6 +2418,7 @@ components:
         - isPublic
         - uuid
         - registryUUID
+        - isDeleted
     ArtifactVersionMetadata:
       type: object
       description: Artifact Version Metadata
@@ -2497,6 +2518,12 @@ components:
           type: boolean
         uuid:
           type: string
+        deletedAt:
+          type: string
+          description: Timestamp in milliseconds when the registry was soft-deleted
+        isDeleted:
+          type: boolean
+          description: True if the registry is soft-deleted
       required:
         - name
         - identifier
@@ -2505,6 +2532,7 @@ components:
         - packageType
         - isPublic
         - uuid
+        - isDeleted
     ArtifactDetail:
       type: object
       description: Artifact Detail
@@ -2891,11 +2919,18 @@ components:
           type: string
         registryUUID:
           type: string
+        deletedAt:
+          type: string
+          description: Timestamp in milliseconds when the registry was soft-deleted
+        isDeleted:
+          type: boolean
+          description: True if the registry is soft-deleted
       required:
         - imageName
         - packageType
         - uuid
         - registryUUID
+        - isDeleted
     ArtifactVersionSummary:
       type: object
       description: Docker Artifact Version Summary
@@ -2916,12 +2951,19 @@ components:
           type: string
         registryUUID:
           type: string
+        deletedAt:
+          type: string
+          description: Timestamp in milliseconds when the registry was soft-deleted
+        isDeleted:
+          type: boolean
+          description: True if the registry is soft-deleted
       required:
         - imageName
         - version
         - packageType
         - uuid
         - registryUUID
+        - isDeleted
     DockerArtifactManifest:
       type: object
       description: Docker Artifact Manifest
