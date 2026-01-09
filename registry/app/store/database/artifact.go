@@ -550,14 +550,14 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 		Join("registries r ON r.registry_id = i.image_registry_id").
 		Where("r.registry_parent_id = ?", parentID).
 		LeftJoin(
-			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
+			`( SELECT i.image_id, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
 			FROM artifacts a JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id 
 			GROUP BY a.artifact_image_id ) as t1 
 			JOIN images i ON i.image_id = t1.artifact_image_id 
 			JOIN registries r ON r.registry_id = i.image_registry_id 
-			WHERE r.registry_parent_id = ? GROUP BY i.image_name) as t2 
-			ON i.image_name = t2.image_name`, parentID,
+			WHERE r.registry_parent_id = ? GROUP BY i.image_id) as t2 
+			ON i.image_id = t2.image_id`, parentID,
 		)
 
 	if latestVersion {
@@ -675,15 +675,15 @@ func (a ArtifactDao) GetArtifactsByRepo(
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
 		LeftJoin(
-			`( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
+			`( SELECT i.image_id, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
 			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
 			FROM artifacts a 
 			JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id GROUP BY 
 			a.artifact_image_id ) as t1 
 			JOIN images i ON i.image_id = t1.artifact_image_id 
 			JOIN registries r ON r.registry_id = i.image_registry_id 
-			WHERE r.registry_parent_id = ? AND r.registry_name = ? GROUP BY i.image_name) as t2 
-			ON i.image_name = t2.image_name`, parentID, repoKey,
+			WHERE r.registry_parent_id = ? AND r.registry_name = ? GROUP BY i.image_id) as t2 
+			ON i.image_id = t2.image_id`, parentID, repoKey,
 		).
 		Where("a1.rank = 1 ")
 
