@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/store"
 
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
@@ -105,9 +106,12 @@ func dbQuarantineStatusOCI(
 
 	var parsedDigest digest.Digest
 	var err error
-	if info.Digest == "" {
+	if info.Digest == "" { //nolint:nestif
 		dbManifest, err := c.DBStore.ManifestDao.FindManifestDigestByTagName(ctx, registry.ID, info.Image, info.Tag)
 		if err != nil {
+			if errors.Is(err, store.ErrResourceNotFound) {
+				return nil
+			}
 			return err
 		}
 		parsedDigest, err = dbManifest.Parse()
