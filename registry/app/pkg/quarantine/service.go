@@ -16,10 +16,12 @@ package quarantine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/store"
+	store2 "github.com/harness/gitness/store"
 
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
@@ -82,6 +84,9 @@ func (s *Service) ResolveDigest(
 	if tag != "" {
 		dbManifest, err := s.manifestRepo.FindManifestDigestByTagName(ctx, registryID, image, tag)
 		if err != nil {
+			if errors.Is(err, store2.ErrResourceNotFound) {
+				return "", nil
+			}
 			return "", fmt.Errorf("failed to find manifest digest: %w", err)
 		}
 		parsedDigest, err := dbManifest.Parse()

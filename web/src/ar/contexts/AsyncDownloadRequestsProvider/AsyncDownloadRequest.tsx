@@ -95,7 +95,7 @@ export default function AsyncDownloadRequest({ requestKey, onRemove }: AsyncDown
           message={response.message}
         />
         <Text className={css.requestKey} lineClamp={1} font={{ variation: FontVariation.BODY, weight: 'bold' }}>
-          {response.key}
+          {response.outputFileName || requestKey}
         </Text>
       </Layout.Horizontal>
       <Layout.Horizontal spacing="small">

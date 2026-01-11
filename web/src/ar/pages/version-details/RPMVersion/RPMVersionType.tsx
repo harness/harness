@@ -121,8 +121,11 @@ export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
   }
 
   renderArtifactActions(props: ArtifactActionProps): JSX.Element {
-    if (props.pageType === PageType.Details) return <></>
-    return <ArtifactActions {...props} allowedActions={[ArtifactActionsEnum.SetupClient]} />
+    if (props.pageType === PageType.Details)
+      return <ArtifactActions {...props} allowedActions={[ArtifactActionsEnum.Download]} />
+    return (
+      <ArtifactActions {...props} allowedActions={[ArtifactActionsEnum.SetupClient, ArtifactActionsEnum.Download]} />
+    )
   }
 
   renderVersionActions(props: VersionActionProps): JSX.Element {

@@ -26,8 +26,10 @@ import { Icon, type IconName, type IconProps } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 
 import { killEvent } from '@ar/common/utils'
+import { useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings/String'
 import type { RepositoryConfigType } from '@ar/common/types'
+import type { RbacButtonProps } from '@ar/__mocks__/components/RbacButton'
 import { TimeAgoPopover } from '@ar/components/TimeAgoPopover/TimeAgoPopover'
 import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadge'
 
@@ -131,7 +133,7 @@ export const CopyTextCell: FC<PropsWithChildren<CopyTextCellProps>> = ({
   )
 }
 
-interface DownloadCellProps extends ButtonProps {
+interface DownloadCellProps extends RbacButtonProps {
   icon?: IconName
 }
 
@@ -141,8 +143,9 @@ export const DownloadCell: FC<PropsWithChildren<DownloadCellProps>> = ({
   children,
   ...rest
 }): JSX.Element => {
+  const { RbacButton } = useParentComponents()
   return (
-    <Button
+    <RbacButton
       className={css.copyButton}
       intent="primary"
       minimal
@@ -151,7 +154,7 @@ export const DownloadCell: FC<PropsWithChildren<DownloadCellProps>> = ({
       iconProps={iconProps}
       {...rest}>
       {children}
-    </Button>
+    </RbacButton>
   )
 }
 

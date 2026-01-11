@@ -286,6 +286,11 @@ func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 			return nil, fmt.Errorf("failed to get generic artifact info: %w", err)
 		}
 		return artifactInfo, nil
+	} else if len(splits) >= 4 && splits[0] == "pkg" && splits[3] == "files" {
+		// Missing required path segments (version or filepath)
+		return nil, usererror.BadRequestf(
+			"Invalid request path: expected /pkg/{root}/{registry}/files/{package}/{version}/{filepath}, got: %s",
+			r.URL.Path)
 	}
 	info, e := h.GetArtifactInfo(r)
 

@@ -85,13 +85,11 @@ type OciVersionMetadata struct {
 }
 
 type TagDetail struct {
-	ID            int64
-	Name          string
-	ImageName     string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Size          string
-	DownloadCount int64
+	ID        int64
+	Name      string
+	ImageName string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type TagInfo struct {
