@@ -80,6 +80,8 @@ type Repository struct {
 	Tags json.RawMessage `json:"tags,omitempty" yaml:"tags"`
 
 	Type enum.RepoType `json:"repo_type,omitempty" yaml:"repo_type"`
+
+	Language string `json:"language,omitempty" yaml:"language"`
 }
 
 func (r *Repository) Core() *RepositoryCore {
@@ -211,4 +213,10 @@ type LinkedRepo struct {
 	ConnectorPath       string
 	ConnectorIdentifier string
 	ConnectorRepo       string
+}
+
+type RepoLangStat struct {
+	Language string
+	Bytes    int64
+	Files    int64
 }

@@ -101,6 +101,7 @@ import (
 	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	svclabel "github.com/harness/gitness/app/services/label"
+	"github.com/harness/gitness/app/services/languageanalyzer"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
 	migrateservice "github.com/harness/gitness/app/services/migrate"
@@ -222,6 +223,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideWebhookConfig,
 		cliserver.ProvideNotificationConfig,
 		webhook.WireSet,
+		languageanalyzer.WireSet,
 		cliserver.ProvideTriggerConfig,
 		trigger.WireSet,
 		tokengenerator.WireSet,

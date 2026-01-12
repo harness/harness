@@ -95,6 +95,8 @@ type repository struct {
 	// default sqlite '[]' requires []byte, fails with json.RawMessage
 	Tags []byte `db:"repo_tags"`
 
+	Language string `db:"repo_language"`
+
 	Type null.String `db:"repo_type"`
 }
 
@@ -125,7 +127,9 @@ const (
 		,repo_state
 		,repo_is_empty
 		,repo_tags
-		,repo_type`
+		,repo_type
+		,repo_language
+		`
 )
 
 // Find finds the repo by id.
@@ -247,6 +251,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_is_empty
 			,repo_tags
 			,repo_type
+			,repo_language
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -273,6 +278,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_is_empty
 			,:repo_tags
 			,:repo_type
+			,:repo_language
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -317,6 +323,8 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_state = :repo_state
 			,repo_is_empty = :repo_is_empty
 			,repo_tags = :repo_tags
+			,repo_language = :repo_language
+
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -916,6 +924,7 @@ func (s *RepoStore) mapToRepo(
 		IsEmpty:        in.IsEmpty,
 		Tags:           in.Tags,
 		Type:           t,
+		Language:       in.Language,
 		// Path: is set below
 	}
 
@@ -1006,6 +1015,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		IsEmpty:        in.IsEmpty,
 		Tags:           in.Tags,
 		Type:           null.NewString(string(in.Type), in.Type != ""),
+		Language:       in.Language,
 	}
 }
 

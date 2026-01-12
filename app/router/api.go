@@ -381,6 +381,8 @@ func setupRepos(r chi.Router,
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
 			r.Patch("/", handlerrepo.HandleUpdate(repoCtrl))
 			r.Delete("/", handlerrepo.HandleSoftDelete(repoCtrl))
+
+			r.Get("/languages", handlerrepo.HandleGetLanguages(repoCtrl))
 			r.Post("/purge", handlerrepo.HandlePurge(repoCtrl))
 			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
 			r.Post("/public-access", handlerrepo.HandleUpdatePublicAccess(repoCtrl))
