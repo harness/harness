@@ -32,6 +32,7 @@ import (
 	gopackageutils "github.com/harness/gitness/registry/app/pkg/gopackage/utils"
 	maven2 "github.com/harness/gitness/registry/app/pkg/maven"
 	mavenutils "github.com/harness/gitness/registry/app/pkg/maven/utils"
+	pythonutils "github.com/harness/gitness/registry/app/pkg/python/utils"
 	"github.com/harness/gitness/registry/request"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
@@ -284,6 +285,33 @@ func TrackDownloadStatsForGoPackage(
 				if err != nil {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackDownloadStatsForGoPackage").Err(err).Msg("error while putting download stat of go artifact")
+					return
+				}
+			},
+		)
+	}
+}
+
+func TrackDownloadStatsForPythonPackage(
+	h packages.Handler,
+) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				ctx := context.WithoutCancel(r.Context())
+				sw := &StatusWriter{ResponseWriter: w}
+				next.ServeHTTP(sw, r)
+				if sw.StatusCode != http.StatusOK && sw.StatusCode != http.StatusTemporaryRedirect {
+					return
+				}
+				info := request.ArtifactInfoFrom(r.Context()) //nolint:contextcheck
+				if info == nil || !pythonutils.IsMainArtifactFile(info.GetFileName()) {
+					return
+				}
+				err := h.TrackDownloadStats(ctx, r)
+				if err != nil {
+					log.Ctx(ctx).Error().Stack().Str("middleware",
+						"TrackDownloadStatsForPythonPackage").Err(err).Msg("error while putting download stat of python artifact")
 					return
 				}
 			},
