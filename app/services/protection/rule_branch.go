@@ -46,6 +46,8 @@ func (v *Branch) MergeVerify(
 		return out, violations, fmt.Errorf("merge verify error: %w", err)
 	}
 
+	out.RequiresBypassMessage = v.PullReq.Merge.RequireBypassMessage
+
 	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupIDs)
 	bypassed := in.AllowBypass && bypassable
 	for i := range violations {

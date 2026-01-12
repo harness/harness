@@ -97,6 +97,7 @@ type PullRequestActivityPayloadMerge struct {
 	TargetSHA     string           `json:"target_sha"`
 	SourceSHA     string           `json:"source_sha"`
 	RulesBypassed bool             `json:"rules_bypassed,omitempty"`
+	BypassMessage string           `json:"bypass_message,omitempty"`
 }
 
 func (a *PullRequestActivityPayloadMerge) ActivityType() enum.PullReqActivityType {

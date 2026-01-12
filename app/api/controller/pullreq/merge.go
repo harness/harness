@@ -53,9 +53,10 @@ type MergeInput struct {
 	Message            string           `json:"message"`
 	DeleteSourceBranch bool             `json:"delete_source_branch"`
 
-	BypassRules bool `json:"bypass_rules"`
-	DryRun      bool `json:"dry_run"`
-	DryRunRules bool `json:"dry_run_rules"`
+	BypassRules   bool   `json:"bypass_rules"`
+	BypassMessage string `json:"bypass_message"`
+	DryRun        bool   `json:"dry_run"`
+	DryRunRules   bool   `json:"dry_run_rules"`
 }
 
 func (in *MergeInput) sanitize() error {
@@ -79,6 +80,7 @@ func (in *MergeInput) sanitize() error {
 	// cleanup title / message (NOTE: git doesn't support white space only)
 	in.Title = strings.TrimSpace(in.Title)
 	in.Message = strings.TrimSpace(in.Message)
+	in.BypassMessage = strings.TrimSpace(in.BypassMessage)
 
 	if (in.Method == enum.MergeMethodRebase || in.Method == enum.MergeMethodFastForward) &&
 		(in.Title != "" || in.Message != "") {
@@ -280,6 +282,11 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
+	// Validate bypass message if required and bypassing rules
+	if !in.DryRunRules && !in.DryRun && in.BypassRules && ruleOut.RequiresBypassMessage && in.BypassMessage == "" {
+		return nil, nil, usererror.BadRequest("Bypass message is required when bypassing protection rules")
+	}
+
 	// only delete the source branch if it's the source repository is the same as the target repository.
 	deleteSourceBranch := pr.SourceRepoID != nil && pr.TargetRepoID == *pr.SourceRepoID &&
 		(in.DeleteSourceBranch || ruleOut.DeleteSourceBranch)
@@ -300,6 +307,7 @@ func (c *Controller) Merge(
 			RequiresCodeOwnersApprovalLatest:    ruleOut.RequiresCodeOwnersApprovalLatest,
 			RequiresCommentResolution:           ruleOut.RequiresCommentResolution,
 			RequiresNoChangeRequests:            ruleOut.RequiresNoChangeRequests,
+			RequiresBypassMessage:               ruleOut.RequiresBypassMessage,
 			MinimumRequiredApprovalsCount:       ruleOut.MinimumRequiredApprovalsCount,
 			MinimumRequiredApprovalsCountLatest: ruleOut.MinimumRequiredApprovalsCountLatest,
 			DefaultReviewerApprovals:            ruleOut.DefaultReviewerApprovals,
@@ -453,6 +461,7 @@ func (c *Controller) Merge(
 			RequiresCodeOwnersApprovalLatest:    ruleOut.RequiresCodeOwnersApprovalLatest,
 			RequiresCommentResolution:           ruleOut.RequiresCommentResolution,
 			RequiresNoChangeRequests:            ruleOut.RequiresNoChangeRequests,
+			RequiresBypassMessage:               ruleOut.RequiresBypassMessage,
 			MinimumRequiredApprovalsCount:       ruleOut.MinimumRequiredApprovalsCount,
 			MinimumRequiredApprovalsCountLatest: ruleOut.MinimumRequiredApprovalsCountLatest,
 			DefaultReviewerApprovals:            ruleOut.DefaultReviewerApprovals,
@@ -700,6 +709,7 @@ func (c *Controller) Merge(
 		TargetSHA:     mergeOutput.BaseSHA.String(),
 		SourceSHA:     mergeOutput.HeadSHA.String(),
 		RulesBypassed: protection.IsBypassed(violations),
+		BypassMessage: in.BypassMessage,
 	}
 	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy, activityPayload, nil); errAct != nil {
 		// non-critical error
