@@ -89,7 +89,11 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 				return nil, err
 			}
 
-			commitInfo := commitsInfo[0]
+			var commitInfo CommitInfo
+			if len(commitsInfo) > 0 {
+				commitInfo = commitsInfo[0]
+			}
+
 			repoInfo := repositoryInfoFrom(ctx, repo, s.urlProvider)
 
 			return &ReferencePayload{

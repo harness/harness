@@ -48,11 +48,17 @@ func (s *Service) handleEventPullReqCreated(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqCreated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, targetRepo.GitUID, targetRepo.Path,
-				event.Payload.SourceSHA, s.urlProvider)
+			commitsInfo, _, err := s.fetchCommitsInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				pr.MergeBaseSHA, event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
+
+			var commitInfo CommitInfo
+			if len(commitsInfo) > 0 {
+				commitInfo = commitsInfo[0]
+			}
+
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
@@ -80,6 +86,7 @@ func (s *Service) handleEventPullReqCreated(
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
 					SHA:        event.Payload.SourceSHA,
 					Commit:     &commitInfo,
+					Commits:    &commitsInfo,
 					HeadCommit: &commitInfo,
 				},
 			}, nil
@@ -99,11 +106,17 @@ func (s *Service) handleEventPullReqReopened(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqReopened,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
-				event.Payload.SourceSHA, s.urlProvider)
+			commitsInfo, _, err := s.fetchCommitsInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				pr.MergeBaseSHA, event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
+
+			var commitInfo CommitInfo
+			if len(commitsInfo) > 0 {
+				commitInfo = commitsInfo[0]
+			}
+
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
@@ -131,6 +144,7 @@ func (s *Service) handleEventPullReqReopened(
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
 					SHA:        event.Payload.SourceSHA,
 					Commit:     &commitInfo,
+					Commits:    &commitsInfo,
 					HeadCommit: &commitInfo,
 				},
 			}, nil
@@ -163,7 +177,11 @@ func (s *Service) handleEventPullReqBranchUpdated(
 				return nil, err
 			}
 
-			commitInfo := commitsInfo[0]
+			var commitInfo CommitInfo
+			if len(commitsInfo) > 0 {
+				commitInfo = commitsInfo[0]
+			}
+
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
@@ -273,11 +291,17 @@ func (s *Service) handleEventPullReqMerged(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqMerged,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
-				event.Payload.SourceSHA, s.urlProvider)
+			commitsInfo, _, err := s.fetchCommitsInfoForEvent(ctx, sourceRepo.GitUID, sourceRepo.Path,
+				pr.MergeBaseSHA, event.Payload.SourceSHA, s.urlProvider)
 			if err != nil {
 				return nil, err
 			}
+
+			var commitInfo CommitInfo
+			if len(commitsInfo) > 0 {
+				commitInfo = commitsInfo[0]
+			}
+
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
@@ -305,6 +329,7 @@ func (s *Service) handleEventPullReqMerged(
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
 					SHA:        event.Payload.SourceSHA,
 					Commit:     &commitInfo,
+					Commits:    &commitsInfo,
 					HeadCommit: &commitInfo,
 				},
 			}, nil

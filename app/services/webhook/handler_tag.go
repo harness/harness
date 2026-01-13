@@ -74,10 +74,11 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 				return nil, err
 			}
 
-			commitInfo := CommitInfo{}
+			var commitInfo CommitInfo
 			if len(commitsInfo) > 0 {
 				commitInfo = commitsInfo[0]
 			}
+
 			repoInfo := repositoryInfoFrom(ctx, repo, s.urlProvider)
 
 			return &ReferencePayload{
