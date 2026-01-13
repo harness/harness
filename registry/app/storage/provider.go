@@ -21,12 +21,15 @@ import (
 )
 
 type DriverSelector struct {
+	BucketID     string
+	RootParentID int64
+	gBlobID      string
 }
 
 // DriverProvider interface is for provider storage drivers dynamically.
 type DriverProvider interface {
-	GetDriver(ctx context.Context, selector DriverSelector) driver.StorageDriver
-	GetDeleteDriver(ctx context.Context, selector DriverSelector) driver.StorageDeleter
+	GetDriver(ctx context.Context, selector DriverSelector) (driver.StorageDriver, error)
+	GetDeleteDriver(ctx context.Context, selector DriverSelector) (driver.StorageDeleter, error)
 }
 
 // StaticDriverProvider is a simple implementation of StorageDriverProvider
@@ -40,10 +43,13 @@ func NewStaticDriverProvider(d driver.StorageDriver) DriverProvider {
 }
 
 // GetDriver returns the static driver.
-func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) driver.StorageDriver {
-	return p.driver
+func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) (
+	driver.StorageDriver,
+	error,
+) {
+	return p.driver, nil
 }
 
-func (p *StaticDriverProvider) GetDeleteDriver(_ context.Context, _ DriverSelector) driver.StorageDeleter {
-	return p.driver
+func (p *StaticDriverProvider) GetDeleteDriver(_ context.Context, _ DriverSelector) (driver.StorageDeleter, error) {
+	return p.driver, nil
 }
