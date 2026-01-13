@@ -20,10 +20,18 @@ import (
 	"github.com/harness/gitness/registry/app/driver"
 )
 
+type Mode string
+
+const (
+	ModeWrite Mode = "WRITE"
+	ModeRead  Mode = "READ"
+)
+
 type DriverSelector struct {
 	BucketID     string
 	RootParentID int64
-	gBlobID      string
+	GBlobID      string
+	Mode         Mode
 }
 
 // DriverProvider interface is for provider storage drivers dynamically.
