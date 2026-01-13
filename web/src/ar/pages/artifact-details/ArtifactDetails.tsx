@@ -93,7 +93,7 @@ function ArtifactDetails(): JSX.Element {
         className={css.saveButton}
         variation={ButtonVariation.PRIMARY}
         onClick={handleSubmitForm}
-        disabled={!isDirty || isUpdating}
+        disabled={!isDirty || isUpdating || isReadonly}
         permission={{
           permission: PermissionIdentifier.DOWNLOAD_ARTIFACT,
           resource: {

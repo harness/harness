@@ -16,7 +16,7 @@
 
 import React, { useContext } from 'react'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useCreateBulkDownloadRequestMutation } from '@harnessio/react-har-service-v2-client'
+import { useCreateBulkDownloadRequestMutation } from '@harnessio/react-har-service-client'
 
 import { encodeFileName } from '@ar/common/utils'
 import { useAppStore, useParentComponents } from '@ar/hooks'

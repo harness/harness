@@ -18,7 +18,7 @@ import React, { useCallback } from 'react'
 import classNames from 'classnames'
 import type { Column, Row } from 'react-table'
 import { Container, PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
+import type { ListVersion, VersionMetadata } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { killEvent } from '@ar/common/utils'
@@ -27,6 +27,7 @@ import type { RepositoryPackageType } from '@ar/common/types'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
 import { handleToggleExpandableRow } from '@ar/components/TableCells/utils'
 import ArtifactRowSubComponentWidget from '@ar/frameworks/Version/ArtifactRowSubComponentWidget'
+import { SoftDeleteFilterEnum } from '@ar/constants'
 
 import {
   ArtifactDeploymentsCell,
@@ -45,26 +46,27 @@ export interface ArtifactListColumnActions {
   refetchList?: () => void
 }
 export interface ArtifactListTableProps extends ArtifactListColumnActions {
-  data: ListArtifact
+  data: ListVersion
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: string[]) => void
   sortBy: string[]
   minimal?: boolean
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 export default function ArtifactListTable(props: ArtifactListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, softDeleteFilter } = props
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
 
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
-  const getRowId = (rowData: ArtifactMetadata) => {
+  const getRowId = (rowData: VersionMetadata) => {
     return `${rowData.registryIdentifier}/${rowData.package}:${rowData.version}`
   }
 
-  const onToggleRow = useCallback((rowData: ArtifactMetadata): void => {
+  const onToggleRow = useCallback((rowData: VersionMetadata): void => {
     const value = getRowId(rowData)
     const repositoryType = versionFactory?.getVersionType(rowData.packageType)
     if (!repositoryType?.getHasArtifactRowSubComponent()) return
@@ -82,7 +84,7 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
   })
   const [currentSort, currentOrder] = sortBy
 
-  const columns: Column<ArtifactMetadata>[] = React.useMemo(() => {
+  const columns: Column<VersionMetadata>[] = React.useMemo(() => {
     const getServerSortProps = (id: string) => {
       return {
         enableServerSort: true,
@@ -148,10 +150,16 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         width: '100%'
       },
       {
-        Header: getString('artifactList.table.columns.lastUpdated'),
+        Header: getString(
+          softDeleteFilter === SoftDeleteFilterEnum.ONLY
+            ? 'artifactList.table.columns.archivedAt'
+            : 'artifactList.table.columns.lastUpdated'
+        ),
         accessor: 'lastModified',
         Cell: LatestArtifactCell,
-        serverSortProps: getServerSortProps('lastModified'),
+        serverSortProps: getServerSortProps(
+          softDeleteFilter === SoftDeleteFilterEnum.ONLY ? 'deletedAt' : 'lastModified'
+        ),
         width: '100%'
       },
       {
@@ -161,11 +169,11 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         disableSortBy: true,
         width: '30%'
       }
-    ].filter(Boolean) as unknown as Column<ArtifactMetadata>[]
-  }, [currentOrder, currentSort, getString, expandedRows, setExpandedRows])
+    ].filter(Boolean) as unknown as Column<VersionMetadata>[]
+  }, [currentOrder, currentSort, getString, expandedRows, setExpandedRows, softDeleteFilter])
 
   const renderRowSubComponent = useCallback(
-    ({ row }: { row: Row<ArtifactMetadata> }) => (
+    ({ row }: { row: Row<VersionMetadata> }) => (
       <Container className={css.tableRowSubComponent} onClick={killEvent}>
         <ArtifactRowSubComponentWidget
           packageType={row.original.packageType as RepositoryPackageType}
@@ -177,7 +185,7 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
   )
 
   return (
-    <TableV2<ArtifactMetadata>
+    <TableV2<VersionMetadata>
       className={classNames(css.table)}
       columns={columns}
       data={artifacts}

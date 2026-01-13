@@ -40,6 +40,7 @@ const useGetAllHarnessArtifactsQuery = _useGetAllHarnessArtifactsQuery as jest.M
 const useGetAllRegistriesQuery = _useGetAllRegistriesQuery as jest.Mock
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListVersionsQuery: jest.fn(),
   useGetAllHarnessArtifactsQuery: jest.fn(),
   useGetAllRegistriesQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,

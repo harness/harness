@@ -3,11 +3,24 @@ downloadsThisWeek: Downloads This Week
 artifactLabelInputPlaceholder: Type input and hit enter
 labelsUpdated: Artifact labels updated successfully!
 totalDownloads: Total Downloads
-artifactDeleted: Artifact deleted successfully!
 createdAsyncDownloadRequest: Download request created successfully! Please do not close the window.
-deleteArtifactModal:
-  title: Delete Artifact
-  contentText: Are you sure you want to delete the artifact?
+artifactDeleted: Package deleted successfully!
+packageArchived: Package archived successfully!
+deleteModal:
+  title: Delete Package
+  contentText: This action will delete package and all it's versions. Are you absolutely sure you want to proceed?
+  inputLabel: Type the package name to confirm
+  inputPlaceholder: Package Name
+softDeleteModal:
+  title: Archive Package
+  contentText: This action will archive package and all it's versions. You can still restore it from the archived list.
+  inputLabel: Type the package name to confirm
+  inputPlaceholder: Package Name
+restoreModal:
+  title: Restore Package
+  contentText: This action will restore package and all it's versions.
+  inputLabel: Type the package name to confirm
+  inputPlaceholder: Package Name
 tabs:
   versions: Versions
   properties: Properties

@@ -28,6 +28,7 @@ import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
+import AvailablityBadge, { AvailablityBadgeType } from '@ar/components/Badge/AvailablityBadge'
 import VersionNameContent from './VersionNameContent'
 
 interface VersionDetailsHeaderContentProps {
@@ -64,6 +65,7 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         isLatestVersion={false}
       />
       {data.isQuarantined && <QuarantineBadge reason={data.quarantineReason} />}
+      <AvailablityBadge type={data.isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}

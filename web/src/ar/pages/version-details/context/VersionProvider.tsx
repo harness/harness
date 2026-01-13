@@ -76,7 +76,15 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
 
   return (
     <VersionProviderContext.Provider
-      value={{ data: responseData, isReadonly: false, refetch, isDirty, isUpdating, setIsDirty, setIsUpdating }}>
+      value={{
+        data: responseData,
+        isReadonly: responseData?.isDeleted || false,
+        refetch,
+        isDirty,
+        isUpdating,
+        setIsDirty,
+        setIsUpdating
+      }}>
       {loading ? <PageSpinner /> : null}
       {error && !loading ? <PageError message={error.message} onClick={() => refetch()} /> : null}
       {!error && !loading ? children : null}

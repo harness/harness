@@ -19,7 +19,7 @@ import classNames from 'classnames'
 import type { IconName } from '@harnessio/icons'
 import { FontVariation } from '@harnessio/design-system'
 import { Button, ButtonVariation, Layout, Text } from '@harnessio/uicore'
-import { useGetBulkDownloadRequestStatusQuery } from '@harnessio/react-har-service-v2-client'
+import { useGetBulkDownloadRequestStatusQuery } from '@harnessio/react-har-service-client'
 
 import { useAppStore } from '@ar/hooks'
 import { BulkDownloadRequestStatusEnum } from './types'

@@ -56,7 +56,7 @@ export default function RepositoryDetails(): JSX.Element | null {
   const routes = useRoutes()
   const repositoryListViewType = useGetRepositoryListViewType()
 
-  const { isDirty, data, isUpdating } = useContext(RepositoryProviderContext)
+  const { isDirty, data, isUpdating, isReadonly } = useContext(RepositoryProviderContext)
 
   const repositoryTabs = useMemo(() => {
     if (!data) return []
@@ -103,7 +103,7 @@ export default function RepositoryDetails(): JSX.Element | null {
         className={css.saveButton}
         variation={ButtonVariation.PRIMARY}
         onClick={handleSubmitForm}
-        disabled={!isDirty || isUpdating}
+        disabled={!isDirty || isUpdating || isReadonly}
         permission={{
           permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY,
           resource: {

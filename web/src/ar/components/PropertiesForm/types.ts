@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { MetadataType } from '@harnessio/react-har-service-v2-client'
+import type { MetadataType } from '@harnessio/react-har-service-client'
 
 export interface PropertySpec {
   key: string

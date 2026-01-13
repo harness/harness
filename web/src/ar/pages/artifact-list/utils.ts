@@ -17,7 +17,12 @@
 import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
-import { DEFAULT_GLOBAL_ARTIFACT_LIST_TABLE_SORT, DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
+import {
+  DEFAULT_GLOBAL_ARTIFACT_LIST_TABLE_SORT,
+  DEFAULT_PAGE_INDEX,
+  DEFAULT_PAGE_SIZE,
+  SoftDeleteFilterEnum
+} from '@ar/constants'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
@@ -31,6 +36,7 @@ export type ArtifactListPageQueryParams = {
   isDeployedArtifacts: boolean
   searchTerm?: string
   repositoryKey?: string[]
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 export const useArtifactListQueryParamOptions = (): UseQueryParamsOptions<ArtifactListPageQueryParams> => {
@@ -44,7 +50,8 @@ export const useArtifactListQueryParamOptions = (): UseQueryParamsOptions<Artifa
       latestVersion: false,
       packageTypes: [],
       labels: [],
-      repositoryKey: []
+      repositoryKey: [],
+      softDeleteFilter: SoftDeleteFilterEnum.EXCLUDE
     },
     { ignoreEmptyString: true }
   )

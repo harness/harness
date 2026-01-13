@@ -35,6 +35,7 @@ export default function DeleteArtifactMenuItem(props: ArtifactActionProps): JSX.
   const handleAfterDeleteRepository = (): void => {
     onClose?.()
     queryClient.invalidateQueries(['GetAllArtifactsByRegistry'])
+    queryClient.invalidateQueries(['ListPackages'])
     history.push(
       routes.toARRepositoryDetails({
         repositoryIdentifier: repoKey

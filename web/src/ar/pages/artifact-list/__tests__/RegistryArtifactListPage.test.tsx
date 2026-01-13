@@ -33,6 +33,7 @@ import {
 const useGetAllArtifactsByRegistryQuery = _useGetAllArtifactsByRegistryQuery as jest.Mock
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListPackagesQuery: jest.fn(),
   useGetAllArtifactsByRegistryQuery: jest.fn(),
   useGetArtifactSummaryQuery: jest.fn(),
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({

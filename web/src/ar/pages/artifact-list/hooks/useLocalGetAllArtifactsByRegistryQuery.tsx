@@ -19,18 +19,20 @@ import { useParams } from 'react-router-dom'
 import type { UseQueryResult } from '@tanstack/react-query'
 import {
   GetAllArtifactsByRegistryQueryQueryParams,
-  useGetAllArtifactsByRegistryQuery
-} from '@harnessio/react-har-service-client'
-import {
+  useGetAllArtifactsByRegistryQuery,
   type ListPackagesOkResponse,
   type ListPackagesQueryQueryParams,
   type PackageMetadata,
   useListPackagesQuery
-} from '@harnessio/react-har-service-v2-client'
+} from '@harnessio/react-har-service-client'
 
-import { useAppStore, useGetSpaceRef, useV2Apis } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef, useParentHooks, useV2Apis } from '@ar/hooks'
 import type { RepositoryDetailsPathParams } from '@ar/routes/types'
 import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
+import {
+  RegistryArtifactListPageQueryParams,
+  useRegistryArtifactListQueryParamOptions
+} from '../components/RegistryArtifactListTable/utils'
 
 interface UseLocalGetAllArtifactsByRegistryQueryProps extends GetAllArtifactsByRegistryQueryQueryParams {
   metadata?: string[]
@@ -46,6 +48,10 @@ export default function useLocalGetAllArtifactsByRegistryQuery(props: UseLocalGe
   const { repositoryIdentifier } = useParams<RepositoryDetailsPathParams>()
   const { getValueForAPI } = useMetadatadataFilterFromQuery()
   const shouldUseV2Apis = useV2Apis()
+
+  const { useQueryParams } = useParentHooks()
+  const queryParams = useQueryParams<RegistryArtifactListPageQueryParams>(useRegistryArtifactListQueryParamOptions())
+  const { softDeleteFilter } = queryParams
 
   const v1Response = useGetAllArtifactsByRegistryQuery(
     {
@@ -74,7 +80,8 @@ export default function useLocalGetAllArtifactsByRegistryQuery(props: UseLocalGe
         project_identifier: scope.projectIdentifier,
         registry_identifier: [repositoryIdentifier],
         sort_order: props.sort_order as ListPackagesQueryQueryParams['sort_order'],
-        metadata: getValueForAPI()
+        metadata: getValueForAPI(),
+        deleted: softDeleteFilter as ListPackagesQueryQueryParams['deleted']
       },
       stringifyQueryParamsOptions: {
         arrayFormat: 'repeat'
@@ -98,13 +105,18 @@ export default function useLocalGetAllArtifactsByRegistryQuery(props: UseLocalGe
               const { name, ...rest } = artifact
               return {
                 ...rest,
-                package: name
+                package: name,
+                isDeleted: false
               } as PackageMetadata
             }) || [],
           itemCount: v1Data.itemCount,
           pageCount: v1Data.pageCount,
           pageIndex: v1Data.pageIndex,
-          pageSize: v1Data.pageSize
+          pageSize: v1Data.pageSize,
+          meta: {
+            activeCount: 0,
+            deletedCount: 0
+          }
         },
         status: v1Response.data.content.status
       }

@@ -23,6 +23,7 @@ import type { ListRegistry, RegistryMetadata } from '@harnessio/react-har-servic
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks, useV2Apis } from '@ar/hooks'
+import { SoftDeleteFilterEnum } from '@ar/constants'
 import { useParentUtils } from '@ar/hooks/useParentUtils'
 import useGetScopeFromRegistryPath from '@ar/pages/repository-details/hooks/useGetScopeFromRegistryPath/useGetScopeFromRegistryPath'
 
@@ -51,10 +52,11 @@ export interface RepositoryListTableProps extends RepositoryListColumnActions {
   sortBy: string[]
   minimal?: boolean
   showScope?: boolean
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 export function RepositoryListTable(props: RepositoryListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, showScope } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, showScope, softDeleteFilter } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { routeToRegistryDetails } = useParentUtils()
   const { getString } = useStrings()
@@ -136,10 +138,16 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         disableSortBy: !shouldUseV2Apis
       },
       {
-        Header: getString('repositoryList.table.columns.lastModified'),
-        accessor: 'lastModified',
+        Header: getString(
+          softDeleteFilter === SoftDeleteFilterEnum.ONLY
+            ? 'repositoryList.table.columns.archivedAt'
+            : 'repositoryList.table.columns.lastModified'
+        ),
+        accessor: softDeleteFilter === SoftDeleteFilterEnum.ONLY ? 'deletedAt' : 'lastModified',
         Cell: LastModifiedCell,
-        serverSortProps: getServerSortProps('lastModified')
+        serverSortProps: getServerSortProps(
+          softDeleteFilter === SoftDeleteFilterEnum.ONLY ? 'deletedAt' : 'lastModified'
+        )
       },
       {
         Header: '',
@@ -154,7 +162,7 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<RegistryMetadata>[]
-  }, [currentOrder, currentSort, getString, showScope])
+  }, [currentOrder, currentSort, getString, showScope, softDeleteFilter])
 
   return (
     <TableV2

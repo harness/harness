@@ -21,10 +21,11 @@ import { Button, ButtonVariation, ExpandingSearchInput, ExpandingSearchInputHand
 import type { PackageType } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { useParentHooks, useDecodedParams, useAppStore, useFeatureFlags } from '@ar/hooks'
+import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
+import { useParentHooks, useDecodedParams, useAppStore, useFeatureFlags, useAllowSoftDelete } from '@ar/hooks'
 import { Parent, type RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
-import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
+import { DEFAULT_PAGE_INDEX, PreferenceScope, SoftDeleteFilterEnum } from '@ar/constants'
 import VersionListTableWidget from '@ar/frameworks/Version/VersionListTableWidget'
 import MetadataFilterSelector from '@ar/components/MetadataFilterSelector/MetadataFilterSelector'
 import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
@@ -46,10 +47,11 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
   const searchRef = useRef({} as ExpandingSearchInputHandle)
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<VersionListPageQueryParams>>()
   const queryParams = useQueryParams<VersionListPageQueryParams>(useVersionListQueryParamOptions())
-  const { searchTerm, isDeployedArtifacts, page, size } = queryParams
+  const { searchTerm, isDeployedArtifacts, page, size, softDeleteFilter } = queryParams
   const { getString } = useStrings()
   const { parent } = useAppStore()
   const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
+  const allowSoftDelete = useAllowSoftDelete()
 
   const { getValue, updateValue } = useMetadatadataFilterFromQuery()
   const metadataFilter = getValue()
@@ -82,9 +84,7 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
     replaceQueryParams({
-      page: 0,
-      searchTerm: '',
-      isDeployedArtifacts: false
+      softDeleteFilter
     })
   }
 
@@ -105,6 +105,23 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
               updateQueryParams({ isDeployedArtifacts: val, page: DEFAULT_PAGE_INDEX })
             }}
           /> */}
+          {allowSoftDelete && (
+            <ButtonTabs
+              small
+              bold
+              selectedTabId={softDeleteFilter}
+              onChange={newTab => updateQueryParams({ softDeleteFilter: newTab, page: DEFAULT_PAGE_INDEX })}>
+              <ButtonTab
+                id={SoftDeleteFilterEnum.EXCLUDE}
+                title={getString('available', { count: responseData?.meta?.activeCount ?? 0 })}
+              />
+              <ButtonTab
+                id={SoftDeleteFilterEnum.ONLY}
+                title={getString('archived', { count: responseData?.meta?.deletedCount ?? 0 })}
+              />
+            </ButtonTabs>
+          )}
+          <Expander />
           {HAR_CUSTOM_METADATA_ENABLED && parent === Parent.Enterprise && (
             <MetadataFilterSelector
               value={metadataFilter}
@@ -116,7 +133,6 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
               }}
             />
           )}
-          <Expander />
           <ExpandingSearchInput
             alwaysExpanded
             width={200}
@@ -138,7 +154,11 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
         noData={{
           when: () => !responseData?.artifacts?.length,
           // image: getEmptyStateIllustration(hasFilter, module),
-          messageTitle: hasFilter ? getString('noResultsFound') : getString('versionList.table.noVersionsTitle'),
+          messageTitle: hasFilter
+            ? getString('noResultsFound')
+            : softDeleteFilter === SoftDeleteFilterEnum.ONLY
+            ? getString('versionList.table.noArchivedVersionsTitle')
+            : getString('versionList.table.noVersionsTitle'),
           button: hasFilter ? (
             <Button text={getString('clearFilters')} variation={ButtonVariation.LINK} onClick={handleClearAllFilters} />
           ) : undefined
@@ -155,6 +175,7 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
               updateQueryParams({ sort: sortArray })
             }}
             sortBy={sort}
+            softDeleteFilter={softDeleteFilter}
           />
         )}
       </Page.Body>

@@ -17,10 +17,11 @@
 import React, { useCallback } from 'react'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
+import type { ListVersion, VersionMetadata } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import type { SoftDeleteFilterEnum } from '@ar/constants'
 import type { SortByType } from '@ar/frameworks/Version/Version'
 import type { IVersionListTableColumnConfigType, VersionListColumnEnum } from './types'
 
@@ -31,17 +32,18 @@ export interface ArtifactVersionListColumnActions {
   refetchList?: () => void
 }
 export interface CommonVersionListTableProps extends ArtifactVersionListColumnActions {
-  data: ListArtifact
+  data: ListVersion
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: SortByType) => void
   sortBy: SortByType
   minimal?: boolean
   columnConfigs: Partial<Record<VersionListColumnEnum, Partial<IVersionListTableColumnConfigType>>>
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 function VersionListTable(props: CommonVersionListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, columnConfigs } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, columnConfigs, softDeleteFilter } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
@@ -70,12 +72,17 @@ function VersionListTable(props: CommonVersionListTableProps): JSX.Element {
     [currentOrder, currentSort]
   )
 
-  const columns: Column<ArtifactMetadata>[] = React.useMemo(() => {
-    return getVersionListTableCellConfigs(columnConfigs, getServerSortProps, getString) as Column<ArtifactMetadata>[]
-  }, [getServerSortProps, columnConfigs, getString])
+  const columns: Column<VersionMetadata>[] = React.useMemo(() => {
+    return getVersionListTableCellConfigs(
+      columnConfigs,
+      getServerSortProps,
+      getString,
+      softDeleteFilter
+    ) as Column<VersionMetadata>[]
+  }, [getServerSortProps, columnConfigs, getString, softDeleteFilter])
 
   return (
-    <TableV2<ArtifactMetadata>
+    <TableV2<VersionMetadata>
       className={css.table}
       columns={columns}
       data={artifacts}

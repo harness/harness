@@ -16,7 +16,7 @@
 
 import React from 'react'
 import userEvent from '@testing-library/user-event'
-import { getByTestId, getByText, render, waitFor } from '@testing-library/react'
+import { fireEvent, getByTestId, getByText, render, waitFor } from '@testing-library/react'
 
 import { PageType } from '@ar/common/types'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
@@ -26,6 +26,7 @@ import {
   MockGetSetupClientOnRegistryConfigPageResponse
 } from '@ar/pages/repository-details/DockerRepository/__tests__/__mockData__'
 
+import { queryByNameAttribute } from 'utils/test/testUtils'
 import RepositoryActions from '../RepositoryActions'
 
 import '../../../RepositoryFactory'
@@ -93,6 +94,11 @@ describe('Verify RepositoryActions', () => {
     expect(deleteBtn).toBeInTheDocument()
     const cancelBtn = deleteModal.querySelector('button[aria-label=cancel]')
     expect(cancelBtn).toBeInTheDocument()
+
+    const valueField = queryByNameAttribute('value', deleteModal)
+    fireEvent.change(valueField!, {
+      target: { value: MockGetDockerRegistryResponseWithAllData.content.data.identifier }
+    })
 
     await userEvent.click(deleteBtn!)
     await waitFor(() => {

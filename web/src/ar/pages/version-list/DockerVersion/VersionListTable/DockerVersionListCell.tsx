@@ -17,7 +17,7 @@
 import React from 'react'
 import { Icon } from '@harnessio/icons'
 import { Layout } from '@harnessio/uicore'
-import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
+import type { ArtifactMetadata } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 
 import TableCells from '@ar/components/TableCells/TableCells'

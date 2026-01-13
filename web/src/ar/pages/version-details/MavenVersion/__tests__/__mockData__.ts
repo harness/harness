@@ -33,7 +33,8 @@ export const mockMavenLatestVersionListTableData: ListArtifactVersion = {
       registryPath: '',
       size: '69.56MB',
       uuid: 'uuid',
-      registryUUID: 'uuid'
+      registryUUID: 'uuid',
+      isDeleted: false
     }
   ],
   itemCount: 55,
@@ -48,7 +49,8 @@ export const mockMavenVersionSummary: ArtifactVersionSummaryResponseResponse = {
     packageType: 'MAVEN',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid'
+    registryUUID: 'uuid',
+    isDeleted: false
   },
   status: 'SUCCESS'
 }
@@ -71,7 +73,8 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.43MB',
         uuid: 'uuid',
-        registryUUID: 'uuid'
+        registryUUID: 'uuid',
+        isDeleted: false
       },
       {
         deploymentMetadata: {
@@ -88,7 +91,8 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid'
+        registryUUID: 'uuid',
+        isDeleted: false
       },
       {
         deploymentMetadata: {
@@ -105,7 +109,8 @@ export const mockMavenVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid'
+        registryUUID: 'uuid',
+        isDeleted: false
       }
     ],
     itemCount: 3,
@@ -124,7 +129,8 @@ export const mockMavenArtifactDetails: ArtifactDetailResponseResponse = {
     packageType: 'MAVEN',
     size: '6.81KB',
     version: '1.0-SNAPSHOT',
-    downloadCount: 0
+    downloadCount: 0,
+    isDeleted: false
   },
   status: 'SUCCESS'
 }

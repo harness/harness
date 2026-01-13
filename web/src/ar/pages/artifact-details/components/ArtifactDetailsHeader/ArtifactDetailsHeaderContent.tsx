@@ -29,6 +29,7 @@ import NameAndDescription from '@ar/components/PageTitle/NameAndDescription'
 import ArtifactActionsWidget from '@ar/frameworks/Version/ArtifactActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
+import AvailablityBadge, { AvailablityBadgeType } from '@ar/components/Badge/AvailablityBadge'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { ArtifactProviderContext } from '../../context/ArtifactProvider'
 
@@ -46,7 +47,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
 
   const { repositoryIdentifier, artifactIdentifier } = pathParams
-  const { packageType, imageName, modifiedAt, downloadsCount, createdAt } = data as ArtifactSummary
+  const { packageType, imageName, modifiedAt, downloadsCount, createdAt, isDeleted } = data as ArtifactSummary
 
   return (
     <Layout.Vertical spacing="small">
@@ -56,7 +57,10 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
           className={css.nameAndDescriptionContainer}
           spacing="small"
           flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <NameAndDescription name={imageName} hideDescription />
+          <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+            <NameAndDescription name={imageName} hideDescription />
+            <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
+          </Layout.Horizontal>
           <WeeklyDownloads downloads={downloadsCount} label={getString('artifactDetails.totalDownloads')} />
         </Layout.Vertical>
         <Expander />

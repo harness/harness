@@ -18,7 +18,12 @@ import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
-import { DEFAULT_ARTIFACT_LIST_TABLE_SORT, DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
+import {
+  DEFAULT_ARTIFACT_LIST_TABLE_SORT,
+  DEFAULT_PAGE_INDEX,
+  DEFAULT_PAGE_SIZE,
+  SoftDeleteFilterEnum
+} from '@ar/constants'
 
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
@@ -34,6 +39,7 @@ type GetVersionListQueryParams = {
   isDeployedArtifacts: boolean
   packageTypes: RepositoryPackageType[]
   repositoryKey: string
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 export type VersionListPageQueryParams = Omit<
@@ -51,7 +57,8 @@ export const useVersionListQueryParamOptions = (): UseQueryParamsOptions<Version
       isDeployedArtifacts: false,
       packageTypes: [],
       repositoryKey: '',
-      searchTerm: ''
+      searchTerm: '',
+      softDeleteFilter: SoftDeleteFilterEnum.EXCLUDE
     },
     { ignoreEmptyString: false }
   )

@@ -19,7 +19,7 @@ import classNames from 'classnames'
 import { useHistory } from 'react-router-dom'
 import type { Column, Row } from 'react-table'
 import { Container, TableV2 } from '@harnessio/uicore'
-import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
+import type { VersionMetadata } from '@harnessio/react-har-service-client'
 
 import { OCIVersionType, Parent } from '@ar/common/types'
 import { killEvent } from '@ar/common/utils'
@@ -29,6 +29,7 @@ import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import DigestListPage from '@ar/pages/digest-list/DigestListPage'
 import { handleToggleExpandableRow } from '@ar/components/TableCells/utils'
 
+import { SoftDeleteFilterEnum } from '@ar/constants'
 import {
   DigestNameCell,
   OCITagsCell,
@@ -46,7 +47,7 @@ import { DockerDigestToggleAccordionCell } from './DockerVersionListCell'
 import css from './DockerVersionListTable.module.scss'
 
 function DockerDigestListTable(props: DockerVersionListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, softDeleteFilter } = props
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
   const { parent } = useAppStore()
   const history = useHistory()
@@ -67,7 +68,7 @@ function DockerDigestListTable(props: DockerVersionListTableProps): JSX.Element 
   const [currentSort, currentOrder] = sortBy
 
   const onToggleRow = useCallback(
-    (rowData: ArtifactMetadata): void => {
+    (rowData: VersionMetadata): void => {
       const { version, digestCount } = rowData
       if (!digestCount || digestCount < 2) {
         history.push(
@@ -83,7 +84,7 @@ function DockerDigestListTable(props: DockerVersionListTableProps): JSX.Element 
     [pathParams, routes, history]
   )
 
-  const columns: Column<ArtifactMetadata>[] = React.useMemo(() => {
+  const columns: Column<VersionMetadata>[] = React.useMemo(() => {
     const getServerSortProps = (id: string) => {
       return {
         enableServerSort: true,
@@ -142,11 +143,17 @@ function DockerDigestListTable(props: DockerVersionListTableProps): JSX.Element 
         disableSortBy: true
       },
       {
-        Header: getString('versionList.table.columns.publishedByAt'),
+        Header: getString(
+          softDeleteFilter === SoftDeleteFilterEnum.ONLY
+            ? 'versionList.table.columns.archivedAt'
+            : 'versionList.table.columns.publishedByAt'
+        ),
         width: '100%',
-        accessor: 'lastModified',
+        accessor: softDeleteFilter === SoftDeleteFilterEnum.ONLY ? 'deletedAt' : 'lastModified',
         Cell: VersionPublishedAtCell,
-        serverSortProps: getServerSortProps('lastModified')
+        serverSortProps: getServerSortProps(
+          softDeleteFilter === SoftDeleteFilterEnum.ONLY ? 'deletedAt' : 'lastModified'
+        )
       },
       {
         Header: getString('versionList.table.columns.pullCommand'),
@@ -164,11 +171,11 @@ function DockerDigestListTable(props: DockerVersionListTableProps): JSX.Element 
       }
     ]
       .filter(Boolean)
-      .filter(each => !each.hidden) as unknown as Column<ArtifactMetadata>[]
-  }, [currentOrder, currentSort, getString, expandedRows])
+      .filter(each => !each.hidden) as unknown as Column<VersionMetadata>[]
+  }, [currentOrder, currentSort, getString, expandedRows, softDeleteFilter])
 
   const renderRowSubComponent = React.useCallback(
-    ({ row }: { row: Row<ArtifactMetadata> }) => (
+    ({ row }: { row: Row<VersionMetadata> }) => (
       <Container className={css.rowSubComponent} onClick={killEvent}>
         <DigestListPage
           repoKey={pathParams.repositoryIdentifier}
@@ -182,7 +189,7 @@ function DockerDigestListTable(props: DockerVersionListTableProps): JSX.Element 
   )
 
   return (
-    <TableV2<ArtifactMetadata>
+    <TableV2<VersionMetadata>
       className={classNames(css.table)}
       columns={columns}
       data={artifacts}

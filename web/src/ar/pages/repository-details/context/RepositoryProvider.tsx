@@ -96,16 +96,18 @@ const RepositoryProvider: FC<PropsWithChildren<unknown>> = ({ children }): JSX.E
     }
   }, [repositoryData, loading])
 
+  const data = repositoryData?.content?.data
+
   return (
     <RepositoryProviderContext.Provider
       value={{
-        data: repositoryData?.content?.data as RepositoryProviderProps['data'],
+        data: data as Repository,
         isDirty,
         isUpdating,
         setIsDirty,
         setIsLoading,
         setIsUpdating,
-        isReadonly: !isEdit,
+        isReadonly: !isEdit || !!data?.isDeleted,
         refetch
       }}>
       {loading ? <PageSpinner /> : null}

@@ -19,7 +19,7 @@ import {
   useGetDockerArtifactManifestsQuery as _useGetDockerArtifactManifestsQuery,
   ListArtifactVersion
 } from '@harnessio/react-har-service-client'
-import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
+import type { ListVersion, VersionMetadata } from '@harnessio/react-har-service-client'
 import { getByText, queryByText, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import copy from 'clipboard-copy'
@@ -44,7 +44,8 @@ jest.mock('clipboard-copy', () => ({
 }))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
-  useGetDockerArtifactManifestsQuery: jest.fn()
+  useGetDockerArtifactManifestsQuery: jest.fn(),
+  useListVersionsQuery: jest.fn()
 }))
 
 jest.mock('@ar/components/TableCells/utils', () => ({
@@ -53,7 +54,7 @@ jest.mock('@ar/components/TableCells/utils', () => ({
   })
 }))
 
-const convertResponseToV2 = (response: ListArtifactVersion): ListArtifact => {
+const convertResponseToV2 = (response: ListArtifactVersion): ListVersion => {
   return {
     artifacts:
       response.artifactVersions?.map(
@@ -61,9 +62,14 @@ const convertResponseToV2 = (response: ListArtifactVersion): ListArtifact => {
           ({
             ...each,
             version: each.name,
-            package: ''
-          } as ArtifactMetadata)
+            package: '',
+            isDeleted: false
+          } as VersionMetadata)
       ) || [],
+    meta: {
+      activeCount: 0,
+      deletedCount: 0
+    },
     ...response
   }
 }

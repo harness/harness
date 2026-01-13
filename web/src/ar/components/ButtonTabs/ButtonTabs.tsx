@@ -24,13 +24,14 @@ import css from './ButtonTabs.module.scss'
 interface ButtonTabProps<T> {
   id: T
   title: React.ReactElement | string
-  panel: React.ReactElement
+  panel?: React.ReactElement
   icon?: IconName
   iconProps?: Omit<IconProps, 'name'>
 }
 
 export function ButtonTab<T>(props: ButtonTabProps<T>): JSX.Element {
-  return props.panel
+  if (!props.panel) return <></>
+  return <Container className={css.content}>{props.panel}</Container>
 }
 
 interface ButtonTabsProps<T> {
@@ -69,7 +70,7 @@ export function ButtonTabs<T>(props: ButtonTabsProps<T>): JSX.Element {
           />
         ))}
       </ButtonGroup>
-      {selectedTabPannel && <Container className={css.content}>{selectedTabPannel}</Container>}
+      {selectedTabPannel}
     </Container>
   )
 }

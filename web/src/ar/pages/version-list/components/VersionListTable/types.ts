@@ -28,6 +28,7 @@ export enum VersionListColumnEnum {
   DownloadCount = 'DownloadCount',
   FileCount = 'FileCount',
   LastModified = 'LastModified',
+  DeletedAt = 'DeletedAt',
   PullCommand = 'PullCommand',
   Actions = 'Actions',
   Digest = 'Digest',

@@ -32,6 +32,8 @@ repositoryForm:
   repositoryCreated: Registry created successfully
   repositoryUpdated: Registry updated successfully
   repositoryDeleted: Registry deleted successfully
+  repositoryRestored: Registry restored successfully
+  repositorySoftDeleted: Registry archived successfully
   securityScan:
     title: Security
     containerScannerSelect:

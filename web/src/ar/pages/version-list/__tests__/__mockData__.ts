@@ -33,7 +33,8 @@ export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
       downloadsCount: 0,
       registryPath: '',
       uuid: 'uuid',
-      registryUUID: 'uuid'
+      registryUUID: 'uuid',
+      isDeleted: false
     }
   ],
   itemCount: 55,
@@ -59,7 +60,8 @@ export const mockHelmNoPullCmdVersionListTableData: ListArtifactVersion = {
       size: '8.63KB',
       downloadsCount: 0,
       uuid: 'uuid',
-      registryUUID: 'uuid'
+      registryUUID: 'uuid',
+      isDeleted: false
     }
   ],
   itemCount: 55,
@@ -85,7 +87,8 @@ export const mockHelmOldVersionListTableData: ListArtifactVersion = {
       size: '8.63KB',
       downloadsCount: 0,
       uuid: 'uuid',
-      registryUUID: 'uuid'
+      registryUUID: 'uuid',
+      isDeleted: false
     }
   ],
   itemCount: 55,
@@ -110,7 +113,8 @@ export const mockDockerNoPullCmdVersionListTableData: ListArtifactVersion = {
       registryPath: '',
       size: '69.56MB',
       uuid: 'uuid',
-      registryUUID: 'uuid'
+      registryUUID: 'uuid',
+      isDeleted: false
     }
   ],
   itemCount: 55,
@@ -135,7 +139,8 @@ export const mockDockerLatestVersionListTableData: ListArtifactVersion = {
       registryPath: '',
       size: '69.56MB',
       uuid: 'uuid',
-      registryUUID: 'uuid'
+      registryUUID: 'uuid',
+      isDeleted: false
     }
   ],
   itemCount: 55,
@@ -160,7 +165,8 @@ export const mockDockerOldVersionListTableData: ListArtifactVersion = {
       registryPath: '',
       size: '69.56MB',
       uuid: 'uuid',
-      registryUUID: 'uuid'
+      registryUUID: 'uuid',
+      isDeleted: false
     }
   ],
   itemCount: 55,

@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+import React from 'react'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { Intent } from '@harnessio/design-system'
 import { useDeleteRegistryMutation } from '@harnessio/react-har-service-client'
 
 import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import DeleteModalContent from '@ar/components/Form/DeleteModalContent'
 
 interface useDeleteUpstreamProxyModalProps {
   repoKey: string
@@ -27,7 +29,7 @@ interface useDeleteUpstreamProxyModalProps {
 }
 
 export default function useDeleteUpstreamProxyModal(props: useDeleteUpstreamProxyModalProps) {
-  const { onSuccess, repoKey } = props
+  const { repoKey, onSuccess } = props
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
   const { useConfirmationDialog } = useParentHooks()
@@ -35,30 +37,41 @@ export default function useDeleteUpstreamProxyModal(props: useDeleteUpstreamProx
 
   const { mutateAsync: deleteRepository } = useDeleteRegistryMutation()
 
-  const handleDeleteRepository = async (isConfirmed: boolean): Promise<void> => {
-    if (isConfirmed) {
-      try {
-        const response = await deleteRepository({
-          registry_ref: spaceRef
-        })
-        if (response.content.status === 'SUCCESS') {
-          clear()
-          showSuccess(getString('upstreamProxyDetails.actions.delete.repositoryDeleted'))
-          onSuccess()
-        }
-      } catch (e: any) {
-        showError(getErrorInfoFromErrorObject(e, true))
+  const handleDeleteRepository = async (): Promise<void> => {
+    try {
+      const response = await deleteRepository({
+        registry_ref: spaceRef
+      })
+      if (response.content.status === 'SUCCESS') {
+        clear()
+        showSuccess(getString('repositoryDetails.repositoryForm.repositoryDeleted'))
+        onSuccess()
       }
+    } catch (e: any) {
+      showError(getErrorInfoFromErrorObject(e, true))
     }
   }
 
-  const { openDialog } = useConfirmationDialog({
+  const handleCloseDialog = () => {
+    closeDialog()
+  }
+
+  const { openDialog, closeDialog } = useConfirmationDialog({
     titleText: getString('upstreamProxyDetails.actions.delete.title'),
-    contentText: getString('upstreamProxyDetails.actions.delete.contentText'),
-    confirmButtonText: getString('delete'),
-    cancelButtonText: getString('cancel'),
+    contentText: (
+      <DeleteModalContent
+        entity="repository"
+        value={repoKey}
+        onSubmit={handleDeleteRepository}
+        onClose={handleCloseDialog}
+        content={getString('upstreamProxyDetails.actions.delete.contentText')}
+        placeholder={getString('upstreamProxyDetails.actions.delete.inputPlaceholder')}
+        inputLabel={getString('upstreamProxyDetails.actions.delete.inputLabel')}
+      />
+    ),
+    customButtons: <></>,
     intent: Intent.DANGER,
-    onCloseDialog: handleDeleteRepository
+    onCloseDialog: handleCloseDialog
   })
 
   return { triggerDelete: openDialog }

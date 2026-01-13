@@ -15,41 +15,33 @@
  */
 
 import React, { useState } from 'react'
-import { Menu, Position } from '@blueprintjs/core'
-import { Button, ButtonVariation } from '@harnessio/uicore'
+import ActionButton from '@ar/components/ActionButton/ActionButton'
 
-import DeleteUpstreamProxy from './DeleteUpstreamProxy'
+import { PageType } from '@ar/common/types'
+import { useAllowSoftDelete } from '@ar/hooks'
+import SetupClientMenuItem from '@ar/pages/repository-details/components/Actions/SetupClient'
+import DeleteRepositoryMenuItem from '@ar/pages/repository-details/components/Actions/DeleteRepository'
+import SoftDeleteRepositoryMenuItem from '@ar/pages/repository-details/components/Actions/SoftDeleteRepository'
+
 import type { UpstreamProxyActionProps } from './type'
 
-import css from './UpstreamProxyActions.module.scss'
-
 export default function UpstreamProxyActions({ data, readonly, pageType }: UpstreamProxyActionProps): JSX.Element {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [open, setOpen] = useState(false)
+  const allowSoftDelete = useAllowSoftDelete()
   return (
-    <Button
-      variation={ButtonVariation.ICON}
-      icon="Options"
-      tooltip={
-        <Menu
-          className={css.optionsMenu}
-          onClick={e => {
-            e.stopPropagation()
-          }}>
-          <DeleteUpstreamProxy data={data} readonly={readonly} pageType={pageType} />
-        </Menu>
-      }
-      tooltipProps={{
-        interactionKind: 'click',
-        onInteraction: nextOpenState => {
-          setMenuOpen(nextOpenState)
-        },
-        isOpen: menuOpen,
-        position: Position.BOTTOM
-      }}
-      onClick={e => {
-        e.stopPropagation()
-        setMenuOpen(true)
-      }}
-    />
+    <ActionButton isOpen={open} setOpen={setOpen}>
+      {allowSoftDelete && (
+        <SoftDeleteRepositoryMenuItem
+          data={data}
+          readonly={readonly}
+          pageType={pageType}
+          onClose={() => setOpen(false)}
+        />
+      )}
+      <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      {pageType === PageType.Table && (
+        <SetupClientMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      )}
+    </ActionButton>
   )
 }

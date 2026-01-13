@@ -18,9 +18,10 @@ import React from 'react'
 import classNames from 'classnames'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ListPackage, PackageMetadata } from '@harnessio/react-har-service-v2-client'
+import type { ListPackage, PackageMetadata } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
+import { SoftDeleteFilterEnum } from '@ar/constants'
 import { useParentHooks } from '@ar/hooks'
 
 import {
@@ -43,10 +44,11 @@ export interface RegistryArtifactListTableProps extends RegistryArtifactListColu
   sortBy: string[]
   minimal?: boolean
   onClickLabel: (val: string) => void
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 export default function RegistryArtifactListTable(props: RegistryArtifactListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, onClickLabel } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, onClickLabel, softDeleteFilter } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
@@ -94,9 +96,11 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
       },
       {
         Header: getString('artifactList.table.columns.latestVersion'),
-        accessor: 'lastModified',
+        accessor: softDeleteFilter === SoftDeleteFilterEnum.ONLY ? 'deletedAt' : 'lastModified',
         Cell: RegistryArtifactLatestUpdatedCell,
-        serverSortProps: getServerSortProps('lastModified')
+        serverSortProps: getServerSortProps(
+          softDeleteFilter === SoftDeleteFilterEnum.ONLY ? 'deletedAt' : 'lastModified'
+        )
       },
       {
         Header: '',
@@ -105,7 +109,7 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
         disableSortBy: true
       }
     ].filter(Boolean) as unknown as Column<PackageMetadata>[]
-  }, [currentOrder, currentSort, getString, onClickLabel])
+  }, [currentOrder, currentSort, getString, onClickLabel, softDeleteFilter])
 
   return (
     <TableV2<PackageMetadata>

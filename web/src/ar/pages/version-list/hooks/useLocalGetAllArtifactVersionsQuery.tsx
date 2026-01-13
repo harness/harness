@@ -19,19 +19,18 @@ import { useParams } from 'react-router-dom'
 import type { UseQueryResult } from '@tanstack/react-query'
 import {
   useGetAllArtifactVersionsQuery,
-  GetAllArtifactVersionsQueryQueryParams
+  GetAllArtifactVersionsQueryQueryParams,
+  type ListVersionsOkResponse,
+  type ListVersionsQueryQueryParams,
+  useListVersionsQuery,
+  VersionMetadata
 } from '@harnessio/react-har-service-client'
-import {
-  type ArtifactMetadata,
-  type ListArtifactsOkResponse,
-  type ListArtifactsQueryQueryParams,
-  useListArtifactsQuery
-} from '@harnessio/react-har-service-v2-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
-import { useGetSpaceRef, useAppStore, useV2Apis } from '@ar/hooks'
+import { useGetSpaceRef, useAppStore, useV2Apis, useParentHooks } from '@ar/hooks'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
+import { useVersionListQueryParamOptions, VersionListPageQueryParams } from '../utils'
 
 const COLUMN_NAME_MAPPING_FROM_V2_TO_V1: Record<string, string> = {
   version: 'name'
@@ -47,6 +46,10 @@ function useLocalGetAllArtifactVersionsQuery(props: UseLocalGetAllArtifactVersio
   const { scope } = useAppStore()
   const pathParams = useParams<ArtifactDetailsPathParams>()
   const { getValueForAPI } = useMetadatadataFilterFromQuery()
+
+  const { useQueryParams } = useParentHooks()
+  const queryParams = useQueryParams<VersionListPageQueryParams>(useVersionListQueryParamOptions())
+  const { softDeleteFilter } = queryParams
 
   const v1Response = useGetAllArtifactVersionsQuery(
     {
@@ -67,7 +70,7 @@ function useLocalGetAllArtifactVersionsQuery(props: UseLocalGetAllArtifactVersio
     }
   )
 
-  const v2Response = useListArtifactsQuery(
+  const v2Response = useListVersionsQuery(
     {
       queryParams: {
         ...props,
@@ -76,8 +79,9 @@ function useLocalGetAllArtifactVersionsQuery(props: UseLocalGetAllArtifactVersio
         project_identifier: scope.projectIdentifier,
         registry_identifier: [pathParams.repositoryIdentifier],
         package: pathParams.artifactIdentifier,
-        sort_order: props.sort_order as ListArtifactsQueryQueryParams['sort_order'],
-        metadata: getValueForAPI()
+        sort_order: props.sort_order as ListVersionsQueryQueryParams['sort_order'],
+        metadata: getValueForAPI(),
+        deleted: softDeleteFilter as ListVersionsQueryQueryParams['deleted']
       },
       stringifyQueryParamsOptions: {
         arrayFormat: 'repeat'
@@ -88,12 +92,12 @@ function useLocalGetAllArtifactVersionsQuery(props: UseLocalGetAllArtifactVersio
     }
   )
 
-  const convertedV1ResponseToV2: UseQueryResult<ListArtifactsOkResponse, Error> = useMemo(() => {
+  const convertedV1ResponseToV2: UseQueryResult<ListVersionsOkResponse, Error> = useMemo(() => {
     if (!v1Response.data?.content?.data) {
-      return v1Response as UseQueryResult<ListArtifactsOkResponse, Error>
+      return v1Response as UseQueryResult<ListVersionsOkResponse, Error>
     }
     const v1Data = v1Response.data.content.data
-    const convertedData: ListArtifactsOkResponse = {
+    const convertedData: ListVersionsOkResponse = {
       content: {
         data: {
           artifacts:
@@ -103,13 +107,18 @@ function useLocalGetAllArtifactVersionsQuery(props: UseLocalGetAllArtifactVersio
                   ...artifact,
                   version: artifact.name,
                   package: pathParams.artifactIdentifier,
-                  lastModified: artifact.lastModified as string
-                } as ArtifactMetadata)
+                  lastModified: artifact.lastModified as string,
+                  isDeleted: false
+                } as VersionMetadata)
             ) || [],
           itemCount: v1Data.itemCount,
           pageCount: v1Data.pageCount,
           pageIndex: v1Data.pageIndex,
-          pageSize: v1Data.pageSize
+          pageSize: v1Data.pageSize,
+          meta: {
+            activeCount: 0,
+            deletedCount: 0
+          }
         },
         status: v1Response.data.content.status
       }
@@ -118,7 +127,7 @@ function useLocalGetAllArtifactVersionsQuery(props: UseLocalGetAllArtifactVersio
     return {
       ...v1Response,
       data: convertedData
-    } as UseQueryResult<ListArtifactsOkResponse, Error>
+    } as UseQueryResult<ListVersionsOkResponse, Error>
   }, [v1Response])
 
   return shouldUseV2Apis ? v2Response : convertedV1ResponseToV2

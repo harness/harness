@@ -23,8 +23,9 @@ import type { ArtifactType } from '@harnessio/react-har-service-client'
 
 import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
-import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
-import { useAppStore, useFeatureFlags, useParentHooks } from '@ar/hooks'
+import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
+import { DEFAULT_PAGE_INDEX, PreferenceScope, SoftDeleteFilterEnum } from '@ar/constants'
+import { useAllowSoftDelete, useAppStore, useFeatureFlags, useParentHooks } from '@ar/hooks'
 import MetadataFilterSelector from '@ar/components/MetadataFilterSelector/MetadataFilterSelector'
 import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
 
@@ -50,10 +51,11 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
   const searchRef = useRef({} as ExpandingSearchInputHandle)
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<RegistryArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<RegistryArtifactListPageQueryParams>(useRegistryArtifactListQueryParamOptions())
-  const { searchTerm, isDeployedArtifacts, packageTypes, page, size, labels } = queryParams
+  const { searchTerm, isDeployedArtifacts, packageTypes, page, size, labels, softDeleteFilter } = queryParams
 
   const { getValue, updateValue } = useMetadatadataFilterFromQuery()
   const metadataFilter = getValue()
+  const allowSoftDelete = useAllowSoftDelete()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -83,10 +85,7 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
     replaceQueryParams({
-      page: undefined,
-      searchTerm: undefined,
-      packageTypes: undefined,
-      isDeployedArtifacts: undefined
+      softDeleteFilter
     })
   }
 
@@ -108,6 +107,23 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
     <>
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
+          {allowSoftDelete && (
+            <ButtonTabs
+              small
+              bold
+              selectedTabId={softDeleteFilter}
+              onChange={newTab => updateQueryParams({ softDeleteFilter: newTab, page: DEFAULT_PAGE_INDEX })}>
+              <ButtonTab
+                id={SoftDeleteFilterEnum.EXCLUDE}
+                title={getString('available', { count: responseData?.meta?.activeCount ?? 0 })}
+              />
+              <ButtonTab
+                id={SoftDeleteFilterEnum.ONLY}
+                title={getString('archived', { count: responseData?.meta?.deletedCount ?? 0 })}
+              />
+            </ButtonTabs>
+          )}
+          <Expander />
           {HAR_CUSTOM_METADATA_ENABLED && parent === Parent.Enterprise && (
             <MetadataFilterSelector
               value={metadataFilter}
@@ -119,7 +135,6 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
               }}
             />
           )}
-          <Expander />
           <ExpandingSearchInput
             alwaysExpanded
             width={200}
@@ -141,7 +156,13 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
           when: () => !responseData?.packages?.length,
           // image: getEmptyStateIllustration(hasFilter, module),
           icon: 'store-artifact-bundle',
-          messageTitle: hasFilter ? getString('noResultsFound') : getString('artifactList.table.noArtifactsTitle'),
+          messageTitle: hasFilter
+            ? getString('noResultsFound')
+            : getString(
+                softDeleteFilter === SoftDeleteFilterEnum.ONLY
+                  ? 'artifactList.table.noArchivedArtifactsTitle'
+                  : 'artifactList.table.noArtifactsTitle'
+              ),
           button: hasFilter ? (
             <Button text={getString('clearFilters')} variation={ButtonVariation.LINK} onClick={handleClearAllFilters} />
           ) : undefined
@@ -160,6 +181,7 @@ function RegistryArtifactListPage({ pageBodyClassName, artifactType }: RegistryA
             }}
             onClickLabel={handleClickLabel}
             sortBy={sort}
+            softDeleteFilter={softDeleteFilter}
           />
         )}
       </Page.Body>

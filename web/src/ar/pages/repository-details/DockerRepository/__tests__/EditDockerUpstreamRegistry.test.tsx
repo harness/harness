@@ -70,6 +70,7 @@ jest.mock('@harnessio/react-ng-manager-client', () => ({
 }))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListPackagesQuery: jest.fn(),
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     refetch: jest.fn(),
@@ -306,7 +307,8 @@ describe('Verify configuration form', () => {
       expect(modifyRepository).toHaveBeenLastCalledWith({
         body: {
           ...MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData.content.data,
-          description: 'updated description'
+          description: 'updated description',
+          parentRef: 'undefined/+'
         },
         registry_ref: 'undefined/abcd/+'
       })
@@ -358,7 +360,9 @@ describe('Verify configuration form', () => {
             scanners: [{ name: 'AQUA_TRIVY' }],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -397,7 +401,9 @@ describe('Verify configuration form', () => {
             scanners: [{ name: 'AQUA_TRIVY' }],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -441,7 +447,9 @@ describe('Verify configuration form', () => {
             scanners: [{ name: 'AQUA_TRIVY' }],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -480,7 +488,9 @@ describe('Verify configuration form', () => {
             scanners: [{ name: 'AQUA_TRIVY' }],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -519,7 +529,9 @@ describe('Verify configuration form', () => {
             scanners: [{ name: 'AQUA_TRIVY' }],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -555,7 +567,8 @@ describe('Verify configuration form', () => {
       expect(modifyRepository).toHaveBeenLastCalledWith({
         body: {
           ...MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData.content.data,
-          description: 'updated description'
+          description: 'updated description',
+          parentRef: 'undefined/+'
         },
         registry_ref: 'undefined/abcd/+'
       })

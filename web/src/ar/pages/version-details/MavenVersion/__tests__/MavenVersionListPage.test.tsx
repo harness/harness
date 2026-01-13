@@ -34,7 +34,8 @@ import { mockMavenLatestVersionListTableData } from './__mockData__'
 const useGetAllArtifactVersionsQuery = _useGetAllArtifactVersionsQuery as jest.Mock
 
 jest.mock('@harnessio/react-har-service-client', () => ({
-  useGetAllArtifactVersionsQuery: jest.fn()
+  useGetAllArtifactVersionsQuery: jest.fn(),
+  useListVersionsQuery: jest.fn()
 }))
 
 jest.mock('clipboard-copy', () => ({

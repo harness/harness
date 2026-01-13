@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { ArtifactType, useDeleteArtifactMutation } from '@harnessio/react-har-service-client'
@@ -21,6 +22,7 @@ import { ArtifactType, useDeleteArtifactMutation } from '@harnessio/react-har-se
 import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
+import DeleteModalContent from '@ar/components/Form/DeleteModalContent'
 
 interface useDeleteArtifactModalProps {
   repoKey: string
@@ -37,34 +39,45 @@ export default function useDeleteArtifactModal(props: useDeleteArtifactModalProp
 
   const { mutateAsync: deleteArtifact } = useDeleteArtifactMutation()
 
-  const handleDeleteArtifact = async (isConfirmed: boolean): Promise<void> => {
-    if (isConfirmed) {
-      try {
-        const response = await deleteArtifact({
-          registry_ref: spaceRef,
-          artifact: encodeRef(artifactKey),
-          queryParams: {
-            artifact_type: artifactType
-          }
-        })
-        if (response.content.status === 'SUCCESS') {
-          clear()
-          showSuccess(getString('artifactDetails.artifactDeleted'))
-          onSuccess()
+  const handleDeleteArtifact = async (): Promise<void> => {
+    try {
+      const response = await deleteArtifact({
+        registry_ref: spaceRef,
+        artifact: encodeRef(artifactKey),
+        queryParams: {
+          artifact_type: artifactType
         }
-      } catch (e: any) {
-        showError(getErrorInfoFromErrorObject(e, true))
+      })
+      if (response.content.status === 'SUCCESS') {
+        clear()
+        showSuccess(getString('artifactDetails.artifactDeleted'))
+        onSuccess()
       }
+    } catch (e: any) {
+      showError(getErrorInfoFromErrorObject(e, true))
     }
   }
 
-  const { openDialog } = useConfirmationDialog({
-    titleText: getString('artifactDetails.deleteArtifactModal.title'),
-    contentText: getString('artifactDetails.deleteArtifactModal.contentText'),
-    confirmButtonText: getString('delete'),
-    cancelButtonText: getString('cancel'),
+  const handleCloseDialog = () => {
+    closeDialog()
+  }
+
+  const { openDialog, closeDialog } = useConfirmationDialog({
+    titleText: getString('artifactDetails.deleteModal.title'),
+    contentText: (
+      <DeleteModalContent
+        entity="package"
+        value={artifactKey}
+        onSubmit={handleDeleteArtifact}
+        onClose={handleCloseDialog}
+        content={getString('artifactDetails.deleteModal.contentText')}
+        placeholder={getString('artifactDetails.deleteModal.inputPlaceholder')}
+        inputLabel={getString('artifactDetails.deleteModal.inputLabel')}
+      />
+    ),
+    customButtons: <></>,
     intent: Intent.DANGER,
-    onCloseDialog: handleDeleteArtifact
+    onCloseDialog: handleCloseDialog
   })
 
   return { triggerDelete: openDialog }

@@ -21,7 +21,7 @@ import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, Use
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { Layout, Text } from '@harnessio/uicore'
-import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
+import type { ArtifactMetadata, VersionMetadata } from '@harnessio/react-har-service-client'
 
 import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
@@ -45,7 +45,7 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
   value: CellValue<V>
 }
 
-type CellType = Renderer<CellTypeWithActions<ArtifactMetadata>>
+type CellType = Renderer<CellTypeWithActions<VersionMetadata>>
 
 export const ToggleAccordionCell: Renderer<{
   row: UseExpandedRowProps<ArtifactMetadata> & Row<ArtifactMetadata>

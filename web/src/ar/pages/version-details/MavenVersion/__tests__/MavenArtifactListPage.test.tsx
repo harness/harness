@@ -30,6 +30,7 @@ import {
   MockGetMavenRegistryResponseWithAllData
 } from '@ar/pages/repository-details/MavenRepository/__tests__/__mockData__'
 import { getTableColumn } from '@ar/utils/testUtils/utils'
+import { queryByNameAttribute } from 'utils/test/testUtils'
 
 const useGetAllArtifactsByRegistryQuery = _useGetAllArtifactsByRegistryQuery as jest.Mock
 
@@ -37,6 +38,7 @@ const deleteArtifact = jest.fn().mockImplementation(() => Promise.resolve({ cont
 
 jest.mock('@harnessio/react-har-service-client', () => ({
   useGetAllArtifactsByRegistryQuery: jest.fn(),
+  useListPackagesQuery: jest.fn(),
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     refetch: jest.fn(),
@@ -337,6 +339,11 @@ describe('Test Registry Artifact List Page', () => {
     const cancelBtn = deleteDialog.querySelector('button[aria-label=cancel]')
     expect(deleteBtn).toBeInTheDocument()
     expect(cancelBtn).toBeInTheDocument()
+
+    const valueField = queryByNameAttribute('value', deleteDialog as HTMLElement)
+    fireEvent.change(valueField!, {
+      target: { value: MockGetMavenRegistryResponseWithAllData.content.data.identifier }
+    })
 
     // click on delete button on modal
     await userEvent.click(deleteBtn!)

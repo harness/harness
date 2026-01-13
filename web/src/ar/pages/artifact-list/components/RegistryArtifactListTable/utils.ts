@@ -18,7 +18,12 @@ import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
-import { DEFAULT_PACKAGE_LIST_TABLE_SORT, DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE } from '@ar/constants'
+import {
+  DEFAULT_PACKAGE_LIST_TABLE_SORT,
+  DEFAULT_PAGE_INDEX,
+  DEFAULT_PAGE_SIZE,
+  SoftDeleteFilterEnum
+} from '@ar/constants'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
 export type RegistryArtifactListPageQueryParams = {
@@ -31,6 +36,7 @@ export type RegistryArtifactListPageQueryParams = {
   packageTypes: RepositoryPackageType[]
   repositoryKey?: string
   labels: string[]
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 export const useRegistryArtifactListQueryParamOptions =
@@ -43,7 +49,8 @@ export const useRegistryArtifactListQueryParamOptions =
         sort: DEFAULT_PACKAGE_LIST_TABLE_SORT,
         isDeployedArtifacts: false,
         packageTypes: [],
-        labels: []
+        labels: [],
+        softDeleteFilter: SoftDeleteFilterEnum.EXCLUDE
       },
       { ignoreEmptyString: false }
     )

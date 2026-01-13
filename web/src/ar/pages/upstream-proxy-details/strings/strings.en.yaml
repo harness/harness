@@ -42,8 +42,10 @@ editForm:
 actions:
   delete:
     title: Delete Upstream Registry
-    contentText: Are you sure you want to delete the upstream registry?
+    contentText: This action will delete registry and all it's images and versions. Are you absolutely sure you want to proceed?
     repositoryDeleted: Upstream registry deleted successfully
+    inputLabel: Type the registry name or ID to confirm
+    inputPlaceholder: Registry Name or ID
   createUpdateModal:
     createSuccessMessage: Upstream proxy created successfully
     updateSuccessMessage: Upstream proxy updated successfully
