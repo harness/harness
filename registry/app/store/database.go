@@ -522,6 +522,9 @@ type ArtifactRepository interface {
 	GetByRegistryImageAndVersion(
 		ctx context.Context, registryID int64, image string, version string,
 	) (*types.Artifact, error)
+	GetByRegistryImageVersionAndArtifactType(
+		ctx context.Context, registryID int64, image string, version string, artifactType string,
+	) (*types.Artifact, error)
 	// Create an Artifact
 	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) (int64, error)
 	Count(ctx context.Context) (int64, error)

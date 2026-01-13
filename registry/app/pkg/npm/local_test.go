@@ -300,6 +300,11 @@ func (m *mockArtifactDAO) GetByRegistryImageAndVersion(
 ) (*types.Artifact, error) {
 	return nil, nil //nolint:nilnil
 }
+func (m *mockArtifactDAO) GetByRegistryImageVersionAndArtifactType(
+	ctx context.Context, registryID int64, image string, version string, artifactType string,
+) (*types.Artifact, error) {
+	return nil, nil //nolint:nilnil
+}
 func (m *mockArtifactDAO) CreateOrUpdate(context.Context, *types.Artifact) (int64, error) {
 	return 0, nil
 }
