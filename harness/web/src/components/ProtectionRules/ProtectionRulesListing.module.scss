@@ -1,0 +1,119 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.pageBody {
+  min-height: calc(90vh - var(--page-header-height, 64px)) !important;
+}
+
+.table {
+  width: 100%;
+  .row {
+    .title {
+      font-weight: 600;
+      font-size: 14px;
+      font-style: normal;
+      color: var(--grey-800);
+      padding-bottom: var(--spacing-xsmall);
+    }
+
+    .text {
+      font-size: 13px !important;
+      font-style: normal !important;
+      font-weight: 500 !important;
+      margin-top: var(--spacing-xsmall) !important;
+      color: var(--grey-700);
+    }
+
+    .greyButton {
+      border-radius: 4px;
+      background: #f2f2f5 !important;
+      display: flex;
+      width: fit-content;
+      padding: 2px 8px !important;
+      max-width: 200px;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pattern {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .rulesText {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--grey-700);
+      padding-right: var(--spacing-small);
+      padding-top: 1px;
+    }
+
+    .rulesContainer {
+      flex-wrap: wrap;
+      width: 88%;
+      row-gap: var(--spacing-xsmall);
+      justify-content: flex-start !important;
+    }
+  }
+}
+
+.hideDetailsContainer {
+  display: none;
+}
+
+.appliedRulesTextContainer {
+  font-size: 12px !important;
+  font-weight: 400;
+  color: var(--grey-500);
+  padding: 0 var(--spacing-medium) !important;
+}
+
+.popover {
+  z-index: 999;
+  padding: var(--spacing-tiny) !important;
+}
+
+.widthContainer {
+  max-width: calc(100% - 150px);
+  overflow-x: hidden;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.appliedRulesContainer {
+  padding-top: 12px !important;
+}
+
+.hideButtonIcon {
+  :global {
+    [class*='ConfirmationDialog--header'] {
+      .bp3-icon {
+        display: none !important;
+      }
+    }
+
+    [class*='ConfirmationDialog--body'] {
+      padding-left: 3px !important;
+    }
+  }
+}
+
+.divider {
+  height: 18px;
+  width: 1px;
+  background-color: var(--grey-500);
+}

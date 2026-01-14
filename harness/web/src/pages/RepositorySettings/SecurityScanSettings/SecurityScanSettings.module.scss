@@ -1,0 +1,44 @@
+.main {
+  width: 100%;
+}
+
+.generalContainer {
+  background: var(--grey-0) !important;
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+  border-radius: 4px;
+}
+
+.title {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  font-style: normal !important;
+  color: var(--grey-800) !important;
+}
+.text {
+  font-size: 13px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  color: var(--grey-400) !important;
+}
+
+.collapse {
+  align-items: center !important;
+}
+
+.expand {
+  align-items: flex-start !important;
+  .text {
+    margin-bottom: 1px !important;
+  }
+}
+
+.toggle {
+  margin-top: 0.2rem !important ;
+}
+
+.radioContainer {
+  margin-top: var(--spacing-medium) !important;
+  label[class*='RadioButton'] {
+    margin-top: 10px !important;
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "mainHeader": "Go Client Setup",
+  "secHeader": "Follow these instructions to install/use go packages from this registry.",
+  "sections": [
+    {
+      "header": "Configure registry",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "export GOPROXY=\"http://example.com/registry/test-registry/GO\""
+            }
+          ],
+          "header": "To resolve a Go package from this registry using Go, \n\t\t\t\tfirst set your default Harness Go registry by running the following command:",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Install Package",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "go get test-artifact@v1.0.0"
+            }
+          ],
+          "header": "Install a package using go client",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}

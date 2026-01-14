@@ -1,0 +1,2 @@
+DROP INDEX idx_git_signature_results_principal_id;
+DROP TABLE git_signature_results;

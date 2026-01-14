@@ -1,0 +1,1 @@
+ALTER TABLE rules DROP COLUMN rule_scope;

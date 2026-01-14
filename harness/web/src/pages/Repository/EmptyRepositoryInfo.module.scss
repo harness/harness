@@ -1,0 +1,61 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.emptyRepo {
+  padding: var(--spacing-xxlarge) !important;
+}
+
+.divContainer {
+  background: var(--white);
+  box-shadow: var(--elevation-2);
+  border-radius: 4px;
+}
+
+.textContainer {
+  a {
+    color: var(--primary-7) !important;
+  }
+}
+
+.layout {
+  height: 33px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--grey-200);
+  background-color: var(--grey-50) !important;
+  border-radius: 4px;
+  padding-left: var(--spacing-small) !important;
+  max-width: 100%;
+  .url {
+    // width: 80%;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px !important;
+  }
+
+  button#cloneCopyButton {
+    --button-height: 24px !important;
+    border-radius: 0 !important;
+    border-left: 1px solid var(--grey-200) !important;
+    margin-left: var(--spacing-small) !important;
+  }
+}
+
+.text {
+  font-size: 16px !important;
+}

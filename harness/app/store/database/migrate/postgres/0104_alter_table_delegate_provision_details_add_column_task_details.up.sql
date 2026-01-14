@@ -1,0 +1,1 @@
+ALTER TABLE delegate_provision_details ADD COLUMN IF NOT EXISTS dpdeta_task_details jsonb;

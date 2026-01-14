@@ -1,0 +1,62 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  padding-bottom: 0 !important;
+
+  div[class*='TextInput'] {
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  > div {
+    align-items: center;
+  }
+}
+
+.branchDropdown {
+  background-color: var(--white);
+  border: 1px solid var(--grey-200) !important;
+}
+
+.authorDropdownItem {
+  max-width: 350px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  align-items: center;
+  gap: 2px;
+}
+
+.authorDropdownItem:hover {
+  background-color: var(--primary-1);
+  cursor: pointer;
+}
+
+.authorName span {
+  white-space: nowrap !important;
+  :global {
+    .bp3-popover-content p {
+      white-space: nowrap !important;
+    }
+  }
+}
+
+.banners {
+  // Only add margin-bottom to the last child if it exists
+  > :last-child {
+    margin-bottom: var(--spacing-medium);
+  }
+}

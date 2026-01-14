@@ -1,0 +1,1 @@
+ALTER TABLE delegate_provision_details ADD COLUMN dpdeta_agent_port INTEGER NOT NULL DEFAULT 0;

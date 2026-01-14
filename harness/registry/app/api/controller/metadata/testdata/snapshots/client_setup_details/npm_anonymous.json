@@ -1,0 +1,36 @@
+{
+  "mainHeader": "NPM Client Setup",
+  "secHeader": "Follow these instructions to install/use NPM packages from this registry.",
+  "sections": [
+    {
+      "header": "Configure registry",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "registry=https://example.com/registry/test-registry/NPM/"
+            }
+          ],
+          "header": "Create or update your ~/.npmrc file with the following content:",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Install Package",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "npm install test-artifact@v1.0.0"
+            }
+          ],
+          "header": "Install a package using npm",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}

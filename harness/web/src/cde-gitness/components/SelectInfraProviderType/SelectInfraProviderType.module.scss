@@ -1,0 +1,12 @@
+.dropdownLabel {
+  overflow: hidden !important;
+}
+
+.icon {
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: var(--spacing-small) !important;
+  color: #6b6d85;
+}

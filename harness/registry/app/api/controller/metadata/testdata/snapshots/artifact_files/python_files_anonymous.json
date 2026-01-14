@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "name": "test-artifact-v1.0.0.tar.gz",
+      "size": "1.00 KB",
+      "createdAt": "1704067200",
+      "checksums": [
+        "sha256:abc123def456..."
+      ],
+      "downloadCommand": "curl --location 'https://registry.example.com/root/test-registry/python/test-artifact/v1.0.0/test-artifact-v1.0.0.tar.gz' -o 'test-artifact-v1.0.0.tar.gz'"
+    }
+  ],
+  "itemCount": 1,
+  "pageCount": 1,
+  "pageNumber": 1,
+  "pageSize": 10,
+  "status": "SUCCESS"
+}

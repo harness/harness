@@ -1,0 +1,19 @@
+{
+  "image": "harness0.harness.io/oci/gitspaces-image-registry/gitness-base:main-amd64",
+  "remoteUser": "root",
+  "forwardPorts": [
+    "3000"
+  ],
+  "customizations": {
+    "harnessGitspaces": {
+      "connectors": [
+        {
+          "type": "DockerRegistry",
+          "identifier": "org.gitspacesimageregistry"
+        }
+      ]
+    }
+  },
+  "postCreateCommand": "sudo chmod +x /root/gitness/.devcontainer/postCreate.sh && /root/gitness/.devcontainer/postCreate.sh",
+  "postStartCommand": "sudo chmod +x /root/gitness/.devcontainer/postStart.sh && /root/gitness/.devcontainer/postStart.sh"
+}

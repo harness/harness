@@ -1,0 +1,121 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.table {
+  margin-top: var(--spacing-large);
+
+  div[class*='TableV2--cell'] {
+    width: auto !important;
+  }
+
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr 0.7fr 50px !important;
+  }
+}
+
+.cdeTable {
+  margin-top: var(--spacing-large);
+
+  div[class*='TableV2--cell'] {
+    width: auto !important;
+  }
+
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    display: grid !important;
+    grid-template-columns: 1.4fr 1.4fr 1.5fr 0.6fr 0.7fr 0.8fr 50px !important;
+  }
+}
+
+.popover {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+
+  .listContainer {
+    border-radius: 20px !important;
+    :global {
+      a.bp3-menu-item:hover,
+      .bp3-active {
+        background: var(--primary-1) !important;
+        color: var(--grey-1000) !important;
+      }
+    }
+  }
+}
+
+.gitspaceURL {
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copyBtn {
+  padding: 0 !important;
+}
+
+.gitspaceIdContainer [class*='Layout--horizontal'] {
+  margin-top: 0 !important;
+}
+
+.gitspaceIdContainer [class*='bp3-popover-wrapper'] {
+  margin-left: 0 !important;
+}
+
+.copyBtn:hover {
+  box-shadow: none !important;
+}
+
+.repositoryCell {
+  max-width: 70%;
+}
+
+.branchCell {
+  max-width: 30%;
+}
+
+.gitspaceId {
+  .bp3-icon > svg {
+    cursor: pointer !important;
+  }
+}
+
+.stopModal {
+  width: 650px !important;
+  [class*='ConfirmationDialog--body'] {
+    margin-bottom: 0px !important;
+  }
+  span[data-icon='info-messaging'] {
+    display: none;
+  }
+  svg {
+    fill: #004ba4;
+  }
+}
+
+.standardProviderIcon {
+  height: 20px !important;
+  width: 20px !important;
+  margin-right: 1px !important;
+}
+
+.providerNameText {
+  color: var(--black) !important;
+  font-size: var(--font-size-normal) !important;
+  text-align: left !important;
+}

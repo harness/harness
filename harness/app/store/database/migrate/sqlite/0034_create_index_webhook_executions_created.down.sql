@@ -1,0 +1,1 @@
+DROP INDEX webhook_executions_created;

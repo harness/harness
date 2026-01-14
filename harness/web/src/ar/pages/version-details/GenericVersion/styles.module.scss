@@ -1,0 +1,11 @@
+.pageBody {
+  --page-header-height: 137px;
+}
+
+.cardContainer {
+  width: 60% !important;
+  min-width: 1040px;
+  padding: var(--spacing-7) !important;
+  background-color: var(--white);
+  margin: var(--spacing-large);
+}

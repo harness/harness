@@ -1,0 +1,72 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.container {
+  --sidenav-collapsed-width: 82px;
+  --shadowTop: inset 0px 8px 5px -5px rgba(0, 0, 0, 0.7);
+  --shadowBottom: inset 0px -8px 5px -5px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  background: #07182b !important; // this color is not in design system, check with ux
+  box-shadow: 0px 4px 8px 0px rgba(96, 97, 112, 0.16), 0px 0px 2px 0px rgba(40, 41, 61, 0.04);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+
+  :global(.bp3-popover-wrapper),
+  :global(.bp3-popover-target) {
+    display: block !important;
+  }
+
+  &.expanded {
+    width: 232px !important;
+    padding-top: var(--spacing-small) !important;
+  }
+
+  &.collapsed {
+    width: var(--sidenav-collapsed-width);
+    align-items: center;
+    padding-top: var(--spacing-small) !important;
+  }
+
+  &.publicAccessMode {
+    justify-content: space-between;
+  }
+
+  .section {
+    > * + div[data-name='nav-border'] {
+      display: block !important;
+    }
+
+    div[data-name='nav-border'] {
+      margin-top: var(--spacing-large) !important;
+      margin-bottom: var(--spacing-medium) !important;
+      border-bottom: 1px solid var(--grey-700);
+      display: none;
+    }
+
+    .sectionTitle {
+      text-transform: uppercase;
+    }
+
+    &:nth-last-child(2) {
+      div[data-name='nav-border'] {
+        border-bottom: none;
+      }
+    }
+  }
+}

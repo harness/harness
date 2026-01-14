@@ -1,0 +1,12 @@
+*.sqlite
+*.sqlite3
+web/node_modules
+web/dist
+release
+.idea
+coverage.out
+*.rsa
+*.rsa.pub
+
+# ignore any executables we build
+/gitness

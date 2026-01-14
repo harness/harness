@@ -1,0 +1,207 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  min-height: calc(var(--page-height) - 160px);
+  background-color: var(--primary-bg) !important;
+  width: 100%;
+  margin: var(--spacing-small);
+  :global {
+    .bp3-tab {
+      width: fit-content !important;
+      height: 34px;
+    }
+
+    .bp3-tab-panel {
+      width: 100%;
+    }
+
+    .bp3-tab {
+      margin-top: 20px;
+      margin-bottom: unset !important;
+    }
+
+    .bp3-tab-list .bp3-tab[aria-selected='true'] {
+      background-color: var(--grey-0);
+      -webkit-box-shadow: none;
+      box-shadow: none;
+      border-bottom: 2px solid var(--primary-7);
+      border-bottom-left-radius: 0px !important;
+      border-bottom-right-radius: 0px !important;
+    }
+  }
+}
+
+.webhooksContent {
+  width: 100%;
+}
+
+.btn {
+  margin-top: 5px;
+}
+
+.webhookHeader {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+.contentContainer {
+  margin: 20px !important;
+}
+
+.generalContainer {
+  width: 100%;
+  background: var(--grey-0) !important;
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+  border-radius: 4px;
+}
+
+.label {
+  padding-top: var(--spacing-xsmall);
+  width: 220px;
+  padding-right: var(--spacing-medium);
+}
+
+.descText {
+  align-self: center !important;
+}
+
+.radioContainer {
+  :global([class*='RadioButton--radio']) {
+    align-items: center;
+  }
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+}
+
+.content {
+  width: 80%;
+}
+
+.deleteContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.text {
+  text-transform: capitalize;
+}
+
+.dividerContainer {
+  opacity: 0.2;
+  height: 1px;
+  color: var(--grey-100);
+  margin: 20px 0;
+}
+
+.dialogContainer {
+  :global(.bp3-dialog-header) {
+    margin-bottom: var(--spacing-medium) !important;
+  }
+}
+
+.saveBtn {
+  margin-left: var(--spacing-medium) !important;
+}
+
+.textContainer {
+  width: 100%;
+}
+
+.editContainer {
+  width: 60% !important;
+  textarea {
+    min-height: 100px !important;
+  }
+}
+
+.buttonContainer {
+  width: 20%;
+  padding-top: var(--spacing-xsmall) !important;
+  gap: 10px;
+  margin-left: auto !important;
+}
+
+.textSize {
+  font-size: 13px !important;
+}
+
+.description {
+  width: 80%;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
+  margin: 0 auto;
+}
+
+.tabsContainer {
+  flex-grow: 1;
+  display: flex;
+  background-color: var(--primary-bg) !important;
+
+  > div {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  > div > div[role='tablist'] {
+    background-color: var(--white) !important;
+    padding-left: var(--spacing-large) !important;
+    padding-right: var(--spacing-xlarge) !important;
+    border-bottom: 1px solid var(--grey-200) !important;
+  }
+
+  > div > div[role='tabpanel'] {
+    margin-top: 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  [aria-selected='true'] {
+    .tabTitle,
+    .tabTitle:hover {
+      color: var(--grey-900) !important;
+      font-weight: 600 !important;
+    }
+  }
+
+  .tabTitle {
+    font-weight: 500;
+    color: var(--grey-700);
+    display: flex;
+    align-items: center;
+    height: 24px;
+    margin-top: var(--spacing-8);
+
+    > svg {
+      display: inline-block;
+      margin-right: 5px;
+    }
+  }
+
+  .tabTitle:not:first-child {
+    margin-left: var(--spacing-8) !important;
+  }
+}
+
+.headerContainer {
+  border-bottom: unset !important;
+}

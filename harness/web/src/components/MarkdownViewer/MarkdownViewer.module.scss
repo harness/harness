@@ -1,0 +1,105 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import 'src/utils/utils';
+
+.main {
+  overflow: hidden;
+
+  &.withMaxHeight {
+    overflow: auto;
+  }
+
+  :global {
+    .wmde-markdown {
+      max-width: 100%;
+      @include markdown-font;
+
+      pre {
+        position: relative;
+
+        .code-line {
+          white-space: break-spaces;
+        }
+      }
+
+      // TODO: Disable white-space on global markdown p tags since it conflicts with simple
+      // html tags from Markdown in Github
+      // Remove later if things don't break....
+      // p {
+      //   white-space: break-spaces;
+      // }
+
+      tt,
+      code {
+        @include mono-font;
+      }
+      video {
+        max-width: 100%;
+      }
+
+      // Customize https://wangchujiang.com/rehype-video/
+      details.octicon.octicon-video {
+        display: block;
+
+        > summary {
+          padding-bottom: var(--spacing-xsmall);
+
+          > svg {
+            margin: 0 var(--spacing-small);
+          }
+        }
+      }
+    }
+  }
+}
+
+.suggestion {
+  background-color: var(--white) !important;
+  border: 1px solid var(--grey-200);
+  border-radius: 4px;
+
+  pre {
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+
+    code {
+      padding: var(--spacing-small) !important;
+    }
+  }
+
+  .removed pre {
+    background-color: var(--red-100) !important;
+  }
+
+  .added pre {
+    background-color: var(--green-100) !important;
+  }
+
+  .text {
+    color: var(--grey-500);
+    font-size: 11px !important;
+    padding: var(--spacing-small) !important;
+  }
+}
+
+.suggestion + [data-code] {
+  display: none !important;
+}
+
+.mentionName {
+  color: var(--primary-7);
+}

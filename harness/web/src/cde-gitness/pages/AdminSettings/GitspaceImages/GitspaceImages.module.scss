@@ -1,0 +1,13 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-xlarge);
+  gap: var(--spacing-large);
+}
+
+.imagePathCard {
+  width: 100%;
+  margin: 0;
+}

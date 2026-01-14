@@ -1,0 +1,14 @@
+[
+    {
+        "id": 1,
+        "url": "https://some.url/path",
+        "verifySsl": true,
+        "events": [
+            "eventA",
+            "eventB"
+        ],
+        "Created": 1667799167640,
+        "Updated": 1667799167640,
+        "CreatedBy": 42
+    }
+]

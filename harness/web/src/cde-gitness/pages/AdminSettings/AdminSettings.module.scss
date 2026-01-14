@@ -1,0 +1,43 @@
+.customBreadcumbStyles {
+  [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
+    display: none !important;
+  }
+}
+
+.learnMoreLink {
+  font-weight: 500 !important;
+  font-size: var(--font-size-normal) !important;
+  cursor: pointer !important;
+
+  .bp3-icon {
+    padding-left: var(--spacing-small) !important;
+  }
+}
+
+.tabContainer {
+  width: 100% !important;
+  min-height: calc(var(--page-height) - var(--page-header-height, 64px));
+  display: flex;
+
+  [class*='bp3-tab-list'] {
+    background-color: var(--grey-0) !important;
+    border-bottom: 1px solid var(--grey-200) !important;
+    padding: 0 var(--spacing-xlarge) !important;
+  }
+
+  :global(.bp3-tabs) {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  :global(.bp3-tab-panel) {
+    flex-grow: 1;
+    margin-top: 0;
+    padding: 0 !important;
+  }
+}
+
+.tabContent {
+  padding: var(--spacing-large);
+}

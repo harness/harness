@@ -1,0 +1,1 @@
+CREATE INDEX job_group_id ON jobs(job_group_id);

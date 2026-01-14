@@ -1,0 +1,213 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@import 'src/utils/utils';
+
+.customSubheader {
+  height: 10vh;
+}
+
+.pageMain {
+  margin: var(--spacing-xxlarge) !important;
+}
+
+@media (min-width: 2000px) {
+  .titleContainer {
+    width: 80% !important;
+    margin: 0 10% !important;
+  }
+}
+
+.titleContainer {
+  width: 95% !important;
+  margin: 0 5% !important;
+}
+
+.cardContainer {
+  margin-top: var(--spacing-xxlarge) !important;
+  width: 100% !important;
+
+  [data-testid='logsCard-panel'],
+  [data-testid='eventsCard-panel'] {
+    padding: 0px !important;
+  }
+
+  &:first-child {
+    margin-top: 0px !important;
+  }
+}
+
+.popover {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+
+  :global {
+    a.bp3-menu-item:hover,
+    .bp3-active {
+      background: var(--primary-1) !important;
+      color: var(--grey-1000) !important;
+    }
+  }
+}
+
+.gitspaceIdContainer [class*='Layout--horizontal'] {
+  margin-top: 0 !important;
+}
+
+.gitspaceIdContainer [class*='bp3-popover-wrapper'] {
+  margin-left: 0 !important;
+}
+
+.gitspaceIcon {
+  margin: auto var(--spacing-small) auto 0 !important;
+}
+
+.marginLeftContainer {
+  margin-left: 7px !important;
+}
+
+.copyBtn {
+  padding: 0 !important;
+  min-height: var(--spacing-medium) !important;
+  height: var(--spacing-medium) !important;
+}
+
+.copyBtn:hover {
+  box-shadow: none !important;
+}
+
+.accordionnCustomSummary {
+  :global(.Accordion--chevron) {
+    margin-left: auto;
+    color: var(--grey-700);
+  }
+
+  :global([class*='Accordion--panel']) {
+    padding: 0px !important;
+  }
+
+  div[data-testid='eventsCard-summary'],
+  div[data-testid='logsCard-summary'] {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    margin: 0 var(--spacing-medium);
+    width: 100%;
+
+    div:first-child {
+      width: 97%;
+    }
+  }
+}
+
+.containerlogsTitle {
+  width: 130px;
+  justify-content: space-between !important;
+}
+
+.scrollDownBtn {
+  position: absolute;
+  padding: 8px !important;
+  bottom: 35px;
+  right: 30px;
+
+  & > :global(.bp3-icon) {
+    padding: 0 !important;
+  }
+
+  & > :global(.bp3-button-text) {
+    width: 0;
+    padding-left: 0;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  &:hover > :global(.bp3-button-text) {
+    width: auto;
+    padding-left: 4px;
+  }
+}
+
+.consoleContainer {
+  min-height: 120px !important;
+  max-height: 70vh !important;
+  overflow: scroll;
+  align-items: start !important;
+  padding-top: var(--spacing-large) !important;
+  padding-bottom: var(--spacing-large) !important;
+  padding-left: var(--spacing-xlarge) !important;
+  background-color: var(--black) !important;
+  color: var(--white) !important;
+  pre {
+    background-color: var(--black) !important;
+    color: var(--white) !important;
+    text-align: start !important;
+    font-size: 12px;
+    font-family: var(--font-family-mono) !important;
+  }
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  border-radius: 6px;
+  padding: 0 10px 0 6px;
+  // position: sticky;
+  top: 0px;
+  z-index: 2;
+  cursor: pointer;
+  background-color: var(--black);
+
+  &.expanded {
+    .chevron {
+      transform: rotate(90deg);
+    }
+  }
+
+  .chevron {
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background-color: #22222aa9;
+  }
+
+  &.selected {
+    background-color: #22222a;
+  }
+
+  &.selected .name {
+    color: var(--primary-7) !important;
+    font-weight: 600 !important;
+  }
+
+  .noShrink {
+    flex-shrink: inherit;
+  }
+
+  .name {
+    color: #b0b1c3 !important;
+    font-weight: 400 !important;
+    font-size: 14px !important;
+    font-family: var(--font-family-mono) !important;
+  }
+}
+
+.customBreadcumbStyles {
+  [class*='Layout--horizontal']:last-child > span[class*='bp3-icon'] {
+    display: none !important;
+  }
+}

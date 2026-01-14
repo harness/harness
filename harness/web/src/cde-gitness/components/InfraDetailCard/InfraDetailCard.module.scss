@@ -1,0 +1,222 @@
+.infraDetailCard {
+  background: white !important;
+  border-radius: var(--spacing-small) !important;
+  box-shadow: 0px var(--spacing-tiny) 3px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid var(--grey-100) !important;
+  padding: var(--spacing-xlarge) !important;
+  width: 100% !important;
+  min-width: 900px !important;
+
+  .cardTitle {
+    font-size: var(--font-size-medium) !important;
+    font-weight: 600 !important;
+    line-height: var(--spacing-xlarge) !important;
+    padding-left: var(--spacing-small) !important;
+    color: var(--grey-1000) !important;
+  }
+
+  .cardGridContainer {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto;
+    gap: var(--spacing-xlarge);
+    margin-top: var(--spacing-xxlarge) !important;
+    width: 100% !important;
+  }
+
+  .cardGridItem {
+    .rowHeader {
+      font-size: var(--font-size-small) !important;
+      font-weight: 500 !important;
+      color: var(--grey-500) !important;
+      line-height: 18px !important;
+      margin: 0 !important;
+    }
+
+    .rowContent {
+      font-size: var(--font-size-normal) !important;
+      font-weight: 500 !important;
+      line-height: var(--spacing-large) !important;
+      color: var(--grey-900) !important;
+      margin-top: var(--spacing-small) !important;
+    }
+  }
+
+  // Collapsible sections for Gateway and VM Runner details
+  .collapsibleSection {
+    margin-top: var(--spacing-xlarge) !important;
+    border: 1px solid var(--grey-100);
+    border-radius: var(--spacing-small);
+    overflow: hidden;
+  }
+
+  .collapsibleHeader {
+    padding: var(--spacing-medium) var(--spacing-large);
+    cursor: pointer;
+    background-color: var(--grey-50);
+    display: flex;
+    align-items: center;
+
+    &:hover {
+      background-color: var(--grey-100);
+    }
+  }
+
+  .sectionTitle {
+    font-size: var(--font-size-small) !important;
+    font-weight: 600 !important;
+    color: var(--grey-1000) !important;
+  }
+
+  .collapsibleContent {
+    padding: var(--spacing-large);
+    background-color: white;
+  }
+
+  .detailsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xlarge);
+  }
+
+  .detailsGridItem {
+    .rowHeader {
+      font-size: var(--font-size-small) !important;
+      font-weight: 500 !important;
+      color: var(--grey-500) !important;
+      line-height: 18px !important;
+      margin: 0 !important;
+    }
+
+    .rowContent {
+      font-size: var(--font-size-normal) !important;
+      font-weight: 500 !important;
+      line-height: var(--spacing-large) !important;
+      color: var(--grey-900) !important;
+      margin-top: var(--spacing-small) !important;
+    }
+  }
+
+  .imageNameContainer {
+    display: flex;
+    align-items: center;
+  }
+
+  .truncateText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+    display: block;
+  }
+
+  .copyButtonContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .copyButton {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    width: 15px;
+    height: 15px;
+    display: block;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 5px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .delegateTagsContainer {
+    border: none;
+    background-color: transparent;
+    padding: 8px 0;
+    min-height: 30px;
+    width: 100%;
+    cursor: default;
+    margin-top: var(--spacing-xsmall) !important;
+  }
+
+  .delegateTagsWrapper {
+    display: flex;
+    flex-wrap: nowrap; // Prevent wrapping
+    gap: 6px;
+    overflow: hidden; // Prevent overflow
+  }
+
+  .delegateTag {
+    background-color: var(--grey-100);
+    border: 1px solid var(--grey-200);
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    cursor: default;
+    white-space: nowrap; // Prevent text wrapping
+  }
+
+  .delegateTagText {
+    font-size: var(--font-size-normal);
+    color: #0a3364 !important;
+    line-height: 15px;
+    font-weight: 500;
+  }
+
+  .delegateTagExtra {
+    background-color: #effbff !important;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    min-width: 40px;
+    height: 20px;
+    padding: 0 8px;
+    cursor: default;
+    white-space: nowrap; // Prevent text wrapping
+    flex-shrink: 0; // Prevent shrinking
+  }
+
+  .delegateTagExtraText {
+    font-size: var(--font-size-normal);
+    color: #0278d5;
+    line-height: 15px;
+    font-weight: 500;
+  }
+
+  .noTagsMessage {
+    color: var(--grey-400);
+    font-size: var(--font-size-small);
+  }
+}
+
+.delegateTooltipContent {
+  padding: 8px 12px;
+  font-size: var(--font-size-small);
+  color: var(--grey-900);
+  max-width: 300px;
+  background-color: var(--white);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  max-height: 90px;
+  overflow-y: auto;
+
+  div {
+    margin: 4px 0;
+    padding: 2px 0;
+    white-space: nowrap;
+  }
+}

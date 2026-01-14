@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<p>
+    <b>@{{.Committer.DisplayName}}</b> pushed new commits to pull request <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+</p>
+<p>
+    Latest commit is {{.NewSHA}}
+</p>
+<p>
+    <a href="{{.Base.PullReqURL}}">View pull request #{{.Base.PullReq.Number}}</a>
+</p>
+</body>
+</html>

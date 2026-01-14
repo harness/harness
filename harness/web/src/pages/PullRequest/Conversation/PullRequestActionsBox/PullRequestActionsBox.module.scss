@@ -1,0 +1,312 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  --bar-height: 60px;
+  top: 0;
+  z-index: 4;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+
+  &.primary {
+    background-color: var(--green-50) !important;
+  }
+
+  &.merged {
+    border-color: transparent !important;
+    background: #e8e8ff !important;
+  }
+
+  &.error {
+    background-color: var(--red-50) !important;
+  }
+
+  &.fferror {
+    background-color: var(--red-50) !important;
+  }
+
+  &.ruleViolation {
+    background-color: var(--red-50) !important;
+  }
+
+  &.closed {
+    background-color: var(--grey-100) !important;
+  }
+
+  &.draft {
+    background-color: var(--orange-100) !important;
+  }
+
+  &.unchecked {
+    background-color: var(--orange-50) !important; // Note: No UICore color variable for this background
+  }
+
+  .layout {
+    height: var(--bar-height);
+    padding: 0 var(--spacing-xlarge) !important;
+    padding-right: var(--spacing-large) !important;
+    .secondaryButton,
+    [class*='Button--variation-tertiary'] {
+      --box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
+    }
+
+    &.shimmer {
+      background-color: var(--grey-100) !important;
+    }
+  }
+
+  .btn {
+    background-color: var(--green-800) !important;
+    color: var(--white) !important;
+  }
+
+  .heading {
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
+    color: var(--grey-700) !important;
+  }
+
+  .sub {
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
+    color: var(--green-800) !important;
+
+    &.closed {
+      color: var(--grey-600) !important;
+    }
+
+    &.merged {
+      font-weight: unset !important;
+      color: var(--purple-700) !important;
+      white-space: nowrap !important;
+      font-size: 14px !important;
+    }
+
+    &.draft {
+      color: var(--orange-900) !important;
+    }
+
+    &.unmergeable {
+      color: var(--red-500) !important;
+    }
+
+    &.ffblock {
+      color: var(--red-500) !important;
+    }
+
+    &.unchecked {
+      color: #c05809 !important; // Note: No UICore color variable for this text
+    }
+    &.ruleViolate {
+      color: var(--red-500) !important;
+    }
+    .boldText {
+      color: var(--purple-700) !important;
+      font-weight: 600 !important;
+      font-size: 14px !important;
+      line-height: 24px !important;
+    }
+    .widthContainer {
+      max-width: 220px !important;
+      min-width: min-content !important;
+    }
+    .dateText {
+      font-size: 12px !important;
+      line-height: 18px !important;
+      font-weight: 500 !important;
+      padding-left: var(--spacing-small) !important;
+      color: var(--grey-700) !important;
+      padding-top: 2px !important;
+    }
+    .purpleContainer {
+      background: #cccbff !important;
+      padding: 2px 7px;
+      gap: 3px;
+      border-radius: 4px;
+      opacity: 0px;
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+.popover {
+  transform: translateY(5px) !important;
+
+  .menuItem {
+    strong {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    p {
+      font-size: 13px;
+      padding-left: 27px;
+      line-height: 16px;
+      margin: 5px 0;
+      max-width: 320px;
+      white-space: break-spaces !important;
+    }
+  }
+  .menuReviewItem {
+    strong {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    p {
+      font-size: 13px;
+      padding-left: 2px;
+      line-height: 16px;
+      margin: 0px 1px;
+      max-width: 320px;
+    }
+  }
+}
+
+.btnWrapper {
+  &.hasRuleViolated button {
+    --background-color-hover: var(--white) !important;
+  }
+
+  &.hasRuleViolated a {
+    --background-color: var(--grey-50) !important;
+    --background-color-hover: var(--white) !important;
+    --background-color-active: var(--grey-100) !important;
+  }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  &.hasError button {
+    --background-color: var(--grey-50) !important;
+    --background-color-hover: var(--white) !important;
+    --background-color-active: var(--grey-100) !important;
+  }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+.mergeContainer {
+  border-radius: 4px;
+  background: #e8e8ff !important;
+}
+
+.viewDetailsBtn {
+  margin-bottom: 3px !important;
+}
+
+.checkbox {
+  padding-top: 8px !important;
+  padding-right: var(--spacing-medium) !important;
+}
+
+.overviewPopover {
+  background: blue;
+  :global {
+    .bp3-icon > svg > g {
+      stroke: white !important;
+    }
+  }
+}
+
+.dialogContentContainer {
+  height: calc(100vh - 125px) !important;
+  .content {
+    height: inherit !important;
+  }
+}
+
+.dialogContainer {
+  transition: transform 0.5s ease-in-out !important;
+  position: absolute;
+  right: 1.25%;
+}
+
+.checkboxLabel {
+  :global(.Tooltip--acenter) {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+    vertical-align: middle;
+  }
+}
+
+.mergeStratText {
+  font-size: 12px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  color: var(--grey-600) !important;
+}
+
+.widthContent {
+  width: 100% !important;
+}
+
+.mergeItemContainer {
+  padding: var(--spacing-small) var(--spacing-medium);
+}
+
+.mergeItemContainer:hover {
+  background: var(--primary-1) !important;
+}
+
+.optionMenuButton {
+  padding-right: var(--spacing-medium) !important;
+}
+
+.textArea {
+  :global(.bp3-input) {
+    min-height: 150px !important;
+  }
+}
+
+.verticalContainer {
+  .mergeStratContainer {
+    margin-top: unset !important;
+    padding-left: var(--spacing-xxxlarge) !important;
+    padding-right: 4.05rem !important;
+    padding-top: unset !important;
+
+    .divider {
+      border-left: 1px solid var(--grey-100) !important;
+    }
+    .innerContainer {
+      border-radius: 4px !important ;
+    }
+  }
+}
+
+.btnContainer {
+  float: right !important;
+}
+
+.disableBtn {
+  :global {
+    [class*='SplitButton--splitButton'] > .bp3-button {
+      --text-color: var(--grey-250) !important;
+      cursor: pointer;
+    }
+  }
+}

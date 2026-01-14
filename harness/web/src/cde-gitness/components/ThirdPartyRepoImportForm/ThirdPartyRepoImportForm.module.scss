@@ -1,0 +1,55 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.formFields {
+  div[data-id='branch-1'],
+  div[data-id='code_repo_url-0'],
+  [class*='repoInput'],
+  [class*='branchDropdown'] {
+    width: 100% !important;
+  }
+}
+
+.importForm {
+  cursor: pointer;
+  display: contents;
+  font-size: var(--font-size-small) !important;
+}
+
+.repoInput {
+  span[icon='git-repo'],
+  span[icon='git-branch'] {
+    top: 20%;
+    left: 2% !important;
+    color: var(--grey-500) !important;
+  }
+
+  input {
+    height: 50px !important;
+    border-radius: 7px !important;
+    border: 1px solid var(--grey-200) !important;
+    box-shadow: none !important;
+    background: var(--grey-100);
+    padding-left: 10% !important;
+
+    &:active {
+      background: white;
+    }
+    &:focus {
+      background: white;
+    }
+  }
+}

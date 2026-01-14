@@ -1,0 +1,71 @@
+.rowHeaders {
+  font-size: 12px !important;
+}
+
+.infoButton {
+  --button-height: 0 !important;
+}
+
+.detailsContainer {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-rows: repeat(2, auto) !important;
+  column-gap: 20px;
+  row-gap: 30px;
+
+  > div {
+    margin-bottom: 10px;
+  }
+}
+
+.horizontalContainer {
+  :global(.Button--button--maDuR[class*='bp3-button']:not([class*='bp3-intent-']) > span svg path) {
+    fill: var(--white) !important;
+  }
+}
+
+.marginLeftContainer {
+  margin-left: var(--layout-spacing) !important;
+}
+
+.clickableText {
+  cursor: pointer !important;
+  color: var(--primary-7) !important;
+  font-size: var(--font-size-normal) !important;
+  text-align: left !important;
+  margin-left: var(--spacing-small) !important;
+}
+
+.iconMarginRight {
+  margin-right: 1px !important;
+}
+
+.infoIcon {
+  height: 14px !important;
+  width: 14px !important;
+  fill: white !important;
+  color: #0278d5 !important;
+}
+
+.standardIcon {
+  height: 20px !important;
+  width: 20px !important;
+  margin-right: 1px !important;
+}
+
+.statusText {
+  color: var(--black) !important;
+  font-size: var(--font-size-normal) !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+}
+
+.providerText {
+  color: var(--grey-500) !important;
+  font-size: var(--font-size-normal) !important;
+  text-align: left !important;
+}
+
+.greyText {
+  color: var(--grey-500) !important;
+}

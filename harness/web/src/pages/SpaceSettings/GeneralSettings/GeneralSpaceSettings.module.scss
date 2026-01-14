@@ -1,0 +1,211 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.mainCtn {
+  height: var(--page-height);
+  background-color: var(--primary-bg) !important;
+
+  .roleBadge {
+    text-transform: capitalize;
+    padding: var(--spacing-xsmall) 6px;
+    border-radius: 4px;
+    border: 1px solid var(--grey-200);
+    background: var(--grey-50);
+    width: max-content;
+  }
+}
+
+.dividerContainer {
+  opacity: 0.2;
+  height: 1px;
+  color: var(--grey-100);
+  margin: 20px 0;
+}
+
+.label {
+  width: 100px;
+  padding-right: var(--spacing-medium);
+}
+
+.content {
+  width: 93%;
+}
+
+.deleteContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.deleteBtn {
+  white-space: nowrap !important;
+  min-width: auto !important;
+}
+
+.saveBtn {
+  margin-left: var(--spacing-medium) !important;
+}
+
+.textContainer {
+  width: 80%;
+}
+
+.buttonContainer {
+  width: 20%;
+  padding-top: var(--spacing-xsmall) !important;
+}
+
+.generalContainer {
+  width: 100%;
+  background: var(--grey-0) !important;
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+  border-radius: 4px;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.yellowContainer {
+  background: var(--orange-50) !important;
+  padding: var(--spacing-medium) var(--spacing-small);
+  margin: 0 var(--spacing-large) 0 0 !important;
+  border-radius: 4px;
+}
+
+.verticalContainer {
+  width: 100% !important;
+}
+
+.upgradeContainer {
+  align-items: center;
+  overflow: hidden !important;
+  position: relative !important;
+  .button {
+    --background-color: var(--green-700) !important;
+    --background-color-hover: var(--green-800) !important;
+    --background-color-active: var(--green-700) !important;
+    z-index: 2;
+    .buttonText {
+      font-size: 13px !important;
+    }
+  }
+}
+
+.harnessWatermark {
+  position: absolute;
+  right: -2.81%;
+  top: 6%;
+  bottom: -17%;
+  z-index: 1;
+  opacity: 0.1 !important;
+  svg {
+    opacity: 0.1;
+  }
+}
+
+.upgradeHeader {
+  align-items: center;
+}
+
+.importContainer {
+  background: var(--grey-50) !important;
+  border: 1px solid var(--grey-200) !important;
+  border-radius: 4px;
+
+  :global {
+    .bp3-form-group {
+      margin: unset !important;
+    }
+  }
+}
+
+.detailsLabel {
+  white-space: nowrap !important;
+  max-width: 155px !important;
+  color: var(--grey-600) !important;
+}
+
+.icon {
+  > svg {
+    fill: var(--primary-7) !important;
+
+    > path {
+      fill: var(--primary-7) !important;
+    }
+  }
+}
+
+.checkbox {
+  :global {
+    [class*='Tooltip--acenter'] {
+      opacity: 0.7 !important;
+    }
+    .bp3-control-indicator {
+      background: var(--primary-7) !important;
+      opacity: 0.7;
+    }
+  }
+}
+
+.repoInfo {
+  border-radius: 4px;
+  border: 1px solid var(--grey-100);
+  background: var(--grey-50) !important;
+}
+
+.upgradeButton {
+  --background-color: var(--green-700) !important;
+  --background-color-hover: var(--green-800) !important;
+  --background-color-active: var(--green-700) !important;
+  z-index: 2;
+  .buttonText {
+    font-size: 13px !important;
+  }
+}
+
+.progressBar {
+  width: 461px;
+}
+
+.harnessUpgradeWatermark {
+  position: absolute;
+  right: 2%;
+  top: 6%;
+  bottom: -17%;
+  z-index: 1;
+  opacity: 0.1 !important;
+  svg {
+    opacity: 0.1;
+  }
+}
+
+.mainContainer {
+  :global {
+    --bp3-intent-color: unset !important;
+
+    .bp3-intent-danger {
+      --bp3-intent-color: unset !important;
+    }
+    .bp3-form-helper-text {
+      margin-top: unset !important;
+    }
+    [class*='FormError--errorDiv'] {
+      display: none !important;
+    }
+  }
+}
+
+.textSize {
+  font-size: 13px !important;
+}

@@ -1,0 +1,57 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.badge {
+  --line-height: 1rem;
+  --typography-weight: 700;
+  --typography-size: 0.7rem;
+  --intent-color: var(--primary-7);
+
+  padding: 0px var(--spacing-small) !important;
+  background-color: var(--grey-100) !important;
+  border: 1px solid var(--grey-200);
+  border-radius: 4px;
+  max-width: max-content;
+  min-width: max-content;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.quarantineBadge {
+  background-color: var(--orange-200) !important;
+  border-color: var(--orange-200) !important;
+  --intent-color: var(--orange-900) !important;
+}
+
+.dockerTag {
+  --intent-color: var(--blue-900) !important;
+  background-color: var(--blue-100) !important;
+  border-color: var(--blue-200) !important;
+  display: inline-block;
+  max-width: 120px;
+  min-width: unset;
+  text-transform: none;
+
+  &.hover {
+    cursor: pointer;
+  }
+}
+
+.visibilityBadge {
+  background-color: var(--white) !important;
+  border-color: var(--grey-200) !important;
+  --intent-color: var(--grey-600) !important;
+}

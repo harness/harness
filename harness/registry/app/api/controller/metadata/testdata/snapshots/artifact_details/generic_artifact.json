@@ -1,0 +1,9 @@
+{
+  "createdAt": "1704067200000",
+  "description": "",
+  "isQuarantined": false,
+  "modifiedAt": "1704067200000",
+  "name": "test-artifact",
+  "packageType": "GENERIC",
+  "version": "v1.0.0"
+}

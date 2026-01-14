@@ -1,0 +1,72 @@
+{
+  "mainHeader": "Hugging Face Client Setup",
+  "secHeader": "Follow these instructions to interact with Hugging Face models and datasets in this registry.",
+  "sections": [
+    {
+      "header": "Configure Hugging Face Client",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "export HF_HUB_ETAG_TIMEOUT=86400\nexport HF_HUB_DOWNLOAD_TIMEOUT=86400\nexport HF_ENDPOINT=http://example.com/registry/test-registry/HUGGINGFACE"
+            }
+          ],
+          "header": "Set up environment variables to connect to Artifact Registry:",
+          "type": "Static"
+        },
+        {
+          "header": "For Hugging Face client version 0.19.0 and above, this timeout setting enables model resolution via pipelines and tokenizer libraries.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Resolve Model",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "from huggingface_hub import snapshot_download\nsnapshot_download(\n    repo_id=\"test-artifact\", revision=\"v1.0.0\", etag_timeout=86400\n)"
+            }
+          ],
+          "header": "Download a model from Artifact Registry:",
+          "type": "Static"
+        },
+        {
+          "header": "With Hugging Face client version 0.19.0+ and HF_HUB_ETAG_TIMEOUT set, you can resolve models with transformers, diffusers, and other libraries.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Resolve Dataset",
+      "steps": [
+        {
+          "commands": [
+            {
+              "value": "from datasets import load_dataset\ndataset = load_dataset(\"test-artifact\")"
+            }
+          ],
+          "header": "Artifact Registry supports resolving datasets using Hugging Face dataset libraries:",
+          "type": "Static"
+        },
+        {
+          "commands": [
+            {
+              "value": "from huggingface_hub import snapshot_download\nsnapshot_download(\n    repo_id=\"test-artifact\", revision=\"v1.0.0\", repo_type=\"dataset\", etag_timeout=86400\n)"
+            }
+          ],
+          "header": "Or download an entire dataset repository using the snapshot_download API:",
+          "type": "Static"
+        },
+        {
+          "header": "Note: Artifact Registry fully caches only datasets hosted directly on Hugging Face, not those referencing external sources.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    }
+  ]
+}

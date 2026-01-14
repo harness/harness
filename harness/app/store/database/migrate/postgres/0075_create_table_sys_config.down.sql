@@ -1,0 +1,1 @@
+DROP INDEX settings_sys_key;

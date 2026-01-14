@@ -1,0 +1,36 @@
+.main {
+  --bar-height: 56px;
+  top: 0;
+  z-index: 4;
+  border-radius: 4px;
+  width: 100%;
+
+  &.banner {
+    background: var(--green-50);
+  }
+
+  .layout {
+    height: var(--bar-height);
+    padding: var(--spacing-small) var(--spacing-small) var(--spacing-small) var(--spacing-xlarge) !important;
+  }
+
+  .message {
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    line-height: 20px !important;
+  }
+
+  .dateText {
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    padding-left: var(--spacing-small) !important;
+    color: var(--grey-700) !important;
+  }
+
+  .link {
+    background-color: inherit !important;
+    font-size: 13px;
+    color: var(--grey-500) !important;
+    padding-left: var(--spacing-xsmall) !important;
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "name": "pytorch_model.bin",
+      "size": "1.00 KB",
+      "createdAt": "1704067200",
+      "checksums": [
+        "sha256:abc123def456..."
+      ],
+      "downloadCommand": "curl --location 'https://registry.example.com/root/test-registry/huggingface/model/test-artifact/resolve/v1.0.0/pytorch_model.bin' -J -o '<OUTPUT_FILE_NAME>'"
+    }
+  ],
+  "itemCount": 1,
+  "pageCount": 1,
+  "pageNumber": 1,
+  "pageSize": 10,
+  "status": "SUCCESS"
+}
