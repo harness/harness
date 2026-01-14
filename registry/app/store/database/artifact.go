@@ -176,7 +176,7 @@ func (a ArtifactDao) GetByRegistryIDAndImage(ctx context.Context, registryID int
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
 		From("artifacts a").
 		Join("images i ON a.artifact_image_id = i.image_id").
-		Where("i.image_registry_id = ? AND i.image_name = ?", registryID, image).
+		Where("i.image_registry_id = ? AND i.image_name = ? AND i.image_type IS NULL", registryID, image).
 		OrderBy("a.artifact_created_at DESC")
 
 	sql, args, err := q.ToSql()

@@ -99,7 +99,7 @@ func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 		).
 		From("artifacts a").
 		Join("images i ON a.artifact_image_id = i.image_id").
-		Where("a.artifact_version = ? AND i.image_registry_id = ? AND i.image_name = ?").
+		Where("a.artifact_version = ? AND i.image_registry_id = ? AND i.image_name = ? AND i.image_type IS NULL").
 		Limit(1)
 
 	insertQuery := databaseg.Builder.
