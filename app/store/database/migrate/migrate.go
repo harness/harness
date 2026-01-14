@@ -156,6 +156,8 @@ func getMigrator(db *sqlx.DB) (migrate.Options, error) {
 			return MigrateAfter_0153_migrate_artifacts(ctx, dbtx)
 		case "0155_migrate_rpm_artifacts":
 			return MigrateAfter_0155_migrate_rpm_artifacts(ctx, dbtx, db.DriverName())
+		case "0160":
+			return MigrateAfter_0160(ctx, dbtx)
 
 		default:
 			return nil
