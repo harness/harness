@@ -240,3 +240,16 @@ func (c *huggingFacePackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *huggingFacePackageType) GetPkgDownloadURL(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+) (string, error) {
+	return "", nil
+}

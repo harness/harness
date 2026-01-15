@@ -241,3 +241,23 @@ func (c *npmPackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *npmPackageType) GetPkgDownloadURL(
+	ctx context.Context,
+	rootIdentifier string,
+	registryIdentifier string,
+	packageName string,
+	_ string,
+	version string,
+	filename string,
+	_ string,
+) (string, error) {
+	if packageName == "" || version == "" || filename == "" {
+		return "", fmt.Errorf("packageName, version, and filename cannot be empty")
+	}
+
+	baseURL := c.registryHelper.GetPackageURL(ctx, rootIdentifier, registryIdentifier, c.pathPackageType)
+
+	downloadURL := fmt.Sprintf("%s/%s/-/%s/%s", baseURL, packageName, version, filename)
+	return downloadURL, nil
+}

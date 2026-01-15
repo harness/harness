@@ -241,3 +241,16 @@ func (c *goPackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *goPackageType) GetPkgDownloadURL(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+) (string, error) {
+	return "", nil
+}

@@ -125,4 +125,15 @@ type PackageWrapper interface {
 		packageName string,
 		version string,
 	) ([]string, error)
+	GetPkgDownloadURL(
+		ctx context.Context,
+		packageType string,
+		rootIdentifier string,
+		registryIdentifier string,
+		packageName string,
+		artifactType string,
+		version string,
+		filename string,
+		filepath string,
+	) (string, error)
 }

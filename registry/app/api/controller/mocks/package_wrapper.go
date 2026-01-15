@@ -1767,3 +1767,111 @@ func (_c *MockPackageWrapper_GetNodePathsForArtifact_Call) RunAndReturn(run func
 	_c.Call.Return(run)
 	return _c
 }
+
+// GetPkgDownloadURL provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) GetPkgDownloadURL(ctx context.Context, packageType string, rootIdentifier string, registryIdentifier string, packageName string, artifactType string, version string, filename string, filepath string) (string, error) {
+	ret := _mock.Called(ctx, packageType, rootIdentifier, registryIdentifier, packageName, artifactType, version, filename, filepath)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPkgDownloadURL")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string, string, string, string, string) (string, error)); ok {
+		return returnFunc(ctx, packageType, rootIdentifier, registryIdentifier, packageName, artifactType, version, filename, filepath)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, string, string, string, string, string) string); ok {
+		r0 = returnFunc(ctx, packageType, rootIdentifier, registryIdentifier, packageName, artifactType, version, filename, filepath)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string, string, string, string, string, string, string) error); ok {
+		r1 = returnFunc(ctx, packageType, rootIdentifier, registryIdentifier, packageName, artifactType, version, filename, filepath)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockPackageWrapper_GetPkgDownloadURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPkgDownloadURL'
+type MockPackageWrapper_GetPkgDownloadURL_Call struct {
+	*mock.Call
+}
+
+// GetPkgDownloadURL is a helper method to define mock.On call
+//   - ctx context.Context
+//   - packageType string
+//   - rootIdentifier string
+//   - registryIdentifier string
+//   - packageName string
+//   - artifactType string
+//   - version string
+//   - filename string
+//   - filepath string
+func (_e *MockPackageWrapper_Expecter) GetPkgDownloadURL(ctx interface{}, packageType interface{}, rootIdentifier interface{}, registryIdentifier interface{}, packageName interface{}, artifactType interface{}, version interface{}, filename interface{}, filepath interface{}) *MockPackageWrapper_GetPkgDownloadURL_Call {
+	return &MockPackageWrapper_GetPkgDownloadURL_Call{Call: _e.mock.On("GetPkgDownloadURL", ctx, packageType, rootIdentifier, registryIdentifier, packageName, artifactType, version, filename, filepath)}
+}
+
+func (_c *MockPackageWrapper_GetPkgDownloadURL_Call) Run(run func(ctx context.Context, packageType string, rootIdentifier string, registryIdentifier string, packageName string, artifactType string, version string, filename string, filepath string)) *MockPackageWrapper_GetPkgDownloadURL_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 string
+		if args[4] != nil {
+			arg4 = args[4].(string)
+		}
+		var arg5 string
+		if args[5] != nil {
+			arg5 = args[5].(string)
+		}
+		var arg6 string
+		if args[6] != nil {
+			arg6 = args[6].(string)
+		}
+		var arg7 string
+		if args[7] != nil {
+			arg7 = args[7].(string)
+		}
+		var arg8 string
+		if args[8] != nil {
+			arg8 = args[8].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
+			arg5,
+			arg6,
+			arg7,
+			arg8,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPkgDownloadURL_Call) Return(s string, err error) *MockPackageWrapper_GetPkgDownloadURL_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPkgDownloadURL_Call) RunAndReturn(run func(ctx context.Context, packageType string, rootIdentifier string, registryIdentifier string, packageName string, artifactType string, version string, filename string, filepath string) (string, error)) *MockPackageWrapper_GetPkgDownloadURL_Call {
+	_c.Call.Return(run)
+	return _c
+}

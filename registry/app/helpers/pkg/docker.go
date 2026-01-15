@@ -250,3 +250,16 @@ func (c *dockerPackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *dockerPackageType) GetPkgDownloadURL(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+) (string, error) {
+	return "", nil
+}

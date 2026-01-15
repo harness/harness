@@ -103,4 +103,14 @@ type PackageHelper interface {
 		packageName string,
 		version string,
 	) ([]string, error)
+	GetPkgDownloadURL(
+		ctx context.Context,
+		rootIdentifier string,
+		registryIdentifier string,
+		packageName string,
+		artifactType string,
+		version string,
+		filename string,
+		filepath string,
+	) (string, error)
 }
