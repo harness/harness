@@ -787,6 +787,123 @@ func (_c *RegistryRepository_GetByRootParentIDAndName_Call) RunAndReturn(run fun
 	return _c
 }
 
+// GetIDsByParentSpace provides a mock function with given fields: ctx, parentSpaceID
+func (_m *RegistryRepository) GetIDsByParentSpace(ctx context.Context, parentSpaceID int64) ([]int64, error) {
+	ret := _m.Called(ctx, parentSpaceID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIDsByParentSpace")
+	}
+
+	var r0 []int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) ([]int64, error)); ok {
+		return rf(ctx, parentSpaceID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) []int64); ok {
+		r0 = rf(ctx, parentSpaceID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]int64)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, parentSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RegistryRepository_GetIDsByParentSpace_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetIDsByParentSpace'
+type RegistryRepository_GetIDsByParentSpace_Call struct {
+	*mock.Call
+}
+
+// GetIDsByParentSpace is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parentSpaceID int64
+func (_e *RegistryRepository_Expecter) GetIDsByParentSpace(ctx interface{}, parentSpaceID interface{}) *RegistryRepository_GetIDsByParentSpace_Call {
+	return &RegistryRepository_GetIDsByParentSpace_Call{Call: _e.mock.On("GetIDsByParentSpace", ctx, parentSpaceID)}
+}
+
+func (_c *RegistryRepository_GetIDsByParentSpace_Call) Run(run func(ctx context.Context, parentSpaceID int64)) *RegistryRepository_GetIDsByParentSpace_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *RegistryRepository_GetIDsByParentSpace_Call) Return(ids []int64, err error) *RegistryRepository_GetIDsByParentSpace_Call {
+	_c.Call.Return(ids, err)
+	return _c
+}
+
+func (_c *RegistryRepository_GetIDsByParentSpace_Call) RunAndReturn(run func(context.Context, int64) ([]int64, error)) *RegistryRepository_GetIDsByParentSpace_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateParentSpace provides a mock function with given fields: ctx, sourceSpaceID, targetSpaceID
+func (_m *RegistryRepository) UpdateParentSpace(ctx context.Context, sourceSpaceID int64, targetSpaceID int64) (int64, error) {
+	ret := _m.Called(ctx, sourceSpaceID, targetSpaceID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateParentSpace")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) (int64, error)); ok {
+		return rf(ctx, sourceSpaceID, targetSpaceID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) int64); ok {
+		r0 = rf(ctx, sourceSpaceID, targetSpaceID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(ctx, sourceSpaceID, targetSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RegistryRepository_UpdateParentSpace_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateParentSpace'
+type RegistryRepository_UpdateParentSpace_Call struct {
+	*mock.Call
+}
+
+// UpdateParentSpace is a helper method to define mock.On call
+//   - ctx context.Context
+//   - sourceSpaceID int64
+//   - targetSpaceID int64
+func (_e *RegistryRepository_Expecter) UpdateParentSpace(ctx interface{}, sourceSpaceID interface{}, targetSpaceID interface{}) *RegistryRepository_UpdateParentSpace_Call {
+	return &RegistryRepository_UpdateParentSpace_Call{Call: _e.mock.On("UpdateParentSpace", ctx, sourceSpaceID, targetSpaceID)}
+}
+
+func (_c *RegistryRepository_UpdateParentSpace_Call) Run(run func(ctx context.Context, sourceSpaceID int64, targetSpaceID int64)) *RegistryRepository_UpdateParentSpace_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64), args[2].(int64))
+	})
+	return _c
+}
+
+func (_c *RegistryRepository_UpdateParentSpace_Call) Return(count int64, err error) *RegistryRepository_UpdateParentSpace_Call {
+	_c.Call.Return(count, err)
+	return _c
+}
+
+func (_c *RegistryRepository_UpdateParentSpace_Call) RunAndReturn(run func(context.Context, int64, int64) (int64, error)) *RegistryRepository_UpdateParentSpace_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Update provides a mock function with given fields: ctx, repository
 func (_m *RegistryRepository) Update(ctx context.Context, repository *types.Registry) error {
 	ret := _m.Called(ctx, repository)

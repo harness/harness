@@ -354,6 +354,62 @@ func (r UpstreamproxyDao) CountAll(
 	return total, nil
 }
 
+func (r UpstreamproxyDao) UpdateSecretSpaceID(
+	ctx context.Context,
+	srcSpaceID int64,
+	targetSpaceID int64,
+) (int64, error) {
+	stmt := databaseg.Builder.Update("upstream_proxy_configs").
+		Set("upstream_proxy_config_secret_space_id", targetSpaceID).
+		Where("upstream_proxy_config_secret_space_id = ?", srcSpaceID)
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "failed to bind query")
+	}
+
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "failed to update upstream proxy config secret space")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return count, nil
+}
+
+func (r UpstreamproxyDao) UpdateUserNameSecretSpaceID(
+	ctx context.Context,
+	srcSpaceID int64,
+	targetSpaceID int64,
+) (int64, error) {
+	stmt := databaseg.Builder.Update("upstream_proxy_configs").
+		Set("upstream_proxy_config_user_name_secret_space_id", targetSpaceID).
+		Where("upstream_proxy_config_user_name_secret_space_id = ?", srcSpaceID)
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "failed to bind query")
+	}
+
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "failed to update upstream proxy config username secret space")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return count, nil
+}
+
 func (r UpstreamproxyDao) mapToInternalUpstreamProxy(
 	ctx context.Context,
 	in *types.UpstreamProxyConfig,

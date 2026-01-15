@@ -168,3 +168,45 @@ func (m *WebhooksRepository) UpdateOptLock(ctx context.Context, hook *types.Webh
 
 	return r0, r1
 }
+
+// UpdateParentSpace provides a mock function
+func (m *WebhooksRepository) UpdateParentSpace(ctx context.Context, srcParentSpaceID int64, targetParentSpaceID int64) (int64, error) {
+	ret := m.Called(ctx, srcParentSpaceID, targetParentSpaceID)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) int64); ok {
+		r0 = rf(ctx, srcParentSpaceID, targetParentSpaceID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(ctx, srcParentSpaceID, targetParentSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateSecretSpaceID provides a mock function
+func (m *WebhooksRepository) UpdateSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error) {
+	ret := m.Called(ctx, srcSpaceID, targetSpaceID)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) int64); ok {
+		r0 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

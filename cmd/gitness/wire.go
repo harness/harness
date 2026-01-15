@@ -181,6 +181,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		services.ProvideGitspaceServices,
 		server.WireSet,
 		url.WireSet,
+		spaceSvc.ProvideNoopResourceMover,
 		spaceSvc.WireSet,
 		space.WireSet,
 		limiter.WireSet,

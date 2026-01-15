@@ -174,3 +174,45 @@ func (m *UpstreamProxyStore) CountAll(ctx context.Context, parentID string, pack
 
 	return r0, r1
 }
+
+// UpdateSecretSpaceID provides a mock function with given fields: ctx, srcSpaceID, targetSpaceID
+func (m *UpstreamProxyStore) UpdateSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error) {
+	ret := m.Called(ctx, srcSpaceID, targetSpaceID)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) int64); ok {
+		r0 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateUserNameSecretSpaceID provides a mock function with given fields: ctx, srcSpaceID, targetSpaceID
+func (m *UpstreamProxyStore) UpdateUserNameSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error) {
+	ret := m.Called(ctx, srcSpaceID, targetSpaceID)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) int64); ok {
+		r0 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

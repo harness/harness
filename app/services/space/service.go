@@ -26,15 +26,17 @@ import (
 )
 
 type Service struct {
-	tx               dbtx.Transactor
-	scheduler        *job.Scheduler
-	encrypter        encrypt.Encrypter
-	repoStore        store.RepoStore
-	spaceStore       store.SpaceStore
-	spacePathStore   store.SpacePathStore
-	labelStore       store.LabelStore
-	rulesStore       store.RuleStore
-	webhookStore     store.WebhookStore
+	tx             dbtx.Transactor
+	scheduler      *job.Scheduler
+	encrypter      encrypt.Encrypter
+	repoStore      store.RepoStore
+	spaceStore     store.SpaceStore
+	spacePathStore store.SpacePathStore
+	rulesStore     store.RuleStore
+
+	// - nil for gitness standalone (as move feature not supported in it)
+	// - provided by harness-code services (registry, cde, gitness-server) to enable move feature
+	resourceMover    ResourceMover
 	spaceFinder      refcache.SpaceFinder
 	gitspaceSvs      *gitspace.Service
 	infraProviderSvc *infraprovider.Service
@@ -48,9 +50,8 @@ func NewService(
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
 	spacePathStore store.SpacePathStore,
-	labelStore store.LabelStore,
 	rulesStore store.RuleStore,
-	webhookStore store.WebhookStore,
+	resourceMover ResourceMover,
 	spaceFinder refcache.SpaceFinder,
 	gitspaceSvs *gitspace.Service,
 	infraProviderSvc *infraprovider.Service,
@@ -63,9 +64,8 @@ func NewService(
 		repoStore:        repoStore,
 		spaceStore:       spaceStore,
 		spacePathStore:   spacePathStore,
-		labelStore:       labelStore,
 		rulesStore:       rulesStore,
-		webhookStore:     webhookStore,
+		resourceMover:    resourceMover,
 		spaceFinder:      spaceFinder,
 		gitspaceSvs:      gitspaceSvs,
 		infraProviderSvc: infraProviderSvc,

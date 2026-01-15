@@ -905,3 +905,53 @@ func (r registryDao) mapToRegistryMetadata(ctx context.Context, dst *RegistryMet
 		Config:        config,
 	}
 }
+
+// GetIDsByParentSpace returns all registry IDs under a given parent space.
+func (r registryDao) GetIDsByParentSpace(ctx context.Context, parentSpaceID int64) ([]int64, error) {
+	stmt := databaseg.Builder.
+		Select("registry_id").
+		From("registries").
+		Where("registry_parent_id = ?", parentSpaceID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert select query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	var registryIDs []int64
+	err = db.SelectContext(ctx, &registryIDs, sql, args...)
+	if err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "failed to fetch registry IDs by parent space")
+	}
+
+	return registryIDs, nil
+}
+
+// UpdateParentSpace updates the parent space ID for all registries under a given source space to target space.
+// This is used during space move operations to update registry ownership.
+// Returns the number of registries updated.
+func (r registryDao) UpdateParentSpace(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error) {
+	stmt := databaseg.Builder.
+		Update("registries").
+		Set("registry_parent_id", targetSpaceID).
+		Where("registry_parent_id = ?", srcSpaceID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert update parent space query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, r.db)
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "failed to update registry parent space")
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	return rowsAffected, nil
+}
