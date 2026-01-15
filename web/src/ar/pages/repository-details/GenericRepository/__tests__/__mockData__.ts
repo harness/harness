@@ -51,7 +51,8 @@ export const MockGetGenericArtifactsByRegistryResponse: GetAllArtifactsByRegistr
           registryPath: '',
           isPublic: false,
           registryUUID: 'uuid',
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         }
       ],
       itemCount: 0,

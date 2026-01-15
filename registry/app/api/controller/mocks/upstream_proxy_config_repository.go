@@ -227,6 +227,62 @@ func (_m *UpstreamProxyConfigRepository) Update(ctx context.Context, upstreampro
 	return r0
 }
 
+// UpdateSecretSpaceID provides a mock function with given fields: ctx, srcSpaceID, targetSpaceID
+func (_m *UpstreamProxyConfigRepository) UpdateSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error) {
+	ret := _m.Called(ctx, srcSpaceID, targetSpaceID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateSecretSpaceID")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) (int64, error)); ok {
+		return rf(ctx, srcSpaceID, targetSpaceID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) int64); ok {
+		r0 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateUserNameSecretSpaceID provides a mock function with given fields: ctx, srcSpaceID, targetSpaceID
+func (_m *UpstreamProxyConfigRepository) UpdateUserNameSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error) {
+	ret := _m.Called(ctx, srcSpaceID, targetSpaceID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUserNameSecretSpaceID")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) (int64, error)); ok {
+		return rf(ctx, srcSpaceID, targetSpaceID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) int64); ok {
+		r0 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = rf(ctx, srcSpaceID, targetSpaceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewUpstreamProxyConfigRepository creates a new instance of UpstreamProxyConfigRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewUpstreamProxyConfigRepository(t interface {

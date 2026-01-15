@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
+import type { VersionMetadata } from '@harnessio/react-har-service-client'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 import type { PageType } from '@ar/common/types'
 
 export interface VersionActionProps {
-  data: ArtifactVersionSummary | ArtifactMetadata
+  data: ArtifactVersionSummary | VersionMetadata
   versionKey: string
   artifactKey: string
   repoKey: string

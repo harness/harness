@@ -48,6 +48,7 @@ jest.mock('react-router-dom', () => ({
 }))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListRegistriesQuery: jest.fn(),
   useGetAllRegistriesQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     data: { content: { data: { registries: [] }, status: 'SUCCESS' } },

@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
+	"github.com/harness/gitness/app/services/languageanalyzer"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/pullreq"
@@ -62,6 +63,7 @@ type Services struct {
 	registryWebhooksService        *registrywebhooks.Service
 	Branch                         *branch.Service
 	registryAsyncProcessingService *registryasyncprocessing.Service
+	languageAnalyzer               languageanalyzer.LanguageAnalyzer
 }
 
 type GitspaceServices struct {
@@ -113,6 +115,7 @@ func ProvideServices(
 	branchSvc *branch.Service,
 	registryAsyncProcessingService *registryasyncprocessing.Service,
 	registryJobRpmRegistryIndex *handler.JobRpmRegistryIndex,
+	languageAnalyzer languageanalyzer.LanguageAnalyzer,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -132,5 +135,6 @@ func ProvideServices(
 		registryWebhooksService:        registryWebhooksService,
 		Branch:                         branchSvc,
 		registryAsyncProcessingService: registryAsyncProcessingService,
+		languageAnalyzer:               languageAnalyzer,
 	}
 }

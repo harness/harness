@@ -4,6 +4,7 @@ deployedArtifacts: Deployed Artifacts
 viewArtifactDetails: View Artifact Details
 table:
   noArtifactsTitle: There are no artifacts available.
+  noArchivedArtifactsTitle: There are no archived artifacts.
   allRepositories: Registries
   latestVersions: Latest Versions
   allVersions: All Versions
@@ -18,14 +19,17 @@ table:
     environments: Environments
     sto: Security Vulnerabilities
     lastUpdated: Uploaded At
+    archivedAt: Archived At
     size: Size
     type: Type
     version: Tags / Version
   actions:
     editRepository: Edit Registry
     deleteRepository: Delete Registry
-    deleteArtifact: Delete Artifact
+    deleteArtifact: Delete
     download: Download
+    archivePackage: Archive
+    restorePackage: Restore
     VulnerabilityStatus:
       scanned: Scanned
       nonScanned: Not Scanned

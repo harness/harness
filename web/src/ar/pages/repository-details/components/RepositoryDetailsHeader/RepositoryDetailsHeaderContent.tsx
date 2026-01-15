@@ -33,6 +33,7 @@ import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 import type { Repository } from '@ar/pages/repository-details/types'
 import RepositoryVisibilityBadge from '@ar/components/Badge/RepositoryVisibilityBadge'
+import AvailablityBadge, { AvailablityBadgeType } from '@ar/components/Badge/AvailablityBadge'
 
 import css from './RepositoryDetailsHeader.module.scss'
 
@@ -43,7 +44,7 @@ interface RepositoryDetailsHeaderContentProps {
 
 export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsHeaderContentProps): JSX.Element {
   const { data, iconSize = 40 } = props
-  const { identifier, labels, description, modifiedAt, packageType, isPublic } = data || {}
+  const { identifier, labels, description, modifiedAt, packageType, isPublic, isDeleted } = data || {}
   const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
   return (
@@ -66,6 +67,7 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
               />
             )}
             <RepositoryVisibilityBadge type={isPublic ? RepositoryVisibility.PUBLIC : RepositoryVisibility.PRIVATE} />
+            <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
           </Layout.Horizontal>
           <Text
             data-testid="registry-description"

@@ -242,3 +242,16 @@ func (c *helmPackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *helmPackageType) GetPkgDownloadURL(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+) (string, error) {
+	return "", nil
+}

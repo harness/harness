@@ -15,7 +15,6 @@
  */
 
 import React from 'react'
-import { defaultTo } from 'lodash-es'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Layout, Text } from '@harnessio/uicore'
 import type { RegistryMetadata } from '@harnessio/react-har-service-client'
@@ -25,7 +24,6 @@ import ScopeBadge from '@ar/components/Badge/ScopeBadge'
 import { useStrings } from '@ar/frameworks/strings/String'
 import TableCells from '@ar/components/TableCells/TableCells'
 import { getEntityScopeType } from '@ar/hooks/useGetPageScope'
-import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { RepositoryVisibilityOptions } from '@ar/pages/repository-details/constants'
 import DescriptionPopover from '@ar/components/DescriptionPopover/DescriptionPopover'
@@ -46,7 +44,7 @@ type CellType = Renderer<CellTypeWithActions<RegistryMetadata>>
 
 export const RepositoryNameCell: CellType = ({ value, row }) => {
   const { original } = row
-  const { labels, description, packageType, isPublic } = original
+  const { description, packageType, isPublic } = original
   const { getString } = useStrings()
   const subText = isPublic
     ? RepositoryVisibilityOptions[RepositoryVisibility.PUBLIC].label
@@ -58,7 +56,6 @@ export const RepositoryNameCell: CellType = ({ value, row }) => {
         <Text lineClamp={1} color={Color.GREY_900} font={{ size: 'small' }}>
           {value}
         </Text>
-        <LabelsPopover labels={defaultTo(labels, [])} />
         {description && <DescriptionPopover text={description} />}
       </Layout.Horizontal>
       <Text className={css.subText} lineClamp={1} color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>

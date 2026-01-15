@@ -61,6 +61,8 @@ jest.mock('@harnessio/react-ng-manager-client', () => ({
 }))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListPackagesQuery: jest.fn(),
+  useListRegistriesQuery: jest.fn(),
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     refetch: jest.fn(),

@@ -21,12 +21,26 @@ selectLabels: '{{ $.artifactList.table.columns.tags }}'
 compact: Compact View
 deleteModal:
   title: '{{ $.artifactList.table.actions.deleteRepository }}'
-  contentText: Are you sure you want to delete the registry?
+  contentText: This action will delete registry and all it's images and versions. Are you absolutely sure you want to proceed?
+  inputLabel: Type the registry name or ID to confirm
+  inputPlaceholder: Registry Name or ID
+softDeleteModal:
+  title: Archive Registry
+  contentText: This action will archive registry and all it's artifacts and versions. You can still restore it from the archived list.
+  inputLabel: Type the registry name or ID to confirm
+  inputPlaceholder: Registry Name or ID
+restoreModal:
+  title: Restore Registry
+  contentText: This action will restore registry and all it's artifacts and versions.
+  inputLabel: Type the registry name or ID to confirm
+  inputPlaceholder: Registry Name or ID
 table:
   noRepositoriesTitle: There are no registries available.
+  noArchivedRepositoriesTitle: There are no archived registries.
   columns:
     nameAndEnvironment: '{{ $.artifactList.table.columns.name }}'
     lastModified: Last Modified
+    archivedAt: Archived At
     url: URL
     size: '{{ $.digestList.table.columns.size }}'
     artifacts: '{{ $.artifactList.pageHeading }}'

@@ -144,6 +144,31 @@ func (a ArtifactDao) GetByRegistryImageAndVersion(
 	return a.mapToArtifact(ctx, dst)
 }
 
+func (a ArtifactDao) GetByRegistryImageVersionAndArtifactType(
+	ctx context.Context, registryID int64, image string, version string, artifactType string,
+) (*types.Artifact, error) {
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Where("i.image_registry_id = ?", registryID).
+		Where("i.image_name = ?", image).
+		Where("i.image_type = ?", artifactType).
+		Where("a.artifact_version = ?", version)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	dst := new(artifactDB)
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact")
+	}
+	return a.mapToArtifact(ctx, dst)
+}
+
 func (a ArtifactDao) GetByRegistryIDAndImage(ctx context.Context, registryID int64, image string) (
 	*[]types.Artifact,
 	error,
@@ -151,7 +176,7 @@ func (a ArtifactDao) GetByRegistryIDAndImage(ctx context.Context, registryID int
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
 		From("artifacts a").
 		Join("images i ON a.artifact_image_id = i.image_id").
-		Where("i.image_registry_id = ? AND i.image_name = ?", registryID, image).
+		Where("i.image_registry_id = ? AND i.image_name = ? AND i.image_type IS NULL", registryID, image).
 		OrderBy("a.artifact_created_at DESC")
 
 	sql, args, err := q.ToSql()

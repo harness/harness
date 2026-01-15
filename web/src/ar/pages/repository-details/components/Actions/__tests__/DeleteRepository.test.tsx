@@ -16,7 +16,7 @@
 
 import React from 'react'
 import userEvent from '@testing-library/user-event'
-import { render, waitFor } from '@testing-library/react'
+import { fireEvent, render, waitFor } from '@testing-library/react'
 import { useDeleteRegistryMutation } from '@harnessio/react-har-service-client'
 
 import { PageType } from '@ar/common/types'
@@ -24,6 +24,7 @@ import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import type { VirtualRegistry } from '@ar/pages/repository-details/types'
 import { MockGetDockerRegistryResponseWithAllData } from '@ar/pages/repository-details/DockerRepository/__tests__/__mockData__'
 
+import { queryByNameAttribute } from 'utils/test/testUtils'
 import DeleteRepositoryMenuItem from '../DeleteRepository'
 
 const mutateDeleteRegistrySuccess = jest.fn().mockImplementation(
@@ -106,10 +107,14 @@ describe('Verify DeleteRepositoryModal', () => {
     const cancelBtn = dialog.querySelector('button[aria-label=cancel]')
     expect(cancelBtn).toBeInTheDocument()
 
+    const valueField = queryByNameAttribute('value', dialog)
+    fireEvent.change(valueField!, {
+      target: { value: MockGetDockerRegistryResponseWithAllData.content.data.identifier }
+    })
+
     await userEvent.click(deleteBtn!)
     await waitFor(() => {
       expect(mutateDeleteRegistrySuccess).toHaveBeenCalledWith({ registry_ref: 'undefined/docker-repo/+' })
-      expect(dialog).not.toBeInTheDocument()
     })
   })
 
@@ -145,6 +150,11 @@ describe('Verify DeleteRepositoryModal', () => {
     expect(deleteBtn).toBeInTheDocument()
     const cancelBtn = dialog.querySelector('button[aria-label=cancel]')
     expect(cancelBtn).toBeInTheDocument()
+
+    const valueField = queryByNameAttribute('value', dialog)
+    fireEvent.change(valueField!, {
+      target: { value: MockGetDockerRegistryResponseWithAllData.content.data.identifier }
+    })
 
     await userEvent.click(deleteBtn!)
     await waitFor(() => {

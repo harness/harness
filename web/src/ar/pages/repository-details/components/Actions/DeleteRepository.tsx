@@ -33,6 +33,8 @@ export default function DeleteRepositoryMenuItem({ data, onClose }: RepositoryAc
 
   const handleAfterDeleteRepository = (): void => {
     queryClient.invalidateQueries(['GetAllRegistries'])
+    queryClient.invalidateQueries(['ListRegistries'])
+
     onClose?.()
     history.push(routes.toARRepositories())
   }

@@ -93,6 +93,7 @@ func ProvideController(
 	favoriteStore store.FavoriteStore,
 	signatureVerifyService publickey.SignatureVerifyService,
 	connectorService importer.ConnectorService,
+	repoLangStore store.RepoLangStore,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
@@ -103,6 +104,7 @@ func ProvideController(
 		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
 		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService, connectorService,
+		repoLangStore,
 	)
 }
 

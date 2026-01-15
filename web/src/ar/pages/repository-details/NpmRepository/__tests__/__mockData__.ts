@@ -51,7 +51,8 @@ export const MockGetNpmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOkR
           registryPath: '',
           isPublic: false,
           registryUUID: 'uuid',
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         }
       ],
       itemCount: 0,
@@ -355,7 +356,8 @@ export const MockGetNpmUpstreamRegistryResponseWithNpmJsSourceAllData = {
       packageType: 'NPM',
       labels: ['label1', 'label2', 'label3', 'label4'],
       url: '',
-      uuid: 'uuid'
+      uuid: 'uuid',
+      isDeleted: false
     },
     status: 'SUCCESS'
   }

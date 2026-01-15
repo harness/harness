@@ -33,6 +33,7 @@ import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButto
 import RepositoryVisibilityBadge from '@ar/components/Badge/RepositoryVisibilityBadge'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 import { PageType, RepositoryConfigType, RepositoryPackageType, RepositoryVisibility } from '@ar/common/types'
+import AvailablityBadge, { AvailablityBadgeType } from '@ar/components/Badge/AvailablityBadge'
 
 import css from './UpstreamProxyDetailsHeader.module.scss'
 
@@ -43,7 +44,7 @@ interface UpstreamProxyDetailsHeaderContentProps {
 
 export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDetailsHeaderContentProps): JSX.Element {
   const { data, iconSize = 40 } = props
-  const { identifier, modifiedAt, packageType, labels, description, isPublic } = data
+  const { identifier, modifiedAt, packageType, labels, description, isPublic, isDeleted } = data
   const { getString } = useStrings()
   const { isCurrentSessionPublic } = useAppStore()
 
@@ -70,6 +71,7 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
               />
             )}
             <RepositoryVisibilityBadge type={isPublic ? RepositoryVisibility.PUBLIC : RepositoryVisibility.PRIVATE} />
+            <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
           </Layout.Horizontal>
           <Text
             data-testid="registry-description"

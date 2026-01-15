@@ -57,7 +57,8 @@ function UpstreamProxyConfigurationForm(
   const { showSuccess, showError, clear } = useToaster()
   const { getString } = useStrings()
   const { parent, scope } = useAppStore()
-  const spaceRef = useGetSpaceRef()
+  const registryRef = useGetSpaceRef()
+  const parentRef = useGetSpaceRef('')
 
   const { mutateAsync: modifyUpstreamProxy } = useModifyRegistryMutation()
 
@@ -79,8 +80,11 @@ function UpstreamProxyConfigurationForm(
     try {
       setIsUpdating(true)
       const response = await modifyUpstreamProxy({
-        registry_ref: spaceRef,
-        body: values
+        registry_ref: registryRef,
+        body: {
+          ...values,
+          parentRef
+        }
       })
       if (response.content.status === 'SUCCESS') {
         clear()

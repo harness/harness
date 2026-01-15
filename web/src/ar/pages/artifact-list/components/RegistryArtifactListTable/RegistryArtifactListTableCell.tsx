@@ -19,7 +19,7 @@ import { defaultTo } from 'lodash-es'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 import { Layout, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
-import type { PackageMetadata } from '@harnessio/react-har-service-v2-client'
+import type { PackageMetadata } from '@harnessio/react-har-service-client'
 
 import { useRoutes } from '@ar/hooks'
 import Tag from '@ar/components/Tag/Tag'
@@ -103,7 +103,8 @@ export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
   const routes = useRoutes()
   const { getString } = useStrings()
   const { original } = row
-  const { latestVersion, lastModified } = original || {}
+  const { latestVersion, lastModified, deletedAt, isDeleted } = original || {}
+  const lastModifiedTime = isDeleted ? deletedAt : lastModified
   if (!latestVersion) {
     return (
       <Text color={Color.GREY_900} font={{ size: 'small' }}>
@@ -123,7 +124,7 @@ export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
         })}
         label={latestVersion}
       />
-      <TableCells.LastModifiedCell value={defaultTo(lastModified, 0)} />
+      <TableCells.LastModifiedCell value={defaultTo(lastModifiedTime, 0)} />
     </Layout.Vertical>
   )
 }

@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/sharedrepo"
+	"github.com/harness/gitness/langstats"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/rs/zerolog/log"
@@ -101,6 +102,15 @@ type DeleteRepositoryParams struct {
 
 type GetRepositorySizeParams struct {
 	ReadParams
+}
+
+type GetRepoLanguageStatsParams struct {
+	ReadParams
+	Branch string
+}
+
+type GetRepoLanguageStatsOutput struct {
+	Stats map[string]*langstats.LangStat
 }
 
 type GetRepositorySizeOutput struct {
@@ -774,5 +784,30 @@ func (s *Service) SyncRefs(
 
 	return &SyncRefsOutput{
 		Refs: refUpdates,
+	}, nil
+}
+
+func (s *Service) GetRepoLanguageStats(
+	ctx context.Context,
+	params *GetRepoLanguageStatsParams,
+) (GetRepoLanguageStatsOutput, error) {
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	nodes, err := api.ListTreeNodesRecursive(
+		ctx,
+		repoPath,
+		params.Branch,
+		"",
+		true,  // fetchSizes
+		false, // flattenDirectories
+	)
+	if err != nil {
+		return GetRepoLanguageStatsOutput{},
+			fmt.Errorf("failed to list tree nodes recursively: %w", err)
+	}
+
+	stats := langstats.AnalyzeRepoLanguages(ctx, nodes)
+
+	return GetRepoLanguageStatsOutput{
+		Stats: stats,
 	}, nil
 }

@@ -151,6 +151,7 @@ type OtherVersion struct {
 }
 
 type OtherPackage struct {
+	XMLName      xml.Name                 `xml:"package"`
 	Pkgid        string                   `xml:"pkgid,attr"`
 	Name         string                   `xml:"name,attr"`
 	Architecture string                   `xml:"arch,attr"`
@@ -165,6 +166,7 @@ type FileListVersion struct {
 }
 
 type FileListPackage struct {
+	XMLName      xml.Name            `xml:"package"`
 	Pkgid        string              `xml:"pkgid,attr"`
 	Name         string              `xml:"name,attr"`
 	Architecture string              `xml:"arch,attr"`

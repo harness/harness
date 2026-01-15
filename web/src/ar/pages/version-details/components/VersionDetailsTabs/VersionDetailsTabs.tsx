@@ -147,7 +147,7 @@ export default function VersionDetailsTabs(): JSX.Element {
         className={css.saveButton}
         variation={ButtonVariation.PRIMARY}
         onClick={handleSubmitForm}
-        disabled={!isDirty || isUpdating}
+        disabled={!isDirty || isUpdating || isReadonly}
         permission={{
           permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY,
           resource: {

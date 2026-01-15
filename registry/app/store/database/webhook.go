@@ -562,3 +562,59 @@ func mapToWebhooksList(
 	}
 	return webhooks, nil
 }
+
+func (w WebhookDao) UpdateParentSpace(
+	ctx context.Context,
+	srcSpaceID int64,
+	targetSpaceID int64,
+) (int64, error) {
+	stmt := database.Builder.Update("registry_webhooks").
+		Set("registry_webhook_space_id", targetSpaceID).
+		Where("registry_webhook_space_id = ?", srcSpaceID)
+
+	db := dbtx.GetAccessor(ctx, w.db)
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to bind query")
+	}
+
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to update registry webhook")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return count, nil
+}
+
+func (w WebhookDao) UpdateSecretSpaceID(
+	ctx context.Context,
+	srcSpaceID int64,
+	targetSpaceID int64,
+) (int64, error) {
+	stmt := database.Builder.Update("registry_webhooks").
+		Set("registry_webhook_secret_space_id", targetSpaceID).
+		Where("registry_webhook_secret_space_id = ?", srcSpaceID)
+
+	db := dbtx.GetAccessor(ctx, w.db)
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to bind query")
+	}
+
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to update registry webhook secret space")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
+	}
+
+	return count, nil
+}

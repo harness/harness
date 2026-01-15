@@ -126,6 +126,7 @@ func NewRouter(
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsUpload)).
 				Post("/*", pythonHandler.UploadPackageFile)
 			r.With(middleware.StoreArtifactInfo(pythonHandler)).
+				With(middleware.TrackDownloadStatsForPythonPackage(packageHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/files/{image}/{version}/{filename}", pythonHandler.DownloadPackageFile)
 			r.With(middleware.StoreArtifactInfo(pythonHandler)).

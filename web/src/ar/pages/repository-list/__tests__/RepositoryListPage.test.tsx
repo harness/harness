@@ -29,7 +29,8 @@ import RepositoryListPage from '../RepositoryListPage'
 import { mockRepositoryListApiResponse } from './__mockData__'
 
 jest.mock('@harnessio/react-har-service-client', () => ({
-  useGetAllRegistriesQuery: jest.fn()
+  useGetAllRegistriesQuery: jest.fn(),
+  useListRegistriesQuery: jest.fn()
 }))
 
 describe('Test Registry List Page', () => {

@@ -28,6 +28,7 @@ import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
+import AvailablityBadge, { AvailablityBadgeType } from '@ar/components/Badge/AvailablityBadge'
 import type { HelmVersionDetailsQueryParams } from '../../types'
 import HelmVersionName from './HelmVersionName'
 
@@ -38,7 +39,7 @@ interface HelmVersionDetailsHeaderContentProps {
 
 export default function HelmVersionDetailsHeaderContent(props: HelmVersionDetailsHeaderContentProps) {
   const { iconSize = 40, data } = props
-  const { imageName: name, version, packageType, isQuarantined, quarantineReason } = data
+  const { imageName: name, version, packageType, isQuarantined, quarantineReason, isDeleted } = data
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { useQueryParams } = useParentHooks()
   const { tag } = useQueryParams<HelmVersionDetailsQueryParams>()
@@ -62,6 +63,7 @@ export default function HelmVersionDetailsHeaderContent(props: HelmVersionDetail
       <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: iconSize }} />
       <HelmVersionName name={name} version={version} tag={tag} onChange={handleChangeVersion} />
       {isQuarantined && <QuarantineBadge reason={quarantineReason} />}
+      <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}

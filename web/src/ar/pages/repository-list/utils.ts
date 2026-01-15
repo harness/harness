@@ -17,7 +17,12 @@
 import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
-import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_REPOSITORY_LIST_TABLE_SORT } from '@ar/constants'
+import {
+  DEFAULT_PAGE_INDEX,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_REPOSITORY_LIST_TABLE_SORT,
+  SoftDeleteFilterEnum
+} from '@ar/constants'
 import { RepositoryConfigType, RepositoryPackageType, RepositoryScopeType } from '@ar/common/types'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
@@ -35,6 +40,7 @@ type GetArtifactRepositoryQueryParams = {
   repositoryTypes: RepositoryPackageType[]
   configType?: RepositoryConfigType
   treeSort?: string
+  softDeleteFilter?: SoftDeleteFilterEnum
 }
 
 export type ArtifactRepositoryListPageQueryParams = Omit<
@@ -52,7 +58,8 @@ export const useArtifactRepositoriesQueryParamOptions =
         sort: DEFAULT_REPOSITORY_LIST_TABLE_SORT,
         scope: RepositoryScopeType.NONE,
         repositoryTypes: [],
-        compact: false
+        compact: false,
+        softDeleteFilter: SoftDeleteFilterEnum.EXCLUDE
       },
       { ignoreEmptyString: false }
     )

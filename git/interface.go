@@ -40,6 +40,10 @@ type Interface interface {
 	PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error)
 	Summary(ctx context.Context, params SummaryParams) (SummaryOutput, error)
 	FindLFSPointers(ctx context.Context, params *FindLFSPointersParams) (*FindLFSPointersOutput, error)
+	GetRepoLanguageStats(
+		ctx context.Context,
+		params *GetRepoLanguageStatsParams,
+	) (GetRepoLanguageStatsOutput, error)
 
 	// GetRepositorySize calculates the size of a repo in KiB.
 	GetRepositorySize(ctx context.Context, params *GetRepositorySizeParams) (*GetRepositorySizeOutput, error)

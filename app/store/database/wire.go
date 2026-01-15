@@ -37,6 +37,7 @@ var WireSet = wire.NewSet(
 	ProvideSpacePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
+	ProvideRepoLangStore,
 	ProvideLinkRepoStore,
 	ProvideBranchStore,
 	ProvideRuleStore,
@@ -156,6 +157,12 @@ func ProvideRepoStore(
 	spaceStore store.SpaceStore,
 ) store.RepoStore {
 	return NewRepoStore(db, spacePathCache, spacePathStore, spaceStore)
+}
+
+func ProvideRepoLangStore(
+	db *sqlx.DB,
+) store.RepoLangStore {
+	return NewRepoLangStore(db)
 }
 
 func ProvideLinkRepoStore(

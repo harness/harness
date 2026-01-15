@@ -18,7 +18,7 @@ import React, { useCallback } from 'react'
 import classNames from 'classnames'
 import type { Column, Row } from 'react-table'
 import { Container, TableV2 } from '@harnessio/uicore'
-import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
+import type { VersionMetadata } from '@harnessio/react-har-service-client'
 
 import { Parent } from '@ar/common/types'
 import { killEvent } from '@ar/common/utils'
@@ -61,12 +61,12 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
   })
   const [currentSort, currentOrder] = sortBy
 
-  const onToggleRow = useCallback((rowData: ArtifactMetadata): void => {
+  const onToggleRow = useCallback((rowData: VersionMetadata): void => {
     const value = rowData.version
     setExpandedRows(handleToggleExpandableRow(value))
   }, [])
 
-  const columns: Column<ArtifactMetadata>[] = React.useMemo(() => {
+  const columns: Column<VersionMetadata>[] = React.useMemo(() => {
     const getServerSortProps = (id: string) => {
       return {
         enableServerSort: true,
@@ -133,11 +133,11 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
       }
     ]
       .filter(Boolean)
-      .filter(each => !each.hidden) as unknown as Column<ArtifactMetadata>[]
+      .filter(each => !each.hidden) as unknown as Column<VersionMetadata>[]
   }, [currentOrder, currentSort, getString, expandedRows])
 
   const renderRowSubComponent = React.useCallback(
-    ({ row }: { row: Row<ArtifactMetadata> }) => (
+    ({ row }: { row: Row<VersionMetadata> }) => (
       <Container className={css.rowSubComponent} onClick={killEvent}>
         <DigestListPage
           repoKey={pathParams.repositoryIdentifier}
@@ -150,7 +150,7 @@ function DockerTagListTable(props: DockerVersionListTableProps): JSX.Element {
   )
 
   return (
-    <TableV2<ArtifactMetadata>
+    <TableV2<VersionMetadata>
       className={classNames(css.table)}
       columns={columns}
       data={artifacts}

@@ -19,7 +19,7 @@ import { debounce, get } from 'lodash-es'
 import { useFormikContext } from 'formik'
 import { MenuItem } from '@blueprintjs/core'
 import { FormInput, getErrorInfoFromErrorObject, SelectOption } from '@harnessio/uicore'
-import { getMetadataKeys, getMetadataValues } from '@harnessio/react-har-service-v2-client'
+import { getMetadataKeys, getMetadataValues } from '@harnessio/react-har-service-client'
 
 import { useAppStore } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'

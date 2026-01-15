@@ -77,9 +77,6 @@ describe('Verify Reppository List Table', () => {
       if (each.description) {
         expect(nameColumn?.querySelector('span[data-icon="description"]')).toBeInTheDocument()
       }
-      if (each.labels?.length) {
-        expect(nameColumn?.querySelector('span[icon="tag"]')).toBeInTheDocument()
-      }
       // type column
       expect(getTableColumn(row, 2)).toHaveTextContent(
         each.type === 'VIRTUAL' ? 'badges.artifactRegistry' : 'badges.upstreamProxy'

@@ -53,7 +53,8 @@ export const MockGetArtifactsByRegistryResponse: GetAllArtifactsByRegistryOkResp
           registryPath: '',
           isPublic: false,
           registryUUID: 'uuid',
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         }
       ],
       itemCount: 1,
@@ -146,7 +147,8 @@ export const MockGetDockerUpstreamRegistryResponseWithDockerhubSourceAllData = {
       url: '',
       scanners: [{ name: 'AQUA_TRIVY' }],
       isPublic: false,
-      uuid: 'uuid'
+      uuid: 'uuid',
+      isDeleted: false
     },
     status: 'SUCCESS'
   }

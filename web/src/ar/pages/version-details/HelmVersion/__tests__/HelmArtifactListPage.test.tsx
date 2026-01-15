@@ -30,12 +30,14 @@ import {
   MockGetHelmRegistryResponseWithAllData
 } from '@ar/pages/repository-details/HelmRepository/__tests__/__mockData__'
 import { getTableColumn } from '@ar/utils/testUtils/utils'
+import { queryByNameAttribute } from 'utils/test/testUtils'
 
 const useGetAllArtifactsByRegistryQuery = _useGetAllArtifactsByRegistryQuery as jest.Mock
 
 const deleteArtifact = jest.fn().mockImplementation(() => Promise.resolve({}))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListPackagesQuery: jest.fn(),
   useGetAllArtifactsByRegistryQuery: jest.fn(),
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
@@ -328,13 +330,18 @@ describe('Test Registry Artifact List Page', () => {
     const dialogs = document.getElementsByClassName('bp3-dialog')
     await waitFor(() => expect(dialogs).toHaveLength(1))
     const deleteDialog = dialogs[0] as HTMLElement
-    expect(globalGetByText(deleteDialog, 'artifactDetails.deleteArtifactModal.title')).toBeInTheDocument()
-    expect(globalGetByText(deleteDialog, 'artifactDetails.deleteArtifactModal.contentText')).toBeInTheDocument()
+    expect(globalGetByText(deleteDialog, 'artifactDetails.deleteModal.title')).toBeInTheDocument()
+    expect(globalGetByText(deleteDialog, 'artifactDetails.deleteModal.contentText')).toBeInTheDocument()
 
     const deleteBtn = deleteDialog.querySelector('button[aria-label=delete]')
     const cancelBtn = deleteDialog.querySelector('button[aria-label=cancel]')
     expect(deleteBtn).toBeInTheDocument()
     expect(cancelBtn).toBeInTheDocument()
+
+    const valueField = queryByNameAttribute('value', deleteDialog)
+    fireEvent.change(valueField!, {
+      target: { value: 'podinfo-artifact' }
+    })
 
     // click on delete button on modal
     await userEvent.click(deleteBtn!)

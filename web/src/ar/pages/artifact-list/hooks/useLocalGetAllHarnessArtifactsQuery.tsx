@@ -18,17 +18,16 @@ import { useMemo } from 'react'
 import type { UseQueryResult } from '@tanstack/react-query'
 import {
   type GetAllHarnessArtifactsQueryQueryParams,
-  useGetAllHarnessArtifactsQuery
+  ListVersionsOkResponse,
+  ListVersionsQueryQueryParams,
+  useGetAllHarnessArtifactsQuery,
+  useListVersionsQuery,
+  type VersionMetadata
 } from '@harnessio/react-har-service-client'
-import {
-  type ArtifactMetadata,
-  type ListArtifactsOkResponse,
-  type ListArtifactsQueryQueryParams,
-  useListArtifactsQuery
-} from '@harnessio/react-har-service-v2-client'
 
-import { useAppStore, useGetSpaceRef, useV2Apis } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef, useParentHooks, useV2Apis } from '@ar/hooks'
 import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
+import { ArtifactListPageQueryParams, useArtifactListQueryParamOptions } from '../utils'
 
 export const COLUMN_NAME_MAPPING_FROM_V2_TO_V1: Record<string, string> = {
   package: 'name'
@@ -43,6 +42,9 @@ export default function useLocalGetAllHarnessArtifactsQuery(props: UseLocalGetAl
   const { scope } = useAppStore()
   const shouldUseV2Apis = useV2Apis()
   const { getValueForAPI } = useMetadatadataFilterFromQuery()
+  const { useQueryParams } = useParentHooks()
+  const queryParams = useQueryParams<ArtifactListPageQueryParams>(useArtifactListQueryParamOptions())
+  const { softDeleteFilter } = queryParams
 
   const v1Response = useGetAllHarnessArtifactsQuery(
     {
@@ -62,7 +64,7 @@ export default function useLocalGetAllHarnessArtifactsQuery(props: UseLocalGetAl
     }
   )
 
-  const v2Response = useListArtifactsQuery(
+  const v2Response = useListVersionsQuery(
     {
       queryParams: {
         ...props,
@@ -70,8 +72,9 @@ export default function useLocalGetAllHarnessArtifactsQuery(props: UseLocalGetAl
         org_identifier: scope.orgIdentifier,
         project_identifier: scope.projectIdentifier,
         registry_identifier: props.reg_identifier,
-        sort_order: props.sort_order as ListArtifactsQueryQueryParams['sort_order'],
-        metadata: getValueForAPI()
+        sort_order: props.sort_order as ListVersionsQueryQueryParams['sort_order'],
+        metadata: getValueForAPI(),
+        deleted: softDeleteFilter as ListVersionsQueryQueryParams['deleted']
       },
       stringifyQueryParamsOptions: {
         arrayFormat: 'repeat'
@@ -82,12 +85,12 @@ export default function useLocalGetAllHarnessArtifactsQuery(props: UseLocalGetAl
     }
   )
 
-  const convertedV1ResponseToV2: UseQueryResult<ListArtifactsOkResponse, Error> = useMemo(() => {
+  const convertedV1ResponseToV2: UseQueryResult<ListVersionsOkResponse, Error> = useMemo(() => {
     if (!v1Response.data?.content?.data) {
-      return v1Response as UseQueryResult<ListArtifactsOkResponse, Error>
+      return v1Response as UseQueryResult<ListVersionsOkResponse, Error>
     }
     const v1Data = v1Response.data.content.data
-    const convertedData: ListArtifactsOkResponse = {
+    const convertedData: ListVersionsOkResponse = {
       content: {
         data: {
           artifacts:
@@ -97,13 +100,18 @@ export default function useLocalGetAllHarnessArtifactsQuery(props: UseLocalGetAl
                 ...rest,
                 version: version,
                 package: name,
-                lastModified: artifact.lastModified as string
-              } as ArtifactMetadata
+                lastModified: artifact.lastModified as string,
+                isDeleted: false
+              } as VersionMetadata
             }) || [],
           itemCount: v1Data.itemCount,
           pageCount: v1Data.pageCount,
           pageIndex: v1Data.pageIndex,
-          pageSize: v1Data.pageSize
+          pageSize: v1Data.pageSize,
+          meta: {
+            activeCount: 0,
+            deletedCount: 0
+          }
         },
         status: v1Response.data.content.status
       }
@@ -112,7 +120,7 @@ export default function useLocalGetAllHarnessArtifactsQuery(props: UseLocalGetAl
     return {
       ...v1Response,
       data: convertedData
-    } as UseQueryResult<ListArtifactsOkResponse, Error>
+    } as UseQueryResult<ListVersionsOkResponse, Error>
   }, [v1Response])
 
   return shouldUseV2Apis ? v2Response : convertedV1ResponseToV2

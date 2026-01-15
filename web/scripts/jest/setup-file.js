@@ -91,14 +91,3 @@ Object.defineProperty(window, 'getApiBaseUrl', {
     return '/'
   })
 })
-
-// TODO: add tests for v2
-jest.mock('@harnessio/react-har-service-v2-client', () => ({
-  useListRegistriesQuery: jest.fn(),
-  useListPackagesQuery: jest.fn(),
-  useListArtifactsQuery: jest.fn(),
-  useGetArtifactMetadataQuery: jest.fn(),
-  useUpdateMetadataMutation: jest.fn(),
-  useGetMetadataKeysQuery: jest.fn(),
-  useGetMetadataValuesQuery: jest.fn()
-}))

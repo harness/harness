@@ -50,7 +50,11 @@ export const mockEmptyGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
       pageCount: 0,
       pageIndex: 0,
       pageSize: 0,
-      registries: []
+      registries: [],
+      meta: {
+        deletedCount: 0,
+        activeCount: 0
+      }
     },
     status: 'SUCCESS'
   }
@@ -135,20 +139,21 @@ export const mockGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
           type: 'VIRTUAL',
           url: 'space/repo1',
           isPublic: false,
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         },
         {
           identifier: 'repo2',
           packageType: 'DOCKER',
           description: 'Test Discription',
-          labels: ['label1', 'label2', 'label2'],
           type: 'VIRTUAL',
           url: 'space/repo1',
           downloadsCount: 100,
           registrySize: '100 MB',
           artifactsCount: 100,
           isPublic: false,
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         },
         {
           identifier: 'upstream_1',
@@ -156,13 +161,18 @@ export const mockGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
           type: 'UPSTREAM',
           url: 'space/upstream_1',
           isPublic: false,
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         }
       ],
       itemCount: 3,
       pageCount: 10,
       pageIndex: 0,
-      pageSize: 10
+      pageSize: 10,
+      meta: {
+        deletedCount: 0,
+        activeCount: 3
+      }
     },
     status: 'SUCCESS'
   }

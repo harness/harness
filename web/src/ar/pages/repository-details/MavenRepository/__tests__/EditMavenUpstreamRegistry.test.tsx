@@ -65,6 +65,7 @@ jest.mock('react-router-dom', () => ({
 }))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListPackagesQuery: jest.fn(),
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     refetch: jest.fn(),
@@ -179,8 +180,8 @@ describe('Verify header section for docker artifact registry', () => {
     await userEvent.click(actionItem)
     let deleteDialog = document.getElementsByClassName('bp3-dialog')[0]
     expect(deleteDialog).toBeInTheDocument()
-    expect(deleteDialog).toHaveTextContent('upstreamProxyDetails.actions.delete.title')
-    expect(deleteDialog).toHaveTextContent('upstreamProxyDetails.actions.delete.contentText')
+    expect(deleteDialog).toHaveTextContent('repositoryList.deleteModal.title')
+    expect(deleteDialog).toHaveTextContent('repositoryList.deleteModal.contentText')
 
     const cancelButton = deleteDialog.querySelector('button[aria-label=cancel]')
     expect(cancelButton).toBeInTheDocument()
@@ -192,14 +193,18 @@ describe('Verify header section for docker artifact registry', () => {
     expect(deleteDialog).toBeInTheDocument()
     const deleteBtn = deleteDialog.querySelector('button[aria-label=delete]')
     expect(deleteBtn).toBeInTheDocument()
-    await userEvent.click(deleteBtn!)
 
+    const valueField = queryByNameAttribute('value', deleteDialog as HTMLElement)
+    fireEvent.change(valueField!, {
+      target: { value: MockGetMavenUpstreamRegistryResponseWithMavenCentralSourceAllData.content.data.identifier }
+    })
+
+    await userEvent.click(deleteBtn!)
     await waitFor(() => {
       expect(deleteRegistry).toHaveBeenLastCalledWith({ registry_ref: 'undefined/maven-up-repo/+' })
       expect(mockHistoryPush).toHaveBeenCalledWith('/registries')
-      expect(showSuccessToast).toHaveBeenCalledWith('upstreamProxyDetails.actions.delete.repositoryDeleted')
+      expect(showSuccessToast).toHaveBeenCalledWith('repositoryDetails.repositoryForm.repositoryDeleted')
     })
-    expect(deleteDialog).not.toBeInTheDocument()
   })
 
   test('verify delete action: Failure', async () => {
@@ -228,19 +233,23 @@ describe('Verify header section for docker artifact registry', () => {
     await userEvent.click(actionItem)
     const deleteDialog = document.getElementsByClassName('bp3-dialog')[0]
     expect(deleteDialog).toBeInTheDocument()
-    expect(deleteDialog).toHaveTextContent('upstreamProxyDetails.actions.delete.title')
-    expect(deleteDialog).toHaveTextContent('upstreamProxyDetails.actions.delete.contentText')
+    expect(deleteDialog).toHaveTextContent('repositoryList.deleteModal.title')
+    expect(deleteDialog).toHaveTextContent('repositoryList.deleteModal.contentText')
 
     const deleteBtn = deleteDialog.querySelector('button[aria-label=delete]')
     expect(deleteBtn).toBeInTheDocument()
-    await userEvent.click(deleteBtn!)
 
+    const valueField = queryByNameAttribute('value', deleteDialog as HTMLElement)
+    fireEvent.change(valueField!, {
+      target: { value: MockGetMavenUpstreamRegistryResponseWithMavenCentralSourceAllData.content.data.identifier }
+    })
+
+    await userEvent.click(deleteBtn!)
     await waitFor(() => {
       expect(deleteRegistry).toHaveBeenLastCalledWith({ registry_ref: 'undefined/maven-up-repo/+' })
       expect(mockHistoryPush).not.toHaveBeenCalledWith('/registries')
       expect(showErrorToast).toHaveBeenLastCalledWith('error message')
     })
-    expect(deleteDialog).not.toBeInTheDocument()
   })
 
   test('Verify tab selection status', async () => {
@@ -382,7 +391,9 @@ describe('Verify configuration form', () => {
       expect(modifyRepository).toHaveBeenLastCalledWith({
         body: {
           ...MockGetMavenUpstreamRegistryResponseWithMavenCentralSourceAllData.content.data,
-          description: 'updated description'
+          description: 'updated description',
+          parentRef: 'undefined/+',
+          isDeleted: false
         },
         registry_ref: 'undefined/abcd/+'
       })
@@ -433,7 +444,9 @@ describe('Verify configuration form', () => {
             packageType: 'MAVEN',
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -471,7 +484,9 @@ describe('Verify configuration form', () => {
             packageType: 'MAVEN',
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -509,7 +524,9 @@ describe('Verify configuration form', () => {
             packageType: 'MAVEN',
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -545,7 +562,9 @@ describe('Verify configuration form', () => {
       expect(modifyRepository).toHaveBeenLastCalledWith({
         body: {
           ...MockGetMavenUpstreamRegistryResponseWithMavenCentralSourceAllData.content.data,
-          description: 'updated description'
+          description: 'updated description',
+          parentRef: 'undefined/+',
+          isDeleted: false
         },
         registry_ref: 'undefined/abcd/+'
       })

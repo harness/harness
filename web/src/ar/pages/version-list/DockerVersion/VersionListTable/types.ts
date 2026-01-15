@@ -15,15 +15,17 @@
  */
 
 import type { PaginationProps } from '@harnessio/uicore'
-import type { ListArtifact } from '@harnessio/react-har-service-v2-client'
+import type { ListVersion } from '@harnessio/react-har-service-client'
 
 import type { SortByType } from '@ar/frameworks/Version/Version'
+import type { SoftDeleteFilterEnum } from '@ar/constants'
 
 export interface DockerVersionListTableProps {
-  data: ListArtifact
+  data: ListVersion
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: SortByType) => void
   sortBy: SortByType
   minimal?: boolean
+  softDeleteFilter?: SoftDeleteFilterEnum
 }

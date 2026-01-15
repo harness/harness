@@ -507,3 +507,16 @@ func (c *cargoPackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *cargoPackageType) GetPkgDownloadURL(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+) (string, error) {
+	return "", nil
+}

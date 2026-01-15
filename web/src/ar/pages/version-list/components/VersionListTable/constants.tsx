@@ -65,6 +65,11 @@ export const VERSION_LIST_TABLE_CELL_CONFIG: Record<VersionListColumnEnum, IVers
     accessor: 'lastModified',
     Cell: VersionPublishedAtCell
   },
+  [VersionListColumnEnum.DeletedAt]: {
+    Header: 'versionList.table.columns.archivedAt',
+    accessor: 'deletedAt',
+    Cell: VersionPublishedAtCell
+  },
   [VersionListColumnEnum.PullCommand]: {
     Header: 'versionList.table.columns.pullCommand',
     accessor: 'pullCommand',

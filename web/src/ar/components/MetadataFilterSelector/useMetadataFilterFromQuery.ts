@@ -15,7 +15,7 @@
  */
 
 import { useCallback } from 'react'
-import type { MetadataType } from '@harnessio/react-har-service-v2-client'
+import type { MetadataType } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
 

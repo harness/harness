@@ -14,21 +14,37 @@
  * limitations under the License.
  */
 
-import { type GetAllRegistriesQueryQueryParams, useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
-import { type ListRegistriesQueryQueryParams, useListRegistriesQuery } from '@harnessio/react-har-service-v2-client'
+import { useMemo } from 'react'
+import type { UseQueryResult } from '@tanstack/react-query'
+import {
+  type GetAllRegistriesQueryQueryParams,
+  useGetAllRegistriesQuery,
+  type ListRegistriesOkResponse,
+  type ListRegistriesQueryQueryParams,
+  type RegistryMetadata,
+  useListRegistriesQuery
+} from '@harnessio/react-har-service-client'
 
-import { useAppStore, useGetSpaceRef, useV2Apis } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef, useParentHooks, useV2Apis } from '@ar/hooks'
 import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
+import { ArtifactRepositoryListPageQueryParams, useArtifactRepositoriesQueryParamOptions } from '../utils'
 
 interface UseLocalGetRegistriesQueryProps extends GetAllRegistriesQueryQueryParams {
   metadata?: string[]
 }
 
-export default function useLocalGetRegistriesQuery(props: UseLocalGetRegistriesQueryProps) {
+export default function useLocalGetRegistriesQuery(
+  props: UseLocalGetRegistriesQueryProps
+): UseQueryResult<ListRegistriesOkResponse, Error> {
   const spaceRef = useGetSpaceRef()
   const { scope } = useAppStore()
   const shouldUseV2Apis = useV2Apis()
+  const { useQueryParams } = useParentHooks()
   const { getValueForAPI } = useMetadatadataFilterFromQuery()
+
+  const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
+  const queryParams = useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
+  const { softDeleteFilter } = queryParams
 
   const v1Response = useGetAllRegistriesQuery(
     {
@@ -54,7 +70,8 @@ export default function useLocalGetRegistriesQuery(props: UseLocalGetRegistriesQ
         account_identifier: scope.accountId as string,
         org_identifier: scope.orgIdentifier,
         project_identifier: scope.projectIdentifier,
-        metadata: getValueForAPI()
+        metadata: getValueForAPI(),
+        deleted: softDeleteFilter as ListRegistriesQueryQueryParams['deleted']
       },
       stringifyQueryParamsOptions: {
         arrayFormat: 'repeat'
@@ -63,7 +80,32 @@ export default function useLocalGetRegistriesQuery(props: UseLocalGetRegistriesQ
     {
       enabled: shouldUseV2Apis
     }
-  )
+  ) as UseQueryResult<ListRegistriesOkResponse, Error>
 
-  return shouldUseV2Apis ? v2Response : v1Response
+  const convertedV1ResponseToV2 = useMemo((): UseQueryResult<ListRegistriesOkResponse, Error> => {
+    if (!v1Response.data?.content?.data) {
+      return v1Response as UseQueryResult<ListRegistriesOkResponse, Error>
+    }
+    const v1Data = v1Response.data.content.data
+    const convertedData: ListRegistriesOkResponse = {
+      content: {
+        data: {
+          registries: (v1Data.registries as RegistryMetadata[]) || [],
+          itemCount: v1Data.itemCount,
+          pageCount: v1Data.pageCount,
+          pageIndex: v1Data.pageIndex,
+          pageSize: v1Data.pageSize,
+          meta: { activeCount: 0, deletedCount: 0 }
+        },
+        status: v1Response.data.content.status
+      }
+    }
+
+    return {
+      ...v1Response,
+      data: convertedData
+    } as UseQueryResult<ListRegistriesOkResponse, Error>
+  }, [v1Response])
+
+  return shouldUseV2Apis ? v2Response : convertedV1ResponseToV2
 }

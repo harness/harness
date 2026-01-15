@@ -5,6 +5,7 @@ save: Save
 apply: Apply
 discard: Discard
 delete: Delete
+restore: Restore
 prod: Prod
 nonProd: Non-Prod
 id: 'ID: {{ id }}'
@@ -27,6 +28,12 @@ download: Download
 loading: Loading...
 addProperty: Add Property
 addMetadata: Add Metadata
+available: 'Available({{count}})'
+deleted: 'Deleted({{count}})'
+archived: 'Archived({{count}})'
+status:
+  available: Available
+  archived: Archived
 dateLabel: Date
 timeLabel: Time
 harnessAI: Harness AI
@@ -68,6 +75,7 @@ breadcrumbs:
 actions:
   edit: Edit
   delete: '{{ $.delete }}'
+  softDelete: Archive
   quarantine: Quarantine
   restore: Restore
   scan: Scan
@@ -150,6 +158,7 @@ validationMessages:
   stringMax: '{{entity}} must be 50 characters or less'
   noNewLine: '{{entity}} cannot contain new lines'
   uniqueValues: '{{entity}} must be unique'
+  equals: '{{entity}} must be equal to {{value}}'
 vulnerabilityStatus:
   critical: 'C {{count}}'
   high: 'H {{count}}'

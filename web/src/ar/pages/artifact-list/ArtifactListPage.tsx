@@ -24,15 +24,16 @@ import {
   Button,
   ButtonVariation,
   ExpandingSearchInput,
-  ExpandingSearchInputHandle
+  ExpandingSearchInputHandle,
+  Container
 } from '@harnessio/uicore'
 
 import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
-import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
+import { DEFAULT_PAGE_INDEX, PreferenceScope, SoftDeleteFilterEnum } from '@ar/constants'
 import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
-import { useAppStore, useFeatureFlags, useParentHooks } from '@ar/hooks'
+import { useAllowSoftDelete, useAppStore, useFeatureFlags, useParentHooks } from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 import MetadataFilterSelector from '@ar/components/MetadataFilterSelector/MetadataFilterSelector'
 import useMetadatadataFilterFromQuery from '@ar/components/MetadataFilterSelector/useMetadataFilterFromQuery'
@@ -52,11 +53,13 @@ function ArtifactListPage(): JSX.Element {
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<ArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<ArtifactListPageQueryParams>(useArtifactListQueryParamOptions())
-  const { searchTerm, isDeployedArtifacts, repositoryKey, page, size, latestVersion, packageTypes } = queryParams
+  const { searchTerm, isDeployedArtifacts, repositoryKey, page, size, latestVersion, packageTypes, softDeleteFilter } =
+    queryParams
   const searchRef = useRef({} as ExpandingSearchInputHandle)
 
   const { getValue, updateValue } = useMetadatadataFilterFromQuery()
   const metadataFilter = getValue()
+  const allowSoftDelete = useAllowSoftDelete()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -89,12 +92,7 @@ function ArtifactListPage(): JSX.Element {
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
     replaceQueryParams({
-      page: undefined,
-      searchTerm: undefined,
-      isDeployedArtifacts: undefined,
-      latestVersion: undefined,
-      packageTypes: undefined,
-      repositoryKey: undefined
+      softDeleteFilter
     })
   }
 
@@ -195,8 +193,26 @@ function ArtifactListPage(): JSX.Element {
           )}
         </div>
       </Page.SubHeader>
+      {allowSoftDelete && (
+        <Container margin="large">
+          <ButtonTabs
+            small
+            bold
+            selectedTabId={softDeleteFilter}
+            onChange={newTab => updateQueryParams({ softDeleteFilter: newTab, page: DEFAULT_PAGE_INDEX })}>
+            <ButtonTab
+              id={SoftDeleteFilterEnum.EXCLUDE}
+              title={getString('available', { count: responseData?.meta?.activeCount ?? 0 })}
+            />
+            <ButtonTab
+              id={SoftDeleteFilterEnum.ONLY}
+              title={getString('archived', { count: responseData?.meta?.deletedCount ?? 0 })}
+            />
+          </ButtonTabs>
+        </Container>
+      )}
       <Page.Body
-        className={classNames(css.pageBody)}
+        className={classNames(css.pageBody, css.marginLarge)}
         loading={loading}
         error={error?.message}
         retryOnError={() => refetch()}
@@ -204,7 +220,13 @@ function ArtifactListPage(): JSX.Element {
           when: () => !responseData?.artifacts?.length,
           // image: getEmptyStateIllustration(hasFilter, module),
           icon: 'store-artifact-bundle',
-          messageTitle: hasFilter ? getString('noResultsFound') : getString('artifactList.table.noArtifactsTitle'),
+          messageTitle: hasFilter
+            ? getString('noResultsFound')
+            : getString(
+                softDeleteFilter === SoftDeleteFilterEnum.ONLY
+                  ? 'artifactList.table.noArchivedArtifactsTitle'
+                  : 'artifactList.table.noArtifactsTitle'
+              ),
           button: hasFilter ? (
             <Button text={getString('clearFilters')} variation={ButtonVariation.LINK} onClick={handleClearAllFilters} />
           ) : undefined
@@ -222,6 +244,7 @@ function ArtifactListPage(): JSX.Element {
               updateQueryParams({ sort: sortArray })
             }}
             sortBy={sort}
+            softDeleteFilter={softDeleteFilter}
           />
         )}
       </Page.Body>

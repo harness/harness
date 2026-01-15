@@ -13,11 +13,22 @@ export interface StringsMap {
   'artifactDetails.artifactDeleted': string
   'artifactDetails.artifactLabelInputPlaceholder': string
   'artifactDetails.createdAsyncDownloadRequest': string
-  'artifactDetails.deleteArtifactModal.contentText': string
-  'artifactDetails.deleteArtifactModal.title': string
+  'artifactDetails.deleteModal.contentText': string
+  'artifactDetails.deleteModal.inputLabel': string
+  'artifactDetails.deleteModal.inputPlaceholder': string
+  'artifactDetails.deleteModal.title': string
   'artifactDetails.downloadsThisWeek': string
   'artifactDetails.labelsUpdated': string
+  'artifactDetails.packageArchived': string
   'artifactDetails.page': string
+  'artifactDetails.restoreModal.contentText': string
+  'artifactDetails.restoreModal.inputLabel': string
+  'artifactDetails.restoreModal.inputPlaceholder': string
+  'artifactDetails.restoreModal.title': string
+  'artifactDetails.softDeleteModal.contentText': string
+  'artifactDetails.softDeleteModal.inputLabel': string
+  'artifactDetails.softDeleteModal.inputPlaceholder': string
+  'artifactDetails.softDeleteModal.title': string
   'artifactDetails.tabs.properties': string
   'artifactDetails.tabs.versions': string
   'artifactDetails.totalDownloads': string
@@ -29,12 +40,15 @@ export interface StringsMap {
   'artifactList.table.actions.VulnerabilityStatus.partiallyScanned': string
   'artifactList.table.actions.VulnerabilityStatus.scanStatus': string
   'artifactList.table.actions.VulnerabilityStatus.scanned': string
+  'artifactList.table.actions.archivePackage': string
   'artifactList.table.actions.deleteArtifact': string
   'artifactList.table.actions.deleteRepository': string
   'artifactList.table.actions.download': string
   'artifactList.table.actions.editRepository': string
+  'artifactList.table.actions.restorePackage': string
   'artifactList.table.allRepositories': string
   'artifactList.table.allVersions': string
+  'artifactList.table.columns.archivedAt': string
   'artifactList.table.columns.artifactName': string
   'artifactList.table.columns.downloads': string
   'artifactList.table.columns.environments': string
@@ -49,6 +63,7 @@ export interface StringsMap {
   'artifactList.table.columns.type': string
   'artifactList.table.columns.version': string
   'artifactList.table.latestVersions': string
+  'artifactList.table.noArchivedArtifactsTitle': string
   'artifactList.table.noArtifactsTitle': string
   'artifactList.viewArtifactDetails': string
   'digestList.page': string
@@ -127,6 +142,8 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.ossAdvancedOptionsSubTitle': string
   'repositoryDetails.repositoryForm.repositoryCreated': string
   'repositoryDetails.repositoryForm.repositoryDeleted': string
+  'repositoryDetails.repositoryForm.repositoryRestored': string
+  'repositoryDetails.repositoryForm.repositorySoftDeleted': string
   'repositoryDetails.repositoryForm.repositoryUpdated': string
   'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardSubTitle': string
   'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardTitle': string
@@ -162,11 +179,17 @@ export interface StringsMap {
   'repositoryList.artifactRegistry.subLabel': string
   'repositoryList.compact': string
   'repositoryList.deleteModal.contentText': string
+  'repositoryList.deleteModal.inputLabel': string
+  'repositoryList.deleteModal.inputPlaceholder': string
   'repositoryList.deleteModal.title': string
   'repositoryList.newRegistry': string
   'repositoryList.newRepository': string
   'repositoryList.pageHeading': string
   'repositoryList.registryCount': string
+  'repositoryList.restoreModal.contentText': string
+  'repositoryList.restoreModal.inputLabel': string
+  'repositoryList.restoreModal.inputPlaceholder': string
+  'repositoryList.restoreModal.title': string
   'repositoryList.scope.accountOnly': string
   'repositoryList.scope.accountRecursive': string
   'repositoryList.scope.orgOnly': string
@@ -176,6 +199,11 @@ export interface StringsMap {
   'repositoryList.selectPackageTypes': string
   'repositoryList.selectRegistryType': string
   'repositoryList.selectScope': string
+  'repositoryList.softDeleteModal.contentText': string
+  'repositoryList.softDeleteModal.inputLabel': string
+  'repositoryList.softDeleteModal.inputPlaceholder': string
+  'repositoryList.softDeleteModal.title': string
+  'repositoryList.table.columns.archivedAt': string
   'repositoryList.table.columns.artifacts': string
   'repositoryList.table.columns.downloads': string
   'repositoryList.table.columns.lastModified': string
@@ -187,12 +215,15 @@ export interface StringsMap {
   'repositoryList.table.copyRegistryUrl': string
   'repositoryList.table.copyUpstreamUrl': string
   'repositoryList.table.copyUrl': string
+  'repositoryList.table.noArchivedRepositoriesTitle': string
   'repositoryList.table.noRepositoriesTitle': string
   'repositoryList.upstreamProxy.label': string
   'repositoryList.upstreamProxy.subLabel': string
   'upstreamProxyDetails.actions.createUpdateModal.createSuccessMessage': string
   'upstreamProxyDetails.actions.createUpdateModal.updateSuccessMessage': string
   'upstreamProxyDetails.actions.delete.contentText': string
+  'upstreamProxyDetails.actions.delete.inputLabel': string
+  'upstreamProxyDetails.actions.delete.inputPlaceholder': string
   'upstreamProxyDetails.actions.delete.repositoryDeleted': string
   'upstreamProxyDetails.actions.delete.title': string
   'upstreamProxyDetails.createForm.authentication.accessKey': string
@@ -274,6 +305,8 @@ export interface StringsMap {
   'versionDetails.cards.supplyChain.title': string
   'versionDetails.cards.supplyChain.totalComponents': string
   'versionDetails.deleteVersionModal.contentText': string
+  'versionDetails.deleteVersionModal.inputLabel': string
+  'versionDetails.deleteVersionModal.inputPlaceholder': string
   'versionDetails.deleteVersionModal.title': string
   'versionDetails.dependencyList.dependencyNameWithRelease': string
   'versionDetails.dependencyList.table.columns.name': string
@@ -332,19 +365,32 @@ export interface StringsMap {
   'versionDetails.removeFromQuarantineModal.contentText': string
   'versionDetails.removeFromQuarantineModal.title': string
   'versionDetails.removeFromQuarantineModal.versionRemovedFromQuarantine': string
+  'versionDetails.restoreModal.contentText': string
+  'versionDetails.restoreModal.inputLabel': string
+  'versionDetails.restoreModal.inputPlaceholder': string
+  'versionDetails.restoreModal.title': string
   'versionDetails.selectDigestPlaceholder': string
+  'versionDetails.softDeleteModal.contentText': string
+  'versionDetails.softDeleteModal.inputLabel': string
+  'versionDetails.softDeleteModal.inputPlaceholder': string
+  'versionDetails.softDeleteModal.title': string
   'versionDetails.tabs.artifactDetails': string
   'versionDetails.tabs.code': string
   'versionDetails.tabs.deployments': string
   'versionDetails.tabs.overview': string
   'versionDetails.tabs.securityTests': string
   'versionDetails.tabs.supplyChain': string
+  'versionDetails.versionArchived': string
   'versionDetails.versionDeleted': string
+  'versionDetails.versionRestored': string
+  'versionList.actions.archiveVersion': string
   'versionList.actions.deleteVersion': string
   'versionList.actions.quarantine': string
   'versionList.actions.removeQuarantine': string
+  'versionList.actions.restoreVersion': string
   'versionList.page': string
   'versionList.table.columns.activelyDeployed': string
+  'versionList.table.columns.archivedAt': string
   'versionList.table.columns.deployments': string
   'versionList.table.columns.digests': string
   'versionList.table.columns.downloads': string
@@ -354,6 +400,7 @@ export interface StringsMap {
   'versionList.table.columns.size': string
   'versionList.table.columns.tags': string
   'versionList.table.columns.version': string
+  'versionList.table.noArchivedVersionsTitle': string
   'versionList.table.noVersionsTitle': string
   'webhookDetails.tabs.configuration': string
   'webhookDetails.tabs.executions': string
@@ -410,11 +457,14 @@ export interface StringsMap {
   'actions.restore': string
   'actions.scan': string
   'actions.setupClient': string
+  'actions.softDelete': string
   add: string
   addMetadata: string
   addProperty: string
   all: string
   apply: string
+  archived: string
+  available: string
   'badges.accountScope': string
   'badges.artifactRegistry': string
   'badges.orgScope': string
@@ -444,6 +494,7 @@ export interface StringsMap {
   customMetadata: string
   dateLabel: string
   delete: string
+  deleted: string
   description: string
   descriptionPlaceholder: string
   details: string
@@ -517,6 +568,7 @@ export interface StringsMap {
   'repositoryTypes.nuget': string
   'repositoryTypes.pypi': string
   'repositoryTypes.rpm': string
+  restore: string
   retriableError: string
   save: string
   search: string
@@ -524,6 +576,8 @@ export interface StringsMap {
   'sideNav.repositories': string
   'sideNav.upstreamProxies': string
   soon: string
+  'status.archived': string
+  'status.available': string
   stepNotFound: string
   success: string
   tabNotFound: string
@@ -537,6 +591,7 @@ export interface StringsMap {
   'validationMessages.cleanupPolicy.nameRequired': string
   'validationMessages.cleanupPolicy.positiveExpireDays': string
   'validationMessages.entityRequired': string
+  'validationMessages.equals': string
   'validationMessages.genericURLPattern': string
   'validationMessages.headerAlreadyExists': string
   'validationMessages.identifierRequired': string

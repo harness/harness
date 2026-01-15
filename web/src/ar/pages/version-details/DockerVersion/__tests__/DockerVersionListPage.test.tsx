@@ -39,6 +39,7 @@ const useGetAllArtifactVersionsQuery = _useGetAllArtifactVersionsQuery as jest.M
 const useGetDockerArtifactManifestsQuery = _useGetDockerArtifactManifestsQuery as jest.Mock
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListVersionsQuery: jest.fn(),
   useGetAllArtifactVersionsQuery: jest.fn(),
   useGetDockerArtifactManifestsQuery: jest.fn()
 }))

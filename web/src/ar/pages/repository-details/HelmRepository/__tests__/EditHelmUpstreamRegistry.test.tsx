@@ -60,6 +60,7 @@ jest.mock('react-router-dom', () => ({
 }))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useListPackagesQuery: jest.fn(),
   useGetRegistryQuery: jest.fn().mockImplementation(() => ({
     isFetching: false,
     refetch: jest.fn(),
@@ -291,7 +292,8 @@ describe('Verify configuration form', () => {
       expect(modifyRepository).toHaveBeenLastCalledWith({
         body: {
           ...MockGetHelmUpstreamRegistryResponseWithCustomSourceAllData.content.data,
-          description: 'updated description'
+          description: 'updated description',
+          parentRef: 'undefined/+'
         },
         registry_ref: 'undefined/abcd/+'
       })
@@ -343,7 +345,9 @@ describe('Verify configuration form', () => {
             cleanupPolicy: [],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -382,7 +386,9 @@ describe('Verify configuration form', () => {
             cleanupPolicy: [],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -426,7 +432,9 @@ describe('Verify configuration form', () => {
             cleanupPolicy: [],
             url: '',
             isPublic: false,
-            uuid: 'uuid'
+            uuid: 'uuid',
+            parentRef: 'undefined/+',
+            isDeleted: false
           },
           registry_ref: 'undefined/abcd/+'
         })
@@ -462,7 +470,8 @@ describe('Verify configuration form', () => {
       expect(modifyRepository).toHaveBeenLastCalledWith({
         body: {
           ...MockGetHelmUpstreamRegistryResponseWithCustomSourceAllData.content.data,
-          description: 'updated description'
+          description: 'updated description',
+          parentRef: 'undefined/+'
         },
         registry_ref: 'undefined/abcd/+'
       })

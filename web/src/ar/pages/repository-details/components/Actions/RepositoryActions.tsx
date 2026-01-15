@@ -16,17 +16,28 @@
 
 import React, { useState } from 'react'
 
+import { useAllowSoftDelete } from '@ar/hooks'
 import { PageType } from '@ar/common/types'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
 import SetupClientMenuItem from './SetupClient'
 import type { RepositoryActionsProps } from './types'
 import DeleteRepositoryMenuItem from './DeleteRepository'
+import SoftDeleteRepositoryMenuItem from './SoftDeleteRepository'
 
 export default function RepositoryActions({ data, readonly, pageType }: RepositoryActionsProps): JSX.Element {
   const [open, setOpen] = useState(false)
+  const allowSoftDelete = useAllowSoftDelete()
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
+      {allowSoftDelete && (
+        <SoftDeleteRepositoryMenuItem
+          data={data}
+          readonly={readonly}
+          pageType={pageType}
+          onClose={() => setOpen(false)}
+        />
+      )}
       <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
       {pageType === PageType.Table && (
         <SetupClientMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />

@@ -924,7 +924,9 @@ func (l *rpmHelper) buildRepomd(
 func getPrimaryPackage(pi *rpmtypes.PackageInfo, rootPackagePath string) (string, *rpmtypes.PrimaryPackage) {
 	files := make([]*rpmmetadata.File, 0, 3)
 	for _, f := range pi.FileMetadata.Files {
-		if f.IsExecutable {
+		if strings.HasPrefix(f.Path, "/etc/") ||
+			strings.Contains(f.Path, "bin/") ||
+			f.Path == "/usr/lib/sendmail" {
 			files = append(files, f)
 		}
 	}

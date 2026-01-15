@@ -248,3 +248,23 @@ func (c *mavenPackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *mavenPackageType) GetPkgDownloadURL(
+	ctx context.Context,
+	rootIdentifier string,
+	registryIdentifier string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	filepath string,
+) (string, error) {
+	if filepath == "" {
+		return "", fmt.Errorf("filepath cannot be empty")
+	}
+
+	baseURL := c.registryHelper.GetPackageURL(ctx, rootIdentifier, registryIdentifier, c.pathPackageType)
+
+	downloadURL := fmt.Sprintf("%s/%s", baseURL, filepath)
+	return downloadURL, nil
+}

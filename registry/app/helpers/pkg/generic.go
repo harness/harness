@@ -237,3 +237,16 @@ func (c *genericPackageType) GetNodePathsForArtifact(
 	}
 	return result, nil
 }
+
+func (c *genericPackageType) GetPkgDownloadURL(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
+) (string, error) {
+	return "", nil
+}

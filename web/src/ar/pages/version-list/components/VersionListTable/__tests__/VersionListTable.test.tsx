@@ -18,8 +18,7 @@ import React from 'react'
 import { getByText, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import copy from 'clipboard-copy'
-import type { ListArtifactVersion } from '@harnessio/react-har-service-client'
-import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-v2-client'
+import type { ListArtifactVersion, ListVersion, VersionMetadata } from '@harnessio/react-har-service-client'
 
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import {
@@ -33,7 +32,7 @@ import { getTableColumn } from '@ar/utils/testUtils/utils'
 import VersionListTable from '../VersionListTable'
 import { VersionListColumnEnum } from '../types'
 
-const convertResponseToV2 = (response: ListArtifactVersion): ListArtifact => {
+const convertResponseToV2 = (response: ListArtifactVersion): ListVersion => {
   return {
     artifacts:
       response.artifactVersions?.map(
@@ -41,9 +40,14 @@ const convertResponseToV2 = (response: ListArtifactVersion): ListArtifact => {
           ({
             ...each,
             version: each.name,
-            package: ''
-          } as ArtifactMetadata)
+            package: '',
+            isDeleted: false
+          } as VersionMetadata)
       ) || [],
+    meta: {
+      activeCount: 0,
+      deletedCount: 0
+    },
     ...response
   }
 }

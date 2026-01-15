@@ -65,7 +65,7 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey?: string; artifact?: stri
     <ArtifactProviderContext.Provider
       value={{
         data: responseData,
-        isReadonly: false,
+        isReadonly: responseData?.isDeleted || false,
         refetch,
         isDirty,
         isUpdating,

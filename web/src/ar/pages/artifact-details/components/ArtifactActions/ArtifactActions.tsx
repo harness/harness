@@ -16,7 +16,7 @@
 
 import React, { useState } from 'react'
 
-import { useAppStore, useBulkDownloadFile } from '@ar/hooks'
+import { useAppStore, useBulkDownloadFile, useAllowSoftDelete } from '@ar/hooks'
 import { PageType, RepositoryPackageType } from '@ar/common/types'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
@@ -24,6 +24,7 @@ import SetupClientMenuItem from './SetupClientMenuItem'
 import { ArtifactActionProps, ArtifactActionsEnum } from './types'
 import DeleteArtifactMenuItem from './DeleteArtifactMenuItem'
 import DownloadArtifactMenuItem from './DownloadArtifactMenuItem'
+import SoftDeleteArtifactMenuItem from './SoftDeleteArtifactMenuItem'
 
 export default function ArtifactActions({
   data,
@@ -39,6 +40,7 @@ export default function ArtifactActions({
   const isBulkDownloadFileEnabled =
     useBulkDownloadFile() &&
     ![RepositoryPackageType.DOCKER, RepositoryPackageType.HELM].includes(data.packageType as RepositoryPackageType)
+  const allowSoftDelete = useAllowSoftDelete()
 
   const isSupportedAction = (action: ArtifactActionsEnum) => {
     if (!allowedActions) {
@@ -49,17 +51,32 @@ export default function ArtifactActions({
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
       {!isCurrentSessionPublic && isSupportedAction(ArtifactActionsEnum.Delete) && (
-        <DeleteArtifactMenuItem
-          artifactKey={artifactKey}
-          repoKey={repoKey}
-          data={data}
-          pageType={pageType}
-          readonly={readonly}
-          onClose={() => {
-            setOpen(false)
-            onClose?.()
-          }}
-        />
+        <>
+          {allowSoftDelete && (
+            <SoftDeleteArtifactMenuItem
+              artifactKey={artifactKey}
+              repoKey={repoKey}
+              data={data}
+              pageType={pageType}
+              readonly={readonly}
+              onClose={() => {
+                setOpen(false)
+                onClose?.()
+              }}
+            />
+          )}
+          <DeleteArtifactMenuItem
+            artifactKey={artifactKey}
+            repoKey={repoKey}
+            data={data}
+            pageType={pageType}
+            readonly={readonly}
+            onClose={() => {
+              setOpen(false)
+              onClose?.()
+            }}
+          />
+        </>
       )}
       {pageType === PageType.Table && isSupportedAction(ArtifactActionsEnum.SetupClient) && (
         <SetupClientMenuItem

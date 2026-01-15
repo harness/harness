@@ -17,7 +17,7 @@
 import React, { useState } from 'react'
 import { get } from 'lodash-es'
 
-import { useAppStore, useBulkDownloadFile, useFeatureFlags, useRoutes } from '@ar/hooks'
+import { useAppStore, useBulkDownloadFile, useAllowSoftDelete, useFeatureFlags, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 import CopyMenuItem from '@ar/components/MenuItemTypes/CopyMenuItem'
@@ -31,6 +31,7 @@ import { type VersionActionProps, VersionAction } from './types'
 import { VersionDetailsTab } from '../VersionDetailsTabs/constants'
 import RemoveQurantineMenuItem from './RemoveQurantineMenuItem'
 import DownloadVersionMenuItem from './DownloadVersionMenuItem'
+import SoftDeleteVersionMenuItem from './SoftDeleteVersionMenuItem'
 
 export default function VersionActions({
   data,
@@ -50,6 +51,7 @@ export default function VersionActions({
   const { getString } = useStrings()
   const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
   const isBulkDownloadFileEnabled = useBulkDownloadFile()
+  const allowSoftDelete = useAllowSoftDelete()
 
   const isAllowed = (action: VersionAction): boolean => {
     if (!allowedActions) return true
@@ -61,18 +63,34 @@ export default function VersionActions({
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
       {!isCurrentSessionPublic && isAllowed(VersionAction.Delete) && (
-        <DeleteVersionMenuItem
-          artifactKey={artifactKey}
-          repoKey={repoKey}
-          versionKey={versionKey}
-          data={data}
-          pageType={pageType}
-          readonly={readonly}
-          onClose={() => {
-            setOpen(false)
-            onClose?.()
-          }}
-        />
+        <>
+          {allowSoftDelete && (
+            <SoftDeleteVersionMenuItem
+              artifactKey={artifactKey}
+              repoKey={repoKey}
+              versionKey={versionKey}
+              data={data}
+              pageType={pageType}
+              readonly={readonly}
+              onClose={() => {
+                setOpen(false)
+                onClose?.()
+              }}
+            />
+          )}
+          <DeleteVersionMenuItem
+            artifactKey={artifactKey}
+            repoKey={repoKey}
+            versionKey={versionKey}
+            data={data}
+            pageType={pageType}
+            readonly={readonly}
+            onClose={() => {
+              setOpen(false)
+              onClose?.()
+            }}
+          />
+        </>
       )}
       {isAllowed(VersionAction.SetupClient) && (
         <SetupClientMenuItem

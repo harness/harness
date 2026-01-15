@@ -364,6 +364,14 @@ type UpstreamProxyConfigRepository interface {
 	// Update updates the upstreamproxy.
 	Update(ctx context.Context, upstreamproxyRecord *types.UpstreamProxyConfig) (err error)
 
+	// UpdateSecretSpaceID updates the secret space ID for all upstream proxy configs
+	// referencing secrets from source space.
+	UpdateSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error)
+
+	// UpdateUserNameSecretSpaceID updates the username secret space ID for all upstream proxy configs
+	// that reference username secrets from the source space to the target space.
+	UpdateUserNameSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error)
+
 	GetAll(
 		ctx context.Context,
 		parentID int64,
@@ -451,6 +459,12 @@ type RegistryRepository interface {
 
 	FetchUpstreamProxyKeys(ctx context.Context, ids []int64) (repokeys []string, err error)
 	Count(ctx context.Context) (int64, error)
+
+	// GetIDsByParentSpace returns all registry IDs under a given parent space
+	GetIDsByParentSpace(ctx context.Context, parentSpaceID int64) ([]int64, error)
+
+	// UpdateParentSpace updates the parent space ID for all registries under a given source space to target space
+	UpdateParentSpace(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error)
 }
 
 type RegistryBlobRepository interface {
@@ -521,6 +535,9 @@ type ArtifactRepository interface {
 	// Get an Artifact specified by RegistryID, image name and version
 	GetByRegistryImageAndVersion(
 		ctx context.Context, registryID int64, image string, version string,
+	) (*types.Artifact, error)
+	GetByRegistryImageVersionAndArtifactType(
+		ctx context.Context, registryID int64, image string, version string, artifactType string,
 	) (*types.Artifact, error)
 	// Create an Artifact
 	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) (int64, error)
@@ -760,6 +777,12 @@ type WebhooksRepository interface {
 		ctx context.Context, hook *gitnesstypes.WebhookCore,
 		mutateFn func(hook *gitnesstypes.WebhookCore) error,
 	) (*gitnesstypes.WebhookCore, error)
+
+	// UpdateParentSpace updates the parent space ID for all registry webhooks under a given source space.
+	UpdateParentSpace(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error)
+
+	// UpdateSecretSpaceID updates the secret space ID for all webhooks referencing secrets from source space.
+	UpdateSecretSpaceID(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error)
 }
 
 type WebhooksExecutionRepository interface {

@@ -26,20 +26,21 @@ export const mockRepositoryListApiResponse: GetAllRegistriesOkResponse = {
           type: 'VIRTUAL',
           url: 'space/repo1',
           isPublic: false,
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         },
         {
           identifier: 'repo2',
           packageType: 'DOCKER',
           description: 'Test Discription',
-          labels: ['label1', 'label2', 'label2'],
           type: 'VIRTUAL',
           url: 'space/repo1',
           downloadsCount: 100,
           registrySize: '100 MB',
           artifactsCount: 100,
           isPublic: false,
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         },
         {
           identifier: 'upstream_1',
@@ -47,13 +48,18 @@ export const mockRepositoryListApiResponse: GetAllRegistriesOkResponse = {
           type: 'UPSTREAM',
           url: 'space/upstream_1',
           isPublic: false,
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         }
       ],
       itemCount: 2,
       pageCount: 10,
       pageIndex: 0,
-      pageSize: 10
+      pageSize: 10,
+      meta: {
+        activeCount: 2,
+        deletedCount: 0
+      }
     },
     status: 'SUCCESS'
   }

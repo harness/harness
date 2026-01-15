@@ -16,17 +16,37 @@
 
 import type { Column } from 'react-table'
 import type { StringsMap } from '@ar/strings/types'
+import { SoftDeleteFilterEnum } from '@ar/constants'
 import { VERSION_LIST_TABLE_CELL_CONFIG } from './constants'
-import type { VersionListColumnEnum } from './types'
+import { VersionListColumnEnum } from './types'
 import type { CommonVersionListTableProps } from './VersionListTable'
+
+const getColumnConfigBasedOnSoftDeleteFilter = (
+  key: VersionListColumnEnum,
+  softDeleteFilter?: SoftDeleteFilterEnum
+): VersionListColumnEnum => {
+  if (softDeleteFilter === SoftDeleteFilterEnum.ONLY) {
+    switch (key) {
+      case VersionListColumnEnum.LastModified:
+        return VersionListColumnEnum.DeletedAt
+      default:
+        return key
+    }
+  }
+  return key
+}
 
 export const getVersionListTableCellConfigs = (
   columnConfigs: CommonVersionListTableProps['columnConfigs'],
   getServerSortProps: (id: string) => void,
-  getString: (key: keyof StringsMap) => string
+  getString: (key: keyof StringsMap) => string,
+  softDeleteFilter?: SoftDeleteFilterEnum
 ): Column[] => {
   return Object.keys(columnConfigs).map(key => {
-    const columnConfig = VERSION_LIST_TABLE_CELL_CONFIG[key as VersionListColumnEnum]
+    const columnConfig =
+      VERSION_LIST_TABLE_CELL_CONFIG[
+        getColumnConfigBasedOnSoftDeleteFilter(key as VersionListColumnEnum, softDeleteFilter)
+      ]
     return {
       ...columnConfig,
       Header: columnConfig.Header ? getString(columnConfig.Header) : '',

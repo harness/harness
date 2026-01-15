@@ -406,3 +406,23 @@ func (p *packageWrapper) GetNodePathsForArtifact(
 	}
 	return pkg.GetNodePathsForArtifact(artifactType, packageName, version)
 }
+
+func (p *packageWrapper) GetPkgDownloadURL(
+	ctx context.Context,
+	packageType string,
+	rootIdentifier string,
+	registryIdentifier string,
+	packageName string,
+	artifactType string,
+	version string,
+	filename string,
+	filepath string,
+) (string, error) {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return "", fmt.Errorf("unsupported package type: %s", packageType)
+	}
+	return pkg.GetPkgDownloadURL(
+		ctx, rootIdentifier, registryIdentifier, packageName, artifactType, version, filename, filepath,
+	)
+}

@@ -55,3 +55,9 @@
   border-color: var(--grey-200) !important;
   --intent-color: var(--grey-600) !important;
 }
+
+.archivedBadge {
+  background-color: var(--red-200) !important;
+  border-color: var(--red-200) !important;
+  --intent-color: var(--red-900) !important;
+}

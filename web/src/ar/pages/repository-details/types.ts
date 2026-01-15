@@ -26,15 +26,16 @@ export type TypeConfig = {
   type: RegistryType
 }
 
-export type VirtualRegistryRequest = Omit<RegistryRequest, 'config'> & {
+export type VirtualRegistryRequest = Omit<RegistryRequest, 'config' | 'parentRef'> & {
   config: TypeConfig & VirtualConfig
 }
 
 export type VirtualRegistry = Omit<Registry, 'config'> & {
   config: TypeConfig & VirtualConfig
+  isDeleted?: boolean
 }
 
-export type RepositoryRequest = Omit<RegistryRequest, 'config'> & {
+export type RepositoryRequest = Omit<RegistryRequest, 'config' | 'parentRef'> & {
   config: TypeConfig & VirtualConfig & Partial<UpstreamConfig>
 }
 

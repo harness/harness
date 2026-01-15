@@ -94,6 +94,7 @@ import (
 	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/label"
+	"github.com/harness/gitness/app/services/languageanalyzer"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/migrate"
@@ -349,7 +350,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	lfsController := lfs.ProvideController(authorizer, repoFinder, repoStore, principalStore, lfsObjectStore, blobStore, remoteauthService, provider, settingsService)
 	keyfetcherService := keyfetcher.ProvideService(publicKeyStore)
 	signatureVerifyService := publickey.ProvideSignatureVerifyService(principalStore, keyfetcherService, gitSignatureResultStore)
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, linkedRepoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, jobRepository, jobReferenceSync, jobRepositoryLink, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService, connectorService)
+	repoLangStore := database.ProvideRepoLangStore(db)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, linkedRepoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, jobRepository, jobReferenceSync, jobRepositoryLink, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService, connectorService, repoLangStore)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
@@ -452,8 +454,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	tokenGenerator := tokengenerator.ProvideTokenGenerator()
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter3, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter6, ideFactory, spaceStore, tokenGenerator)
 	usageMetricStore := database.ProvideUsageMetricStore(db)
-	webhookStore := database.ProvideWebhookStore(db)
-	spaceService, err := space.ProvideService(transactor, jobScheduler, executor, encrypter, repoStore, spaceStore, spacePathStore, labelStore, ruleStore, webhookStore, spaceFinder, gitspaceService, infraproviderService, repoController)
+	resourceMover := space.ProvideNoopResourceMover()
+	spaceService, err := space.ProvideService(transactor, jobScheduler, executor, encrypter, repoStore, spaceStore, spacePathStore, ruleStore, resourceMover, spaceFinder, gitspaceService, infraproviderService, repoController)
 	if err != nil {
 		return nil, err
 	}
@@ -497,6 +499,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	branchStore := database.ProvideBranchStore(db)
 	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, auditService, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, userGroupStore, userGroupReviewerStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, repoFinder, reporter8, migrator, pullreqService, listService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService, instrumentService, usergroupService, branchStore, usergroupResolver)
 	webhookConfig := server.ProvideWebhookConfig(config)
+	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	urlProvider := webhook.ProvideURLProvider(ctx)
 	secretService := secret3.ProvideSecretService(secretStore, encrypter, spaceFinder)
@@ -811,7 +814,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service3, branchService, asyncprocessingService, jobRpmRegistryIndex)
+	languageAnalyzer, err := languageanalyzer.ProvideAnalyzer(ctx, config, readerFactory3, readerFactory, transactor, repoStore, repoFinder, repoLangStore, gitInterface)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service3, branchService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

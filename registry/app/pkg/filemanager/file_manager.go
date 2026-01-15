@@ -345,15 +345,22 @@ func (f *FileManager) CopyNodes(
 	rootParentID int64,
 	sourceRegistryID int64,
 	targetRegistryID int64,
-	sourcePathPrefix string,
+	sourcePathPrefixes []string,
 ) error {
-	nodes, err := f.nodesDao.GetAllFileNodesByPathPrefixAndRegistryID(ctx, sourceRegistryID, sourcePathPrefix)
-	if err != nil || nodes == nil || len(*nodes) == 0 {
-		return fmt.Errorf("failed to get nodes from source registry: %w", err)
+	var nodes []types.Node
+	for _, sourcePathPrefix := range sourcePathPrefixes {
+		n, err := f.nodesDao.GetAllFileNodesByPathPrefixAndRegistryID(ctx, sourceRegistryID, sourcePathPrefix)
+		if err != nil {
+			return fmt.Errorf("failed to get nodes from source registry for path [%s], err: %w", sourcePathPrefix, err)
+		}
+		nodes = append(nodes, *n...)
+	}
+	if len(nodes) == 0 {
+		return fmt.Errorf("failed to get nodes from source registry")
 	}
 
 	// FIXME: Optimize this flow
-	for _, node := range *nodes {
+	for _, node := range nodes {
 		blob, err := f.genericBlobDao.FindByID(ctx, node.BlobID)
 		if err != nil {
 			return fmt.Errorf("failed to get blob: %s, %w", node.BlobID, err)

@@ -44,7 +44,8 @@ const useGetDockerArtifactManifestsQuery = _useGetDockerArtifactManifestsQuery a
 
 jest.mock('@harnessio/react-har-service-client', () => ({
   useGetAllArtifactVersionsQuery: jest.fn(),
-  useGetDockerArtifactManifestsQuery: jest.fn()
+  useGetDockerArtifactManifestsQuery: jest.fn(),
+  useListVersionsQuery: jest.fn()
 }))
 
 jest.mock('clipboard-copy', () => ({

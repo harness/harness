@@ -28,6 +28,7 @@ import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
+import AvailablityBadge, { AvailablityBadgeType } from '@ar/components/Badge/AvailablityBadge'
 import DockerVersionName from './components/DockerVersionName/DockerVersionName'
 import type { DockerVersionDetailsQueryParams } from './types'
 
@@ -38,7 +39,7 @@ interface DockerVersionHeaderProps {
 
 export default function DockerVersionHeader(props: DockerVersionHeaderProps): JSX.Element {
   const { iconSize = 40, data } = props
-  const { imageName: name, version, packageType, isQuarantined, quarantineReason } = data
+  const { imageName: name, version, packageType, isQuarantined, quarantineReason, isDeleted } = data
   const { isCurrentSessionPublic } = useAppStore()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
@@ -78,6 +79,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         tag={tag}
       />
       {isQuarantined && <QuarantineBadge reason={quarantineReason} />}
+      <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}

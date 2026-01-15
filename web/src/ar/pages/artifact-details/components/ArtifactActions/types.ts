@@ -15,7 +15,7 @@
  */
 
 import type { ArtifactSummary } from '@harnessio/react-har-service-client'
-import type { PackageMetadata } from '@harnessio/react-har-service-v2-client'
+import type { PackageMetadata } from '@harnessio/react-har-service-client'
 import type { PageType } from '@ar/common/types'
 
 export enum ArtifactActionsEnum {

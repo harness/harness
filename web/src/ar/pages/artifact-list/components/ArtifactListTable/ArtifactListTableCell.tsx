@@ -19,7 +19,7 @@ import { defaultTo } from 'lodash-es'
 import { Link, useHistory } from 'react-router-dom'
 import { Color } from '@harnessio/design-system'
 import { Layout, Text } from '@harnessio/uicore'
-import type { ArtifactMetadata } from '@harnessio/react-har-service-v2-client'
+import type { ArtifactMetadata, VersionMetadata } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 
 import { useGetVersionDisplayName, useRoutes } from '@ar/hooks'
@@ -41,7 +41,7 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
   value: CellValue<V>
 }
 
-type CellType = Renderer<CellTypeWithActions<ArtifactMetadata>>
+type CellType = Renderer<CellTypeWithActions<VersionMetadata>>
 
 export type ArtifactListExpandedColumnProps = {
   expandedRows: Set<string>
@@ -226,7 +226,9 @@ export const ScanStatusCell: CellType = ({ row }) => {
 
 export const LatestArtifactCell: CellType = ({ row }) => {
   const { original } = row
-  return <TableCells.LastModifiedCell value={defaultTo(original.lastModified, 0)} />
+  const { lastModified, deletedAt, isDeleted } = original
+  const lastModifiedTime = isDeleted ? deletedAt : lastModified
+  return <TableCells.LastModifiedCell value={defaultTo(lastModifiedTime, 0)} />
 }
 
 export const ArtifactVersionActions: CellType = ({ row }) => {

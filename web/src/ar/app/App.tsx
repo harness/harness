@@ -33,6 +33,7 @@ import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
 import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
 import AsyncDownloadRequestsProvider from '@ar/contexts/AsyncDownloadRequestsProvider/AsyncDownloadRequestsProvider'
+import { ModalProvider, useConfirmationDialog, useModalHook } from '@ar/__mocks__/hooks'
 
 import useOpenApiClient from './useOpenApiClient'
 import '@ar/utils/customYupValidators'
@@ -65,7 +66,6 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
     isCurrentSessionPublic
   } = props
 
-  const { ModalProvider } = customComponents
   const appStoreData = React.useContext(parentContextObj.appStoreContext)
   const { usePreferenceStore } = customHooks
   const { preference: repositoryListViewType, setPreference: setRepositoryListViewType } = usePreferenceStore<
@@ -104,14 +104,17 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
                 {
                   ...hooks,
                   ...customHooks,
-                  useGovernanceMetaDataModal: customHooks.useGovernanceMetaDataModal ?? useGovernanceMetaDataModal // backward compatibility
+                  useGovernanceMetaDataModal: customHooks.useGovernanceMetaDataModal ?? useGovernanceMetaDataModal, // backward compatibility
+                  useConfirmationDialog,
+                  useModalHook
                 } as ParentProviderProps['hooks']
               }
               components={
                 {
                   ...components,
                   ...customComponents,
-                  PageNotPublic: customComponents.PageNotPublic ?? PageNotPublic // backward compatibility
+                  PageNotPublic: customComponents.PageNotPublic ?? PageNotPublic, // backward compatibility
+                  ModalProvider
                 } as ParentProviderProps['components']
               }
               utils={{ ...customUtils }}

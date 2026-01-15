@@ -290,6 +290,7 @@ type MergeResponse struct {
 	RequiresCodeOwnersApprovalLatest bool `json:"requires_code_owners_approval_latest,omitempty"`
 	RequiresCommentResolution        bool `json:"requires_comment_resolution,omitempty"`
 	RequiresNoChangeRequests         bool `json:"requires_no_change_requests,omitempty"`
+	RequiresBypassMessage            bool `json:"requires_bypass_message,omitempty"`
 }
 
 type MergeViolations struct {

@@ -58,7 +58,7 @@ export enum UpstreamProxyAuthenticationMode {
   ANONYMOUS = 'Anonymous'
 }
 
-export type UpstreamRegistryRequest = Omit<RegistryRequest, 'config'> & {
+export type UpstreamRegistryRequest = Omit<RegistryRequest, 'config' | 'parentRef'> & {
   config: TypeConfig & UpstreamConfig
 }
 

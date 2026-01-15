@@ -326,6 +326,21 @@ type (
 		UpdateParent(ctx context.Context, currentParentID, newParentID int64) (int64, error)
 	}
 
+	RepoLangStore interface {
+		InsertByRepoID(
+			ctx context.Context,
+			repoID int64,
+			langs []*types.RepoLangStat,
+		) error
+
+		DeleteByRepoID(ctx context.Context, repoID int64) error
+
+		ListByRepoID(
+			ctx context.Context,
+			repoID int64,
+		) ([]*types.RepoLangStat, error)
+	}
+
 	LinkedRepoStore interface {
 		Find(ctx context.Context, repoID int64) (*types.LinkedRepo, error)
 		Create(ctx context.Context, v *types.LinkedRepo) error

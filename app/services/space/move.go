@@ -128,17 +128,10 @@ func (s *Service) Handle(
 	}
 
 	// when dstSpace exists, update the srcSpace resources parent to the dstSpace
-	output, err := s.moveSpaceResourcesInTx(ctx, srcSpace, dstSpace)
+	_, err = s.moveSpaceResourcesInTx(ctx, srcSpace, dstSpace)
 	if err != nil {
 		return "", fmt.Errorf("failed to move space resources: %w", err)
 	}
-	log.Ctx(ctx).Info().
-		Int64("repo_count", output.RepoCount).
-		Int64("label_count", output.LabelCount).
-		Int64("rule_count", output.RuleCount).
-		Int64("webhook_count", output.WebhookCount).
-		Msgf("space resources moved from %s to %s",
-			srcSpace.Identifier, dstSpace.Identifier)
 
 	return "", nil
 }
@@ -205,10 +198,16 @@ func (s *Service) MoveNoAuth(
 }
 
 type MoveResourcesOutput struct {
-	RepoCount    int64 `json:"repo_count"`
-	LabelCount   int64 `json:"label_count"`
-	RuleCount    int64 `json:"rule_count"`
-	WebhookCount int64 `json:"webhook_count"`
+	RepoCount                        int64 `json:"repo_count"`
+	LabelCount                       int64 `json:"label_count"`
+	RuleCount                        int64 `json:"rule_count"`
+	WebhookCount                     int64 `json:"webhook_count"`
+	RegistryCount                    int64 `json:"registry_count"`
+	RegistryWebhookCount             int64 `json:"registry_webhook_count"`
+	RegistryWebhookSecretCount       int64 `json:"registry_webhook_secret_count"`
+	UpstreamProxySecretCount         int64 `json:"upstream_proxy_secret_count"`
+	UpstreamProxyUserNameSecretCount int64 `json:"upstream_proxy_username_secret_count"`
+	MetadataKeyCount                 int64 `json:"metadata_key_count"`
 }
 
 // MoveResources moves space resources to a new parent space individually and soft delete the source space.
@@ -225,6 +224,11 @@ func (s *Service) moveSpaceResourcesInTx(
 		return output, fmt.Errorf("source and target spaces cannot be the same")
 	}
 
+	// Single transaction: move all resources available in this service's schema
+	// The resourceMover implementation determines which tables are updated:
+	// - CodeResourceMover (in gitness): repos, labels, rules, webhooks (cde-manager, gitness-server)
+	// - RegistryResourceMover (in harness-code): registries, registry_webhooks, upstream_proxy_configs,
+	//   metadata_key (registry-server)
 	if err := s.tx.WithTx(ctx, func(ctx context.Context) error {
 		var err error
 		_, err = s.spaceStore.FindForUpdate(ctx, sourceSpace.ID)
@@ -237,24 +241,10 @@ func (s *Service) moveSpaceResourcesInTx(
 			return fmt.Errorf("failed to lock the space for update: %w", err)
 		}
 
-		output.RepoCount, err = s.repoStore.UpdateParent(ctx, sourceSpace.ID, targetSpace.ID)
+		// Delegate to service-specific resource mover
+		output, err = s.resourceMover.MoveResources(ctx, sourceSpace.ID, targetSpace.ID)
 		if err != nil {
-			return fmt.Errorf("failed to move repos: %w", err)
-		}
-
-		output.LabelCount, err = s.labelStore.UpdateParentSpace(ctx, sourceSpace.ID, targetSpace.ID)
-		if err != nil {
-			return fmt.Errorf("failed to update labels: %w", err)
-		}
-
-		output.RuleCount, err = s.rulesStore.UpdateParentSpace(ctx, sourceSpace.ID, targetSpace.ID)
-		if err != nil {
-			return fmt.Errorf("failed to update rules: %w", err)
-		}
-
-		output.WebhookCount, err = s.webhookStore.UpdateParentSpace(ctx, sourceSpace.ID, targetSpace.ID)
-		if err != nil {
-			return fmt.Errorf("failed to update webhooks: %w", err)
+			return err
 		}
 
 		if err := s.cleanUpStaleSpaceResources(ctx, sourceSpace); err != nil {

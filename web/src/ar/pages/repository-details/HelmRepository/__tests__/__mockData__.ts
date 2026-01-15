@@ -51,7 +51,8 @@ export const MockGetHelmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOk
           registryPath: '',
           isPublic: false,
           registryUUID: 'uuid',
-          uuid: 'uuid'
+          uuid: 'uuid',
+          isDeleted: false
         }
       ],
       itemCount: 1,
@@ -134,7 +135,8 @@ export const MockGetHelmUpstreamRegistryResponseWithCustomSourceAllData = {
       labels: ['label1', 'label2', 'label3', 'label4'],
       url: '',
       isPublic: false,
-      uuid: 'uuid'
+      uuid: 'uuid',
+      isDeleted: false
     },
     status: 'SUCCESS'
   }

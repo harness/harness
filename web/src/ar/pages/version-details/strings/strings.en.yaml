@@ -115,9 +115,23 @@ dependencyList:
       name: Dependency Name
       version: Dependency Version
 versionDeleted: Artifact version deleted successfully!
+versionArchived: Artifact version archived successfully!
+versionRestored: Artifact version restored successfully!
 deleteVersionModal:
   title: Delete Artifact Version
-  contentText: Are you sure you want to delete the artifact version?
+  contentText: This action will delete version. Are you absolutely sure you want to proceed?
+  inputLabel: Type the version name to confirm
+  inputPlaceholder: Version Name
+softDeleteModal:
+  title: Archive Version
+  contentText: This action will archive version. You can still restore it from the archived list.
+  inputLabel: Type the version name to confirm
+  inputPlaceholder: Version Name
+restoreModal:
+  title: Restore Version
+  contentText: This action will restore version.
+  inputLabel: Type the version name to confirm
+  inputPlaceholder: Version Name
 quarantineVersionModal:
   title: Add to Quarantine
   contentText: Proceeding will put this artifact to quarantine, making it not generally accessible. Please provide a reason for this action.

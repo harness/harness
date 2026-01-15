@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useState } from 'react'
+import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { ArtifactType, useDeleteArtifactVersionMutation } from '@harnessio/react-har-service-client'
@@ -22,6 +22,7 @@ import { ArtifactType, useDeleteArtifactVersionMutation } from '@harnessio/react
 import { useConfirmationDialog, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
+import DeleteModalContent from '@ar/components/Form/DeleteModalContent'
 
 interface useDeleteVersionModalProps {
   repoKey: string
@@ -32,49 +33,53 @@ interface useDeleteVersionModalProps {
 }
 export default function useDeleteVersionModal(props: useDeleteVersionModalProps) {
   const { repoKey, onSuccess, artifactKey, versionKey, artifactType } = props
-  const [submitting, setSubmitting] = useState(false)
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
   const spaceRef = useGetSpaceRef(repoKey)
 
   const { mutateAsync: deleteVersion } = useDeleteArtifactVersionMutation()
 
-  const handleDeleteVersion = async (isConfirmed: boolean): Promise<void> => {
-    if (isConfirmed) {
-      setSubmitting(true)
-      try {
-        const response = await deleteVersion({
-          registry_ref: spaceRef,
-          artifact: encodeRef(artifactKey),
-          version: versionKey,
-          queryParams: {
-            artifact_type: artifactType
-          }
-        })
-        if (response.content.status === 'SUCCESS') {
-          clear()
-          showSuccess(getString('versionDetails.versionDeleted'))
-          onSuccess()
-          closeDialog()
+  const handleDeleteVersion = async (): Promise<void> => {
+    try {
+      const response = await deleteVersion({
+        registry_ref: spaceRef,
+        artifact: encodeRef(artifactKey),
+        version: versionKey,
+        queryParams: {
+          artifact_type: artifactType
         }
-      } catch (e: any) {
-        showError(getErrorInfoFromErrorObject(e, true))
-      } finally {
-        setSubmitting(false)
+      })
+      if (response.content.status === 'SUCCESS') {
+        clear()
+        showSuccess(getString('versionDetails.versionDeleted'))
+        onSuccess()
+        closeDialog()
       }
-    } else {
-      closeDialog()
+    } catch (e: any) {
+      showError(getErrorInfoFromErrorObject(e, true))
     }
+  }
+
+  const handleCloseDialog = () => {
+    closeDialog()
   }
 
   const { openDialog, closeDialog } = useConfirmationDialog({
     titleText: getString('versionDetails.deleteVersionModal.title'),
-    contentText: getString('versionDetails.deleteVersionModal.contentText'),
-    confirmButtonText: getString('delete'),
-    cancelButtonText: getString('cancel'),
+    contentText: (
+      <DeleteModalContent
+        entity="version"
+        value={versionKey}
+        onSubmit={handleDeleteVersion}
+        onClose={handleCloseDialog}
+        content={getString('versionDetails.deleteVersionModal.contentText')}
+        placeholder={getString('versionDetails.deleteVersionModal.inputPlaceholder')}
+        inputLabel={getString('versionDetails.deleteVersionModal.inputLabel')}
+      />
+    ),
+    customButtons: <></>,
     intent: Intent.DANGER,
-    onCloseDialog: handleDeleteVersion,
-    buttonDisabled: submitting
+    onCloseDialog: handleCloseDialog
   })
 
   return { triggerDelete: openDialog }

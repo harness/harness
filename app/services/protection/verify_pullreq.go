@@ -59,6 +59,7 @@ type (
 		RequiresCodeOwnersApprovalLatest    bool
 		RequiresCommentResolution           bool
 		RequiresNoChangeRequests            bool
+		RequiresBypassMessage               bool
 		DefaultReviewerApprovals            []*types.DefaultReviewerApprovalsResponse
 	}
 
@@ -470,9 +471,10 @@ func (c *DefStatusChecks) Sanitize() error {
 }
 
 type DefMerge struct {
-	StrategiesAllowed []enum.MergeMethod `json:"strategies_allowed,omitempty"`
-	DeleteBranch      bool               `json:"delete_branch,omitempty"`
-	Block             bool               `json:"block,omitempty"`
+	StrategiesAllowed    []enum.MergeMethod `json:"strategies_allowed,omitempty"`
+	DeleteBranch         bool               `json:"delete_branch,omitempty"`
+	Block                bool               `json:"block,omitempty"`
+	RequireBypassMessage bool               `json:"require_bypass_message,omitempty"`
 }
 
 func (v *DefMerge) Sanitize() error {

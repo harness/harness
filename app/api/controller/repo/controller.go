@@ -125,6 +125,7 @@ type Controller struct {
 	favoriteStore          store.FavoriteStore
 	signatureVerifyService publickey.SignatureVerifyService
 	connectorService       importer.ConnectorService
+	repoLangStore          store.RepoLangStore
 }
 
 func NewController(
@@ -170,6 +171,7 @@ func NewController(
 	favoriteStore store.FavoriteStore,
 	signatureVerifyService publickey.SignatureVerifyService,
 	connectorService importer.ConnectorService,
+	repoLangStore store.RepoLangStore,
 ) *Controller {
 	return &Controller{
 		defaultBranch:          config.Git.DefaultBranch,
@@ -214,6 +216,7 @@ func NewController(
 		favoriteStore:          favoriteStore,
 		signatureVerifyService: signatureVerifyService,
 		connectorService:       connectorService,
+		repoLangStore:          repoLangStore,
 	}
 }
 

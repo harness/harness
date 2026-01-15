@@ -16,7 +16,7 @@
 
 import React, { forwardRef } from 'react'
 import { Card, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useGetMetadataQuery, useUpdateMetadataMutation } from '@harnessio/react-har-service-v2-client'
+import { useGetMetadataQuery, useUpdateMetadataMutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
