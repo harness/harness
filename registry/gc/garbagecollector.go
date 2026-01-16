@@ -31,7 +31,13 @@ func New() Service {
 	return &Noop{}
 }
 
-func (s *Noop) Start(context.Context, corestore.SpaceStore, store.BlobRepository, *storage.Service, *types.Config) {
+func (s *Noop) Start(
+	context.Context,
+	corestore.SpaceStore,
+	store.BlobRepository,
+	storage.DriverProvider,
+	*types.Config,
+) {
 	// NOOP
 }
 
