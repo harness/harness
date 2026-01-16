@@ -99,6 +99,8 @@ var (
 	ErrGitLFSDisabled = New(http.StatusBadRequest, "Git LFS is disabled")
 
 	ErrQuarantinedArtifact = New(http.StatusForbidden, "Artifact is quarantined")
+
+	ErrArtifactBlocked = New(http.StatusForbidden, "Artifact is blocked due to policy violations")
 )
 
 // Error represents a json-encoded API error.
