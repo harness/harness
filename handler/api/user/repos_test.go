@@ -59,7 +59,7 @@ func TestRepositoryList(t *testing.T) {
 	got, want := []*core.Repository{}, mockRepos
 	json.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -89,6 +89,6 @@ func TestRepositoryListErr(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

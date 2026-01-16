@@ -51,7 +51,7 @@ func TestHandleList(t *testing.T) {
 	got, want := []*core.User{}, mockUserList
 	json.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -72,6 +72,6 @@ func TestUserList_Err(t *testing.T) {
 	// got, want := new(render.Error), &render.Error{Message: "sql: no rows in result set"}
 	// json.NewDecoder(w.Body).Decode(got)
 	// if diff := cmp.Diff(got, want); len(diff) > 0 {
-	// 	t.Errorf(diff)
+	// 	t.Errorf("Diff: %s", diff)
 	// }
 }

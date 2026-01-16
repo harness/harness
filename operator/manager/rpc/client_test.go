@@ -50,7 +50,7 @@ func TestRequest(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 
 	if gock.IsPending() {
@@ -103,7 +103,7 @@ func TestNetrc(t *testing.T) {
 		Machine:  "github.com",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 
 	if gock.IsPending() {
@@ -181,7 +181,7 @@ func TestBefore(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(before, after); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 
 	if gock.IsPending() {
@@ -228,7 +228,7 @@ func TestAfter(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(before, after); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 
 	if gock.IsPending() {
@@ -281,7 +281,7 @@ func TestBeforeAll(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(before, after); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 
 	if gock.IsPending() {
@@ -334,7 +334,7 @@ func TestAfterAll(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(before, after); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 
 	if gock.IsPending() {

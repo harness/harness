@@ -124,7 +124,7 @@ func Parse(req *core.ConvertArgs, fileService core.FileService, limit int, templ
 	// map external inputs
 	if len(templateData) != 0 {
 		for k, v := range templateData {
-			key := fmt.Sprintf("input." + k)
+			key := fmt.Sprintf("input.%s", k)
 			val := fmt.Sprint(v)
 			vm.ExtVar(key, val)
 		}

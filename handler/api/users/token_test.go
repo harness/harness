@@ -55,7 +55,7 @@ func TestTokenRotate(t *testing.T) {
 
 	ignore := cmpopts.IgnoreFields(core.User{}, "Hash")
 	if diff := cmp.Diff(got.User, want, ignore); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 	if got.Message == "" {
 		t.Errorf("Expect Message returned")
@@ -97,7 +97,7 @@ func TestToken_UserNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -126,6 +126,6 @@ func TestToken_UpdateError(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

@@ -46,7 +46,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 
 	if len(service.cache.Keys()) == 0 {
@@ -95,6 +95,6 @@ func TestFindCache(t *testing.T) {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

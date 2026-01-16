@@ -38,7 +38,7 @@ func TestCron(t *testing.T) {
 		ignoreHookFields := cmpopts.IgnoreFields(core.Hook{},
 			"Source", "Before")
 		if diff := cmp.Diff(hook, dummyHook, ignoreHookFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 	}
 

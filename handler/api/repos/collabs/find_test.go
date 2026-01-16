@@ -58,7 +58,7 @@ func TestFind(t *testing.T) {
 	got, want := &core.Perm{}, mockMember
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -90,7 +90,7 @@ func TestFind_RepoNotFound(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -123,7 +123,7 @@ func TestFind_UserNotFound(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -157,6 +157,6 @@ func TestFind_MemberNotFound(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

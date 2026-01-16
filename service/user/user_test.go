@@ -34,7 +34,7 @@ func TestFind(t *testing.T) {
 			Refresh: "e08f3fa43e",
 		}
 		if diff := cmp.Diff(got, want); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 	}
 
@@ -65,7 +65,7 @@ func TestFind(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

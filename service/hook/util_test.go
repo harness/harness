@@ -36,7 +36,7 @@ func TestFindHook(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(hook, hooks[1]); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

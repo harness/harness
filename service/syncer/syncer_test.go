@@ -85,7 +85,7 @@ func TestSync(t *testing.T) {
 	ignore := cmpopts.IgnoreFields(core.Repository{},
 		"Synced", "Created", "Updated")
 	if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -152,7 +152,7 @@ func TestSync_Update(t *testing.T) {
 	ignore := cmpopts.IgnoreFields(core.Repository{},
 		"Synced", "Created", "Updated")
 	if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -210,7 +210,7 @@ func TestSync_Rename(t *testing.T) {
 	ignore := cmpopts.IgnoreFields(core.Repository{},
 		"Synced", "Created", "Updated")
 	if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -252,7 +252,7 @@ func TestSync_Revoke(t *testing.T) {
 		},
 	}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -431,7 +431,7 @@ func TestSync_SkipSubrepo(t *testing.T) {
 
 	want := &core.Batch{}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -480,6 +480,6 @@ func TestSyncArchive(t *testing.T) {
 	ignore := cmpopts.IgnoreFields(core.Repository{},
 		"Synced", "Created", "Updated")
 	if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

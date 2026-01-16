@@ -36,7 +36,7 @@ func TestCombineSources(t *testing.T) {
 		},
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

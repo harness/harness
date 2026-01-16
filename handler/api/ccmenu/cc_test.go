@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 
 	got := New(repo, build, link)
 	if diff := cmp.Diff(got, want); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -77,7 +77,7 @@ func TestNew_Success(t *testing.T) {
 
 	got := New(repo, build, link)
 	if diff := cmp.Diff(got, want, ignore); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -109,7 +109,7 @@ func TestNew_Failure(t *testing.T) {
 
 	got := New(repo, build, link)
 	if diff := cmp.Diff(got, want, ignore); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -141,6 +141,6 @@ func TestNew_Error(t *testing.T) {
 
 	got := New(repo, build, link)
 	if diff := cmp.Diff(got, want, ignore); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
