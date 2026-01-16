@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
@@ -71,13 +72,14 @@ func ManifestServiceProvider(
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
 	artifactEventReporter *registryevents.Reporter,
 	urlProvider url.Provider,
+	auditService audit.Service,
 ) ManifestService {
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
 		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spaceFinder,
 		ociImageIndexMappingDao, *artifactEventReporter, urlProvider, func(_ context.Context) bool {
 			return true
-		})
+		}, auditService)
 }
 
 func RemoteRegistryProvider(

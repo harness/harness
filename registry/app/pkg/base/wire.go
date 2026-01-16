@@ -17,6 +17,7 @@ package base
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -34,8 +35,12 @@ func LocalBaseProvider(
 	tagsDao store.PackageTagRepository,
 	authorizer authz.Authorizer,
 	spaceFinder refcache.SpaceFinder,
+	auditService audit.Service,
 ) LocalBase {
-	return NewLocalBase(registryDao, fileManager, tx, imageDao, artifactDao, nodesDao, tagsDao, authorizer, spaceFinder)
+	return NewLocalBase(
+		registryDao, fileManager, tx, imageDao, artifactDao, nodesDao,
+		tagsDao, authorizer, spaceFinder, auditService,
+	)
 }
 
 var WireSet = wire.NewSet(LocalBaseProvider)
