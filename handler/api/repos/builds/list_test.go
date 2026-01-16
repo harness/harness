@@ -103,7 +103,7 @@ func TestList(t *testing.T) {
 	got, want := []*core.Build{}, mockBuilds
 	json.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -135,7 +135,7 @@ func TestListBranch(t *testing.T) {
 	got, want := []*core.Build{}, mockBuilds
 	json.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -167,7 +167,7 @@ func TestListTag(t *testing.T) {
 	got, want := []*core.Build{}, mockBuilds
 	json.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -198,7 +198,7 @@ func TestList_RepositoryNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -230,6 +230,6 @@ func TestList_InternalError(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

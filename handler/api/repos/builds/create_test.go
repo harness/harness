@@ -117,7 +117,7 @@ func TestCreate(t *testing.T) {
 	got, want := new(core.Build), mockBuild
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -168,6 +168,6 @@ func TestCreate_FromHead(t *testing.T) {
 	got, want := new(core.Build), mockBuild
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

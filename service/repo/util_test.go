@@ -38,7 +38,7 @@ func TestConvertRepository(t *testing.T) {
 	}
 	got := convertRepository(from, "", false)
 	if diff := cmp.Diff(want, got); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -93,6 +93,6 @@ func TestDefinedVisibility(t *testing.T) {
 	}
 	got := convertRepository(from, "internal", false)
 	if diff := cmp.Diff(want, got); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

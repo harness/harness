@@ -41,7 +41,7 @@ func TestHandleVarz(t *testing.T) {
 	got, want := &varz{}, mockVarz
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

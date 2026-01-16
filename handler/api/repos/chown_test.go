@@ -61,7 +61,7 @@ func TestChown(t *testing.T) {
 	got, want := &core.Repository{}, repo
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) > 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -90,7 +90,7 @@ func TestChown_RepoNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -120,6 +120,6 @@ func TestChown_Error(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

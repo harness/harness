@@ -81,7 +81,7 @@ func TestHandler(t *testing.T) {
 	}
 	xml.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

@@ -44,7 +44,7 @@ func TestDecline_InvalidBuildNumber(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Invalid build number")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -72,7 +72,7 @@ func TestDecline_InvalidStageNumber(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Invalid stage number")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestDecline_RepoNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Repository not found")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -153,7 +153,7 @@ func TestDecline_BuildNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Build not found")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -203,7 +203,7 @@ func TestDecline_StageNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Stage not found")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -258,6 +258,6 @@ func TestDecline_InvalidStatus(t *testing.T) {
 	got, want := new(errors.Error), errors.New(`Cannot decline build with status "pending"`)
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

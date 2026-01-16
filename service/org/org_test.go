@@ -36,7 +36,7 @@ func TestList(t *testing.T) {
 			Expires: time.Unix(1532292869, 0),
 		}
 		if diff := cmp.Diff(got, want); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 		if got, want := opts.Size, 100; got != want {
 			t.Errorf("Want page size %d, got %d", want, got)
@@ -80,7 +80,7 @@ func TestList(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

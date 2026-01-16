@@ -81,7 +81,7 @@ func TestFind(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -185,7 +185,7 @@ func TestFindRef(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -302,7 +302,7 @@ func TestListChanges(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

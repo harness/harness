@@ -44,7 +44,7 @@ func TestNetrc(t *testing.T) {
 		Password: "x-oauth-basic",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -75,7 +75,7 @@ func TestNetrc_Gitlab(t *testing.T) {
 		Password: "755bb80e5b",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -106,7 +106,7 @@ func TestNetrc_Gogs(t *testing.T) {
 		Password: "x-oauth-basic",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -137,7 +137,7 @@ func TestNetrc_Bitbucket(t *testing.T) {
 		Password: "755bb80e5b",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -168,7 +168,7 @@ func TestNetrc_Gitee(t *testing.T) {
 		Password: "755bb80e5b",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -209,7 +209,7 @@ func TestNetrc_StaticLogin(t *testing.T) {
 		Password: "password",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

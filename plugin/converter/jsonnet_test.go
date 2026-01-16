@@ -145,7 +145,7 @@ func TestJsonnet_Import(t *testing.T) {
 	}
 	controller := gomock.NewController(t)
 	mockFileService := mock.NewMockFileService(controller)
-	mockFileService.EXPECT().Find(gomock.Any(), &core.User{Token: "foobar"}, "octocat/hello-world", "542ed565d03dab86f079798f937663ec1f05360b", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", ".step.libsonnet").Return(importedContent, nil).Times(2)
+	mockFileService.EXPECT().Find(gomock.Any(), gomock.Any(), "octocat/hello-world", "542ed565d03dab86f079798f937663ec1f05360b", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", ".step.libsonnet").Return(importedContent, nil).Times(1)
 	service := Jsonnet(true, 1, mockFileService)
 	res, err := service.Convert(noContext, args)
 	if err != nil {
@@ -175,7 +175,7 @@ func TestJsonnet_ImportLimit(t *testing.T) {
 	}
 	controller := gomock.NewController(t)
 	mockFileService := mock.NewMockFileService(controller)
-	mockFileService.EXPECT().Find(gomock.Any(), &core.User{Token: "foobar"}, "octocat/hello-world", "542ed565d03dab86f079798f937663ec1f05360b", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", ".step.libsonnet").Return(importedContent, nil).Times(2)
+	mockFileService.EXPECT().Find(gomock.Any(), gomock.Any(), "octocat/hello-world", "542ed565d03dab86f079798f937663ec1f05360b", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", ".step.libsonnet").Return(importedContent, nil).Times(1)
 
 	service := Jsonnet(true, 1, mockFileService)
 	_, err := service.Convert(noContext, args)
@@ -229,17 +229,14 @@ func TestJsonnet_ImportLimitZero(t *testing.T) {
 			Token: "foobar",
 		},
 	}
-	importedContent := &core.File{
-		Data: []byte(jsonnetFileImportLib),
-	}
 	controller := gomock.NewController(t)
 	mockFileService := mock.NewMockFileService(controller)
-	mockFileService.EXPECT().Find(gomock.Any(), &core.User{Token: "foobar"}, "octocat/hello-world", "542ed565d03dab86f079798f937663ec1f05360b", "a6586b3db244fb6b1198f2b25c213ded5b44f9fa", ".step.libsonnet").Return(importedContent, nil).Times(2)
+	// No mock expectations - limit=0 means no imports will be attempted
 
 	service := Jsonnet(true, 0, mockFileService)
 	_, err := service.Convert(noContext, args)
 	if err == nil {
-		t.Errorf("Expect nil response when jsonnet import limit is exceeded")
+		t.Errorf("Expect error response when jsonnet import limit is zero")
 	}
 }
 

@@ -133,7 +133,7 @@ func TestApprove_InvalidStatus(t *testing.T) {
 	got, want := new(errors.Error), errors.New(`Cannot approve a Pipeline with Status "pending"`)
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -161,7 +161,7 @@ func TestApprove_InvalidBuildNumber(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Invalid build number")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -189,7 +189,7 @@ func TestApprove_InvalidStageNumber(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Invalid stage number")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -239,7 +239,7 @@ func TestApprove_StageNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Stage not found")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -281,7 +281,7 @@ func TestApprove_BuildNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Build not found")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -320,7 +320,7 @@ func TestApprove_RepoNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.New("Repository not found")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -378,7 +378,7 @@ func TestApprove_CannotSaveStage(t *testing.T) {
 	got, want := new(errors.Error), errors.New("There was a problem approving the Pipeline")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -439,7 +439,7 @@ func TestApprove_CannotEnqueue(t *testing.T) {
 	got, want := new(errors.Error), errors.New("There was a problem scheduling the Pipeline")
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 func TestApprove_ParallelStages(t *testing.T) {

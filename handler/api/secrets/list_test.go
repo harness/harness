@@ -72,7 +72,7 @@ func TestHandleList(t *testing.T) {
 	got, want := []*core.Secret{}, dummySecretListScrubbed
 	json.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -100,6 +100,6 @@ func TestHandleList_SecretListErr(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

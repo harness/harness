@@ -49,7 +49,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 

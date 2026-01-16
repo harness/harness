@@ -84,7 +84,7 @@ func TestList(t *testing.T) {
 	got, want := []*core.Collaborator{}, mockMembers
 	json.NewDecoder(w.Body).Decode(&got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -114,7 +114,7 @@ func TestList_NotFoundError(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -145,6 +145,6 @@ func TestList_InternalError(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

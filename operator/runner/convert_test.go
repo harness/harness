@@ -26,7 +26,7 @@ import (
 // 	}
 
 // 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-// 		t.Errorf(diff)
+// 		t.Errorf("Diff: %s", diff)
 // 	}
 // }
 
@@ -47,7 +47,7 @@ func Test_convertRegistry(t *testing.T) {
 		},
 	}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -78,7 +78,7 @@ func Test_convertLines(t *testing.T) {
 		},
 	}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -95,6 +95,6 @@ func Test_convertLine(t *testing.T) {
 		Timestamp: 1257894000,
 	}
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

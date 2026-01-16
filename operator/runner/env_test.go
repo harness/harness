@@ -28,7 +28,7 @@ func Test_systemEnviron(t *testing.T) {
 		"DRONE_SYSTEM_VERSION":  "v1.0.0",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -45,6 +45,6 @@ func Test_runnerEnviron(t *testing.T) {
 		"DRONE_RUNNER_PLATFORM": "linux/amd64",
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

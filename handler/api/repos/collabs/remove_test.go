@@ -79,7 +79,7 @@ func TestDelete_UserNotFound(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestDelete_RepoNotFound(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -145,7 +145,7 @@ func TestDelete_MemberNotFound(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -180,6 +180,6 @@ func TestDelete_InternalError(t *testing.T) {
 	got, want := &errors.Error{}, errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

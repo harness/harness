@@ -52,7 +52,7 @@ func TestFind(t *testing.T) {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -127,7 +127,7 @@ func TestFindPerm(t *testing.T) {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -205,7 +205,7 @@ func TestList(t *testing.T) {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -284,6 +284,6 @@ func TestListWithNilRepo(t *testing.T) {
 		t.Error(err)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

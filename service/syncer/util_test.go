@@ -45,7 +45,7 @@ import (
 // 	}
 // 	got := convertRepository(from)
 // 	if diff := cmp.Diff(want, got); len(diff) != 0 {
-// 		t.Errorf(diff)
+// 		t.Errorf("Diff: %s", diff)
 // 	}
 // }
 
@@ -190,6 +190,6 @@ func TestMerge(t *testing.T) {
 	}
 	merge(dst, src)
 	if diff := cmp.Diff(merged, dst); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }

@@ -130,7 +130,7 @@ func testRepoFind(repos *repoStore) func(t *testing.T) {
 
 		ignore := cmpopts.IgnoreFields(core.Repository{}, "ID")
 		if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 	}
 }
@@ -157,7 +157,7 @@ func testRepoFindName(repos *repoStore) func(t *testing.T) {
 
 		ignore := cmpopts.IgnoreFields(core.Repository{}, "ID")
 		if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 	}
 }
@@ -193,7 +193,7 @@ func testRepoList(repos *repoStore) func(t *testing.T) {
 
 		ignore := cmpopts.IgnoreFields(core.Repository{}, "ID")
 		if diff := cmp.Diff(got, want, ignore); len(diff) != 0 {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 	}
 }

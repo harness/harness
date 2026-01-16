@@ -35,19 +35,19 @@ func TestTrigger(t *testing.T) {
 
 	checkBuild := func(_ context.Context, build *core.Build, stages []*core.Stage) {
 		if diff := cmp.Diff(build, dummyBuild, ignoreBuildFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 		if diff := cmp.Diff(stages, dummyStages, ignoreStageFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 	}
 
 	checkStatus := func(_ context.Context, _ *core.User, req *core.StatusInput) error {
 		if diff := cmp.Diff(req.Build, dummyBuild, ignoreBuildFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 		if diff := cmp.Diff(req.Repo, dummyRepo, ignoreStageFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 		return nil
 	}
@@ -99,7 +99,7 @@ func TestTrigger(t *testing.T) {
 		return
 	}
 	if diff := cmp.Diff(build, dummyBuild, ignoreBuildFields); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -195,19 +195,19 @@ func TestTrigger_ErrorYaml(t *testing.T) {
 
 	checkBuild := func(_ context.Context, build *core.Build, stages []*core.Stage) {
 		if diff := cmp.Diff(build, dummyErrorBuild, ignoreBuildFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 		if diff := cmp.Diff(stages, []*core.Stage(nil), ignoreStageFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 	}
 
 	checkStatus := func(_ context.Context, _ *core.User, req *core.StatusInput) error {
 		if diff := cmp.Diff(req.Build, dummyErrorBuild, ignoreBuildFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 		if diff := cmp.Diff(req.Repo, dummyRepo, ignoreStageFields); diff != "" {
-			t.Errorf(diff)
+			t.Errorf("Diff: %s", diff)
 		}
 		return nil
 	}

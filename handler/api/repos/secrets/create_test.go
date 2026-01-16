@@ -55,7 +55,7 @@ func TestHandleCreate(t *testing.T) {
 	got, want := &core.Secret{}, dummySecretScrubbed
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -87,7 +87,7 @@ func TestHandleCreate_ValidationError(t *testing.T) {
 	got, want := &errors.Error{}, &errors.Error{Message: "Invalid Secret Name"}
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -116,7 +116,7 @@ func TestHandleCreate_BadRequest(t *testing.T) {
 	got, want := &errors.Error{}, &errors.Error{Message: "EOF"}
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -145,7 +145,7 @@ func TestHandleCreate_RepoNotFound(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
 
@@ -181,6 +181,6 @@ func TestHandleCreate_CreateError(t *testing.T) {
 	got, want := new(errors.Error), errors.ErrNotFound
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("Diff: %s", diff)
 	}
 }
