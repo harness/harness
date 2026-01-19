@@ -32,6 +32,7 @@ type Accessor interface {
 
 	GetContext(ctx context.Context, dest any, query string, args ...any) error
 	SelectContext(ctx context.Context, dest any, query string, args ...any) error
+	NamedExecContext(ctx context.Context, query string, arg any) (sql.Result, error)
 }
 
 // Transaction is the Go's standard sql transaction interface.

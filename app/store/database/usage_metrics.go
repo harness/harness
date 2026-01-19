@@ -16,7 +16,6 @@ package database
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -40,7 +39,6 @@ type usageMetric struct {
 	StorageTotal    int64 `db:"usage_metric_storage_total"`
 	LFSStorageTotal int64 `db:"usage_metric_lfs_storage_total"`
 	Pushes          int64 `db:"usage_metric_pushes"`
-	Version         int64 `db:"usage_metric_version"`
 }
 
 // NewUsageMetricsStore returns a new UsageMetricsStore.
@@ -55,26 +53,14 @@ type UsageMetricsStore struct {
 	db *sqlx.DB
 }
 
-func (s *UsageMetricsStore) getVersion(
+func (s *UsageMetricsStore) Upsert(
 	ctx context.Context,
-	rootSpaceID int64,
-	date int64,
-) int64 {
-	const sqlQuery = `
-		SELECT
-		    usage_metric_version
-		FROM usage_metrics
-		WHERE usage_metric_space_id = $1 AND usage_metric_date = $2
-	`
-	var version int64
-	err := s.db.QueryRowContext(ctx, sqlQuery, rootSpaceID, date).Scan(&version)
-	if err != nil {
-		return 0
+	in []*types.UsageMetric,
+) error {
+	if len(in) == 0 {
+		return nil
 	}
-	return version
-}
 
-func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) error {
 	sqlQuery := `
 		INSERT INTO usage_metrics (
         	usage_metric_space_id
@@ -83,10 +69,7 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 			,usage_metric_updated
 			,usage_metric_bandwidth_out
 			,usage_metric_bandwidth_in
-			,usage_metric_storage_total
-			,usage_metric_lfs_storage_total
 			,usage_metric_pushes
-			,usage_metric_version
 		) VALUES (
 			:usage_metric_space_id
 		    ,:usage_metric_date
@@ -94,59 +77,41 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 		    ,:usage_metric_updated
 		    ,:usage_metric_bandwidth_out
 		    ,:usage_metric_bandwidth_in
-		    ,:usage_metric_storage_total
-		    ,:usage_metric_lfs_storage_total
 		    ,:usage_metric_pushes
-		    ,:usage_metric_version
 		)
 		ON CONFLICT (usage_metric_space_id, usage_metric_date)
 		DO UPDATE
 			SET
-			    usage_metric_version = EXCLUDED.usage_metric_version
-		        ,usage_metric_updated = EXCLUDED.usage_metric_updated
+		        usage_metric_updated = EXCLUDED.usage_metric_updated
 		        ,usage_metric_bandwidth_out = usage_metrics.usage_metric_bandwidth_out + EXCLUDED.usage_metric_bandwidth_out
 				,usage_metric_bandwidth_in = usage_metrics.usage_metric_bandwidth_in + EXCLUDED.usage_metric_bandwidth_in
-		        ,usage_metric_pushes = usage_metrics.usage_metric_pushes + EXCLUDED.usage_metric_pushes
-`
-	if in.StorageTotal > 0 {
-		sqlQuery += `
-				,usage_metric_storage_total = EXCLUDED.usage_metric_storage_total`
-	}
-
-	if in.LFSStorageTotal > 0 {
-		sqlQuery += `
-				,usage_metric_lfs_storage_total = EXCLUDED.usage_metric_lfs_storage_total`
-	}
-
-	sqlQuery += `
-			WHERE usage_metrics.usage_metric_version = EXCLUDED.usage_metric_version - 1`
+		        ,usage_metric_pushes = usage_metrics.usage_metric_pushes + EXCLUDED.usage_metric_pushes`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 	now := time.Now()
-	today := s.Date(now)
-	if !in.Date.IsZero() {
-		today = s.Date(in.Date)
-	}
-	query, args, err := db.BindNamed(sqlQuery, usageMetric{
-		RootSpaceID:     in.RootSpaceID,
-		Date:            today,
-		Created:         now.UnixMilli(),
-		Updated:         now.UnixMilli(),
-		BandwidthOut:    in.BandwidthOut,
-		BandwidthIn:     in.BandwidthIn,
-		StorageTotal:    in.StorageTotal,
-		LFSStorageTotal: in.LFSStorageTotal,
-		Pushes:          in.Pushes,
-		Version:         s.getVersion(ctx, in.RootSpaceID, today) + 1,
-	})
-	if err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "failed to bind query")
+
+	usageMetrics := make([]usageMetric, len(in))
+	for i, m := range in {
+		today := s.Date(now)
+		if !m.Date.IsZero() {
+			today = s.Date(m.Date)
+		}
+		usageMetrics[i] = usageMetric{
+			RootSpaceID:  m.RootSpaceID,
+			Date:         today,
+			Created:      now.UnixMilli(),
+			Updated:      now.UnixMilli(),
+			BandwidthOut: m.BandwidthOut,
+			BandwidthIn:  m.BandwidthIn,
+			Pushes:       m.Pushes,
+		}
 	}
 
-	result, err := db.ExecContext(ctx, query, args...)
+	result, err := db.NamedExecContext(ctx, sqlQuery, usageMetrics)
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "failed to upsert usage_metric")
 	}
+
 	n, err := result.RowsAffected()
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "failed to fetch number of rows affected")
@@ -157,20 +122,68 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 	return nil
 }
 
-// UpsertOptimistic upsert the usage metric details using the optimistic locking mechanism.
-func (s *UsageMetricsStore) UpsertOptimistic(
+// UpsertStorage updates or inserts the storage metrics for a given space
+// and date. If a record already exists for the space and date, it will be
+// overwritten with the new values.
+func (s *UsageMetricsStore) UpsertStorage(
 	ctx context.Context,
-	in *types.UsageMetric,
+	in []*types.UsageMetric,
 ) error {
-	for {
-		err := s.Upsert(ctx, in)
-		if err == nil {
-			return nil
+	sqlQuery := `
+		INSERT INTO usage_metrics (
+        	usage_metric_space_id
+			,usage_metric_date
+			,usage_metric_created
+			,usage_metric_updated
+			,usage_metric_storage_total
+			,usage_metric_lfs_storage_total
+		) VALUES (
+			:usage_metric_space_id
+		    ,:usage_metric_date
+		    ,:usage_metric_created
+		    ,:usage_metric_updated
+		    ,:usage_metric_storage_total
+		    ,:usage_metric_lfs_storage_total
+		)
+		ON CONFLICT (usage_metric_space_id, usage_metric_date)
+		DO UPDATE
+			SET
+		        usage_metric_updated = EXCLUDED.usage_metric_updated
+		        ,usage_metric_storage_total = EXCLUDED.usage_metric_storage_total
+		        ,usage_metric_lfs_storage_total = EXCLUDED.usage_metric_lfs_storage_total`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	now := time.Now()
+
+	usageMetrics := make([]usageMetric, len(in))
+	for i, m := range in {
+		today := s.Date(now)
+		if !m.Date.IsZero() {
+			today = s.Date(m.Date)
 		}
-		if !errors.Is(err, gitness_store.ErrVersionConflict) {
-			return err
+		usageMetrics[i] = usageMetric{
+			RootSpaceID:     m.RootSpaceID,
+			Date:            today,
+			Created:         now.UnixMilli(),
+			Updated:         now.UnixMilli(),
+			StorageTotal:    m.StorageTotal,
+			LFSStorageTotal: m.LFSStorageTotal,
 		}
 	}
+
+	result, err := db.NamedExecContext(ctx, sqlQuery, usageMetrics)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "failed to upsert storage in usage_metric")
+	}
+
+	n, err := result.RowsAffected()
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "failed to fetch number of rows affected")
+	}
+	if n == 0 {
+		return gitness_store.ErrVersionConflict
+	}
+	return nil
 }
 
 func (s *UsageMetricsStore) GetMetrics(

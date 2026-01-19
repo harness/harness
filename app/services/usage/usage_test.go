@@ -26,12 +26,15 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMediator_basic(t *testing.T) {
+	t.Parallel()
+
+	MinFlushInterval = 500 * time.Millisecond
 	space := &types.SpaceCore{
-		ID:         1,
+		//ID:         1,
 		Identifier: "space",
 	}
 	spaceFinderMock := &SpaceFinderMock{
@@ -73,13 +76,15 @@ func TestMediator_basic(t *testing.T) {
 	pushes := atomic.Int64{}
 
 	usageMock := &MetricsMock{
-		UpsertOptimisticFn: func(_ context.Context, metric *types.UsageMetric) error {
-			if metric.RootSpaceID != space.ID {
-				return fmt.Errorf("expected root space id to be %d, got %d", space.ID, metric.RootSpaceID)
+		UpsertFn: func(_ context.Context, metrics []*types.UsageMetric) error {
+			for _, metric := range metrics {
+				if metric.RootSpaceID != space.ID {
+					return fmt.Errorf("expected root space id to be %d, got %d", space.ID, metric.RootSpaceID)
+				}
+				out.Add(metric.BandwidthOut)
+				in.Add(metric.BandwidthIn)
+				pushes.Add(metric.Pushes)
 			}
-			out.Add(metric.BandwidthOut)
-			in.Add(metric.BandwidthIn)
-			pushes.Add(metric.Pushes)
 			return nil
 		},
 		GetMetricsFn: func(
@@ -106,9 +111,7 @@ func TestMediator_basic(t *testing.T) {
 		context.Background(),
 		spaceFinderMock,
 		usageMock,
-		Config{
-			MaxWorkers: 5,
-		},
+		Config{},
 	)
 	err = RegisterEventListeners(context.Background(), "test", mediator, repoEvReaderFactory, repoFinderMock)
 	if err != nil {
@@ -148,12 +151,139 @@ func TestMediator_basic(t *testing.T) {
 		})
 	}
 
-	// todo: add ability to wait for event system to complete
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(mediator.config.FlushInterval + 1*time.Second)
 
-	mediator.Wait()
+	assert.Equal(t, int64(numBandwidthRoutines*defaultSize), out.Load())
+	assert.Equal(t, int64(numBandwidthRoutines*defaultSize), in.Load())
+	assert.Equal(t, int64(numEventsCreated+numEventsPushed), pushes.Load())
+}
 
-	require.Equal(t, int64(numBandwidthRoutines*defaultSize), out.Load())
-	require.Equal(t, int64(numBandwidthRoutines*defaultSize), in.Load())
-	require.Equal(t, int64(numEventsCreated+numEventsPushed), pushes.Load())
+func BenchmarkMediator_MillionRequests(b *testing.B) {
+	MinFlushInterval = 500 * time.Millisecond
+	space := &types.SpaceCore{
+		ID:         1,
+		Identifier: "space",
+	}
+	spaceFinderMock := &SpaceFinderMock{
+		FindByRefFn: func(context.Context, string) (*types.SpaceCore, error) {
+			return space, nil
+		},
+	}
+
+	usageMock := &MetricsMock{
+		UpsertFn: func(_ context.Context, _ []*types.UsageMetric) error {
+			time.Sleep(50 * time.Millisecond)
+			return nil
+		},
+		GetMetricsFn: func(context.Context, int64, int64, int64) (*types.UsageMetric, error) {
+			return &types.UsageMetric{}, nil
+		},
+		ListFn: func(context.Context, int64, int64) ([]types.UsageMetric, error) {
+			return []types.UsageMetric{}, nil
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	mediator := NewMediator(
+		ctx,
+		spaceFinderMock,
+		usageMock,
+		Config{},
+	)
+
+	numRequests := 1_000_000
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
+		wg.Add(numRequests)
+
+		for j := 0; j < numRequests; j++ {
+			go func() {
+				defer wg.Done()
+				_ = mediator.Send(ctx, Metric{
+					SpaceRef: space.Identifier,
+					Bandwidth: Bandwidth{
+						Out: 512,
+						In:  512,
+					},
+				})
+			}()
+		}
+
+		wg.Wait()
+	}
+	b.StopTimer()
+}
+
+func BenchmarkMediator_MillionRequests_MultiSpace(b *testing.B) {
+	MinFlushInterval = 500 * time.Millisecond
+	spaces := make(map[string]*types.SpaceCore)
+	for i := 0; i < 100; i++ {
+		id := fmt.Sprintf("space-%d", i)
+		spaces[id] = &types.SpaceCore{
+			ID:         int64(i),
+			Identifier: id,
+		}
+	}
+
+	spaceFinderMock := &SpaceFinderMock{
+		FindByRefFn: func(_ context.Context, ref string) (*types.SpaceCore, error) {
+			return spaces[ref], nil
+		},
+	}
+
+	usageMock := &MetricsMock{
+		UpsertFn: func(_ context.Context, _ []*types.UsageMetric) error {
+			time.Sleep(500 * time.Millisecond)
+			return nil
+		},
+		GetMetricsFn: func(context.Context, int64, int64, int64) (*types.UsageMetric, error) {
+			return &types.UsageMetric{}, nil
+		},
+		ListFn: func(context.Context, int64, int64) ([]types.UsageMetric, error) {
+			return []types.UsageMetric{}, nil
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	mediator := NewMediator(
+		ctx,
+		spaceFinderMock,
+		usageMock,
+		Config{},
+	)
+
+	numRequests := 1_000_000
+	spaceIDs := make([]string, 0, len(spaces))
+	for id := range spaces {
+		spaceIDs = append(spaceIDs, id)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
+		wg.Add(numRequests)
+
+		for j := 0; j < numRequests; j++ {
+			spaceRef := spaceIDs[j%len(spaceIDs)]
+			go func(ref string) {
+				defer wg.Done()
+				_ = mediator.Send(ctx, Metric{
+					SpaceRef: ref,
+					Bandwidth: Bandwidth{
+						Out: 512,
+						In:  512,
+					},
+				})
+			}(spaceRef)
+		}
+
+		wg.Wait()
+	}
+	b.StopTimer()
 }

@@ -583,8 +583,8 @@ type Config struct {
 	}
 
 	UsageMetrics struct {
-		Enabled    bool `envconfig:"GITNESS_USAGE_METRICS_ENABLED" default:"false"`
-		MaxWorkers int  `envconfig:"GITNESS_USAGE_METRICS_MAX_WORKERS" default:"5"`
+		Enabled       bool          `envconfig:"GITNESS_USAGE_METRICS_ENABLED" default:"false"`
+		FlushInterval time.Duration `envconfig:"GITNESS_USAGE_METRICS_FLUSH_INTERVAL" default:"1m"`
 	}
 
 	Development struct {

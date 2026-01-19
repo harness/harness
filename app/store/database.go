@@ -1505,8 +1505,8 @@ type (
 	}
 
 	UsageMetricStore interface {
-		Upsert(ctx context.Context, in *types.UsageMetric) error
-		UpsertOptimistic(ctx context.Context, in *types.UsageMetric) error
+		Upsert(ctx context.Context, in []*types.UsageMetric) error
+		UpsertStorage(ctx context.Context, in []*types.UsageMetric) error
 		GetMetrics(
 			ctx context.Context,
 			rootSpaceID int64,

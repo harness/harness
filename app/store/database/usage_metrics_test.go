@@ -22,8 +22,8 @@ import (
 	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/types"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 )
 
 func TestUsageMetricsStore_Upsert(t *testing.T) {
@@ -39,22 +39,24 @@ func TestUsageMetricsStore_Upsert(t *testing.T) {
 
 	metricsStore := database.NewUsageMetricsStore(db)
 	// First write will set bandwidth and storage to 100
-	err := metricsStore.Upsert(ctx, &types.UsageMetric{
-		RootSpaceID:     1,
-		BandwidthOut:    100,
-		BandwidthIn:     100,
-		StorageTotal:    100,
-		LFSStorageTotal: 100,
-		Pushes:          21,
+	err := metricsStore.Upsert(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:  1,
+			BandwidthOut: 100,
+			BandwidthIn:  100,
+			Pushes:       21,
+		},
 	})
 	require.NoError(t, err)
 
 	// second write will increase bandwidth for 100 and storage remains the same
-	err = metricsStore.Upsert(ctx, &types.UsageMetric{
-		RootSpaceID:  1,
-		BandwidthOut: 100,
-		BandwidthIn:  100,
-		Pushes:       3,
+	err = metricsStore.Upsert(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:  1,
+			BandwidthOut: 100,
+			BandwidthIn:  100,
+			Pushes:       3,
+		},
 	})
 	require.NoError(t, err)
 
@@ -65,8 +67,6 @@ func TestUsageMetricsStore_Upsert(t *testing.T) {
     		usage_metric_date,
     		usage_metric_bandwidth_out,
     		usage_metric_bandwidth_in,
-    		usage_metric_storage_total,
-    		usage_metric_lfs_storage_total,
 			usage_metric_pushes
     	FROM usage_metrics
     	WHERE usage_metric_space_id = ?
@@ -80,21 +80,17 @@ func TestUsageMetricsStore_Upsert(t *testing.T) {
 		&date,
 		&metric.BandwidthOut,
 		&metric.BandwidthIn,
-		&metric.StorageTotal,
-		&metric.LFSStorageTotal,
 		&metric.Pushes,
 	)
 	require.NoError(t, err)
-	require.Equal(t, int64(1), metric.RootSpaceID)
-	require.Equal(t, metricsStore.Date(time.Now()), date)
-	require.Equal(t, int64(200), metric.BandwidthOut)
-	require.Equal(t, int64(200), metric.BandwidthIn)
-	require.Equal(t, int64(100), metric.StorageTotal)
-	require.Equal(t, int64(100), metric.LFSStorageTotal)
-	require.Equal(t, int64(24), metric.Pushes)
+	assert.Equal(t, int64(1), metric.RootSpaceID)
+	assert.Equal(t, metricsStore.Date(time.Now()), date)
+	assert.Equal(t, int64(200), metric.BandwidthOut)
+	assert.Equal(t, int64(200), metric.BandwidthIn)
+	assert.Equal(t, int64(24), metric.Pushes)
 }
 
-func TestUsageMetricsStore_UpsertOptimistic(t *testing.T) {
+func TestUsageMetricsStore_UpsertStorage(t *testing.T) {
 	db, teardown := setupDB(t)
 	defer teardown()
 
@@ -106,32 +102,51 @@ func TestUsageMetricsStore_UpsertOptimistic(t *testing.T) {
 	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
 
 	metricsStore := database.NewUsageMetricsStore(db)
-
-	g, _ := errgroup.WithContext(ctx)
-
-	for range 100 {
-		g.Go(func() error {
-			return metricsStore.UpsertOptimistic(ctx, &types.UsageMetric{
-				RootSpaceID:  1,
-				BandwidthOut: 100,
-				BandwidthIn:  100,
-				Pushes:       21,
-			})
-		})
-	}
-
-	err := g.Wait()
+	// First write will set bandwidth and storage to 100
+	err := metricsStore.UpsertStorage(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:     1,
+			StorageTotal:    100,
+			LFSStorageTotal: 100,
+		},
+	})
 	require.NoError(t, err)
 
-	now := time.Now().UnixMilli()
-	metric, err := metricsStore.GetMetrics(ctx, 1, now, now)
+	// second write will increase bandwidth for 100 and storage remains the same
+	err = metricsStore.UpsertStorage(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:     1,
+			StorageTotal:    100,
+			LFSStorageTotal: 100,
+		},
+	})
 	require.NoError(t, err)
 
-	require.Equal(t, int64(100*100), metric.BandwidthOut)
-	require.Equal(t, int64(100*100), metric.BandwidthIn)
-	require.Equal(t, int64(0), metric.StorageTotal)
-	require.Equal(t, int64(0), metric.LFSStorageTotal)
-	require.Equal(t, int64(21*100), metric.Pushes)
+	row := db.QueryRowContext(
+		ctx,
+		`SELECT
+    		usage_metric_space_id,
+    		usage_metric_date,
+    		usage_metric_storage_total,
+    		usage_metric_lfs_storage_total
+    	FROM usage_metrics
+    	WHERE usage_metric_space_id = ?
+    	LIMIT 1`,
+		1,
+	)
+	metric := types.UsageMetric{}
+	var date int64
+	err = row.Scan(
+		&metric.RootSpaceID,
+		&date,
+		&metric.StorageTotal,
+		&metric.LFSStorageTotal,
+	)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), metric.RootSpaceID)
+	assert.Equal(t, metricsStore.Date(time.Now()), date)
+	assert.Equal(t, int64(100), metric.StorageTotal)
+	assert.Equal(t, int64(100), metric.LFSStorageTotal)
 }
 
 func TestUsageMetricsStore_GetMetrics(t *testing.T) {
@@ -147,13 +162,13 @@ func TestUsageMetricsStore_GetMetrics(t *testing.T) {
 
 	metricsStore := database.NewUsageMetricsStore(db)
 	// First write will set bandwidth and storage to 100
-	err := metricsStore.Upsert(ctx, &types.UsageMetric{
-		RootSpaceID:     1,
-		BandwidthOut:    100,
-		BandwidthIn:     100,
-		StorageTotal:    100,
-		LFSStorageTotal: 100,
-		Pushes:          21,
+	err := metricsStore.Upsert(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:  1,
+			BandwidthOut: 100,
+			BandwidthIn:  100,
+			Pushes:       21,
+		},
 	})
 	require.NoError(t, err)
 
@@ -162,12 +177,10 @@ func TestUsageMetricsStore_GetMetrics(t *testing.T) {
 	metric, err := metricsStore.GetMetrics(ctx, 1, now, now)
 	require.NoError(t, err)
 
-	require.Equal(t, int64(1), metric.RootSpaceID, "expected spaceID = %d, got %d", 1, metric.RootSpaceID)
-	require.Equal(t, int64(100), metric.BandwidthOut, "expected bandwidth out = %d, got %d", 100, metric.BandwidthOut)
-	require.Equal(t, int64(100), metric.BandwidthIn, "expected bandwidth in = %d, got %d", 100, metric.BandwidthIn)
-	require.Equal(t, int64(100), metric.StorageTotal, "expected storage = %d, got %d", 100, metric.StorageTotal)
-	require.Equal(t, int64(100), metric.LFSStorageTotal, "expected lfs storage = %d, got %d", 100, metric.LFSStorageTotal)
-	require.Equal(t, int64(21), metric.Pushes, "expected pushes = %d, got %d", 21, metric.Pushes)
+	assert.Equal(t, int64(1), metric.RootSpaceID, "expected spaceID = %d, got %d", 1, metric.RootSpaceID)
+	assert.Equal(t, int64(100), metric.BandwidthOut, "expected bandwidth out = %d, got %d", 100, metric.BandwidthOut)
+	assert.Equal(t, int64(100), metric.BandwidthIn, "expected bandwidth in = %d, got %d", 100, metric.BandwidthIn)
+	assert.Equal(t, int64(21), metric.Pushes, "expected pushes = %d, got %d", 21, metric.Pushes)
 }
 
 func TestUsageMetricsStore_List(t *testing.T) {
@@ -183,33 +196,41 @@ func TestUsageMetricsStore_List(t *testing.T) {
 	createSpace(ctx, t, spaceStore, spacePathStore, userID, 2, 0)
 
 	metricsStore := database.NewUsageMetricsStore(db)
-	err := metricsStore.Upsert(ctx, &types.UsageMetric{
-		RootSpaceID:     1,
-		BandwidthOut:    100,
-		BandwidthIn:     100,
-		StorageTotal:    100,
-		LFSStorageTotal: 100,
-		Pushes:          21,
+	err := metricsStore.Upsert(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:  1,
+			BandwidthOut: 100,
+			BandwidthIn:  100,
+			Pushes:       21,
+		},
 	})
 	require.NoError(t, err)
 
-	err = metricsStore.Upsert(ctx, &types.UsageMetric{
-		RootSpaceID:     1,
-		BandwidthOut:    50,
-		BandwidthIn:     50,
-		StorageTotal:    50,
-		LFSStorageTotal: 50,
-		Pushes:          21,
+	err = metricsStore.UpsertStorage(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:     1,
+			StorageTotal:    50,
+			LFSStorageTotal: 50,
+		},
 	})
 	require.NoError(t, err)
 
-	err = metricsStore.Upsert(ctx, &types.UsageMetric{
-		RootSpaceID:     2,
-		BandwidthOut:    200,
-		BandwidthIn:     200,
-		StorageTotal:    200,
-		LFSStorageTotal: 200,
-		Pushes:          21,
+	err = metricsStore.Upsert(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:  2,
+			BandwidthOut: 200,
+			BandwidthIn:  200,
+			Pushes:       21,
+		},
+	})
+	require.NoError(t, err)
+
+	err = metricsStore.UpsertStorage(ctx, []*types.UsageMetric{
+		{
+			RootSpaceID:     2,
+			StorageTotal:    50,
+			LFSStorageTotal: 50,
+		},
 	})
 	require.NoError(t, err)
 
@@ -219,18 +240,18 @@ func TestUsageMetricsStore_List(t *testing.T) {
 	require.Equal(t, 2, len(metrics))
 
 	// list use desc order so first row should be spaceID = 2
-	require.Equal(t, int64(2), metrics[0].RootSpaceID)
-	require.Equal(t, int64(200), metrics[0].BandwidthOut)
-	require.Equal(t, int64(200), metrics[0].BandwidthIn)
-	require.Equal(t, int64(200), metrics[0].StorageTotal)
-	require.Equal(t, int64(200), metrics[0].LFSStorageTotal)
-	require.Equal(t, int64(21), metrics[0].Pushes)
+	assert.Equal(t, int64(2), metrics[0].RootSpaceID)
+	assert.Equal(t, int64(200), metrics[0].BandwidthOut)
+	assert.Equal(t, int64(200), metrics[0].BandwidthIn)
+	assert.Equal(t, int64(50), metrics[0].StorageTotal)
+	assert.Equal(t, int64(50), metrics[0].LFSStorageTotal)
+	assert.Equal(t, int64(21), metrics[0].Pushes)
 
 	// second row should be spaceID = 1
-	require.Equal(t, int64(1), metrics[1].RootSpaceID)
-	require.Equal(t, int64(150), metrics[1].BandwidthOut)
-	require.Equal(t, int64(150), metrics[1].BandwidthIn)
-	require.Equal(t, int64(50), metrics[1].StorageTotal)
-	require.Equal(t, int64(50), metrics[1].LFSStorageTotal)
-	require.Equal(t, int64(42), metrics[1].Pushes)
+	assert.Equal(t, int64(1), metrics[1].RootSpaceID)
+	assert.Equal(t, int64(100), metrics[1].BandwidthOut)
+	assert.Equal(t, int64(100), metrics[1].BandwidthIn)
+	assert.Equal(t, int64(50), metrics[1].StorageTotal)
+	assert.Equal(t, int64(50), metrics[1].LFSStorageTotal)
+	assert.Equal(t, int64(21), metrics[1].Pushes)
 }

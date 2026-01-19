@@ -298,6 +298,11 @@ func (l *lockerCounter) RUnlock() { l.RUnlocks++ }
 
 type dbMockNop struct{}
 
+//nolint:nilnil // it's a mock
+func (d dbMockNop) NamedExecContext(ctx context.Context, query string, arg any) (sql.Result, error) {
+	return nil, nil
+}
+
 func (dbMockNop) DriverName() string                           { return "" }
 func (dbMockNop) Rebind(string) string                         { return "" }
 func (dbMockNop) BindNamed(string, any) (string, []any, error) { return "", nil, nil }

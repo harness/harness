@@ -716,7 +716,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	sizeCalculator, err := repo2.ProvideCalculator(config, gitInterface, repoStore, spaceStore, jobScheduler, executor, lfsObjectStore, sender)
+	sizeCalculator, err := repo2.ProvideCalculator(config, gitInterface, repoStore, spaceStore, jobScheduler, executor, lfsObjectStore, usageMetricStore)
 	if err != nil {
 		return nil, err
 	}

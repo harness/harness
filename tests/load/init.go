@@ -12,34 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package usage
+package load
 
 import (
-	"time"
+	"log"
+	"os"
+	"strings"
 
-	"github.com/harness/gitness/types"
+	"github.com/joho/godotenv"
 )
 
-// MinFlushInterval defines the minimum allowed flush interval.
-// This can be overridden in tests for faster execution.
-var MinFlushInterval = time.Minute
-
-type Config struct {
-	FlushInterval time.Duration
-}
-
-func (c *Config) Sanitize() {
-	if c.FlushInterval < MinFlushInterval {
-		c.FlushInterval = MinFlushInterval
+func init() {
+	err := godotenv.Load("../../.local.env")
+	if err != nil {
+		log.Println("Error loading .local.env file")
+	}
+	err = godotenv.Load("../../.test.env")
+	if err != nil {
+		log.Println("Error loading .test.env file")
 	}
 }
 
-func NewConfig(global *types.Config) Config {
-	cfg := Config{
-		FlushInterval: global.UsageMetrics.FlushInterval,
-	}
-
-	cfg.Sanitize()
-
-	return cfg
+func isE2ETestsEnabled() bool {
+	env := os.Getenv("GITNESS_E2E_TEST_ENABLED")
+	env = strings.ToLower(env)
+	env = strings.TrimSpace(env)
+	return env == "1" || env == "true"
 }
