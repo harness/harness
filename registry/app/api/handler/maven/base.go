@@ -87,14 +87,9 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 		return pkg.MavenArtifactInfo{}, err
 	}
 
-	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceFinder.FindByRef(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
-		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
-	}
-	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
+		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
 		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 

@@ -119,14 +119,9 @@ func (h *Handler) GetGenericArtifactInfo(r *http.Request) (
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceFinder.FindByRef(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
-		return pkg.GenericArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
-	}
-	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
+		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 
@@ -213,16 +208,10 @@ func (h *Handler) GetGenericArtifactInfoV2(r *http.Request) (generic2.ArtifactIn
 		return generic2.ArtifactInfo{}, usererror.BadRequestf("%v", err)
 	}
 
-	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceFinder.FindByRef(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("Root spaceID not found: %q", rootIdentifier)
+		log.Ctx(ctx).Error().Err(err).Msgf("Root space not found: %q", rootIdentifier)
 		return generic2.ArtifactInfo{}, usererror.NotFoundf("Root %q not found", rootIdentifier)
-	}
-	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
-	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("Root space not found: %d", rootSpaceID)
-		return generic2.ArtifactInfo{}, usererror.New(http.StatusInternalServerError,
-			"Root ID not found "+rootIdentifier)
 	}
 
 	registry, err := h.RegistryFinder.FindByRootRef(ctx, rootSpace.Identifier, registryIdentifier)
