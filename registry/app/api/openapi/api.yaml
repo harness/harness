@@ -3077,6 +3077,8 @@ components:
             - $ref: "#/components/schemas/UserPassword"
             - $ref: "#/components/schemas/Anonymous"
             - $ref: "#/components/schemas/AccessKeySecretKey"
+        upstreamProxyConfigFirewallMode:
+          $ref: "#/components/schemas/UpstreamProxyConfigFirewallMode"
         url:
           type: string
         source:
@@ -3102,6 +3104,13 @@ components:
       x-discriminator-value: UPSTREAM
       required:
         - authType
+    UpstreamProxyConfigFirewallMode:
+      type: string
+      description: Firewall mode applied to an upstream proxy.
+      enum:
+        - ALLOW
+        - WARN
+        - BLOCK
     CleanupPolicy:
       type: object
       description: Cleanup Policy for Harness Artifact Registries
