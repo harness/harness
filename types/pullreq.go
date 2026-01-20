@@ -15,6 +15,7 @@
 package types
 
 import (
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/gotidy/ptr"
@@ -32,8 +33,9 @@ type PullReq struct {
 	Edited    int64  `json:"edited"` // TODO: Remove. Field Edited is equal to Updated
 	Closed    *int64 `json:"closed,omitempty"`
 
-	State   enum.PullReqState `json:"state"`
-	IsDraft bool              `json:"is_draft"`
+	State    enum.PullReqState    `json:"state"`
+	SubState enum.PullReqSubState `json:"substate"`
+	IsDraft  bool                 `json:"is_draft"`
 
 	CommentCount    int `json:"-"` // returned as "conversations" in the Stats
 	UnresolvedCount int `json:"-"` // returned as "unresolved_count" in the Stats
@@ -155,9 +157,12 @@ type PullReqFilter struct {
 	SourceRepoID       int64                        `json:"-"` // caller should use source_repo_ref
 	SourceRepoRef      string                       `json:"source_repo_ref"`
 	SourceBranch       string                       `json:"source_branch"`
+	SourceSHA          sha.SHA                      `json:"source_sha"`
 	TargetRepoID       int64                        `json:"-"`
 	TargetBranch       string                       `json:"target_branch"`
 	States             []enum.PullReqState          `json:"state"`
+	SubStates          []enum.PullReqSubState       `json:"sub_state"`
+	IsDraft            *bool                        `json:"is_draft"`
 	Sort               enum.PullReqSort             `json:"sort"`
 	Order              enum.Order                   `json:"order"`
 	LabelID            []int64                      `json:"label_id"`
@@ -167,6 +172,8 @@ type PullReqFilter struct {
 	ReviewDecisions    []enum.PullReqReviewDecision `json:"review_decisions"`
 	MentionedID        int64                        `json:"mentioned_id"`
 	ExcludeDescription bool                         `json:"exclude_description"`
+	MergeCheckStatus   *enum.MergeCheckStatus       `json:"merge_check_status,omitempty"`
+	RebaseCheckStatus  *enum.MergeCheckStatus       `json:"rebase_check_status,omitempty"`
 	CreatedFilter
 	UpdatedFilter
 	EditedFilter

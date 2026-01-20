@@ -48,6 +48,7 @@ func (s *Service) mergeCheckOnCreated(ctx context.Context,
 		event.Payload.Number,
 		sha.Nil.String(),
 		event.Payload.SourceSHA,
+		event.Payload.PrincipalID,
 	)
 }
 
@@ -62,6 +63,7 @@ func (s *Service) mergeCheckOnBranchUpdate(ctx context.Context,
 		event.Payload.Number,
 		event.Payload.OldSHA,
 		event.Payload.NewSHA,
+		event.Payload.PrincipalID,
 	)
 }
 
@@ -76,6 +78,7 @@ func (s *Service) mergeCheckOnTargetBranchChange(
 		event.Payload.Number,
 		sha.None.String(),
 		event.Payload.SourceSHA,
+		event.Payload.PrincipalID,
 	)
 }
 
@@ -90,6 +93,7 @@ func (s *Service) mergeCheckOnReopen(ctx context.Context,
 		event.Payload.Number,
 		sha.None.String(),
 		event.Payload.SourceSHA,
+		event.Payload.PrincipalID,
 	)
 }
 
@@ -100,6 +104,7 @@ func (s *Service) updateMergeData(
 	prNum int64,
 	oldSHA string,
 	newSHA string,
+	principalID int64,
 ) error {
 	pr, err := s.pullreqStore.FindByNumber(ctx, repoID, prNum)
 	if err != nil {
@@ -218,6 +223,15 @@ func (s *Service) updateMergeData(
 	}
 
 	s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
+
+	s.pullreqEvReporter.MergeCheckSucceeded(ctx, &pullreqevents.MergeCheckSucceededPayload{
+		Base: pullreqevents.Base{
+			PullReqID:    pr.ID,
+			SourceRepoID: pr.SourceRepoID,
+			TargetRepoID: pr.TargetRepoID,
+			PrincipalID:  principalID,
+			Number:       pr.Number,
+		}})
 
 	return nil
 }

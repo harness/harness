@@ -63,6 +63,8 @@ func CloseBecauseNonUniqueMergeBase(
 		pr.MergeTargetSHA = ptr.String(targetSHA.String())
 
 		pr.State = enum.PullReqStateClosed
+		pr.SubState = enum.PullReqSubStateNone
+
 		pr.MergeSHA = nil
 		pr.MarkAsMergeUnchecked()
 

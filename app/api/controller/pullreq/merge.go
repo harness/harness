@@ -24,10 +24,9 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/codeowners"
-	"github.com/harness/gitness/app/services/instrument"
+	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/audit"
@@ -149,9 +148,6 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
-	// the max time we give a merge to succeed
-	const timeout = 3 * time.Minute
-
 	// lock the repo only if actual git merge would be attempted
 	if !in.DryRunRules {
 		var lockID int64 // 0 means locking repo level for prs (for actual merging)
@@ -167,7 +163,7 @@ func (c *Controller) Merge(
 			ctx,
 			targetRepo.ID,
 			lockID,
-			timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
+			merge.Timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
 		)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to lock repository for pull request merge: %w", err)
@@ -210,27 +206,18 @@ func (c *Controller) Merge(
 	}
 
 	var sourceRepo *types.RepositoryCore
-	var sourceWriteParams git.WriteParams
 
 	switch {
 	case pr.SourceRepoID == nil:
 		// the source repo is purged
 	case *pr.SourceRepoID != pr.TargetRepoID:
-		// if the source repo is nil, it's soft deleted
+		// if the source repo is nil, it's deleted
 		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
 		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
 			return nil, nil, fmt.Errorf("failed to get source repository: %w", err)
 		}
-
-		if sourceRepo != nil {
-			sourceWriteParams, err = controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, sourceRepo)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
-			}
-		}
 	default:
 		sourceRepo = targetRepo
-		sourceWriteParams = targetWriteParams
 	}
 
 	getHeadRef, err := c.git.GetRef(ctx, git.GetRefParams{
@@ -328,7 +315,7 @@ func (c *Controller) Merge(
 	// TODO: This is a small change to reduce likelihood of dirty state.
 	// We still require a proper solution to handle an application crash or very slow execution times
 	// (which could cause an unlocking pre operation completion).
-	ctx, cancel := contextutil.WithNewTimeout(ctx, timeout)
+	ctx, cancel := contextutil.WithNewTimeout(ctx, merge.Timeout)
 	defer cancel()
 
 	//nolint:nestif
@@ -496,107 +483,30 @@ func (c *Controller) Merge(
 	}
 
 	// commit details: author, committer and message
-
-	var author *git.Identity
-
-	switch in.Method {
-	case enum.MergeMethodMerge:
-		author = controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
-	case enum.MergeMethodSquash:
-		author = controller.IdentityFromPrincipalInfo(pr.Author)
-	case enum.MergeMethodRebase, enum.MergeMethodFastForward:
-		author = nil // Not important for these merge methods: the author info in the commits will be preserved.
-	}
-
-	var committer *git.Identity
-
-	switch in.Method {
-	case enum.MergeMethodMerge, enum.MergeMethodSquash:
-		committer = controller.SystemServicePrincipalInfo()
-	case enum.MergeMethodRebase:
-		committer = controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
-	case enum.MergeMethodFastForward:
-		committer = nil // Not important for fast-forward merge
-	}
-
-	// backfill commit title if none provided
-	if in.Title == "" {
-		switch in.Method {
-		case enum.MergeMethodMerge:
-			if sourceRepo == nil {
-				in.Title = fmt.Sprintf("Merge branch '%s' of deleted fork (#%d)",
-					pr.SourceBranch, pr.Number)
-			} else {
-				in.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch,
-					sourceRepo.Path, pr.Number)
-			}
-		case enum.MergeMethodSquash:
-			in.Title = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
-		case enum.MergeMethodRebase, enum.MergeMethodFastForward:
-			// Not used.
-		}
-	}
-
-	// create merge commit(s)
-
-	log.Ctx(ctx).Debug().Msgf("all pre-check passed, merge PR")
-
-	sourceBranchSHA, err := sha.New(in.SourceSHA)
+	mergeInput, err := c.mergeService.PreparePullReqMergeInput(
+		pr,
+		sourceRepo,
+		targetSHA,
+		session.Principal.ToPrincipalInfo(),
+		in.Method,
+		in.Title,
+		in.Message,
+	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to convert source SHA: %w", err)
+		return nil, nil, fmt.Errorf("failed to prepare merge data: %w", err)
 	}
-
-	refTargetBranch, err := git.GetRefPath(pr.TargetBranch, gitenum.RefTypeBranch)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate target branch ref name: %w", err)
-	}
-
-	prNumber := strconv.FormatInt(pr.Number, 10)
-
-	refPullReqHead, err := git.GetRefPath(prNumber, gitenum.RefTypePullReqHead)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate pull request head ref name: %w", err)
-	}
-
-	refPullReqMerge, err := git.GetRefPath(prNumber, gitenum.RefTypePullReqMerge)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate pull requert merge ref name: %w", err)
-	}
-
-	refUpdates := make([]git.RefUpdate, 0, 4)
-
-	// Update the target branch to the result of the merge.
-	refUpdates = append(refUpdates, git.RefUpdate{
-		Name: refTargetBranch,
-		Old:  targetSHA,
-		New:  sha.SHA{}, // update to the result of the merge.
-	})
-
-	// Make sure the PR head ref points to the correct commit after the merge.
-	refUpdates = append(refUpdates, git.RefUpdate{
-		Name: refPullReqHead,
-		Old:  sha.SHA{}, // don't care about the old value.
-		New:  sourceBranchSHA,
-	})
-
-	// Delete the PR merge reference.
-	refUpdates = append(refUpdates, git.RefUpdate{
-		Name: refPullReqMerge,
-		Old:  sha.SHA{},
-		New:  sha.Nil,
-	})
 
 	now := time.Now()
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams:   targetWriteParams,
 		BaseSHA:       targetSHA,
 		HeadSHA:       sourceSHA,
-		Message:       git.CommitMessage(in.Title, in.Message),
-		Committer:     committer,
+		Message:       mergeInput.CommitMessage,
+		Committer:     mergeInput.Committer,
 		CommitterDate: &now,
-		Author:        author,
+		Author:        mergeInput.Author,
 		AuthorDate:    &now,
-		Refs:          refUpdates,
+		Refs:          mergeInput.RefUpdates,
 		Method:        gitenum.MergeMethod(in.Method),
 	})
 	if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
@@ -657,100 +567,27 @@ func (c *Controller) Merge(
 
 	log.Ctx(ctx).Debug().Msgf("successfully merged PR")
 
-	mergedBy := session.Principal.ID
+	// update DB and delete the source branch
 
-	var activitySeqMerge, activitySeqBranchDeleted int64
-	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-		pr.State = enum.PullReqStateMerged
+	isBypassed := protection.IsBypassed(violations)
+	mergedBy := session.Principal.ToPrincipalInfo()
 
-		nowMilli := now.UnixMilli()
-
-		pr.Merged = &nowMilli
-		pr.MergedBy = &mergedBy
-		pr.MergeMethod = &in.Method
-
-		// update all Merge specific information (might be empty if previous merge check failed)
-		// since this is the final operation on the PR, we update any sha that might've changed by now.
-		pr.SourceSHA = mergeOutput.HeadSHA.String()
-		pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
-		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
-		pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
-		pr.MarkAsMerged()
-
-		bypassed := protection.IsBypassed(violations)
-		pr.MergeViolationsBypassed = &bypassed
-
-		pr.Stats.DiffStats = types.NewDiffStats(
-			mergeOutput.CommitCount,
-			mergeOutput.ChangedFileCount,
-			mergeOutput.Additions,
-			mergeOutput.Deletions,
-		)
-
-		// update sequence for PR activities
-		pr.ActivitySeq++
-		activitySeqMerge = pr.ActivitySeq
-
-		if deleteSourceBranch {
-			pr.ActivitySeq++
-			activitySeqBranchDeleted = pr.ActivitySeq
-		}
-
-		return nil
-	})
+	pr, branchDeleted, err := c.mergeService.AfterMerge(
+		ctx,
+		pr,
+		targetRepo,
+		in.Method,
+		mergeOutput,
+		mergedBy,
+		isBypassed,
+		in.BypassMessage,
+		deleteSourceBranch,
+	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to update pull request: %w", err)
+		return nil, nil, fmt.Errorf("failed to do post merge operations: %w", err)
 	}
 
-	pr.ActivitySeq = activitySeqMerge
-	activityPayload := &types.PullRequestActivityPayloadMerge{
-		MergeMethod:   in.Method,
-		MergeSHA:      mergeOutput.MergeSHA.String(),
-		TargetSHA:     mergeOutput.BaseSHA.String(),
-		SourceSHA:     mergeOutput.HeadSHA.String(),
-		RulesBypassed: protection.IsBypassed(violations),
-		BypassMessage: in.BypassMessage,
-	}
-	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy, activityPayload, nil); errAct != nil {
-		// non-critical error
-		log.Ctx(ctx).Err(errAct).Msgf("failed to write pull req merge activity")
-	}
-
-	c.eventReporter.Merged(ctx, &pullreqevents.MergedPayload{
-		Base:        eventBase(pr, &session.Principal),
-		MergeMethod: in.Method,
-		MergeSHA:    mergeOutput.MergeSHA.String(),
-		TargetSHA:   mergeOutput.BaseSHA.String(),
-		SourceSHA:   mergeOutput.HeadSHA.String(),
-	})
-
-	var branchDeleted bool
-	if deleteSourceBranch {
-		errDelete := c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
-			WriteParams: sourceWriteParams,
-			BranchName:  pr.SourceBranch,
-		})
-		if errDelete != nil {
-			// non-critical error
-			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete source branch after merging")
-		} else {
-			branchDeleted = true
-
-			// NOTE: there is a chance someone pushed on the branch between merge and delete.
-			// Either way, we'll use the SHA that was merged with for the activity to be consistent from PR perspective.
-			pr.ActivitySeq = activitySeqBranchDeleted
-			if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy,
-				&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}, nil); errAct != nil {
-				// non-critical error
-				log.Ctx(ctx).Err(errAct).
-					Msgf("failed to write pull request activity for successful automatic branch delete")
-			}
-		}
-	}
-
-	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
-
-	if protection.IsBypassed(violations) {
+	if isBypassed {
 		err = c.auditService.Log(ctx,
 			session.Principal,
 			audit.NewResource(
@@ -784,20 +621,6 @@ func (c *Controller) Merge(
 		}
 	}
 
-	err = c.instrumentation.Track(ctx, instrument.Event{
-		Type:      instrument.EventTypeMergePullRequest,
-		Principal: session.Principal.ToPrincipalInfo(),
-		Path:      targetRepo.Path,
-		Properties: map[instrument.Property]any{
-			instrument.PropertyRepositoryID:   targetRepo.ID,
-			instrument.PropertyRepositoryName: targetRepo.Identifier,
-			instrument.PropertyPullRequestID:  pr.Number,
-			instrument.PropertyMergeStrategy:  in.Method,
-		},
-	})
-	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for merge pr operation: %s", err)
-	}
 	return &types.MergeResponse{
 		SHA:            mergeOutput.MergeSHA.String(),
 		BranchDeleted:  branchDeleted,

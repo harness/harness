@@ -66,6 +66,9 @@ func (c *Controller) CommentStatus(
 	var pr *types.PullReq
 	var act *types.PullReqActivity
 
+	var oldStatus enum.PullReqCommentStatus
+	var oldResolvedBy *int64
+
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 		if err != nil {
@@ -79,6 +82,12 @@ func (c *Controller) CommentStatus(
 		act, err = c.getCommentCheckChangeStatusAccess(ctx, pr, commentID)
 		if err != nil {
 			return fmt.Errorf("failed to get comment: %w", err)
+		}
+
+		oldStatus = enum.PullReqCommentStatusActive
+		oldResolvedBy = act.ResolvedBy
+		if act.Resolved != nil {
+			oldStatus = enum.PullReqCommentStatusResolved
 		}
 
 		if !in.hasChanges(act, session.Principal.ID) {
@@ -124,6 +133,13 @@ func (c *Controller) CommentStatus(
 		return nil, err
 	}
 
+	isChanged := oldResolvedBy != nil && act.ResolvedBy != nil && *oldResolvedBy != *act.ResolvedBy ||
+		oldResolvedBy == nil && act.ResolvedBy != nil ||
+		oldResolvedBy != nil && act.ResolvedBy == nil
+	if !isChanged {
+		return act, nil
+	}
+
 	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	c.eventReporter.CommentStatusUpdated(ctx, &events.CommentStatusUpdatedPayload{
@@ -134,7 +150,11 @@ func (c *Controller) CommentStatus(
 			PrincipalID:  session.Principal.ID,
 			Number:       pr.Number,
 		},
-		ActivityID: act.ID,
+		ActivityID:    act.ID,
+		OldStatus:     oldStatus,
+		NewStatus:     in.Status,
+		OldResolvedBy: oldResolvedBy,
+		NewResolvedBy: act.ResolvedBy,
 	})
 
 	return act, nil

@@ -72,7 +72,7 @@ func (c *Controller) Update(ctx context.Context,
 	case pr.SourceRepoID == nil:
 		// the source repo is purged
 	case *pr.SourceRepoID != pr.TargetRepoID:
-		// if the source repo is nil, it's soft deleted
+		// if the source repo is nil, it's deleted
 		sourceRepo, err := c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
 		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)

@@ -176,3 +176,30 @@ func (r *Reader) RegisterUpdated(
 ) error {
 	return events.ReaderRegisterEvent(r.innerReader, UpdatedEvent, fn, opts...)
 }
+
+const MergeCheckSucceededEvent events.EventType = "merge-check-succeeded"
+
+type MergeCheckSucceededPayload struct {
+	Base
+}
+
+func (r *Reporter) MergeCheckSucceeded(ctx context.Context, payload *MergeCheckSucceededPayload) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, MergeCheckSucceededEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send pull request merge check succeeded event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported pull request merge check succeeded event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterMergeCheckSucceeded(
+	fn events.HandlerFunc[*MergeCheckSucceededPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, MergeCheckSucceededEvent, fn, opts...)
+}
