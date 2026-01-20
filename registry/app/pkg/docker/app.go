@@ -56,6 +56,7 @@ func NewApp(
 	spaceStore corestore.SpaceStore,
 	cfg *types.Config,
 	storageService *registrystorage.Service,
+	driverProvider registrystorage.DriverProvider,
 	gcService gc.Service,
 	bucketService BucketService,
 ) *App {
@@ -66,7 +67,7 @@ func NewApp(
 		bucketService:  bucketService,
 	}
 	app.configureSecret(cfg) //nolint:contextcheck
-	gcService.Start(ctx, spaceStore, blobRepo, storageService, cfg)
+	gcService.Start(ctx, spaceStore, blobRepo, driverProvider, cfg)
 	return app
 }
 

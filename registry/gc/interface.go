@@ -30,7 +30,7 @@ type Service interface {
 		ctx context.Context,
 		spaceStore corestore.SpaceStore,
 		blobRepo store.BlobRepository,
-		storageDeleter *storage.Service,
+		driverProvider storage.DriverProvider,
 		config *types.Config,
 	)
 	BlobFindAndLockBefore(ctx context.Context, blobID int64, date time.Time) (*registrytypes.GCBlobTask, error)
