@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
@@ -65,12 +66,14 @@ type Controller struct {
 	fileViewStore          store.PullReqFileViewStore
 	membershipStore        store.MembershipStore
 	checkStore             store.CheckStore
+	autoMergeStore         store.AutoMergeStore
 	git                    git.Interface
 	repoFinder             refcache.RepoFinder
 	eventReporter          *pullreqevents.Reporter
 	codeCommentMigrator    *codecomments.Migrator
 	pullreqService         *pullreq.Service
 	pullreqListService     *pullreq.ListService
+	mergeService           *merge.Service
 	protectionManager      *protection.Manager
 	sseStreamer            sse.Streamer
 	codeOwners             *codeowners.Service
@@ -101,12 +104,14 @@ func NewController(
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
+	autoMergeStore store.AutoMergeStore,
 	git git.Interface,
 	repoFinder refcache.RepoFinder,
 	eventReporter *pullreqevents.Reporter,
 	codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service,
 	pullreqListService *pullreq.ListService,
+	mergeService *merge.Service,
 	protectionManager *protection.Manager,
 	sseStreamer sse.Streamer,
 	codeowners *codeowners.Service,
@@ -136,6 +141,7 @@ func NewController(
 		fileViewStore:          fileViewStore,
 		membershipStore:        membershipStore,
 		checkStore:             checkStore,
+		autoMergeStore:         autoMergeStore,
 		git:                    git,
 		repoFinder:             repoFinder,
 		codeCommentMigrator:    codeCommentMigrator,
@@ -143,6 +149,7 @@ func NewController(
 		pullreqService:         pullreqService,
 		pullreqListService:     pullreqListService,
 		protectionManager:      protectionManager,
+		mergeService:           mergeService,
 		sseStreamer:            sseStreamer,
 		codeOwners:             codeowners,
 		locker:                 locker,

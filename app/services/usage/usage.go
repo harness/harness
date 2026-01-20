@@ -17,7 +17,6 @@ package usage
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/harness/gitness/types"
@@ -48,7 +47,8 @@ type SpaceFinder interface {
 }
 
 type MetricStore interface {
-	UpsertOptimistic(ctx context.Context, in *types.UsageMetric) error
+	Upsert(ctx context.Context, in []*types.UsageMetric) error
+	UpsertStorage(ctx context.Context, in []*types.UsageMetric) error
 	GetMetrics(
 		ctx context.Context,
 		rootSpaceID int64,
@@ -63,16 +63,15 @@ type MetricStore interface {
 }
 
 type Mediator struct {
-	queue *queue
-
-	workers []*worker
+	queue chan Metric
 
 	spaceFinder  SpaceFinder
 	metricsStore MetricStore
 
-	wg sync.WaitGroup
-
 	config Config
+
+	lastUpdated time.Time
+	cache       map[string]*Metric
 }
 
 func NewMediator(
@@ -82,40 +81,79 @@ func NewMediator(
 	config Config,
 ) *Mediator {
 	m := &Mediator{
-		queue:        newQueue(),
+		queue:        make(chan Metric, 1),
 		spaceFinder:  spaceFinder,
 		metricsStore: usageMetricsStore,
-		workers:      make([]*worker, config.MaxWorkers),
 		config:       config,
+		cache:        make(map[string]*Metric),
 	}
 
-	m.Start(ctx)
+	go m.Start(ctx)
 
 	return m
 }
 
 func (m *Mediator) Start(ctx context.Context) {
-	for i := range m.workers {
-		w := newWorker(i, m.queue)
-		go w.start(ctx, m.process)
-		m.workers[i] = w
-	}
-}
+	flushFn := func() {
+		usageMetrics := make([]*Metric, 0, len(m.cache))
+		for _, metric := range m.cache {
+			usageMetrics = append(usageMetrics, metric)
+			delete(m.cache, metric.SpaceRef)
+		}
 
-func (m *Mediator) Stop() {
-	for i := range m.workers {
-		m.workers[i].stop()
+		m.process(ctx, usageMetrics)
+		m.lastUpdated = time.Now()
+	}
+
+	m.config.Sanitize()
+
+	ticker := time.NewTicker(m.config.FlushInterval)
+	defer ticker.Stop()
+
+	log.Ctx(ctx).Info().Msg("starting usage metrics service")
+	for {
+		select {
+		case <-ctx.Done():
+			log.Ctx(ctx).Warn().Msg("context canceled")
+			flushFn()
+			return
+		case <-ticker.C:
+			flushFn()
+		case payload := <-m.queue:
+			cache, ok := m.cache[payload.SpaceRef]
+			if !ok {
+				m.cache[payload.SpaceRef] = &payload
+				continue
+			}
+
+			cache.Bandwidth.Out += payload.Bandwidth.Out
+			cache.Bandwidth.In += payload.Bandwidth.In
+			cache.StorageTotal += payload.StorageTotal
+			cache.LFSStorageTotal += payload.LFSStorageTotal
+			cache.Pushes += payload.Pushes
+		}
 	}
 }
 
 func (m *Mediator) Send(ctx context.Context, payload Metric) error {
-	m.wg.Add(1)
-	m.queue.Add(ctx, payload)
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case m.queue <- payload:
+	default:
+		// queue is full then wait in new go routine
+		// until one of consumer read from channel,
+		// we dont want to block caller goroutine
+		log.Ctx(ctx).Warn().Msg("usage metric queue full")
+		go func() {
+			select {
+			case <-ctx.Done():
+				log.Ctx(ctx).Warn().Msg("usage metric dropped: context canceled")
+			case m.queue <- payload:
+			}
+		}()
+	}
 	return nil
-}
-
-func (m *Mediator) Wait() {
-	m.wg.Wait()
 }
 
 func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error) {
@@ -134,66 +172,35 @@ func (m *Mediator) Size(ctx context.Context, spaceRef string) (Bandwidth, error)
 	}, nil
 }
 
-func (m *Mediator) process(ctx context.Context, payload *Metric) {
-	defer m.wg.Done()
-
-	space, err := m.spaceFinder.FindByRef(ctx, payload.SpaceRef)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to find space")
+func (m *Mediator) process(ctx context.Context, payload []*Metric) {
+	if payload == nil {
 		return
 	}
 
-	if err = m.metricsStore.UpsertOptimistic(ctx, &types.UsageMetric{
-		Date:            payload.Time,
-		RootSpaceID:     space.ID,
-		BandwidthOut:    payload.Out,
-		BandwidthIn:     payload.In,
-		StorageTotal:    payload.StorageTotal,
-		LFSStorageTotal: payload.LFSStorageTotal,
-		Pushes:          payload.Pushes,
-	}); err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to upsert usage metrics")
-	}
-}
-
-type worker struct {
-	id     int
-	queue  *queue
-	stopCh chan struct{}
-}
-
-func newWorker(id int, queue *queue) *worker {
-	return &worker{
-		id:     id,
-		queue:  queue,
-		stopCh: make(chan struct{}),
-	}
-}
-
-func (w *worker) start(ctx context.Context, fn func(context.Context, *Metric)) {
-	log.Ctx(ctx).Info().Int("usage-worker", w.id).Msg("usage metrics starting worker")
-	for {
-		select {
-		case <-ctx.Done():
-			log.Ctx(ctx).Err(ctx.Err()).Msg("context canceled")
+	metrics := make([]*types.UsageMetric, len(payload))
+	for i, metric := range payload {
+		space, err := m.spaceFinder.FindByRef(ctx, metric.SpaceRef)
+		if err != nil {
+			log.Ctx(ctx).Err(err).Str("space", metric.SpaceRef).Msg("failed to find space")
 			return
-		case <-w.stopCh:
-			log.Ctx(ctx).Warn().Int("usage-worker", w.id).Msg("worker is stopped")
-			return
-		default:
-			payload, err := w.queue.Pop(ctx)
-			if err != nil {
-				log.Ctx(ctx).Err(err).Int("usage-worker", w.id).Msg("failed to consume the queue")
-				return
-			}
-			fn(ctx, payload)
+		}
+
+		metrics[i] = &types.UsageMetric{
+			Date:            metric.Time,
+			RootSpaceID:     space.ID,
+			BandwidthOut:    metric.Out,
+			BandwidthIn:     metric.In,
+			StorageTotal:    metric.StorageTotal,
+			LFSStorageTotal: metric.LFSStorageTotal,
+			Pushes:          metric.Pushes,
 		}
 	}
-}
 
-func (w *worker) stop() {
-	defer close(w.stopCh)
-	w.stopCh <- struct{}{}
+	if err := m.metricsStore.Upsert(ctx, metrics); err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to upsert usage metrics")
+	} else if len(metrics) > 0 {
+		log.Ctx(ctx).Info().Msg("flush usage metrics data to db")
+	}
 }
 
 type Noop struct{}

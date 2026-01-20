@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/event"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
@@ -36,6 +37,7 @@ import (
 	"github.com/harness/gitness/registry/app/manifest/ocischema"
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
+	registryaudit "github.com/harness/gitness/registry/app/pkg/audit"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
@@ -71,6 +73,7 @@ type manifestService struct {
 	artifactEventReporter   registryevents.Reporter
 	urlProvider             urlprovider.Provider
 	untaggedImagesEnabled   func(ctx context.Context) bool
+	auditService            audit.Service
 }
 
 func NewManifestService(
@@ -81,6 +84,7 @@ func NewManifestService(
 	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository, artifactEventReporter registryevents.Reporter,
 	urlProvider urlprovider.Provider, untaggedImagesEnabled func(ctx context.Context) bool,
+	auditService audit.Service,
 ) ManifestService {
 	return &manifestService{
 		registryDao:             registryDao,
@@ -100,6 +104,7 @@ func NewManifestService(
 		artifactEventReporter:   artifactEventReporter,
 		urlProvider:             urlProvider,
 		untaggedImagesEnabled:   untaggedImagesEnabled,
+		auditService:            auditService,
 	}
 }
 
@@ -512,6 +517,13 @@ func (l *manifestService) upsertImageAndArtifact(ctx context.Context, d digest.D
 	if _, err := l.artifactDao.CreateOrUpdate(ctx, dbArtifact); err != nil {
 		return err
 	}
+
+	// Audit log for OCI/Docker/Helm artifact push
+	registryaudit.LogArtifactPush(
+		ctx, l.auditService, l.spaceFinder, *info.ArtifactInfo,
+		dgst.String(), dbImage.UUID, dbArtifact.UUID,
+	)
+
 	return nil
 }
 

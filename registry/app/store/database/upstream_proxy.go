@@ -64,6 +64,7 @@ type upstreamProxyConfigDB struct {
 	RegistryID               int64          `db:"upstream_proxy_config_registry_id"`
 	Source                   string         `db:"upstream_proxy_config_source"`
 	URL                      string         `db:"upstream_proxy_config_url"`
+	FirewallMode             sql.NullString `db:"upstream_proxy_config_firewall_mode"`
 	AuthType                 string         `db:"upstream_proxy_config_auth_type"`
 	UserName                 string         `db:"upstream_proxy_config_user_name"`
 	SecretIdentifier         sql.NullString `db:"upstream_proxy_config_secret_identifier"`
@@ -90,6 +91,7 @@ type upstreamProxyDB struct {
 	Source                   string               `db:"source"`
 	RepoURL                  string               `db:"repo_url"`
 	RepoAuthType             string               `db:"repo_auth_type"`
+	FirewallMode             sql.NullString       `db:"firewall_mode"`
 	UserName                 string               `db:"user_name"`
 	SecretIdentifier         sql.NullString       `db:"secret_identifier"`
 	SecretSpaceID            sql.NullInt32        `db:"secret_space_id"`
@@ -113,6 +115,7 @@ func getUpstreamProxyQuery() squirrel.SelectBuilder {
 			" r.registry_allowed_pattern as allowed_pattern," +
 			" r.registry_blocked_pattern as blocked_pattern," +
 			" r.registry_config as registry_config," +
+			" u.upstream_proxy_config_firewall_mode as firewall_mode," +
 			" u.upstream_proxy_config_url as repo_url," +
 			" u.upstream_proxy_config_source as source," +
 			" u.upstream_proxy_config_auth_type as repo_auth_type," +
@@ -202,6 +205,7 @@ func (r UpstreamproxyDao) Create(
 			upstream_proxy_config_registry_id
 			,upstream_proxy_config_source
 			,upstream_proxy_config_url
+			,upstream_proxy_config_firewall_mode
 			,upstream_proxy_config_auth_type
 			,upstream_proxy_config_user_name
 			,upstream_proxy_config_secret_identifier
@@ -217,6 +221,7 @@ func (r UpstreamproxyDao) Create(
 			:upstream_proxy_config_registry_id
 			,:upstream_proxy_config_source
 			,:upstream_proxy_config_url
+			,:upstream_proxy_config_firewall_mode
 			,:upstream_proxy_config_auth_type
 			,:upstream_proxy_config_user_name
 			,:upstream_proxy_config_secret_identifier
@@ -429,6 +434,7 @@ func (r UpstreamproxyDao) mapToInternalUpstreamProxy(
 		RegistryID:               in.RegistryID,
 		Source:                   in.Source,
 		URL:                      in.URL,
+		FirewallMode:             util.GetEmptySQLString(in.FirewallMode),
 		AuthType:                 in.AuthType,
 		UserName:                 in.UserName,
 		SecretIdentifier:         util.GetEmptySQLString(in.SecretIdentifier),
@@ -501,6 +507,11 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 		}
 	}
 
+	firewallMode := (*string)(nil)
+	if dst.FirewallMode.Valid {
+		firewallMode = &dst.FirewallMode.String
+	}
+
 	return &types.UpstreamProxy{
 		ID:                       dst.ID,
 		RegistryUUID:             dst.RegistryUUID,
@@ -514,6 +525,7 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 		Source:                   dst.Source,
 		RepoURL:                  dst.RepoURL,
 		RepoAuthType:             dst.RepoAuthType,
+		FirewallMode:             firewallMode,
 		UserName:                 dst.UserName,
 		SecretIdentifier:         secretIdentifier,
 		SecretSpaceID:            secretSpaceID,

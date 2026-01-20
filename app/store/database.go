@@ -599,6 +599,12 @@ type (
 		List(ctx context.Context, prID int64, principalID int64) ([]*types.PullReqFileView, error)
 	}
 
+	AutoMergeStore interface {
+		Find(ctx context.Context, pullreqID int64) (*types.AutoMerge, error)
+		Delete(ctx context.Context, pullreqID int64) (bool, error)
+		Upsert(ctx context.Context, autoMerge *types.AutoMerge) error
+	}
+
 	// RuleStore defines database interface for protection rules.
 	RuleStore interface {
 		// Find finds a protection rule by ID.
@@ -1505,8 +1511,8 @@ type (
 	}
 
 	UsageMetricStore interface {
-		Upsert(ctx context.Context, in *types.UsageMetric) error
-		UpsertOptimistic(ctx context.Context, in *types.UsageMetric) error
+		Upsert(ctx context.Context, in []*types.UsageMetric) error
+		UpsertStorage(ctx context.Context, in []*types.UsageMetric) error
 		GetMetrics(
 			ctx context.Context,
 			rootSpaceID int64,

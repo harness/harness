@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -26,7 +27,11 @@ const CommentStatusUpdatedEvent events.EventType = "comment-status-updated"
 
 type CommentStatusUpdatedPayload struct {
 	Base
-	ActivityID int64 `json:"activity_id"`
+	ActivityID    int64                     `json:"activity_id"`
+	OldStatus     enum.PullReqCommentStatus `json:"old_status"`
+	NewStatus     enum.PullReqCommentStatus `json:"new_status"`
+	OldResolvedBy *int64                    `json:"old_resolved_by"`
+	NewResolvedBy *int64                    `json:"new_resolved_by"`
 }
 
 func (r *Reporter) CommentStatusUpdated(

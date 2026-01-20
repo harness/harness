@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/event"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/events/replication"
@@ -28,6 +29,7 @@ import (
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
 	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
+	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
@@ -41,7 +43,8 @@ import (
 
 func LocalRegistryProvider(
 	app *App, ms ManifestService, blobRepo store.BlobRepository,
-	registryDao store.RegistryRepository, manifestDao store.ManifestRepository,
+	registryDao store.RegistryRepository, registryFinder registryrefcache.RegistryFinder,
+	manifestDao store.ManifestRepository,
 	registryBlobDao store.RegistryBlobRepository,
 	mtRepository store.MediaTypesRepository,
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
@@ -50,7 +53,7 @@ func LocalRegistryProvider(
 	replicationReporter replication.Reporter,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
-		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
+		app, ms, manifestDao, registryDao, registryFinder, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
 		gcService, tx, quarantineArtifactDao, replicationReporter,
 	).(*LocalRegistry)
@@ -69,13 +72,14 @@ func ManifestServiceProvider(
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
 	artifactEventReporter *registryevents.Reporter,
 	urlProvider url.Provider,
+	auditService audit.Service,
 ) ManifestService {
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
 		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spaceFinder,
 		ociImageIndexMappingDao, *artifactEventReporter, urlProvider, func(_ context.Context) bool {
 			return true
-		})
+		}, auditService)
 }
 
 func RemoteRegistryProvider(

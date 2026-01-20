@@ -199,18 +199,13 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 		return pkg.ArtifactInfo{}, errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
 
-	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceFinder.FindByRef(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
-		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
-	}
-	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
+		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
 		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
 	}
 
-	registry, err := h.RegFinder.FindByRootParentID(ctx, rootSpaceID, registryIdentifier)
+	registry, err := h.RegFinder.FindByRootParentID(ctx, rootSpace.ID, registryIdentifier)
 
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(
@@ -258,18 +253,13 @@ func (h *handler) GetUtilityMethodArtifactInfo(r *http.Request) (pkg.ArtifactInf
 	rootIdentifier := parts[2]
 	registryIdentifier := parts[3]
 
-	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceFinder.FindByRef(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
-		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
-	}
-	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
+		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
 		return pkg.ArtifactInfo{}, usererror.NotFoundf("Root not found: %s", rootIdentifier)
 	}
 
-	registry, err := h.RegFinder.FindByRootParentID(ctx, rootSpaceID, registryIdentifier)
+	registry, err := h.RegFinder.FindByRootParentID(ctx, rootSpace.ID, registryIdentifier)
 
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(

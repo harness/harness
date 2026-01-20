@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
@@ -58,10 +59,12 @@ func ProvideController(
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
+	autoMergeStore store.AutoMergeStore,
 	rpcClient git.Interface,
 	repoFinder refcache.RepoFinder,
 	eventReporter *pullreqevents.Reporter, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, pullreqListService *pullreq.ListService,
+	mergeService *merge.Service,
 	ruleManager *protection.Manager, sseStreamer sse.Streamer,
 	codeOwners *codeowners.Service, locker *locker.Locker, importer *migrate.PullReq,
 	labelSvc *label.Service,
@@ -87,12 +90,14 @@ func ProvideController(
 		fileViewStore,
 		membershipStore,
 		checkStore,
+		autoMergeStore,
 		rpcClient,
 		repoFinder,
 		eventReporter,
 		codeCommentMigrator,
 		pullreqService,
 		pullreqListService,
+		mergeService,
 		ruleManager,
 		sseStreamer,
 		codeOwners,

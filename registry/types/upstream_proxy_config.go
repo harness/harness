@@ -26,6 +26,7 @@ type UpstreamProxyConfig struct {
 	RegistryID               int64
 	Source                   string
 	URL                      string
+	FirewallMode             string
 	AuthType                 string
 	UserName                 string
 	UserNameSecretIdentifier string
@@ -53,6 +54,7 @@ type UpstreamProxy struct {
 	Source                   string
 	RepoURL                  string
 	RepoAuthType             string
+	FirewallMode             *string
 	UserName                 string
 	UserNameSecretIdentifier string
 	UserNameSecretSpaceID    int64

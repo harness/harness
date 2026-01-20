@@ -19,6 +19,7 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/app/services/merge"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -189,6 +190,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		repo.WireSet,
 		reposettings.WireSet,
 		pullreq.WireSet,
+		merge.WireSet,
 		controllerwebhook.WireSet,
 		controllerwebhook.ProvidePreprocessor,
 		svclabel.WireSet,

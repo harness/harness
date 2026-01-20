@@ -973,4 +973,43 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opPRCandidates, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/repos/{repo_ref}/pullreq/candidates", opPRCandidates)
+
+	opAutoMergeEnable := openapi3.Operation{}
+	opAutoMergeEnable.WithTags("pullreq")
+	opAutoMergeEnable.WithMapOfAnything(map[string]any{"operationId": "prAutoMergeEnable"})
+	_ = reflector.SetRequest(&opAutoMergeEnable, new(struct {
+		pullReqRequest
+		pullreq.AutoMergeEnableInput
+	}), http.MethodPut)
+	_ = reflector.SetJSONResponse(&opAutoMergeEnable, new(types.AutoMergeResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opAutoMergeEnable, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opAutoMergeEnable, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opAutoMergeEnable, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opAutoMergeEnable, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/automerge", opAutoMergeEnable)
+
+	opAutoMergeDisable := openapi3.Operation{}
+	opAutoMergeDisable.WithTags("pullreq")
+	opAutoMergeDisable.WithMapOfAnything(map[string]any{"operationId": "prAutoMergeDisable"})
+	_ = reflector.SetRequest(&opAutoMergeDisable, new(pullReqRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opAutoMergeDisable, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opAutoMergeDisable, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opAutoMergeDisable, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opAutoMergeDisable, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opAutoMergeDisable, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/automerge", opAutoMergeDisable)
+
+	opAutoMergeGet := openapi3.Operation{}
+	opAutoMergeGet.WithTags("pullreq")
+	opAutoMergeGet.WithMapOfAnything(map[string]any{"operationId": "prAutoMergeGet"})
+	_ = reflector.SetRequest(&opAutoMergeGet, new(pullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opAutoMergeGet, new(types.AutoMergeResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opAutoMergeGet, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opAutoMergeGet, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opAutoMergeGet, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opAutoMergeGet, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/automerge", opAutoMergeGet)
 }

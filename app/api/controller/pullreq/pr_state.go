@@ -95,7 +95,7 @@ func (c *Controller) State(ctx context.Context,
 		// the source repo is purged
 		sourceRepo = nil
 	case *pr.SourceRepoID != pr.TargetRepoID:
-		// if the source repo is nil, it's soft deleted
+		// if the source repo is nil, it's deleted
 		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
 		if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
 			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
@@ -126,6 +126,7 @@ func (c *Controller) State(ctx context.Context,
 	const (
 		changeReopen change = iota + 1
 		changeClose
+		changeDraft
 	)
 
 	var sourceSHA sha.SHA
@@ -133,8 +134,8 @@ func (c *Controller) State(ctx context.Context,
 	var targetSHA sha.SHA
 	var stateChange change
 
-	//nolint:nestif // refactor if needed
-	if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
+	switch {
+	case pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen:
 		if sourceRepo == nil {
 			return nil, usererror.BadRequest("Forked repository doesn't exist anymore.")
 		}
@@ -192,8 +193,15 @@ func (c *Controller) State(ctx context.Context,
 		}
 
 		stateChange = changeReopen
-	} else if pr.State == enum.PullReqStateOpen && in.State != enum.PullReqStateOpen {
+
+	case pr.State == enum.PullReqStateOpen && in.State != enum.PullReqStateOpen:
 		stateChange = changeClose
+
+	case pr.IsDraft != in.IsDraft:
+		stateChange = changeDraft
+	default:
+		// no change
+		return pr, nil
 	}
 
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
@@ -204,12 +212,16 @@ func (c *Controller) State(ctx context.Context,
 			}
 		}
 
-		pr.State = in.State
-		pr.IsDraft = in.IsDraft
+		var clearAutoMerge bool
 
 		switch stateChange {
 		case changeClose:
 			nowMilli := time.Now().UnixMilli()
+
+			pr.State = enum.PullReqStateClosed
+			pr.SubState = enum.PullReqSubStateNone
+			pr.IsDraft = in.IsDraft
+			clearAutoMerge = true
 
 			// clear all merge (check) related fields
 			pr.MergeSHA = nil
@@ -226,6 +238,10 @@ func (c *Controller) State(ctx context.Context,
 			})
 
 		case changeReopen:
+			pr.State = enum.PullReqStateOpen
+			pr.SubState = enum.PullReqSubStateNone
+			pr.IsDraft = in.IsDraft
+
 			pr.SourceSHA = sourceSHA.String()
 			pr.MergeTargetSHA = ptr.String(targetSHA.String())
 			pr.MergeBaseSHA = mergeBaseSHA.String()
@@ -241,6 +257,20 @@ func (c *Controller) State(ctx context.Context,
 			})
 			if err != nil {
 				return fmt.Errorf("failed to set value of PR head ref: %w", err)
+			}
+
+		case changeDraft:
+			pr.IsDraft = in.IsDraft
+			if pr.State == enum.PullReqStateOpen && in.IsDraft {
+				clearAutoMerge = true
+				pr.SubState = enum.PullReqSubStateNone
+			}
+		}
+
+		if clearAutoMerge {
+			_, err = c.autoMergeStore.Delete(ctx, pr.ID)
+			if err != nil {
+				return fmt.Errorf("failed to delete auto merge: %w", err)
 			}
 		}
 
@@ -270,6 +300,7 @@ func (c *Controller) State(ctx context.Context,
 		log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after state change")
 	}
 
+	//nolint:exhaustive
 	switch stateChange {
 	case changeReopen:
 		c.eventReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{

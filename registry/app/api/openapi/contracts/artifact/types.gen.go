@@ -112,6 +112,13 @@ const (
 	UpstreamConfigSourcePyPi         UpstreamConfigSource = "PyPi"
 )
 
+// Defines values for UpstreamProxyConfigFirewallMode.
+const (
+	UpstreamProxyConfigFirewallModeALLOW UpstreamProxyConfigFirewallMode = "ALLOW"
+	UpstreamProxyConfigFirewallModeBLOCK UpstreamProxyConfigFirewallMode = "BLOCK"
+	UpstreamProxyConfigFirewallModeWARN  UpstreamProxyConfigFirewallMode = "WARN"
+)
+
 // Defines values for WebhookExecResult.
 const (
 	WebhookExecResultFATALERROR     WebhookExecResult = "FATAL_ERROR"
@@ -1016,7 +1023,10 @@ type UpstreamConfig struct {
 	// RemoteUrlSuffix Optional path suffix appended to the remote URL for this registry. For Python upstreams, this allows overriding the default `/simple` path used for PyPI-compatible indexes. Leading and trailing slashes are not required and will be normalized.
 	RemoteUrlSuffix *string               `json:"remoteUrlSuffix,omitempty"`
 	Source          *UpstreamConfigSource `json:"source,omitempty"`
-	Url             *string               `json:"url,omitempty"`
+
+	// UpstreamProxyConfigFirewallMode Firewall mode applied to an upstream proxy.
+	UpstreamProxyConfigFirewallMode *UpstreamProxyConfigFirewallMode `json:"upstreamProxyConfigFirewallMode,omitempty"`
+	Url                             *string                          `json:"url,omitempty"`
 }
 
 // UpstreamConfig_Auth defines model for UpstreamConfig.Auth.
@@ -1026,6 +1036,9 @@ type UpstreamConfig_Auth struct {
 
 // UpstreamConfigSource defines model for UpstreamConfig.Source.
 type UpstreamConfigSource string
+
+// UpstreamProxyConfigFirewallMode Firewall mode applied to an upstream proxy.
+type UpstreamProxyConfigFirewallMode string
 
 // UserPassword defines model for UserPassword.
 type UserPassword struct {

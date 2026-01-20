@@ -716,6 +716,11 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 			r.Post("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 			r.Get("/checks", handlerpullreq.HandleCheckList(pullreqCtrl))
+			r.Route("/automerge", func(r chi.Router) {
+				r.Put("/", handlerpullreq.HandleAutoMergeEnable(pullreqCtrl))
+				r.Delete("/", handlerpullreq.HandleAutoMergeDisable(pullreqCtrl))
+				r.Get("/", handlerpullreq.HandleAutoMergeGet(pullreqCtrl))
+			})
 
 			setupPullReqLabels(r, pullreqCtrl)
 		})

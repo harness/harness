@@ -195,6 +195,16 @@ func (m *MockLocalBase) MoveMultipleTempFilesAndCreateArtifact(
 	return args.Error(0)
 }
 
+func (m *MockLocalBase) AuditPush(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	version string,
+	imageUUID string,
+	artifactUUID string,
+) {
+	m.Called(ctx, info, version, imageUUID, artifactUUID)
+}
+
 type MockReadCloser struct {
 	mock.Mock
 }

@@ -21,7 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
@@ -42,9 +41,9 @@ type SizeCalculator struct {
 	scheduler  *job.Scheduler
 	lfsStore   store.LFSObjectStore
 
-	repoStore         store.RepoStore
-	spaceStore        store.SpaceStore
-	usageMetricSender usage.Sender
+	repoStore        store.RepoStore
+	spaceStore       store.SpaceStore
+	usageMetricStore store.UsageMetricStore
 }
 
 func (s *SizeCalculator) Register(ctx context.Context) error {
@@ -155,18 +154,21 @@ func (s *SizeCalculator) sendMetric(
 		return fmt.Errorf("failed to fetch root spaces size: %w", err)
 	}
 
-	for _, rootSpace := range spaces {
-		err = s.usageMetricSender.Send(ctx, usage.Metric{
-			Time:            date,
-			SpaceRef:        rootSpace.Identifier,
+	metrics := make([]*types.UsageMetric, len(spaces))
+	for i, rootSpace := range spaces {
+		metrics[i] = &types.UsageMetric{
+			Date:            date,
+			RootSpaceID:     rootSpace.ID,
 			StorageTotal:    rootSpace.Size,
 			LFSStorageTotal: rootSpace.LFSSize,
-		})
-		if err != nil {
-			log.Ctx(ctx).Error().Err(err).
-				Str("space", rootSpace.Identifier).
-				Msg("failed to send usage metric for root space %s")
 		}
 	}
+
+	err = s.usageMetricStore.UpsertStorage(ctx, metrics)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msg("failed to send usage storage metrics")
+	}
+
 	return nil
 }

@@ -15,21 +15,31 @@
 package usage
 
 import (
+	"time"
+
 	"github.com/harness/gitness/types"
 )
 
+// MinFlushInterval defines the minimum allowed flush interval.
+// This can be overridden in tests for faster execution.
+var MinFlushInterval = time.Minute
+
 type Config struct {
-	MaxWorkers int
+	FlushInterval time.Duration
+}
+
+func (c *Config) Sanitize() {
+	if c.FlushInterval < MinFlushInterval {
+		c.FlushInterval = MinFlushInterval
+	}
 }
 
 func NewConfig(global *types.Config) Config {
 	cfg := Config{
-		MaxWorkers: global.UsageMetrics.MaxWorkers,
+		FlushInterval: global.UsageMetrics.FlushInterval,
 	}
 
-	if cfg.MaxWorkers == 0 {
-		cfg.MaxWorkers = 5
-	}
+	cfg.Sanitize()
 
 	return cfg
 }

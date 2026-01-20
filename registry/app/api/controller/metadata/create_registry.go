@@ -485,7 +485,7 @@ func isDuplicateKeyError(err error) bool {
 }
 
 func (c *APIController) handleDuplicateRegistryError(ctx context.Context, registry *registrytypes.Registry) error {
-	registryData, err := c.RegistryRepository.GetByRootParentIDAndName(ctx, registry.RootParentID, registry.Name)
+	registryData, err := c.RegFinder.FindByRootParentID(ctx, registry.RootParentID, registry.Name)
 	if err != nil {
 		return fmt.Errorf("failed to fetch existing registry details: %w", err)
 	}

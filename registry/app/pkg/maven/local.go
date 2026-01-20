@@ -153,6 +153,9 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	if err != nil {
 		return responseHeaders, []error{errcode.ErrCodeUnknown.WithDetail(err)}
 	}
+
+	var imageUUID string
+	var artifactUUID string
 	err = r.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			name := info.GroupID + ":" + info.ArtifactID
@@ -166,6 +169,7 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 			if err2 != nil {
 				return err2
 			}
+			imageUUID = dbImage.UUID
 
 			if info.Version == "" {
 				return nil
@@ -190,15 +194,21 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 				return err3
 			}
 
-			dbArtifact = &types.Artifact{
+			newArtifact := &types.Artifact{
 				ImageID:  dbImage.ID,
 				Version:  info.Version,
 				Metadata: metadataJSON,
 			}
 
-			_, err2 = r.DBStore.ArtifactDao.CreateOrUpdate(ctx, dbArtifact)
+			_, err2 = r.DBStore.ArtifactDao.CreateOrUpdate(ctx, newArtifact)
 			if err2 != nil {
 				return err2
+			}
+
+			// Get UUID for audit
+			if utils.IsMainArtifactFile(info) && info.Version != "" {
+				// UUID is populated by CreateOrUpdate (generated in mapToInternalArtifact)
+				artifactUUID = newArtifact.UUID
 			}
 
 			return nil
@@ -207,6 +217,12 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	if err != nil {
 		return responseHeaders, []error{errcode.ErrCodeUnknown.WithDetail(err)}
 	}
+
+	// Audit log for Maven artifact push
+	if utils.IsMainArtifactFile(info) && info.Version != "" && artifactUUID != "" {
+		r.localBase.AuditPush(ctx, *info.ArtifactInfo, info.Version, imageUUID, artifactUUID)
+	}
+
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: map[string]string{},
 		Code:    http.StatusCreated,

@@ -19,7 +19,6 @@ import (
 
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/locker"
-	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
@@ -43,19 +42,19 @@ func ProvideCalculator(
 	scheduler *job.Scheduler,
 	executor *job.Executor,
 	lfsStore store.LFSObjectStore,
-	usageMetricSender usage.Sender,
+	usageMetricStore store.UsageMetricStore,
 ) (*SizeCalculator, error) {
 	job := &SizeCalculator{
-		enabled:           config.RepoSize.Enabled,
-		cron:              config.RepoSize.CRON,
-		maxDur:            config.RepoSize.MaxDuration,
-		numWorkers:        config.RepoSize.NumWorkers,
-		git:               git,
-		repoStore:         repoStore,
-		spaceStore:        spaceStore,
-		scheduler:         scheduler,
-		lfsStore:          lfsStore,
-		usageMetricSender: usageMetricSender,
+		enabled:          config.RepoSize.Enabled,
+		cron:             config.RepoSize.CRON,
+		maxDur:           config.RepoSize.MaxDuration,
+		numWorkers:       config.RepoSize.NumWorkers,
+		git:              git,
+		repoStore:        repoStore,
+		spaceStore:       spaceStore,
+		scheduler:        scheduler,
+		lfsStore:         lfsStore,
+		usageMetricStore: usageMetricStore,
 	}
 
 	err := executor.Register(jobType, job)

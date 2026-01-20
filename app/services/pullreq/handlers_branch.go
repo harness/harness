@@ -285,6 +285,8 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 			activitySeqPRClosed = pr.ActivitySeq
 
 			pr.State = enum.PullReqStateClosed
+			pr.SubState = enum.PullReqSubStateNone
+
 			pr.MergeSHA = nil
 			pr.MarkAsMergeUnchecked()
 

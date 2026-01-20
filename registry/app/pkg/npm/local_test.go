@@ -58,6 +58,10 @@ type mockLocalBase struct {
 		tmp, version, path string,
 		md metadata.Metadata, fi types.FileInfo, failOnConflict bool,
 	) (*commons.ResponseHeaders, string, int64, bool, error)
+	auditPush func(
+		ctx context.Context, info pkg.ArtifactInfo, version string,
+		imageUUID string, artifactUUID string,
+	)
 }
 
 func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
@@ -192,6 +196,15 @@ func (m *mockLocalBase) MoveMultipleTempFilesAndCreateArtifact(
 	*[]types.FileInfo, func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, string,
 ) error {
 	return nil
+}
+
+func (m *mockLocalBase) AuditPush(
+	ctx context.Context, info pkg.ArtifactInfo, version string,
+	imageUUID string, artifactUUID string,
+) {
+	if m.auditPush != nil {
+		m.auditPush(ctx, info, version, imageUUID, artifactUUID)
+	}
 }
 
 type mockTagsDAO struct {

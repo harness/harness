@@ -314,6 +314,7 @@ func (c *Controller) Create(
 			Updated:           now,
 			Edited:            now,
 			State:             enum.PullReqStateOpen,
+			SubState:          enum.PullReqSubStateNone,
 			IsDraft:           in.IsDraft,
 			Title:             in.Title,
 			Description:       in.Description,

@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/middleware/address"
 	"github.com/harness/gitness/app/api/middleware/logging"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/handler/swagger"
 	generic2 "github.com/harness/gitness/registry/app/api/router/generic"
 	"github.com/harness/gitness/registry/app/api/router/harness"
@@ -49,6 +50,7 @@ func GetAppRouter(
 	r.Use(logging.HLogRequestIDHandler())
 	r.Use(logging.HLogAccessLogHandler())
 	r.Use(address.Handler("", ""))
+	r.Use(audit.Middleware())
 
 	r.Group(func(r chi.Router) {
 		r.Handle(fmt.Sprintf("%s/*", baseURL), appHandler)

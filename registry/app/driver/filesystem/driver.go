@@ -26,6 +26,8 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"strings"
+	"sync"
 	"time"
 
 	storagedriver "github.com/harness/gitness/registry/app/driver"
@@ -80,14 +82,102 @@ type driver struct {
 	rootDirectory string
 }
 
-func (d *driver) CopyObject(_ context.Context, _, _, _ string) error {
-	//TODO implement me
-	panic("implement me")
+func (d *driver) CopyObject(ctx context.Context, srcKey, _ string, destKey string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	srcPath := d.fullPath(srcKey)
+	destPath := d.fullPath(destKey)
+
+	info, err := os.Stat(srcPath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return storagedriver.PathNotFoundError{Path: srcKey}
+		}
+		return err
+	}
+	if info.IsDir() {
+		return fmt.Errorf("source is a directory: %s", srcKey)
+	}
+
+	destDir := path.Dir(destPath)
+	if err := os.MkdirAll(destDir, 0o777); err != nil {
+		return err
+	}
+
+	tmpFile, err := os.CreateTemp(destDir, ".copy-*")
+	if err != nil {
+		return err
+	}
+	tmpName := tmpFile.Name()
+	_ = tmpFile.Close()
+	if err := os.Remove(tmpName); err != nil {
+		return err
+	}
+	defer os.Remove(tmpName)
+
+	if err := os.Link(srcPath, tmpName); err != nil {
+		if err := copyFileContents(ctx, srcPath, tmpName, info.Mode()); err != nil {
+			return err
+		}
+	}
+
+	if err := os.Rename(tmpName, destPath); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (d *driver) BatchCopyObjects(_ context.Context, _ string, _ []string, _ int) error {
-	//TODO implement me
-	panic("implement me")
+func (d *driver) BatchCopyObjects(ctx context.Context, destBucket string, keys []string, concurrency int) error {
+	if concurrency <= 0 {
+		concurrency = 1
+	}
+
+	total := len(keys)
+	sem := make(chan struct{}, concurrency)
+	errCh := make(chan error, total)
+	var wg sync.WaitGroup
+
+	var mu sync.Mutex
+	completed := 0
+
+	for _, key := range keys {
+		wg.Add(1)
+		sem <- struct{}{}
+
+		go func(key string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			var err error
+			for attempt := 1; attempt <= 3; attempt++ {
+				err = d.CopyObject(ctx, key, destBucket, key)
+				if err == nil {
+					break
+				}
+				time.Sleep(time.Duration(100*attempt) * time.Millisecond)
+			}
+			if err != nil {
+				errCh <- fmt.Errorf("failed to copy key %s after %d retries: %w", key, 3, err)
+				return
+			}
+
+			mu.Lock()
+			completed++
+			log.Ctx(ctx).Info().Msgf("Progress: %d/%d copied", completed, total)
+			mu.Unlock()
+		}(key)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	if len(errCh) > 0 {
+		return <-errCh
+	}
+	return nil
 }
 
 type baseEmbed struct {
@@ -345,7 +435,33 @@ func (d *driver) Walk(
 
 // fullPath returns the absolute path of a key within the Driver's storage.
 func (d *driver) fullPath(subPath string) string {
-	return path.Join(d.rootDirectory, subPath)
+	return path.Join(d.rootDirectory, strings.TrimPrefix(subPath, "/"))
+}
+
+func copyFileContents(ctx context.Context, srcPath, destPath string, mode fs.FileMode) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dest, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode.Perm())
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+
+	if _, err := io.Copy(dest, src); err != nil {
+		return err
+	}
+	if err := dest.Sync(); err != nil {
+		return err
+	}
+	return nil
 }
 
 type fileInfo struct {

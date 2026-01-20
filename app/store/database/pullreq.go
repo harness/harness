@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -65,8 +66,9 @@ type pullReq struct {
 	Edited    int64    `db:"pullreq_edited"` // TODO: Remove
 	Closed    null.Int `db:"pullreq_closed"`
 
-	State   enum.PullReqState `db:"pullreq_state"`
-	IsDraft bool              `db:"pullreq_is_draft"`
+	State    enum.PullReqState    `db:"pullreq_state"`
+	SubState enum.PullReqSubState `db:"pullreq_substate"`
+	IsDraft  bool                 `db:"pullreq_is_draft"`
 
 	CommentCount    int `db:"pullreq_comment_count"`
 	UnresolvedCount int `db:"pullreq_unresolved_count"`
@@ -113,6 +115,7 @@ const (
 		,pullreq_edited
 		,pullreq_closed
 		,pullreq_state
+		,pullreq_substate
 		,pullreq_is_draft
 		,pullreq_comment_count
 		,pullreq_unresolved_count
@@ -212,6 +215,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_edited
 		,pullreq_closed
 		,pullreq_state
+		,pullreq_substate
 		,pullreq_is_draft
 		,pullreq_comment_count
 		,pullreq_unresolved_count
@@ -247,6 +251,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_edited
 		,:pullreq_closed
 		,:pullreq_state
+		,:pullreq_substate
 		,:pullreq_is_draft
 		,:pullreq_comment_count
 		,:pullreq_unresolved_count
@@ -299,6 +304,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_edited = :pullreq_edited
 		,pullreq_closed = :pullreq_closed
 		,pullreq_state = :pullreq_state
+		,pullreq_substate = :pullreq_substate
 		,pullreq_is_draft = :pullreq_is_draft
 		,pullreq_comment_count = :pullreq_comment_count
 		,pullreq_unresolved_count = :pullreq_unresolved_count
@@ -698,12 +704,38 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 		*stmt = stmt.Where(squirrel.Eq{"pullreq_state": opts.States})
 	}
 
+	if len(opts.SubStates) == 1 {
+		*stmt = stmt.Where("pullreq_substate = ?", opts.SubStates[0])
+	} else if len(opts.SubStates) > 1 {
+		*stmt = stmt.Where(squirrel.Eq{"pullreq_substate": opts.SubStates})
+	}
+
+	if slices.Contains(opts.SubStates, enum.PullReqSubStateAutoMerge) {
+		*stmt = stmt.InnerJoin("auto_merges ON auto_merges.auto_merge_pullreq_id = pullreq_id")
+	}
+
+	if opts.IsDraft != nil {
+		*stmt = stmt.Where("pullreq_is_draft = ?", *opts.IsDraft)
+	}
+
+	if opts.MergeCheckStatus != nil {
+		*stmt = stmt.Where("pullreq_merge_check_status = ?", *opts.MergeCheckStatus)
+	}
+
+	if opts.RebaseCheckStatus != nil {
+		*stmt = stmt.Where("pullreq_rebase_check_status = ?", *opts.RebaseCheckStatus)
+	}
+
 	if opts.SourceRepoID != 0 {
 		*stmt = stmt.Where("pullreq_source_repo_id = ?", opts.SourceRepoID)
 	}
 
 	if opts.SourceBranch != "" {
 		*stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
+	}
+
+	if !opts.SourceSHA.IsEmpty() {
+		*stmt = stmt.Where("pullreq_source_sha = ?", opts.SourceSHA.String())
 	}
 
 	if opts.TargetRepoID != 0 {
@@ -863,6 +895,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Edited:                  pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
 		Closed:                  pr.Closed.Ptr(),
 		State:                   pr.State,
+		SubState:                pr.SubState,
 		IsDraft:                 pr.IsDraft,
 		CommentCount:            pr.CommentCount,
 		UnresolvedCount:         pr.UnresolvedCount,
@@ -913,6 +946,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		Edited:                  pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
 		Closed:                  null.IntFromPtr(pr.Closed),
 		State:                   pr.State,
+		SubState:                pr.SubState,
 		IsDraft:                 pr.IsDraft,
 		CommentCount:            pr.CommentCount,
 		UnresolvedCount:         pr.UnresolvedCount,

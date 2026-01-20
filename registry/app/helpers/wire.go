@@ -78,4 +78,5 @@ func ProvideRegistryHelper(
 var WireSet = wire.NewSet(
 	ProvidePackageWrapperProvider,
 	ProvideRegistryHelper,
+	NewNoopDependencyFirewallChecker,
 )

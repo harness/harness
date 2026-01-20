@@ -72,6 +72,7 @@ func NewRouter(
 			r.Use(middleware.CheckAuthWithChallenge(mavenHandler, spaceFinder, publicAccessService))
 			r.Use(middleware.TrackDownloadStatForMavenArtifact(mavenHandler))
 			r.Use(middleware.TrackBandwidthStatForMavenArtifacts(mavenHandler))
+			r.Use(middleware.StoreArtifactInfo(mavenHandler))
 			r.Get("/*", mavenHandler.GetArtifact)
 			r.Head("/*", mavenHandler.HeadArtifact)
 			r.Put("/*", mavenHandler.PutArtifact)

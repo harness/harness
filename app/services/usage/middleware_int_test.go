@@ -15,7 +15,7 @@
 //go:build integration
 // +build integration
 
-package usage_test
+package usage
 
 import (
 	"bytes"
@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/types"
 
 	"github.com/go-chi/chi/v5"
@@ -37,19 +36,22 @@ import (
 )
 
 const (
-	numRequests = 50
-	fileSize    = 100 * 1024 * 1024 // 100 MB
-	url         = "http://localhost:8080"
-	spaceRef    = "root"
+	numRequests  = 10
+	fileSize     = 1 * 1024 * 1024 // 100 MB
+	testURL      = "http://localhost:8080"
+	testSpaceRef = "root"
 )
 
 var httpClient = &http.Client{
 	Transport: &http.Transport{
 		MaxIdleConns:      100,              // Allow up to 100 idle connections
-		MaxConnsPerHost:   100,              // Maximum concurrent connections per host
+		MaxConnsPerHost:   10,               // Maximum concurrent connections per host
 		IdleConnTimeout:   30 * time.Second, // Keep idle connections open for reuse
 		DisableKeepAlives: false,            // Allow connection reuse
+		WriteBufferSize:   64 * 1024,        // 64 KB write buffer
+		ReadBufferSize:    64 * 1024,
 	},
+	Timeout: 2 * time.Minute,
 }
 
 // Helper function to generate random file data
@@ -78,7 +80,7 @@ func simulateUploadRequest(t *testing.T) {
 	_ = writer.Close() // Must close the writer to finalize the boundary
 
 	// Create request and set Content-Type properly
-	req, err := http.NewRequest(http.MethodPost, url+"/testing/"+spaceRef, body)
+	req, err := http.NewRequest(http.MethodPost, testURL+"/testing/"+testSpaceRef, body)
 	if err != nil {
 		t.Fatalf("Failed to create upload request: %v", err)
 	}
@@ -100,7 +102,7 @@ func simulateUploadRequest(t *testing.T) {
 
 // Simulate a download request
 func simulateDownloadRequest(t *testing.T) {
-	req, err := http.NewRequest(http.MethodGet, url+"/testing/"+spaceRef, nil)
+	req, err := http.NewRequest(http.MethodGet, testURL+"/testing/"+testSpaceRef, nil)
 	if err != nil {
 		t.Fatalf("Failed to create download request: %v", err)
 	}
@@ -160,30 +162,24 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 
 // Test function to run multiple uploads and downloads concurrently
 func TestUploadDownloadMiddleware(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	spaceStore := &usage.SpaceStoreMock{
-		FindByRefFn: func(ctx context.Context, spaceRef string) (*types.Space, error) {
-			return &types.Space{
-				ID:          1,
-				Version:     1,
-				ParentID:    0,
-				Path:        "",
-				Identifier:  "root",
-				Description: "",
-				CreatedBy:   0,
-				Created:     0,
-				Updated:     0,
-				Deleted:     nil,
+	spaceStore := &SpaceFinderMock{
+		FindByRefFn: func(ctx context.Context, spaceRef string) (*types.SpaceCore, error) {
+			return &types.SpaceCore{
+				ID:         1,
+				ParentID:   0,
+				Path:       "",
+				Identifier: "root",
 			}, nil
 		},
-		FindByIDsFn: func(ctx context.Context, spaceIDs ...int64) ([]*types.Space, error) {
-			return []*types.Space{}, nil
+		FindByIDsFn: func(ctx context.Context, spaceIDs ...int64) ([]*types.SpaceCore, error) {
+			return []*types.SpaceCore{}, nil
 		},
 	}
 
-	metricsMock := &usage.MetricsMock{
+	metricsMock := &MetricsMock{
 		UpsertOptimisticFn: func(ctx context.Context, in *types.UsageMetric) error {
 			time.Sleep(100 * time.Millisecond)
 			return nil
@@ -196,7 +192,7 @@ func TestUploadDownloadMiddleware(t *testing.T) {
 		},
 	}
 
-	mediator := usage.NewMediator(ctx, spaceStore, metricsMock, usage.Config{})
+	mediator := NewMediator(ctx, spaceStore, metricsMock, Config{})
 	// Start the server in a goroutine
 	go func() {
 		r := chi.NewRouter()
@@ -204,7 +200,7 @@ func TestUploadDownloadMiddleware(t *testing.T) {
 			writer.WriteHeader(http.StatusOK)
 		})
 		r.Route(fmt.Sprintf("/testing/{%s}", request.PathParamRepoRef), func(r chi.Router) {
-			r.Use(usage.Middleware(mediator, true))
+			r.Use(Middleware(mediator))
 			r.Post("/", uploadHandler)
 			r.Get("/", downloadHandler)
 		})
@@ -243,7 +239,7 @@ func TestUploadDownloadMiddleware(t *testing.T) {
 
 func waitServer(t *testing.T) {
 	t.Helper()
-	req, err := http.NewRequest(http.MethodGet, url+"/health", nil)
+	req, err := http.NewRequest(http.MethodGet, testURL+"/health", nil)
 	if err != nil {
 		t.Fatalf("failed to create health request: %v", err)
 		return

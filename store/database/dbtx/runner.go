@@ -164,6 +164,16 @@ func (r runnerDB) SelectContext(ctx context.Context, dest any, query string, arg
 	return r.db.SelectContext(ctx, dest, query, args...)
 }
 
+func (r runnerDB) NamedExecContext(
+	ctx context.Context,
+	query string,
+	arg any,
+) (sql.Result, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.NamedExecContext(ctx, query, arg)
+}
+
 // runnerTx executes sqlx database transaction calls.
 // Locking is not used because runnerDB locks the entire transaction.
 type runnerTx struct {

@@ -45,6 +45,10 @@ type SpaceFinderMock struct {
 		ctx context.Context,
 		spaceRef string,
 	) (*types.SpaceCore, error)
+	FindByIDsFn func(
+		ctx context.Context,
+		spaceIDs ...int64,
+	) ([]*types.SpaceCore, error)
 }
 
 func (s *SpaceFinderMock) FindByRef(
@@ -52,6 +56,10 @@ func (s *SpaceFinderMock) FindByRef(
 	spaceRef string,
 ) (*types.SpaceCore, error) {
 	return s.FindByRefFn(ctx, spaceRef)
+}
+
+func (s *SpaceFinderMock) FindByIDs(ctx context.Context, spaceIDs ...int64) ([]*types.SpaceCore, error) {
+	return s.FindByIDsFn(ctx, spaceIDs...)
 }
 
 type RepoFinderMock struct {
@@ -69,8 +77,9 @@ func (r *RepoFinderMock) FindByID(
 }
 
 type MetricsMock struct {
-	UpsertOptimisticFn func(ctx context.Context, in *types.UsageMetric) error
-	GetMetricsFn       func(
+	UpsertFn        func(ctx context.Context, in []*types.UsageMetric) error
+	UpsertStorageFn func(ctx context.Context, in []*types.UsageMetric) error
+	GetMetricsFn    func(
 		ctx context.Context,
 		rootSpaceID int64,
 		startDate int64,
@@ -83,6 +92,20 @@ type MetricsMock struct {
 	) ([]types.UsageMetric, error)
 }
 
+func (m *MetricsMock) Upsert(
+	ctx context.Context,
+	in []*types.UsageMetric,
+) error {
+	return m.UpsertFn(ctx, in)
+}
+
+func (m *MetricsMock) UpsertStorage(
+	ctx context.Context,
+	in []*types.UsageMetric,
+) error {
+	return m.UpsertStorageFn(ctx, in)
+}
+
 func (m *MetricsMock) GetMetrics(
 	ctx context.Context,
 	rootSpaceID int64,
@@ -90,13 +113,6 @@ func (m *MetricsMock) GetMetrics(
 	endDate int64,
 ) (*types.UsageMetric, error) {
 	return m.GetMetricsFn(ctx, rootSpaceID, startDate, endDate)
-}
-
-func (m *MetricsMock) UpsertOptimistic(
-	ctx context.Context,
-	in *types.UsageMetric,
-) error {
-	return m.UpsertOptimisticFn(ctx, in)
 }
 
 func (m *MetricsMock) List(

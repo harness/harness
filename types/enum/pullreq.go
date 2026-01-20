@@ -38,6 +38,26 @@ var pullReqStates = sortEnum([]PullReqState{
 	PullReqStateClosed,
 })
 
+// PullReqSubState defines pull request sub-state.
+type PullReqSubState string
+
+func (PullReqSubState) Enum() []any { return toInterfaceSlice(pullReqSubStates) }
+func (s PullReqSubState) Sanitize() (PullReqSubState, bool) {
+	return Sanitize(s, GetAllPullReqSubStates)
+}
+func GetAllPullReqSubStates() ([]PullReqSubState, PullReqSubState) { return pullReqSubStates, "" }
+
+// PullReqSubState enumeration.
+const (
+	PullReqSubStateNone      PullReqSubState = ""
+	PullReqSubStateAutoMerge PullReqSubState = "auto_merge"
+)
+
+var pullReqSubStates = sortEnum([]PullReqSubState{
+	PullReqSubStateNone,
+	PullReqSubStateAutoMerge,
+})
+
 // PullReqSort defines pull request attribute that can be used for sorting.
 type PullReqSort string
 

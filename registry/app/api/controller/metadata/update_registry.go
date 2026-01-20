@@ -507,6 +507,9 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 		RegistryID: u.RegistryID,
 		CreatedAt:  u.CreatedAt,
 	}
+	if config.UpstreamProxyConfigFirewallMode != nil {
+		upstreamProxyConfigEntity.FirewallMode = string(*config.UpstreamProxyConfigFirewallMode)
+	}
 	if config.Url != nil {
 		upstreamProxyConfigEntity.URL = *config.Url
 	}
