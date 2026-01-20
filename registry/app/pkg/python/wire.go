@@ -19,6 +19,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -32,12 +33,13 @@ func LocalRegistryProvider(
 	proxyStore store.UpstreamProxyConfigRepository,
 	tx dbtx.Transactor,
 	registryDao store.RegistryRepository,
+	registryFinder registryrefcache.RegistryFinder,
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
 ) LocalRegistry {
-	registry := NewLocalRegistry(localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao,
-		urlProvider)
+	registry := NewLocalRegistry(localBase, fileManager, proxyStore, tx, registryDao, registryFinder,
+		imageDao, artifactDao, urlProvider)
 	base.Register(registry)
 	return registry
 }

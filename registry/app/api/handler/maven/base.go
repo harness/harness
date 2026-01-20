@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/maven"
 	mavenutils "github.com/harness/gitness/registry/app/pkg/maven/utils"
+	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/request"
 
 	"github.com/rs/zerolog/log"
@@ -51,13 +52,15 @@ type Handler struct {
 	Authenticator       authn.Authenticator
 	Authorizer          authz.Authorizer
 	SpaceFinder         refcache.SpaceFinder
+	RegistryFinder      refcache2.RegistryFinder
 	PublicAccessService publicaccess.Service
 }
 
 func NewHandler(
 	controller *maven.Controller, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, authorizer authz.Authorizer,
-	spaceFinder refcache.SpaceFinder, publicAccessService publicaccess.Service,
+	spaceFinder refcache.SpaceFinder, registryFinder refcache2.RegistryFinder,
+	publicAccessService publicaccess.Service,
 ) *Handler {
 	return &Handler{
 		Controller:          controller,
@@ -67,6 +70,7 @@ func NewHandler(
 		Authenticator:       authenticator,
 		Authorizer:          authorizer,
 		SpaceFinder:         spaceFinder,
+		RegistryFinder:      registryFinder,
 		PublicAccessService: publicAccessService,
 	}
 }
@@ -93,7 +97,7 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 
-	registry, err := h.Controller.DBStore.RegistryDao.GetByRootParentIDAndName(ctx, rootSpace.ID, registryIdentifier)
+	registry, err := h.RegistryFinder.FindByRootParentID(ctx, rootSpace.ID, registryIdentifier)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(
 			"registry %s not found for root: %s. Reason: %s", registryIdentifier, rootSpace.Identifier, err,

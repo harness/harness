@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
 	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
+	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
@@ -43,7 +44,8 @@ import (
 
 func LocalRegistryProvider(
 	app *App, ms ManifestService, blobRepo store.BlobRepository,
-	registryDao store.RegistryRepository, manifestDao store.ManifestRepository,
+	registryDao store.RegistryRepository, registryFinder registryrefcache.RegistryFinder,
+	manifestDao store.ManifestRepository,
 	registryBlobDao store.RegistryBlobRepository,
 	mtRepository store.MediaTypesRepository,
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
@@ -53,7 +55,7 @@ func LocalRegistryProvider(
 	bucketService BucketService,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
-		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
+		app, ms, manifestDao, registryDao, registryFinder, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
 		gcService, tx, quarantineArtifactDao, bucketService, replicationReporter,
 	).(*LocalRegistry)

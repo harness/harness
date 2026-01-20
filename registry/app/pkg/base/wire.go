@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -27,6 +28,7 @@ import (
 
 func LocalBaseProvider(
 	registryDao store.RegistryRepository,
+	registryFinder registryrefcache.RegistryFinder,
 	fileManager filemanager.FileManager,
 	tx dbtx.Transactor,
 	imageDao store.ImageRepository,
@@ -38,7 +40,7 @@ func LocalBaseProvider(
 	auditService audit.Service,
 ) LocalBase {
 	return NewLocalBase(
-		registryDao, fileManager, tx, imageDao, artifactDao, nodesDao,
+		registryDao, registryFinder, fileManager, tx, imageDao, artifactDao, nodesDao,
 		tagsDao, authorizer, spaceFinder, auditService,
 	)
 }

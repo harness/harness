@@ -135,7 +135,8 @@ func NewHandlerProvider(
 func NewMavenHandlerProvider(
 	controller *maven.Controller, spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder, publicAccessService publicaccess2.CacheService,
+	authorizer authz.Authorizer, spaceFinder refcache.SpaceFinder, registryFinder refcache2.RegistryFinder,
+	publicAccessService publicaccess2.CacheService,
 ) *mavenhandler.Handler {
 	return mavenhandler.NewHandler(
 		controller,
@@ -145,6 +146,7 @@ func NewMavenHandlerProvider(
 		authenticator,
 		authorizer,
 		spaceFinder,
+		registryFinder,
 		publicAccessService,
 	)
 }

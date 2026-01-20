@@ -33,6 +33,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	pythontype "github.com/harness/gitness/registry/app/pkg/types/python"
 	"github.com/harness/gitness/registry/app/remote/adapter/commons/pypi"
+	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -44,14 +45,15 @@ var _ pkg.Artifact = (*localRegistry)(nil)
 var _ Registry = (*localRegistry)(nil)
 
 type localRegistry struct {
-	localBase   base.LocalBase
-	fileManager filemanager.FileManager
-	proxyStore  store.UpstreamProxyConfigRepository
-	tx          dbtx.Transactor
-	registryDao store.RegistryRepository
-	imageDao    store.ImageRepository
-	artifactDao store.ArtifactRepository
-	urlProvider urlprovider.Provider
+	localBase      base.LocalBase
+	fileManager    filemanager.FileManager
+	proxyStore     store.UpstreamProxyConfigRepository
+	tx             dbtx.Transactor
+	registryDao    store.RegistryRepository
+	registryFinder registryrefcache.RegistryFinder
+	imageDao       store.ImageRepository
+	artifactDao    store.ArtifactRepository
+	urlProvider    urlprovider.Provider
 }
 
 type LocalRegistry interface {
@@ -64,19 +66,21 @@ func NewLocalRegistry(
 	proxyStore store.UpstreamProxyConfigRepository,
 	tx dbtx.Transactor,
 	registryDao store.RegistryRepository,
+	registryFinder registryrefcache.RegistryFinder,
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
 ) LocalRegistry {
 	return &localRegistry{
-		localBase:   localBase,
-		fileManager: fileManager,
-		proxyStore:  proxyStore,
-		tx:          tx,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		urlProvider: urlProvider,
+		localBase:      localBase,
+		fileManager:    fileManager,
+		proxyStore:     proxyStore,
+		tx:             tx,
+		registryDao:    registryDao,
+		registryFinder: registryFinder,
+		imageDao:       imageDao,
+		artifactDao:    artifactDao,
+		urlProvider:    urlProvider,
 	}
 }
 
@@ -105,7 +109,7 @@ func (c *localRegistry) GetPackageMetadata(
 	ctx context.Context,
 	info pythontype.ArtifactInfo,
 ) (pythontype.PackageMetadata, error) {
-	registry, err := c.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
+	registry, err := c.registryFinder.FindByRootParentID(ctx, info.RootParentID, info.RegIdentifier)
 	packageMetadata := pythontype.PackageMetadata{}
 	packageMetadata.Name = info.Image
 	packageMetadata.Files = []pythontype.File{}

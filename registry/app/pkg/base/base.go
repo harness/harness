@@ -38,6 +38,7 @@ import (
 	registryaudit "github.com/harness/gitness/registry/app/pkg/audit"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
@@ -120,20 +121,22 @@ type LocalBase interface {
 }
 
 type localBase struct {
-	registryDao  store.RegistryRepository
-	fileManager  filemanager.FileManager
-	tx           dbtx.Transactor
-	imageDao     store.ImageRepository
-	artifactDao  store.ArtifactRepository
-	nodesDao     store.NodesRepository
-	tagsDao      store.PackageTagRepository
-	authorizer   authz.Authorizer
-	spaceFinder  refcache.SpaceFinder
-	auditService audit.Service
+	registryDao    store.RegistryRepository
+	registryFinder registryrefcache.RegistryFinder
+	fileManager    filemanager.FileManager
+	tx             dbtx.Transactor
+	imageDao       store.ImageRepository
+	artifactDao    store.ArtifactRepository
+	nodesDao       store.NodesRepository
+	tagsDao        store.PackageTagRepository
+	authorizer     authz.Authorizer
+	spaceFinder    refcache.SpaceFinder
+	auditService   audit.Service
 }
 
 func NewLocalBase(
 	registryDao store.RegistryRepository,
+	registryFinder registryrefcache.RegistryFinder,
 	fileManager filemanager.FileManager,
 	tx dbtx.Transactor,
 	imageDao store.ImageRepository,
@@ -145,16 +148,17 @@ func NewLocalBase(
 	auditService audit.Service,
 ) LocalBase {
 	return &localBase{
-		registryDao:  registryDao,
-		fileManager:  fileManager,
-		tx:           tx,
-		imageDao:     imageDao,
-		artifactDao:  artifactDao,
-		nodesDao:     nodesDao,
-		tagsDao:      tagsDao,
-		authorizer:   authorizer,
-		spaceFinder:  spaceFinder,
-		auditService: auditService,
+		registryDao:    registryDao,
+		registryFinder: registryFinder,
+		fileManager:    fileManager,
+		tx:             tx,
+		imageDao:       imageDao,
+		artifactDao:    artifactDao,
+		nodesDao:       nodesDao,
+		tagsDao:        tagsDao,
+		authorizer:     authorizer,
+		spaceFinder:    spaceFinder,
+		auditService:   auditService,
 	}
 }
 
@@ -217,7 +221,7 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 		return responseHeaders, fileSha256, 0, true, nil
 	}
 
-	registry, err := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
+	registry, err := l.registryFinder.FindByRootParentID(ctx, info.RootParentID, info.RegIdentifier)
 	if err != nil {
 		return responseHeaders, "", 0, false, errcode.ErrCodeUnknown.WithDetail(err)
 	}
@@ -406,7 +410,7 @@ func (l *localBase) uploadInternal(
 		}
 	}
 
-	registry, err := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
+	registry, err := l.registryFinder.FindByRootParentID(ctx, info.RootParentID, info.RegIdentifier)
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
@@ -502,7 +506,7 @@ func (l *localBase) Download(
 	}
 
 	path := "/" + info.Image + "/" + version + "/" + fileName
-	reg, _ := l.registryDao.GetByRootParentIDAndName(ctx, info.RootParentID, info.RegIdentifier)
+	reg, _ := l.registryFinder.FindByRootParentID(ctx, info.RootParentID, info.RegIdentifier)
 
 	fileReader, _, redirectURL, err := l.fileManager.DownloadFile(ctx, path, reg.ID,
 		info.RegIdentifier, info.RootIdentifier, true)
