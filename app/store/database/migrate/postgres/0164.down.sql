@@ -1,0 +1,1 @@
+DROP INDEX idx_webhook_executions_trigger_id;
