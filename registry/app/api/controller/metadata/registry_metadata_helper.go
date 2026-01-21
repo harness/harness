@@ -119,6 +119,7 @@ func (r *GitnessRegistryMetadataHelper) GetRegistryRequestBaseInfo(
 		baseInfo.RegistryID = reg.ID
 		baseInfo.RegistryType = reg.Type
 		baseInfo.PackageType = reg.PackageType
+		baseInfo.RegistryUUID = reg.UUID
 	}
 
 	return &baseInfo, nil

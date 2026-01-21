@@ -24,6 +24,7 @@ type RegistryRequestBaseInfo struct {
 	RootIdentifierID   int64
 	RegistryRef        string
 	RegistryIdentifier string
+	RegistryUUID       string
 	RegistryID         int64
 	ParentRef          string
 	ParentID           int64
