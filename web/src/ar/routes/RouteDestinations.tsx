@@ -18,7 +18,7 @@ import React from 'react'
 import { Redirect, Switch } from 'react-router-dom'
 
 import { Parent } from '@ar/common/types'
-import { useAppStore, useGetRepositoryListViewType, useRoutes } from '@ar/hooks'
+import { useAppStore, useFeatureFlags, useGetRepositoryListViewType, useRoutes } from '@ar/hooks'
 import RedirectPage from '@ar/pages/redirect-page/RedirectPage'
 import { RepositoryListViewTypeEnum } from '@ar/contexts/AppStoreContext'
 import type { WebhookDetailsTab } from '@ar/pages/webhook-details/constants'
@@ -44,6 +44,7 @@ const ArtifactDetailsPage = React.lazy(() => import('@ar/pages/artifact-details/
 const VersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/VersionDetailsPage'))
 const RouteProvider = React.lazy(() => import('@ar/components/RouteProvider/RouteProvider'))
 const WebhookDetailsPage = React.lazy(() => import('@ar/pages/webhook-details/WebhookDetailsPage'))
+const DependencyFirewallPage = React.lazy(() => import('@ar/pages/dependency-firewall/DependencyFirewallPage'))
 
 export const manageRegistriesTabPathProps: ManageRegistriesTabPathParams = {
   tab: ':tab' as ManageRegistriesDetailsTab
@@ -111,6 +112,7 @@ const RouteDestinations = (): JSX.Element => {
   const routes = useRoutes(true)
   const { parent } = useAppStore()
   const repositoryListViewType = useGetRepositoryListViewType()
+  const { HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
   const shouldUseSeperateVersionDetailsRoute =
     parent === Parent.Enterprise || repositoryListViewType === RepositoryListViewTypeEnum.DIRECTORY
   return (
@@ -132,6 +134,11 @@ const RouteDestinations = (): JSX.Element => {
       {repositoryListViewType === RepositoryListViewTypeEnum.LIST && (
         <RouteProvider exact path={routes.toARRepositories()}>
           <RepositoryListPage />
+        </RouteProvider>
+      )}
+      {!!HAR_DEPENDENCY_FIREWALL && (
+        <RouteProvider path={routes.toARDependencyFirewall()}>
+          <DependencyFirewallPage />
         </RouteProvider>
       )}
       <RouteProvider path={routes.toARRepositoryWebhookDetails({ ...repositoryWebhookDetailsPathParams })}>

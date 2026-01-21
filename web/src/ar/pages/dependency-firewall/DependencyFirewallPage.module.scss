@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-.pageBody {
-  --page-header-height: 0px;
-  background-color: var(--primary-bg) !important;
+.pageHeader {
+  height: var(--har-dependency-firewall-page-header-height) !important;
+  background-color: var(--white) !important;
+  position: sticky;
+  top: 0;
 }
 
-:root {
-  --har-table-name-column-min-width: 250px;
-  --har-repository-list-page-header-height: 5rem;
-  --har-repository-details-page-header-height: 9rem;
-  --har-version-details-page-header-height: 6.5rem;
-  --har-artifact-list-page-header-height: 5rem;
-  --har-artifact-details-page-header-height: 8rem;
-  --har-dependency-firewall-page-header-height: 5rem;
-  --input-element-width: 580px;
+.tabsContainer {
+  --tab-container-page-header-height: var(--har-dependency-firewall-page-header-height);
 }

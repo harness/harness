@@ -66,6 +66,10 @@ export interface StringsMap {
   'artifactList.table.noArchivedArtifactsTitle': string
   'artifactList.table.noArtifactsTitle': string
   'artifactList.viewArtifactDetails': string
+  'dependencyFirewall.page': string
+  'dependencyFirewall.pageHeading': string
+  'dependencyFirewall.tabs.exceptions': string
+  'dependencyFirewall.tabs.violations': string
   'digestList.page': string
   'digestList.table.aboutDigest': string
   'digestList.table.columns.digest': string
@@ -402,6 +406,7 @@ export interface StringsMap {
   'versionList.table.columns.version': string
   'versionList.table.noArchivedVersionsTitle': string
   'versionList.table.noVersionsTitle': string
+  'violationsList.page': string
   'webhookDetails.tabs.configuration': string
   'webhookDetails.tabs.executions': string
   'webhookExecutionList.executionDetailsDrawer.at': string

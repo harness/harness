@@ -18,6 +18,7 @@ import { defaultTo, isEmpty } from 'lodash-es'
 
 import type {
   ArtifactDetailsPathParams,
+  DependencyFirewallViolationDetailsPathParams,
   ManageRegistriesTabPathParams,
   RedirectPageQueryParams,
   RepositoryDetailsPathParams,
@@ -35,6 +36,13 @@ export interface ARRouteDefinitionsReturn {
   toARManageRegistries: (_?: unknown, options?: IRouteOptions) => string
   toARManageRegistriesTab: (params: ManageRegistriesTabPathParams, options?: IRouteOptions) => string
   toARRepositories: (_?: unknown, options?: IRouteOptions) => string
+  toARDependencyFirewall: (_?: unknown, options?: IRouteOptions) => string
+  toARDependencyFirewallViolations: (_?: unknown, options?: IRouteOptions) => string
+  toARDependencyFirewallViolationDetails: (
+    params: DependencyFirewallViolationDetailsPathParams,
+    options?: IRouteOptions
+  ) => string
+  toARDependencyFirewallExceptions: (_?: unknown, options?: IRouteOptions) => string
   toARRepositoryDetails: (params: RepositoryDetailsPathParams, options?: IRouteOptions) => string
   toARRepositoryDetailsTab: (params: RepositoryDetailsTabPathParams, options?: IRouteOptions) => string
   toARArtifacts: (_?: unknown, options?: IRouteOptions) => string
@@ -113,5 +121,11 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
   ),
   toARRepositoryWebhookDetailsTab: routeDefinitionWithMode(
     params => `/registries/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params.tab}`
-  )
+  ),
+  toARDependencyFirewall: routeDefinitionWithMode(() => '/dependency-firewall'),
+  toARDependencyFirewallViolations: routeDefinitionWithMode(() => '/dependency-firewall/violations'),
+  toARDependencyFirewallViolationDetails: routeDefinitionWithMode(
+    params => `/dependency-firewall/violations/${params.violationId}`
+  ),
+  toARDependencyFirewallExceptions: routeDefinitionWithMode(() => '/dependency-firewall/exceptions')
 }
