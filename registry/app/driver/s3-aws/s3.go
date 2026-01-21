@@ -60,6 +60,7 @@ import (
 )
 
 const driverName = "s3aws"
+const r2DriverName = "r2"
 
 // minChunkSize defines the minimum multipart upload chunk size
 // S3 API requires multipart upload chunks to be at least 5MB.
@@ -170,6 +171,7 @@ func init() {
 
 	// Register this as the default s3 driver in addition to s3aws
 	factory.Register(driverName, &s3DriverFactory{})
+	factory.Register(r2DriverName, &s3DriverFactory{})
 }
 
 // TODO: figure-out why init is not called automatically
