@@ -74,7 +74,7 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("filesystem driver init failed: %v", err)
 	}
-	svc, err := storage.NewStorageService(drv, nil)
+	svc, err := storage.NewStorageService(&storage.StaticDriverProvider{Driver: drv}, nil)
 	if err != nil {
 		t.Fatalf("storage service init failed: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 	lr := newLocalForTests(&mockLocalBase{}, nil, nil, nil, nil)
 	lr.fileManager = fm
 	// Prepare blob store for verification of upload
-	blobStore := svc.GenericBlobsStore(nil, info.RootIdentifier)
+	blobStore := svc.GenericBlobsStore(ctx, info.RootIdentifier)
 
 	// Prepare base64 data for attachment
 	content := []byte("test tarball bytes")

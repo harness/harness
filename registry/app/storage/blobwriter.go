@@ -225,7 +225,7 @@ func (bw *blobWriter) validateBlob(ctx context.Context, desc manifest.Descriptor
 		digester := digest.Canonical.Digester()
 		verifier := desc.Digest.Verifier()
 
-		// Read the file from the backend driver and validate it.
+		// Read the file from the backend Driver and validate it.
 		fr, err := NewFileReader(ctx, bw.driver, bw.path, desc.Size)
 		if err != nil {
 			return manifest.Descriptor{}, err

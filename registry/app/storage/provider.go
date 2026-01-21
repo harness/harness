@@ -17,6 +17,7 @@ package storage
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/harness/gitness/registry/app/driver"
 )
 
@@ -28,9 +29,9 @@ const (
 )
 
 type DriverSelector struct {
-	BucketID     string
+	BucketID     uuid.UUID
 	RootParentID int64
-	GBlobID      string
+	GBlobID      uuid.UUID
 	Mode         Mode
 }
 
@@ -41,23 +42,23 @@ type DriverProvider interface {
 }
 
 // StaticDriverProvider is a simple implementation of StorageDriverProvider
-// that always returns the same driver.
+// that always returns the same Driver.
 type StaticDriverProvider struct {
-	driver driver.StorageDriver
+	Driver driver.StorageDriver
 }
 
 func NewStaticDriverProvider(d driver.StorageDriver) DriverProvider {
-	return &StaticDriverProvider{driver: d}
+	return &StaticDriverProvider{Driver: d}
 }
 
-// GetDriver returns the static driver.
+// GetDriver returns the static Driver.
 func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) (
 	driver.StorageDriver,
 	error,
 ) {
-	return p.driver, nil
+	return p.Driver, nil
 }
 
 func (p *StaticDriverProvider) GetDeleteDriver(_ context.Context, _ DriverSelector) (driver.StorageDeleter, error) {
-	return p.driver, nil
+	return p.Driver, nil
 }
