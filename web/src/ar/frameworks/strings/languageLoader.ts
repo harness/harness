@@ -32,6 +32,7 @@ import webhookDetails from '@ar/pages/webhook-details/strings/strings.en.yaml'
 import webhookExecutionList from '@ar/pages/webhook-execution-list/strings/strings.en.yaml'
 import manageRegistries from '@ar/pages/manage-registries/strings/strings.en.yaml'
 import labelsList from '@ar/pages/labels-list/strings/strings.en.yaml'
+import dependencyFirewall from '@ar/pages/dependency-firewall/strings/strings.en.yaml'
 
 export default function languageLoader() {
   return {
@@ -47,6 +48,7 @@ export default function languageLoader() {
     versionList,
     webhookList,
     webhookDetails,
-    webhookExecutionList
+    webhookExecutionList,
+    dependencyFirewall
   }
 }

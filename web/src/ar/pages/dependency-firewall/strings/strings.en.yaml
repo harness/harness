@@ -1,0 +1,5 @@
+page: Dependency Firewall Page
+pageHeading: Dependency Firewall
+tabs:
+  violations: Policy Violations
+  exceptions: Exceptions

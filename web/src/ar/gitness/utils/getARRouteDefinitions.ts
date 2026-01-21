@@ -79,6 +79,12 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
       params => `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}`
     ),
     toARRepositoryWebhookDetailsTab: params =>
-      `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params?.tab}`
+      `/${params?.repositoryIdentifier}/webhooks/${params?.webhookIdentifier}/${params?.tab}`,
+    toARDependencyFirewall: routeDefinitionWithMode(() => '/dependency-firewall'),
+    toARDependencyFirewallViolations: routeDefinitionWithMode(() => '/dependency-firewall/violations'),
+    toARDependencyFirewallViolationDetails: routeDefinitionWithMode(
+      params => `/dependency-firewall/violations/${params.violationId}`
+    ),
+    toARDependencyFirewallExceptions: routeDefinitionWithMode(() => '/dependency-firewall/exceptions')
   }
 }
