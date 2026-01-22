@@ -19,6 +19,7 @@ import (
 	"mime/multipart"
 
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -50,9 +51,10 @@ type controller struct {
 	artifactDao store.ArtifactRepository
 	urlProvider urlprovider.Provider
 	// TODO: Cleanup and initiate at other place
-	local            python.LocalRegistry
-	proxy            python.Proxy
-	quarantineFinder quarantine.Finder
+	local                     python.LocalRegistry
+	proxy                     python.Proxy
+	quarantineFinder          quarantine.Finder
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker
 }
 
 // NewController creates a new Python controller.
@@ -67,17 +69,19 @@ func NewController(
 	local python.LocalRegistry,
 	proxy python.Proxy,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) Controller {
 	return &controller{
-		proxyStore:       proxyStore,
-		registryDao:      registryDao,
-		imageDao:         imageDao,
-		artifactDao:      artifactDao,
-		fileManager:      fileManager,
-		tx:               tx,
-		urlProvider:      urlProvider,
-		local:            local,
-		proxy:            proxy,
-		quarantineFinder: quarantineFinder,
+		proxyStore:                proxyStore,
+		registryDao:               registryDao,
+		imageDao:                  imageDao,
+		artifactDao:               artifactDao,
+		fileManager:               fileManager,
+		tx:                        tx,
+		urlProvider:               urlProvider,
+		local:                     local,
+		proxy:                     proxy,
+		quarantineFinder:          quarantineFinder,
+		dependencyFirewallChecker: dependencyFirewallChecker,
 	}
 }

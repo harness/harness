@@ -54,7 +54,16 @@ func (c Controller) DownloadFile(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.DBStore.RegistryDao, c.quarantineFinder, f, info, true)
+	result, err := base.ProxyWrapperWithChecks(
+		ctx,
+		c.DBStore.RegistryDao,
+		c.quarantineFinder,
+		c.dependencyFirewallChecker,
+		f,
+		info,
+		true,
+		true,
+	)
 	if err != nil {
 		return &GetArtifactResponse{
 			BaseResponse: BaseResponse{

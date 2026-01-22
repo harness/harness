@@ -48,7 +48,16 @@ func (c *controller) DownloadPackageFile(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, true)
+	result, err := base.ProxyWrapperWithChecks(
+		ctx,
+		c.registryDao,
+		c.quarantineFinder,
+		c.dependencyFirewallChecker,
+		f,
+		info,
+		true,
+		true,
+	)
 	if !commons2.IsEmpty(err) {
 		return &GetArtifactResponse{
 			BaseResponse: BaseResponse{Error: err},

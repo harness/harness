@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -47,8 +48,20 @@ func ControllerProvider(
 	local generic.LocalRegistry,
 	proxy generic.Proxy,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) *Controller {
-	return NewController(spaceStore, authorizer, fileManager, dBStore, tx, spaceFinder, local, proxy, quarantineFinder)
+	return NewController(
+		spaceStore,
+		authorizer,
+		fileManager,
+		dBStore,
+		tx,
+		spaceFinder,
+		local,
+		proxy,
+		quarantineFinder,
+		dependencyFirewallChecker,
+	)
 }
 
 var DBStoreSet = wire.NewSet(DBStoreProvider)

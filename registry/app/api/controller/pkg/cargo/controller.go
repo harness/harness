@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	cargometadata "github.com/harness/gitness/registry/app/metadata/cargo"
 	"github.com/harness/gitness/registry/app/pkg/cargo"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
@@ -58,19 +59,20 @@ type Controller interface {
 
 // Controller handles Cargo package operations.
 type controller struct {
-	fileManager         filemanager.FileManager
-	proxyStore          store.UpstreamProxyConfigRepository
-	tx                  dbtx.Transactor
-	registryDao         store.RegistryRepository
-	registryFinder      refcache.RegistryFinder
-	imageDao            store.ImageRepository
-	artifactDao         store.ArtifactRepository
-	urlProvider         urlprovider.Provider
-	local               cargo.LocalRegistry
-	proxy               cargo.Proxy
-	publicAccessService publicaccess.Service
-	spaceFinder         refcache2.SpaceFinder
-	quarantineFinder    quarantine.Finder
+	fileManager               filemanager.FileManager
+	proxyStore                store.UpstreamProxyConfigRepository
+	tx                        dbtx.Transactor
+	registryDao               store.RegistryRepository
+	registryFinder            refcache.RegistryFinder
+	imageDao                  store.ImageRepository
+	artifactDao               store.ArtifactRepository
+	urlProvider               urlprovider.Provider
+	local                     cargo.LocalRegistry
+	proxy                     cargo.Proxy
+	publicAccessService       publicaccess.Service
+	spaceFinder               refcache2.SpaceFinder
+	quarantineFinder          quarantine.Finder
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker
 }
 
 // NewController creates a new Cargo controller.
@@ -88,20 +90,22 @@ func NewController(
 	publicAccessService publicaccess.Service,
 	spaceFinder refcache2.SpaceFinder,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) Controller {
 	return &controller{
-		proxyStore:          proxyStore,
-		registryDao:         registryDao,
-		registryFinder:      registryFinder,
-		imageDao:            imageDao,
-		artifactDao:         artifactDao,
-		fileManager:         fileManager,
-		tx:                  tx,
-		urlProvider:         urlProvider,
-		local:               local,
-		proxy:               proxy,
-		publicAccessService: publicAccessService,
-		spaceFinder:         spaceFinder,
-		quarantineFinder:    quarantineFinder,
+		proxyStore:                proxyStore,
+		registryDao:               registryDao,
+		registryFinder:            registryFinder,
+		imageDao:                  imageDao,
+		artifactDao:               artifactDao,
+		fileManager:               fileManager,
+		tx:                        tx,
+		urlProvider:               urlProvider,
+		local:                     local,
+		proxy:                     proxy,
+		publicAccessService:       publicAccessService,
+		spaceFinder:               spaceFinder,
+		quarantineFinder:          quarantineFinder,
+		dependencyFirewallChecker: dependencyFirewallChecker,
 	}
 }

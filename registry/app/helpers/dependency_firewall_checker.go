@@ -27,12 +27,12 @@ func NewNoopDependencyFirewallChecker() interfaces.DependencyFirewallChecker {
 	return &noopDependencyFirewallChecker{}
 }
 
-func (n *noopDependencyFirewallChecker) CheckPolicyVoilation(
-	ctx context.Context,
-	registryID int64,
-	image string,
-	version string,
-	artifactType *artifact.ArtifactType,
+func (n *noopDependencyFirewallChecker) CheckPolicyViolation(
+	_ context.Context,
+	_ int64,
+	_ string,
+	_ string,
+	_ *artifact.ArtifactType,
 ) error {
 	return nil
 }
