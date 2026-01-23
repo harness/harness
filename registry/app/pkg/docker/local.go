@@ -384,6 +384,7 @@ func (r *LocalRegistry) fetchBlobInternal(
 
 	blobID, err := r.dbBlobLinkExists(ctx2, digest.Digest(info.Digest), info)
 	if err != nil { //nolint:contextcheck
+		log.Ctx(ctx2).Error().Msgf("error: %v", err)
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
