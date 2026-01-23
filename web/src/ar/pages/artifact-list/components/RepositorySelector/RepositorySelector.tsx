@@ -15,6 +15,7 @@
  */
 
 import React, { useMemo } from 'react'
+import { get } from 'lodash-es'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import type { SelectOption } from '@harnessio/uicore'
 import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
@@ -25,10 +26,12 @@ import { useStrings } from '@ar/frameworks/strings'
 
 export interface RepositorySelectorProps {
   value?: string[]
+  valueKey?: string
   onChange(ids: string[]): void
 }
 
 export default function RepositorySelector(props: RepositorySelectorProps): JSX.Element {
+  const { valueKey = 'identifier' } = props
   const [query, setQuery] = React.useState('')
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef()
@@ -54,10 +57,10 @@ export default function RepositorySelector(props: RepositorySelectorProps): JSX.
     }
     return (
       data?.content.data.registries?.map(item => {
-        return { label: item.identifier, value: item.identifier }
+        return { label: item.identifier, value: get(item, valueKey, '') }
       }) || []
     )
-  }, [data, isFetching, error])
+  }, [data, isFetching, error, getString, valueKey])
 
   const selectedValues = useMemo(() => {
     if (Array.isArray(props.value)) {
@@ -93,7 +96,7 @@ export default function RepositorySelector(props: RepositorySelectorProps): JSX.
           <Menu>
             {itemListProps.items.map((item, idx) => {
               if (item.disabled) {
-                return <MenuItem key={item.label} text={item.label} disabled />
+                return <MenuItem key={item.value as string} text={item.label} disabled />
               }
               return itemListProps.renderItem(item, idx)
             })}

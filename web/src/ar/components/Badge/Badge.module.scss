@@ -61,3 +61,15 @@
   border-color: var(--red-200) !important;
   --intent-color: var(--red-900) !important;
 }
+
+.blockedStatus {
+  background-color: var(--red-200) !important;
+  border-color: var(--red-200) !important;
+  --intent-color: var(--red-900) !important;
+}
+
+.warningStatus {
+  background-color: var(--orange-200) !important;
+  border-color: var(--orange-200) !important;
+  --intent-color: var(--orange-900) !important;
+}

@@ -25,6 +25,7 @@ export const DEFAULT_GLOBAL_ARTIFACT_LIST_TABLE_SORT = ['lastModified', 'DESC']
 export const DEFAULT_PACKAGE_LIST_TABLE_SORT = ['lastModified', 'DESC']
 export const DEFAULT_REPOSITORY_LIST_TABLE_SORT = ['lastModified', 'DESC']
 export const DEFAULT_ARTIFACT_LIST_TABLE_SORT = ['lastModified', 'DESC']
+export const DEFAULT_VIOLATIONS_LIST_TABLE_SORT = ['lastEvaluatedAt', 'DESC']
 export const DEFAULT_UPSTREAM_PROXY_LIST_TABLE_SORT = ['lastModified', 'DESC']
 export const DEFAULT_DEPLOYMENTS_LIST_TABLE_SORT = ['lastDeployedAt', 'DESC']
 

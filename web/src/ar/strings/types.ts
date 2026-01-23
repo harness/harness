@@ -414,7 +414,17 @@ export interface StringsMap {
   'versionList.table.columns.version': string
   'versionList.table.noArchivedVersionsTitle': string
   'versionList.table.noVersionsTitle': string
+  'violationsList.cards.blockedViolations': string
+  'violationsList.cards.dependencies': string
+  'violationsList.cards.totalViolations': string
+  'violationsList.cards.warningViolations': string
+  'violationsList.noViolationsFound': string
   'violationsList.page': string
+  'violationsList.table.columns.actions.violationDetails': string
+  'violationsList.table.columns.package': string
+  'violationsList.table.columns.policySet': string
+  'violationsList.table.columns.registry': string
+  'violationsList.table.columns.status': string
   'webhookDetails.tabs.configuration': string
   'webhookDetails.tabs.executions': string
   'webhookExecutionList.executionDetailsDrawer.at': string
@@ -591,6 +601,8 @@ export interface StringsMap {
   soon: string
   'status.archived': string
   'status.available': string
+  'status.blocked': string
+  'status.warning': string
   stepNotFound: string
   success: string
   tabNotFound: string

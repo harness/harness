@@ -1,1 +1,15 @@
 page: Violations List Page
+noViolationsFound: No Violations Found
+cards:
+  totalViolations: Total Violations
+  blockedViolations: Blocked Violations
+  warningViolations: Warning Violations
+  dependencies: Dependencies
+table:
+  columns:
+    package: Dependency And Version
+    registry: Upstream Registry
+    policySet: Policy Set Violated
+    status: Status
+    actions:
+      violationDetails: Violation Details

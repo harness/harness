@@ -16,11 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const archivedBadge: string
-export declare const badge: string
-export declare const blockedStatus: string
-export declare const dockerTag: string
-export declare const hover: string
-export declare const quarantineBadge: string
-export declare const visibilityBadge: string
-export declare const warningStatus: string
+export declare const pageBody: string
+export declare const subHeader: string
+export declare const subHeaderItems: string
+export declare const table: string
