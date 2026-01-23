@@ -614,6 +614,7 @@ func (c *Controller) Merge(
 				PullReq:        *pr,
 				RepoPath:       targetRepo.Path,
 				RuleViolations: violations,
+				BypassMessage:  in.BypassMessage,
 			}),
 		)
 		if err != nil {
