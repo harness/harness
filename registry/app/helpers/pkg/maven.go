@@ -265,6 +265,6 @@ func (c *mavenPackageType) GetPkgDownloadURL(
 
 	baseURL := c.registryHelper.GetPackageURL(ctx, rootIdentifier, registryIdentifier, c.pathPackageType)
 
-	downloadURL := fmt.Sprintf("%s/%s", baseURL, filepath)
+	downloadURL := fmt.Sprintf("%s%s", baseURL, filepath)
 	return downloadURL, nil
 }
