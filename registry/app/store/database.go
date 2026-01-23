@@ -807,7 +807,8 @@ type WebhooksExecutionRepository interface {
 }
 
 type PackageTagRepository interface {
-	FindByImageNameAndRegID(ctx context.Context, image string, regID int64) ([]*types.PackageTagMetadata, error)
+	FindByImageNameAndRegID(ctx context.Context,
+		image string, regID int64, imageType *string) ([]*types.PackageTagMetadata, error)
 
 	Create(ctx context.Context, tag *types.PackageTag) (string, error)
 

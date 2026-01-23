@@ -244,7 +244,7 @@ func (c *localRegistry) DownloadPackageIndex(
 func (c *localRegistry) DownloadPackageLatestVersionInfo(
 	ctx context.Context, info gopackagetype.ArtifactInfo,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
-	image, err := c.imageDao.GetByRepoAndName(ctx, info.ParentID, info.RegIdentifier, info.Image)
+	image, err := c.imageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err != nil {
 		return nil, nil, nil, "", fmt.Errorf("failed to get image: %w", err)
 	}

@@ -313,7 +313,7 @@ func CreatePackageMetadataVersion(registryURL string,
 }
 
 func (c *localRegistry) ListTags(ctx context.Context, info npm.ArtifactInfo) (map[string]string, error) {
-	tags, err := c.tagsDao.FindByImageNameAndRegID(ctx, info.Image, info.RegistryID)
+	tags, err := c.tagsDao.FindByImageNameAndRegID(ctx, info.Image, info.RegistryID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +327,7 @@ func (c *localRegistry) ListTags(ctx context.Context, info npm.ArtifactInfo) (ma
 }
 
 func (c *localRegistry) AddTag(ctx context.Context, info npm.ArtifactInfo) (map[string]string, error) {
-	image, err := c.imageDao.GetByRepoAndName(ctx, info.ParentID, info.RegIdentifier, info.Image)
+	image, err := c.imageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -339,6 +339,10 @@ func (c *localRegistry) AddTag(ctx context.Context, info npm.ArtifactInfo) (map[
 
 	if len(info.DistTags) == 0 {
 		return nil, usererror.BadRequest("Add tag error: distTags are empty")
+	}
+	if strings.TrimSpace(info.DistTags[0]) == "" {
+		log.Ctx(ctx).Warn().Msg("Add tag skipped: distTag is empty")
+		return map[string]string{}, nil
 	}
 	packageTag := &types.PackageTag{
 		ID:         uuid.NewString(),
