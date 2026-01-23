@@ -54,6 +54,7 @@ export class ComposerRepositoryType extends RepositoryStep<VirtualRegistryReques
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
   protected isWebhookSupported = true
+  protected isDependencyFirewallSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.Packagist,
     UpstreamRepositoryURLInputSource.Custom

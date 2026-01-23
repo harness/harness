@@ -29,12 +29,14 @@ import { RepositoryProviderContext } from '@ar/pages/repository-details/context/
 import RepositoryVisibilityContent from '@ar/pages/repository-details/components/FormContent/RepositoryVisibilityContent'
 import SelectContainerScannersFormSection from '@ar/pages/repository-details/components/FormContent/SelectContainerScannersFormSection'
 import RepositoryOpaPolicySelectorContent from '@ar/pages/repository-details/components/FormContent/RepositoryOpaPolicySelectorContent'
+import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 
 import UpstreamProxyDetailsFormContent from './UpstreamProxyDetailsFormContent'
 import UpstreamProxyAuthenticationFormContent from './UpstreamProxyAuthenticationFormContent'
 import UpstreamProxyIncludeExcludePatternFormContent from './UpstreamProxyIncludeExcludePatternFormContent'
 import UpstreamProxyCleanupPoliciesFormContent from './UpstreamProxyCleanupPoliciesFormContent'
 import type { UpstreamRegistryRequest } from '../../types'
+import DependencyFirewallConfigurationFormContent from './DependencyFirewallConfigurationFormContent'
 
 import css from './FormContent.module.scss'
 interface UpstreamProxyConfigurationFormContentProps {
@@ -51,7 +53,10 @@ export default function UpstreamProxyConfigurationFormContent(
   const { setIsDirty } = useContext(RepositoryProviderContext)
   const { dirty, values } = formikProps
   const [isCollapsedAdvancedConfig] = useState(getInitialStateOfCollapse())
-  const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
+  const { HAR_ARTIFACT_QUARANTINE_ENABLED, HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
+
+  const repositoryType = repositoryFactory.getRepositoryType(values.packageType)
+  const isDependencyFirewallSupported = repositoryType?.getIsDependencyFirewallSupported() && HAR_DEPENDENCY_FIREWALL
 
   useEffect(() => {
     setIsDirty(dirty)
@@ -64,9 +69,14 @@ export default function UpstreamProxyConfigurationFormContent(
 
   const advancedOptionsTitle = useMemo(() => {
     return getString('upstreamProxyDetails.editForm.enterpriseAdvancedOptionsSubTitle', {
-      entities: [getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')].filter(Boolean).join(', ')
+      entities: [
+        isDependencyFirewallSupported && getString('repositoryDetails.repositoryForm.dependencyFirewallTitle'),
+        getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')
+      ]
+        .filter(Boolean)
+        .join(', ')
     })
-  }, [])
+  }, [getString, isDependencyFirewallSupported])
 
   return (
     <Container>
@@ -112,6 +122,11 @@ export default function UpstreamProxyConfigurationFormContent(
             subTitle={advancedOptionsTitle}
             initialState={isCollapsedAdvancedConfig}>
             <Card className={classNames(css.cardContainer)}>
+              {isDependencyFirewallSupported && (
+                <Container>
+                  <DependencyFirewallConfigurationFormContent formikProps={formikProps} isEdit disabled={readonly} />
+                </Container>
+              )}
               <Separator />
               <Container className={css.cleanupPoliciesContainer}>
                 <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled />

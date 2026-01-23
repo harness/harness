@@ -28,6 +28,14 @@ repositoryForm:
   newUpstreamProxy: New Upstream Proxy
   cleanupPoliciesTitle: Cleanup Policies
   cleanupPoliciesSubTitle: Setup periodic cleanup of registries limiting them by days and character patterns
+  dependencyFirewallTitle: Dependency Firewall Configuration
+  enableDependencyFirewall: Enable Dependency Firewall
+  warn: Warn
+  warnSubtitle: Violations are logged but not blocking
+  block: Block
+  blockSubtitle: Violations block the package from being cached
+  allow: Allow
+  allowSubtitle: All dependencies are allowed
   create: Create Registry
   repositoryCreated: Registry created successfully
   repositoryUpdated: Registry updated successfully

@@ -19,5 +19,6 @@
 export declare const authContainer: string
 export declare const cardContainer: string
 export declare const cardHeading: string
+export declare const cardSelect: string
 export declare const cleanupPoliciesContainer: string
 export declare const marginTopLarge: string

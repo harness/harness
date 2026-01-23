@@ -119,9 +119,15 @@ export interface StringsMap {
   'repositoryDetails.registries': string
   'repositoryDetails.repositoryForm.addPatterns': string
   'repositoryDetails.repositoryForm.advancedOptionsTitle': string
+  'repositoryDetails.repositoryForm.allow': string
+  'repositoryDetails.repositoryForm.allowSubtitle': string
+  'repositoryDetails.repositoryForm.block': string
+  'repositoryDetails.repositoryForm.blockSubtitle': string
   'repositoryDetails.repositoryForm.cleanupPoliciesSubTitle': string
   'repositoryDetails.repositoryForm.cleanupPoliciesTitle': string
   'repositoryDetails.repositoryForm.create': string
+  'repositoryDetails.repositoryForm.dependencyFirewallTitle': string
+  'repositoryDetails.repositoryForm.enableDependencyFirewall': string
   'repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle': string
   'repositoryDetails.repositoryForm.enterpriseAdvancedWithoutUpstreamOptionsSubTitle': string
   'repositoryDetails.repositoryForm.environment': string
@@ -165,6 +171,8 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.visibility.public': string
   'repositoryDetails.repositoryForm.visibility.publicDescription': string
   'repositoryDetails.repositoryForm.visibility.title': string
+  'repositoryDetails.repositoryForm.warn': string
+  'repositoryDetails.repositoryForm.warnSubtitle': string
   'repositoryDetails.tabs.configuration': string
   'repositoryDetails.tabs.datasets': string
   'repositoryDetails.tabs.models': string

@@ -58,6 +58,12 @@ export enum UpstreamProxyAuthenticationMode {
   ANONYMOUS = 'Anonymous'
 }
 
+export enum UpstreamProxyConfigFirewallModeEnum {
+  WARN = 'WARN',
+  BLOCK = 'BLOCK',
+  ALLOW = 'ALLOW'
+}
+
 export type UpstreamRegistryRequest = Omit<RegistryRequest, 'config' | 'parentRef'> & {
   config: TypeConfig & UpstreamConfig
 }
