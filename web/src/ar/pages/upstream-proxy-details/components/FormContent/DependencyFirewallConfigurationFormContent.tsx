@@ -39,7 +39,7 @@ function DependencyFirewallConfigurationFormContent(props: DependencyFirewallCon
   const { getString } = useStrings()
   const { formikProps } = props
   const { values } = formikProps
-  const selectedMode = values.config.upstreamProxyConfigFirewallMode
+  const selectedMode = values.config.firewallMode
   const enabled = [UpstreamProxyConfigFirewallModeEnum.WARN, UpstreamProxyConfigFirewallModeEnum.BLOCK].includes(
     selectedMode as UpstreamProxyConfigFirewallModeEnum
   )
@@ -55,15 +55,9 @@ function DependencyFirewallConfigurationFormContent(props: DependencyFirewallCon
           onClick={e => {
             const isChecked = e.currentTarget.checked
             if (isChecked) {
-              formikProps.setFieldValue(
-                'config.upstreamProxyConfigFirewallMode',
-                UpstreamProxyConfigFirewallModeEnum.WARN
-              )
+              formikProps.setFieldValue('config.firewallMode', UpstreamProxyConfigFirewallModeEnum.WARN)
             } else {
-              formikProps.setFieldValue(
-                'config.upstreamProxyConfigFirewallMode',
-                UpstreamProxyConfigFirewallModeEnum.ALLOW
-              )
+              formikProps.setFieldValue('config.firewallMode', UpstreamProxyConfigFirewallModeEnum.ALLOW)
             }
           }}
         />
@@ -90,7 +84,7 @@ function DependencyFirewallConfigurationFormContent(props: DependencyFirewallCon
             onChange={item => {
               if (props.disabled) return
               if (item) {
-                formikProps.setFieldValue('config.upstreamProxyConfigFirewallMode', item)
+                formikProps.setFieldValue('config.firewallMode', item)
               }
             }}
           />

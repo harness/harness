@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ListArtifactScanResponseResponse } from '@harnessio/react-har-service-client'
+import type { ArtifactScanDetails, ListArtifactScanResponseResponse } from '@harnessio/react-har-service-client'
 
 export const mockData: ListArtifactScanResponseResponse = {
   data: [
@@ -50,4 +50,29 @@ export const mockData: ListArtifactScanResponseResponse = {
   pageCount: 1,
   pageIndex: 0,
   pageSize: 10
+}
+
+export const mockArtifactScanDetails: ArtifactScanDetails = {
+  id: '1',
+  packageType: 'NPM',
+  packageName: 'package1',
+  registryName: 'registry1',
+  scanStatus: 'BLOCKED',
+  version: '1.0.0',
+  registryId: '1',
+  fixVersionDetails: {
+    fixVersionAvailable: true,
+    currentVersion: '1.0.0',
+    fixVersion: '2.0.0'
+  },
+  policyFailureDetails: [
+    {
+      name: 'Policy 1',
+      description: 'Policy 1 description'
+    },
+    {
+      name: 'Policy 2',
+      description: 'Policy 2 description'
+    }
+  ]
 }

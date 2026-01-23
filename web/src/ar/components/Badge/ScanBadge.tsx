@@ -24,21 +24,22 @@ import css from './Badge.module.scss'
 
 interface ScanBadgeProps {
   status: ArtifactScan['scanStatus']
+  onClick?: () => void
 }
 
 export default function ScanBadge(props: ScanBadgeProps): JSX.Element {
-  const { status } = props
+  const { status, onClick } = props
   const { getString } = useStrings()
   switch (status) {
     case 'BLOCKED':
       return (
-        <Badge className={css.blockedStatus} icon="warning-sign" iconProps={{ size: 12 }}>
+        <Badge className={css.blockedStatus} icon="warning-sign" iconProps={{ size: 12 }} onClick={onClick}>
           {getString('status.blocked')}
         </Badge>
       )
     case 'WARN':
       return (
-        <Badge className={css.warningStatus} icon="warning-icon" iconProps={{ size: 12 }}>
+        <Badge className={css.warningStatus} icon="warning-icon" iconProps={{ size: 12 }} onClick={onClick}>
           {getString('status.warning')}
         </Badge>
       )

@@ -39,7 +39,6 @@ import TableCard from './components/TableCard/TableCard'
 import RepositorySelector from '../artifact-list/components/RepositorySelector/RepositorySelector'
 import { useViolationsListQueryParamOptions, type ViolationsListPageQueryParams } from './utils'
 
-import { mockData } from './__tests__/mockData'
 import css from './ViolationsListPage.module.scss'
 
 export default function ViolationsListPage() {
@@ -54,6 +53,7 @@ export default function ViolationsListPage() {
   const { searchTerm, repositoryIds, packageTypes, page, size, sort, status } = queryParams
 
   const {
+    data,
     isFetching: loading,
     error,
     refetch
@@ -77,7 +77,7 @@ export default function ViolationsListPage() {
   }
 
   const hasFilter = !!searchTerm || repositoryIds?.length || packageTypes?.length
-  const responseData = mockData
+  const responseData = data?.content
   return (
     <>
       <Page.SubHeader className={css.subHeader}>

@@ -26,6 +26,7 @@ import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionD
 import ScanBadgeComponent from '@ar/components/Badge/ScanBadge'
 import { useStrings } from '@ar/frameworks/strings'
 import useGetPolicySetDetailsPageUrl from '../../hooks/useGetPolicySetDetailsPageUrl'
+import { useViolationDetailsModal } from '../../hooks/useViolationDetailsModal/useViolationDetailsModal'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -85,10 +86,13 @@ export const StatusCell: CellType = ({ row }) => {
   return <ScanBadgeComponent status={scanStatus} />
 }
 
-export const ViolationActionsCell: CellType = () => {
+export const ViolationActionsCell: CellType = ({ row }) => {
+  const { original } = row
+  const { id } = original
   const { getString } = useStrings()
+  const [showModal] = useViolationDetailsModal({ scanId: id })
   return (
-    <Button variation={ButtonVariation.SECONDARY} size={ButtonSize.SMALL}>
+    <Button variation={ButtonVariation.SECONDARY} size={ButtonSize.SMALL} onClick={showModal}>
       {getString('violationsList.table.columns.actions.violationDetails')}
     </Button>
   )

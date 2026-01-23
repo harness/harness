@@ -425,6 +425,23 @@ export interface StringsMap {
   'violationsList.table.columns.policySet': string
   'violationsList.table.columns.registry': string
   'violationsList.table.columns.status': string
+  'violationsList.violationDetailsModal.actions.reEvaluate': string
+  'violationsList.violationDetailsModal.actions.requestException': string
+  'violationsList.violationDetailsModal.basicInformationSection.category': string
+  'violationsList.violationDetailsModal.basicInformationSection.packageName': string
+  'violationsList.violationDetailsModal.basicInformationSection.policySetViolated': string
+  'violationsList.violationDetailsModal.basicInformationSection.status': string
+  'violationsList.violationDetailsModal.basicInformationSection.title': string
+  'violationsList.violationDetailsModal.basicInformationSection.upstreamProxy': string
+  'violationsList.violationDetailsModal.evaluationDetailsSection.firstDetected': string
+  'violationsList.violationDetailsModal.evaluationDetailsSection.lastDetected': string
+  'violationsList.violationDetailsModal.evaluationDetailsSection.title': string
+  'violationsList.violationDetailsModal.fixInformationSection.currentVersion': string
+  'violationsList.violationDetailsModal.fixInformationSection.fixAvailable': string
+  'violationsList.violationDetailsModal.fixInformationSection.fixedVersion': string
+  'violationsList.violationDetailsModal.fixInformationSection.title': string
+  'violationsList.violationDetailsModal.title': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.title': string
   'webhookDetails.tabs.configuration': string
   'webhookDetails.tabs.executions': string
   'webhookExecutionList.executionDetailsDrawer.at': string
