@@ -391,7 +391,7 @@ func (n NodeDao) GetFilesMetadataByPathAndRegistryID(
 	q = q.OrderBy(sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
 	if search != "" {
-		q = q.Where("name LIKE ?", sqlPartialMatch(search))
+		q = q.Where("n.node_name LIKE ?", sqlPartialMatch(search))
 	}
 	dst := []*FileNodeMetadataDB{}
 	sql, args, err := q.ToSql()
