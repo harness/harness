@@ -28,7 +28,6 @@ import (
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/types"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -36,8 +35,11 @@ const (
 	HeaderContentDigest = "Content-Digest"
 )
 
+type PathFunc func(dgst types.Digest) (string, error)
+type TempPathFunc func() (string, error)
+
 type genericBlobStore struct {
-	driverKey     string
+	DriverMeta    DriverResult
 	driver        driver.StorageDriver
 	rootParentRef string
 	redirect      bool

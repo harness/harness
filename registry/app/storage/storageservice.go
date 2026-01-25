@@ -89,7 +89,7 @@ func (storage *Service) GenericBlobsStore(ctx context.Context, rootParentRef str
 	}
 
 	return &genericBlobStore{
-		driverKey:     result.GetKey(),
+		DriverMeta:    result,
 		driver:        result.GetDriver(),
 		redirect:      storage.redirect,
 		rootParentRef: rootParentRef,
