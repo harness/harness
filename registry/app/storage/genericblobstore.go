@@ -37,7 +37,7 @@ const (
 )
 
 type genericBlobStore struct {
-	key           string
+	driverKey     string
 	driver        driver.StorageDriver
 	rootParentRef string
 	redirect      bool

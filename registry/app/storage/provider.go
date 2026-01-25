@@ -24,21 +24,44 @@ import (
 type Mode string
 
 const (
-	ModeWrite Mode = "WRITE"
-	ModeRead  Mode = "READ"
+	ModeWrite  Mode   = "WRITE"
+	ModeRead   Mode   = "READ"
+	DefaultKey string = "default"
 )
 
 type DriverSelector struct {
-	BucketID     uuid.UUID
-	RootParentID int64
-	GBlobID      uuid.UUID
-	Mode         Mode
+	BucketID      uuid.UUID
+	RootParentID  int64
+	BlobID        int64
+	GenericBlobID uuid.UUID
+	GlobalBlobID  uuid.UUID
+	Mode          Mode
+}
+
+// DriverResult is an extensible interface for GetDriver responses.
+// Implementers can embed BaseDriverResult and add custom fields/methods.
+type DriverResult interface {
+	GetDriver() driver.StorageDriver
+	GetKey() string
+}
+
+// BaseDriverResult provides a default implementation of DriverResult.
+type BaseDriverResult struct {
+	Driver driver.StorageDriver
+	Key    string
+}
+
+func (r *BaseDriverResult) GetDriver() driver.StorageDriver {
+	return r.Driver
+}
+
+func (r *BaseDriverResult) GetKey() string {
+	return r.Key
 }
 
 // DriverProvider interface is for provider storage drivers dynamically.
 type DriverProvider interface {
-	GetDriver(ctx context.Context, selector DriverSelector) (driver.StorageDriver, string, error)
-	GetDeleteDriver(ctx context.Context, selector DriverSelector) (driver.StorageDeleter, string, error)
+	GetDriver(ctx context.Context, selector DriverSelector) (DriverResult, error)
 }
 
 // StaticDriverProvider is a simple implementation of StorageDriverProvider
@@ -52,18 +75,9 @@ func NewStaticDriverProvider(d driver.StorageDriver) DriverProvider {
 }
 
 // GetDriver returns the static Driver.
-func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) (
-	driver.StorageDriver,
-	string,
-	error,
-) {
-	return p.Driver, "default", nil
-}
-
-func (p *StaticDriverProvider) GetDeleteDriver(_ context.Context, _ DriverSelector) (
-	driver.StorageDeleter,
-	string,
-	error,
-) {
-	return p.Driver, "default", nil
+func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) (DriverResult, error) {
+	return &BaseDriverResult{
+		Driver: p.Driver,
+		Key:    DefaultKey,
+	}, nil
 }

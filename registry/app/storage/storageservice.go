@@ -63,16 +63,16 @@ func NewStorageService(provider DriverProvider, options ...Option) (*Service, er
 }
 
 func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootParentRef string) OciBlobStore {
-	driver, key, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
+	result, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
 	if err != nil {
 		// TODO(Arvind): Return this error
 		log.Fatal().Err(err).Msg("Failed to get storage Driver")
 	}
 	return &ociBlobStore{
-		key:                    key,
+		driverKey:              result.GetKey(),
 		repoKey:                repoKey,
 		ctx:                    ctx,
-		driver:                 driver,
+		driver:                 result.GetDriver(),
 		pathFn:                 PathFn,
 		redirect:               storage.redirect,
 		deleteEnabled:          storage.deleteEnabled,
@@ -82,15 +82,15 @@ func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootP
 }
 
 func (storage *Service) GenericBlobsStore(ctx context.Context, rootParentRef string) GenericBlobStore {
-	driver, key, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
+	result, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
 	if err != nil {
 		// TODO(Arvind): Return this error
 		log.Fatal().Err(err).Msg("Failed to get storage Driver")
 	}
 
 	return &genericBlobStore{
-		key:           key,
-		driver:        driver,
+		driverKey:     result.GetKey(),
+		driver:        result.GetDriver(),
 		redirect:      storage.redirect,
 		rootParentRef: rootParentRef,
 	}

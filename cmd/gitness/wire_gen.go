@@ -567,7 +567,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	gcService := gc.ServiceProvider()
 	ociBlobStoreFactory := docker.ProvideOciBlobStore(storageService)
 	bucketService := docker.ProvideBucketService(ociBlobStoreFactory)
-	app := docker.NewApp(ctx, blobRepository, spaceStore, config, storageService, gcService, bucketService)
+	app := docker.NewApp(ctx, blobRepository, spaceStore, config, storageService, driverProvider, gcService, bucketService)
 	manifestRepository := database2.ProvideManifestDao(db, mediaTypesRepository)
 	manifestReferenceRepository := database2.ProvideManifestRefDao(db)
 	tagRepository := database2.ProvideTagDao(db)

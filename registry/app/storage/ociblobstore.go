@@ -53,9 +53,9 @@ const (
 const blobCacheControlMaxAge = 365 * 24 * time.Hour
 
 type ociBlobStore struct {
-	key     string
-	repoKey string
-	driver  driver.StorageDriver
+	driverKey string
+	repoKey   string
+	driver    driver.StorageDriver
 	// only to be used where context can't come through method args
 	ctx                    context.Context
 	deleteEnabled          bool
