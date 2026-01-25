@@ -167,6 +167,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/rpm"
 	publicaccess2 "github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
+	storage3 "github.com/harness/gitness/registry/app/services/storage"
 	storage2 "github.com/harness/gitness/registry/app/storage"
 	cache2 "github.com/harness/gitness/registry/app/store/cache"
 	database2 "github.com/harness/gitness/registry/app/store/database"
@@ -607,7 +608,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryOCIHandler := router.OCIHandlerProvider(handler)
 	genericBlobRepository := database2.ProvideGenericBlobDao(db)
 	nodesRepository := database2.ProvideNodeDao(db)
-	fileManager := filemanager.Provider(registryRepository, genericBlobRepository, nodesRepository, transactor, config, storageService, bucketService, replicationReporter)
+	blobCreationDBHook := storage3.ProvideBlobCreationDBHook()
+	fileManager := filemanager.Provider(registryRepository, genericBlobRepository, nodesRepository, transactor, config, storageService, bucketService, replicationReporter, blobCreationDBHook)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	webhooksRepository := database2.ProvideWebhookDao(db)
 	webhooksExecutionRepository := database2.ProvideWebhookExecutionDao(db)

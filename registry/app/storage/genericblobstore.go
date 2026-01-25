@@ -175,3 +175,7 @@ func (bs *genericBlobStore) Stat(ctx context.Context, filePath string) (int64, e
 	}
 	return fileInfo.Size(), nil
 }
+
+func (bs *genericBlobStore) GetDriverDetails() DriverResult {
+	return bs.DriverMeta
+}

@@ -23,7 +23,6 @@ import (
 	"io"
 	"mime/multipart"
 
-	"github.com/google/uuid"
 	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/types"
@@ -188,9 +187,18 @@ type GenericBlobStore interface {
 	Get(ctx context.Context, filePath string, size int64, filename string) (*FileReader, string, error)
 	GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error)
 	Stat(ctx context.Context, filePath string) (int64, error)
+	GetDriverDetails() DriverResult
 }
 
-type BlobCreationHook interface {
-	AfterBlobCreate(ctx context.Context, driverKey string, blobID int64) error
-	AfterGenericBlobCreate(ctx context.Context, driverKey string, genericBlobID uuid.UUID) error
+type BlobCreationDBHook interface {
+	AfterBlobCreate(
+		ctx context.Context,
+		rootParentID int64,
+		sha1 types.Digest,
+		sha256 types.Digest,
+		sha512 types.Digest,
+		md5 types.Digest,
+		size int64,
+		bucketID int64,
+	) error
 }

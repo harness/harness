@@ -33,10 +33,11 @@ func Provider(
 	storageService *storage.Service,
 	bucketService docker.BucketService,
 	replicationReporter replication.Reporter,
+	blobCreationDBHook storage.BlobCreationDBHook,
 ) FileManager {
 	// Pass the BucketService to use the unified implementation
 	return NewFileManager(registryDao, genericBlobDao, nodesDao, tx,
-		config, storageService, bucketService, replicationReporter)
+		config, storageService, bucketService, replicationReporter, blobCreationDBHook)
 }
 
 var Set = wire.NewSet(Provider)

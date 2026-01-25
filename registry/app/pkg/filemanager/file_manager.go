@@ -50,6 +50,7 @@ func NewFileManager(
 	nodesDao store.NodesRepository, tx dbtx.Transactor,
 	config *gitnesstypes.Config, storageService *storage.Service,
 	bucketService docker.BucketService, replicationReporter replication.Reporter,
+	blobCreationDBHook storage.BlobCreationDBHook,
 ) FileManager {
 	return FileManager{
 		registryDao:         registryDao,
@@ -60,6 +61,7 @@ func NewFileManager(
 		storageService:      storageService,
 		bucketService:       bucketService,
 		replicationReporter: replicationReporter,
+		blobCreationDBHook:  blobCreationDBHook,
 	}
 }
 
@@ -72,6 +74,7 @@ type FileManager struct {
 	tx                  dbtx.Transactor
 	bucketService       docker.BucketService
 	replicationReporter replication.Reporter
+	blobCreationDBHook  storage.BlobCreationDBHook
 }
 
 func (f *FileManager) UploadFile(
@@ -100,7 +103,7 @@ func (f *FileManager) UploadFile(
 		return fileInfo, err
 	}
 
-	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo, principalID)
+	blobID, created, err := f.dbSaveFile(ctx, blobContext, filePath, regID, rootParentID, fileInfo, principalID)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -146,6 +149,7 @@ func (f *FileManager) GetOCIBlobStore(
 
 func (f *FileManager) dbSaveFile(
 	ctx context.Context,
+	blobContext *Context,
 	filePath string,
 	regID int64,
 	rootParentID int64,
@@ -163,17 +167,31 @@ func (f *FileManager) dbSaveFile(
 		Size:         fileInfo.Size,
 		CreatedBy:    createdBy,
 	}
-	created, err := f.genericBlobDao.Create(ctx, gb)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("failed to save generic blob in db with "+
-			"sha256 : %s, err: %s", fileInfo.Sha256, err.Error())
-		return "", false, fmt.Errorf("failed to save generic blob"+
-			" in db with sha256 : %s, err: %w", fileInfo.Sha256, err)
-	}
-	blobID = gb.ID
+
 	// Saving the nodes
-	err = f.tx.WithTx(ctx, func(ctx context.Context) error {
+	created := false
+	err := f.tx.WithTx(ctx, func(ctx context.Context) error {
+		var err error
+		blobID, created, err = f.genericBlobDao.Create(ctx, gb)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("failed to save generic blob in db with "+
+				"sha256 : %s, err: %s", fileInfo.Sha256, err.Error())
+			return fmt.Errorf("failed to save generic blob"+
+				" in db with sha256 : %s, err: %w", fileInfo.Sha256, err)
+		}
 		err = f.createNodes(ctx, filePath, blobID, regID, createdBy)
+		if err != nil {
+			return err
+		}
+		err = f.blobCreationDBHook.AfterBlobCreate(ctx,
+			rootParentID,
+			types.Digest(gb.Sha1),
+			types.Digest(gb.Sha256),
+			types.Digest(gb.Sha512),
+			types.Digest(gb.MD5),
+			gb.Size,
+			// TODO(Arvind) This should be provided by storage layer
+			-1)
 		if err != nil {
 			return err
 		}
@@ -699,7 +717,7 @@ func (f *FileManager) MoveTempFile(
 		return err
 	}
 
-	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo, principalID)
+	blobID, created, err := f.dbSaveFile(ctx, nil, filePath, regID, rootParentID, fileInfo, principalID)
 	if err != nil {
 		return err
 	}

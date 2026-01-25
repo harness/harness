@@ -103,7 +103,7 @@ func (g GenericBlobDao) FindBySha256AndRootParentID(
 	return g.mapToGenericBlob(ctx, dst)
 }
 
-func (g GenericBlobDao) Create(ctx context.Context, gb *types.GenericBlob) (bool, error) {
+func (g GenericBlobDao) Create(ctx context.Context, gb *types.GenericBlob) (string, bool, error) {
 	const sqlQuery = `
         INSERT INTO generic_blobs (
             generic_blob_id,
@@ -132,16 +132,16 @@ func (g GenericBlobDao) Create(ctx context.Context, gb *types.GenericBlob) (bool
 	db := dbtx.GetAccessor(ctx, g.sqlDB)
 	query, arg, err := db.BindNamed(sqlQuery, g.mapToInternalGenericBlob(gb))
 	if err != nil {
-		return false, databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind generic blob object")
+		return "", false, databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind generic blob object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&gb.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) || errors.Is(err, store2.ErrDuplicate) {
-			return false, nil
+			return "", false, nil
 		}
-		return false, databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
+		return "", false, databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
-	return true, nil
+	return gb.ID, true, nil
 }
 
 func (g GenericBlobDao) DeleteByID(_ context.Context, _ string) error {

@@ -16,31 +16,38 @@ type GenericBlobRepository struct {
 }
 
 // Create provides a mock function with given fields: ctx, gb
-func (_m *GenericBlobRepository) Create(ctx context.Context, gb *types.GenericBlob) (bool, error) {
+func (_m *GenericBlobRepository) Create(ctx context.Context, gb *types.GenericBlob) (string, bool, error) {
 	ret := _m.Called(ctx, gb)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *types.GenericBlob) (bool, error)); ok {
+	var r0 string
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, *types.GenericBlob) (string, bool, error)); ok {
 		return rf(ctx, gb)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *types.GenericBlob) bool); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *types.GenericBlob) string); ok {
 		r0 = rf(ctx, gb)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *types.GenericBlob) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *types.GenericBlob) bool); ok {
 		r1 = rf(ctx, gb)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, *types.GenericBlob) error); ok {
+		r2 = rf(ctx, gb)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // DeleteByID provides a mock function with given fields: ctx, id
