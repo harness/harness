@@ -32,6 +32,7 @@ var WireSetSpace = wire.NewSet(
 	ProvideEvictorSpaceCore,
 	ProvideSpaceIDCache,
 	ProvideSpacePathCache,
+	ProvideSpaceCaseInsensitiveCache,
 	ProvideInfraProviderResourceCache,
 )
 
@@ -83,6 +84,20 @@ func ProvideSpacePathCache(
 	spacePathTransformation store.SpacePathTransformation,
 ) store.SpacePathCache {
 	return New(appCtx, pathStore, spacePathTransformation, evictor, spaceCacheDuration)
+}
+
+// ProvideSpaceCaseInsensitiveCache provides a cache for case-insensitive space lookups.
+func ProvideSpaceCaseInsensitiveCache(
+	appCtx context.Context,
+	spaceStore store.SpaceStore,
+	evictor Evictor[*types.SpaceCore],
+) store.SpaceCaseInsensitiveCache {
+	return NewSpaceCaseInsensitiveCache(
+		appCtx,
+		spaceStore,
+		evictor,
+		spaceCacheDuration,
+	)
 }
 
 func ProvideRepoIDCache(

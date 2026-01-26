@@ -31,9 +31,10 @@ var WireSet = wire.NewSet(
 func ProvideSpaceFinder(
 	spaceIDCache store.SpaceIDCache,
 	spaceRefCache store.SpacePathCache,
+	spaceCaseInsensitiveCache store.SpaceCaseInsensitiveCache,
 	evictor cache.Evictor[*types.SpaceCore],
 ) SpaceFinder {
-	return NewSpaceFinder(spaceIDCache, spaceRefCache, evictor)
+	return NewSpaceFinder(spaceIDCache, spaceRefCache, spaceCaseInsensitiveCache, evictor)
 }
 
 func ProvideRepoFinder(

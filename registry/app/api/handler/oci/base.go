@@ -218,16 +218,12 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 	rootIdentifier, registryIdentifier, image, ref, dgst, tag := ExtractPathVars(r.Context(), path, paramMap)
 	// Skip rootIdentifier validation since it may not be OCI compliant. We do modifications on it before it reaches here.
 
-	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceFinder.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
+		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
 		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
-	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
-		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
-	}
+	rootSpaceID := rootSpace.ID
 
 	registry, err := h.registryFinder.FindByRootParentID(ctx, rootSpaceID, registryIdentifier)
 	if err != nil {

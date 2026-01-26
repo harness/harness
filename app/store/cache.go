@@ -29,6 +29,9 @@ type (
 	// SpacePathCache caches a raw path to a space path.
 	SpacePathCache cache.Cache[string, *types.SpacePath]
 
+	// SpaceCaseInsensitiveCache caches case-insensitive space references to space IDs.
+	SpaceCaseInsensitiveCache cache.Cache[string, int64]
+
 	// RepoIDCache holds Repository objects fetched by their ID.
 	RepoIDCache cache.Cache[int64, *types.RepositoryCore]
 
