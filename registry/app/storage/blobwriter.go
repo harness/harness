@@ -142,6 +142,10 @@ func (bw *blobWriter) Size() int64 {
 }
 
 func (bw *blobWriter) Write(p []byte) (int, error) {
+	// We don't support multipart uploads in generic.
+	if bw.genericBlobStore != nil {
+		return bw.fileWriter.Write(p)
+	}
 	// Ensure that the current write offset matches how many bytes have been
 	// written to the digester. If not, we need to update the digest state to
 	// match the current write position.
@@ -161,6 +165,10 @@ func (bw *blobWriter) Write(p []byte) (int, error) {
 }
 
 func (bw *blobWriter) Close() error {
+	// We don't support multipart uploads in Generic
+	if bw.genericBlobStore != nil {
+		return bw.fileWriter.Close()
+	}
 	if bw.committed {
 		return errors.New("blobwriter close after commit")
 	}

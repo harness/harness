@@ -142,7 +142,7 @@ func (bs *genericBlobStore) newBlobUpload(ctx context.Context, id, path, rootIde
 
 	bw := &blobWriter{
 		ctx:                    ctx,
-		blobStore:              nil,
+		genericBlobStore:       bs,
 		id:                     id,
 		digester:               digest.Canonical.Digester(),
 		fileWriter:             fw,
@@ -193,8 +193,8 @@ func (bs *genericBlobStore) Write(
 func (bs *genericBlobStore) move(
 	ctx context.Context,
 	rootIdentifier string,
-	sha256 string,
 	id string,
+	sha256 string,
 ) error {
 	log.Ctx(ctx).Debug().Msg("(*genericBlobStore).Move")
 	srcPath, err := pathFor(
