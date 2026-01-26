@@ -70,7 +70,7 @@ func (c *registryHelper) UploadPackage(
 
 	p, err := rpmutil.ParsePackage(r)
 	if err != nil {
-		log.Printf("failded to parse rpm package: %v", err)
+		log.Printf("failed to parse rpm package: %v", err)
 		return nil, "", err
 	}
 

@@ -29,7 +29,6 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	huggingfacemetadata "github.com/harness/gitness/registry/app/metadata/huggingface"
-	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
@@ -292,8 +291,8 @@ func (c *localRegistry) LfsUpload(
 	}
 	resp := &huggingfacetype.LfsUploadResponse{}
 
-	// TODO(Arvind) Use this SHA256 to validate the checksum post upload is done
-	//file := types.FileInfo{Sha256: info.SHA256}
+	// TODO(Arvind) Use this SHA256 to validate the checksum post upload is done.
+	// file := types.FileInfo{Sha256: info.SHA256}.
 
 	info.Image = info.Repo
 
@@ -549,10 +548,6 @@ func validateSlice(meta map[string]any, metaKey string) (*huggingfacetype.Valida
 		}, false
 	}
 	return nil, true
-}
-
-func getTmpFilePath(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string {
-	return info.RootIdentifier + "/" + info.RegIdentifier + "/" + info.Image + "/" + "/upload/" + fileInfo.Sha256
 }
 
 func validateString(meta map[string]any, metaKey string) (*huggingfacetype.ValidateYamlResponse, bool) {

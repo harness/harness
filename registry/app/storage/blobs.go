@@ -102,7 +102,7 @@ type BlobWriter interface {
 	)
 
 	// PlainCommit is dangerous and expects you to do validate and move blob.
-	// This is for backward compatibilty with generic, shall be removed soon.
+	// This is for backward compatibility with generic, shall be removed soon.
 	PlainCommit(ctx context.Context, sha256 string) error
 
 	// Cancel ends the blob write without storing any data and frees any

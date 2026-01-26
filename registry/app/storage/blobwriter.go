@@ -100,7 +100,7 @@ func (bw *blobWriter) Commit(ctx context.Context, pathPrefix string, desc manife
 }
 
 // PlainCommit commits the files and move to desired location without any validity.
-// To be deprecated SOON after global storage takes over
+// To be deprecated SOON after global storage takes over.
 func (bw *blobWriter) PlainCommit(ctx context.Context, sha256 string) error {
 	log.Debug().Msg("(*blobWriter).Commit")
 

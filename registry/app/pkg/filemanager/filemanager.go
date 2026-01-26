@@ -1,4 +1,4 @@
-//  Copyright 2023 Harness, Inc.
+// Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,8 +70,7 @@ type fileManager struct {
 	replicationReporter replication.Reporter
 }
 
-// UploadFile - use it to upload file
-// Inputs can be file or fileReader
+// UploadFile - use it to upload file. Inputs can be file or fileReader.
 func (f *fileManager) UploadFile(
 	ctx context.Context,
 	filePath string,

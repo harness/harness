@@ -59,6 +59,10 @@ func (bs *genericBlobStore) GetV2NoRedirect(
 		},
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	br, err := NewFileReader(ctx, bs.driver, path, fileSize)
 	if err != nil {
 		return nil, err
@@ -81,6 +85,10 @@ func (bs *genericBlobStore) GetGeneric(
 			sha256:         sha256,
 		},
 	)
+
+	if err != nil {
+		return nil, "", err
+	}
 
 	if bs.redirect {
 		redirectURL, err := bs.driver.RedirectURL(ctx, http.MethodGet, path, filename)
@@ -203,12 +211,20 @@ func (bs *genericBlobStore) move(
 			id:             id,
 		},
 	)
+	if err != nil {
+		return fmt.Errorf("failed to create srcPath for root: %s, id: %s, digest: %s, %w", rootIdentifier, id, sha256,
+			err)
+	}
 	dstPath, err := pathFor(
 		genericDataPathSpec{
 			rootIdentifier: rootIdentifier,
 			sha256:         sha256,
 		},
 	)
+	if err != nil {
+		return fmt.Errorf("failed to create dstPath for root: %s, id: %s, digest: %s, %w", rootIdentifier, id, sha256,
+			err)
+	}
 	err = bs.driver.Move(ctx, srcPath, dstPath)
 	if err != nil {
 		return err
@@ -234,6 +250,10 @@ func (bs *genericBlobStore) StatByDigest(ctx context.Context, rootIdentifier, sh
 			sha256:         sha256,
 		},
 	)
+
+	if err != nil {
+		return 0, err
+	}
 
 	fileInfo, err := bs.driver.Stat(ctx, path)
 	if err != nil {

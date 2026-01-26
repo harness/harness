@@ -19,6 +19,7 @@ package storage
 import (
 	"fmt"
 	"path"
+	"slices"
 	"strings"
 
 	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -90,7 +91,8 @@ func pathFor(spec pathSpec) (string, error) {
 			return "", err
 		}
 		components = append(components, "data")
-		blobsPrefix := append(rootPrefix, "blobs")
+		blobsPrefix := slices.Clone(rootPrefix)
+		blobsPrefix = append(blobsPrefix, "blobs")
 		return path.Join(append(blobsPrefix, components...)...), nil
 	case globalUploadDataPathSpec:
 		return path.Join(append(rootPrefix, "_uploads", v.id, "data")...), nil
