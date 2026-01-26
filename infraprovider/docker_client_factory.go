@@ -55,7 +55,10 @@ func (d *DockerClientFactory) getClient(_ []types.InfraProviderParameter) (*clie
 	if err != nil {
 		return nil, fmt.Errorf("unable to create docker opts overrides: %w", err)
 	}
-	opts := append([]client.Opt{client.FromEnv}, overrides...)
+	// WithAPIVersionNegotiation enables automatic API version negotiation.
+	// This ensures compatibility with Docker daemons that require newer API versions
+	// (e.g., Docker 29.0+ requires minimum API version 1.44).
+	opts := append([]client.Opt{client.FromEnv, client.WithAPIVersionNegotiation()}, overrides...)
 	dockerClient, err := client.NewClientWithOpts(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create docker client: %w", err)

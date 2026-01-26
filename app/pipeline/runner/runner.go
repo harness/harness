@@ -55,6 +55,11 @@ var Privileged = []string{
 func dockerOpts(config *types.Config) []dockerclient.Opt {
 	var overrides []dockerclient.Opt
 
+	// Enable API version negotiation to automatically use a compatible version.
+	// This ensures compatibility with Docker daemons that require newer API versions
+	// (e.g., Docker 29.0+ requires minimum API version 1.44).
+	overrides = append(overrides, dockerclient.WithAPIVersionNegotiation())
+
 	if config.Docker.Host != "" {
 		overrides = append(overrides, dockerclient.WithHost(config.Docker.Host))
 	}
