@@ -76,7 +76,7 @@ ar-conformance-test: ar-clean build
 ar-hot-conformance-test:
 	@echo "Running OCI conformance tests..."
 	rm -rf distribution-spec || true
-	./registry/tests/conformance_test.sh localhost:4000 || true
+	./registry/tests/conformance_test.sh localhost:3000 || true
 
 ar-api-update:
 	@set -e; \
