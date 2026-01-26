@@ -63,7 +63,7 @@ run: ar-clean build
 	./gitness server .local.env || true
 
 # Main conformance test targets
-ar-conformance-test: ar-clean build
+ar-conformance-test: tools ar-clean build
 	./gitness server .local.env > logfile.log 2>&1 & echo $$! > server.PID
 	sleep 20
 	./registry/tests/conformance_test.sh localhost:3000
