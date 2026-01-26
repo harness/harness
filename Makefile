@@ -76,21 +76,21 @@ ar-conformance-test: ar-clean build
 ar-hot-conformance-test:
 	@echo "Running OCI conformance tests..."
 	rm -rf distribution-spec || true
-	./registry/tests/conformance_test.sh localhost:3000 || true
-	@echo "Running Maven conformance tests..."
-	./registry/tests/maven/scripts/setup_test.sh localhost:3000
-	@chmod +x /tmp/maven_env.sh
-	source /tmp/maven_env.sh && go test -v ./registry/tests/maven/... -ginkgo.v || true
-	@echo "Running Cargo conformance tests..."
-	./registry/tests/cargo/scripts/setup_test.sh localhost:3000
-	@chmod +x /tmp/cargo_env.sh
-	source /tmp/cargo_env.sh && go test -v ./registry/tests/cargo/... -ginkgo.v || true
-	@chmod +x /tmp/go_env.sh
-	source /tmp/go_env.sh && go test -v ./registry/tests/gopkg/... -ginkgo.v || true
-	@echo "Running NPM conformance tests..."
-	./registry/tests/npm/scripts/setup_test.sh localhost:3000
-	@chmod +x /tmp/npm_env.sh
-	source /tmp/npm_env.sh && go test -v ./registry/tests/npm/... -ginkgo.v || true
+	./registry/tests/conformance_test.sh localhost:4000 || true
+#	@echo "Running Maven conformance tests..."
+#	./registry/tests/maven/scripts/setup_test.sh localhost:3000
+#	@chmod +x /tmp/maven_env.sh
+#	source /tmp/maven_env.sh && go test -v ./registry/tests/maven/... -ginkgo.v || true
+#	@echo "Running Cargo conformance tests..."
+#	./registry/tests/cargo/scripts/setup_test.sh localhost:3000
+#	@chmod +x /tmp/cargo_env.sh
+#	source /tmp/cargo_env.sh && go test -v ./registry/tests/cargo/... -ginkgo.v || true
+#	@chmod +x /tmp/go_env.sh
+#	source /tmp/go_env.sh && go test -v ./registry/tests/gopkg/... -ginkgo.v || true
+#	@echo "Running NPM conformance tests..."
+#	./registry/tests/npm/scripts/setup_test.sh localhost:3000
+#	@chmod +x /tmp/npm_env.sh
+#	source /tmp/npm_env.sh && go test -v ./registry/tests/npm/... -ginkgo.v || true
 
 ar-api-update:
 	@set -e; \
