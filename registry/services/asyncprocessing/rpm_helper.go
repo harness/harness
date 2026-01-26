@@ -77,7 +77,7 @@ type registryData interface {
 }
 
 func (l localRepoData) getReader(ctx context.Context) (io.ReadCloser, error) {
-	primaryReader, _, _, err := l.fileManager.DownloadFile(
+	primaryReader, _, _, err := l.fileManager.DownloadFileByPath(
 		ctx, "/"+l.fileRef, l.registryID, l.registryIdentifier, l.rootIdentifier, false,
 	)
 	if err != nil {
@@ -363,7 +363,7 @@ func (l *rpmHelper) getRefsForHarnessRepos(
 	refType string,
 	regType artifact.RegistryType,
 ) (string, error) {
-	fileReader, _, _, err := l.fileManager.DownloadFile(
+	fileReader, _, _, err := l.fileManager.DownloadFileByPath(
 		ctx, "/repodata/repomd.xml", registryID, registryIdentifier, rootIdentifier, false,
 	)
 	if err != nil {
@@ -457,12 +457,14 @@ func (l *rpmHelper) buildPrimary(
 			return
 		}
 
-		if err := encoder.EncodeToken(xml.StartElement{Name: xml.Name{Local: "metadata"},
+		if err := encoder.EncodeToken(xml.StartElement{
+			Name: xml.Name{Local: "metadata"},
 			Attr: []xml.Attr{
 				{Name: xml.Name{Local: "xmlns"}, Value: "http://linux.duke.edu/metadata/common"},
 				{Name: xml.Name{Local: "xmlns:rpm"}, Value: "http://linux.duke.edu/metadata/rpm"},
 				{Name: xml.Name{Local: "packages"}, Value: fmt.Sprintf("%d", 0)}, // TODO fix size
-			}}); err != nil {
+			},
+		}); err != nil {
 			pw.CloseWithError(fmt.Errorf("failed to encode metadata start: %w", err))
 			return
 		}
@@ -566,16 +568,16 @@ func (l *rpmHelper) buildPrimary(
 		}
 	}()
 
-	info, tempFileName, err := l.fileManager.UploadTempFile(ctx, rootIdentifier, nil, PrimaryFile, pr)
+	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
 
 	filePath := RepoDataPrefix + info.Sha256 + "-" + PrimaryFile
-	err = l.fileManager.MoveTempFile(ctx, filePath, registryID, rootParentID, rootIdentifier,
-		info, tempFileName, principalID)
+	err = l.fileManager.PostFileUpload(ctx, filePath, registryID, rootParentID, rootIdentifier,
+		info, principalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to move temp file [%s] to [%s]: %w", tempFileName, filePath, err)
+		return nil, fmt.Errorf("failed to move temp file to [%s]: %w", filePath, err)
 	}
 
 	return getRepoData(info, filePath, "primary"), nil
@@ -627,11 +629,13 @@ func (l *rpmHelper) buildOther(
 			return
 		}
 
-		if err := encoder.EncodeToken(xml.StartElement{Name: xml.Name{Local: "otherdata"},
+		if err := encoder.EncodeToken(xml.StartElement{
+			Name: xml.Name{Local: "otherdata"},
 			Attr: []xml.Attr{
 				{Name: xml.Name{Local: "xmlns"}, Value: "http://linux.duke.edu/metadata/other"},
 				{Name: xml.Name{Local: "packages"}, Value: fmt.Sprintf("%d", 0)}, // TODO fix size
-			}}); err != nil {
+			},
+		}); err != nil {
 			pw.CloseWithError(fmt.Errorf("failed to encode metadata start: %w", err))
 			return
 		}
@@ -706,16 +710,16 @@ func (l *rpmHelper) buildOther(
 		}
 	}()
 
-	info, tempFileName, err := l.fileManager.UploadTempFile(ctx, rootIdentifier, nil, OtherFile, pr)
+	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
 
 	filePath := RepoDataPrefix + info.Sha256 + "-" + OtherFile
-	err = l.fileManager.MoveTempFile(ctx, filePath, registryID,
-		rootParentID, rootIdentifier, info, tempFileName, principalID)
+	err = l.fileManager.PostFileUpload(ctx, filePath, registryID, rootParentID, rootIdentifier,
+		info, principalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to move temp file [%s] to [%s]: %w", tempFileName, filePath, err)
+		return nil, fmt.Errorf("failed to move temp file to [%s]: %w", filePath, err)
 	}
 
 	return getRepoData(info, filePath, "other"), nil
@@ -743,11 +747,13 @@ func (l *rpmHelper) buildFileLists(
 			return
 		}
 
-		if err := encoder.EncodeToken(xml.StartElement{Name: xml.Name{Local: "filelists"},
+		if err := encoder.EncodeToken(xml.StartElement{
+			Name: xml.Name{Local: "filelists"},
 			Attr: []xml.Attr{
 				{Name: xml.Name{Local: "xmlns"}, Value: "http://linux.duke.edu/metadata/filelists"},
 				{Name: xml.Name{Local: "packages"}, Value: fmt.Sprintf("%d", 0)}, // TODO fix size
-			}}); err != nil {
+			},
+		}); err != nil {
 			pw.CloseWithError(fmt.Errorf("failed to encode metadata start: %w", err))
 			return
 		}
@@ -824,16 +830,16 @@ func (l *rpmHelper) buildFileLists(
 		}
 	}()
 
-	info, tempFileName, err := l.fileManager.UploadTempFile(ctx, rootIdentifier, nil, FileListsFile, pr)
+	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
 
 	filePath := RepoDataPrefix + info.Sha256 + "-" + FileListsFile
-	err = l.fileManager.MoveTempFile(ctx, filePath, registryID,
-		rootParentID, rootIdentifier, info, tempFileName, principalID)
+	err = l.fileManager.PostFileUpload(ctx, filePath, registryID, rootParentID, rootIdentifier,
+		info, principalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to move temp file [%s] to [%s]: %w", tempFileName, filePath, err)
+		return nil, fmt.Errorf("failed to move temp file to [%s]: %w", filePath, err)
 	}
 
 	return getRepoData(info, filePath, "filelists"), nil
@@ -913,8 +919,8 @@ func (l *rpmHelper) buildRepomd(
 	repomdContent, _ := rpmtypes.CreateHashedBufferFromReader(&buf)
 	defer repomdContent.Close()
 
-	_, err := l.fileManager.UploadFile(ctx, RepoDataPrefix+RepoMdFile, registryID,
-		rootParentID, rootIdentifier, repomdContent, repomdContent, RepoMdFile, principalID)
+	_, err := l.fileManager.UploadFile(ctx, RepoDataPrefix+RepoMdFile, registryID, rootParentID, rootIdentifier,
+		repomdContent, repomdContent, principalID)
 	if err != nil {
 		return err
 	}

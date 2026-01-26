@@ -142,7 +142,7 @@ func (c *APIController) GetArtifactFile(
 		}, nil
 	}
 	filePath := filePathPrefix + "/" + file
-	fileInfo, err := c.fileManager.GetFileMetadata(ctx, filePath, img.RegistryID)
+	fileInfo, err := c.fileManager.GetFileMetadata(ctx, img.RegistryID, filePath)
 
 	if err != nil {
 		if errors.Is(err, store.ErrResourceNotFound) {

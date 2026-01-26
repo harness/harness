@@ -143,7 +143,6 @@ func (h *registryHelper) uploadIndexMetadata(
 	rootParentID int64, registryID int64, image string,
 	indexMetadataList []*cargometadata.IndexMetadata,
 ) error {
-	fileName := image
 	filePath := h.GetIndexFilePathFromImageName(image)
 
 	metadataList := []string{}
@@ -155,11 +154,8 @@ func (h *registryHelper) uploadIndexMetadata(
 		}
 		metadataList = append(metadataList, string(metadataJSON))
 	}
-	_, err := h.fileManager.UploadFile(
-		ctx, filePath, registryID, rootParentID, rootIdentifier, nil,
-		io.NopCloser(strings.NewReader(strings.Join(metadataList, "\n"))),
-		fileName, principalID,
-	)
+	_, err := h.fileManager.UploadFile(ctx, filePath, registryID, rootParentID, rootIdentifier, nil,
+		io.NopCloser(strings.NewReader(strings.Join(metadataList, "\n"))), principalID)
 	if err != nil {
 		return fmt.Errorf("failed to upload package index metadata: %w", err)
 	}

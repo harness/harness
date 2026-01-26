@@ -135,12 +135,12 @@ func (r *proxy) DownloadPackageFile(
 			log.Ctx(ctx2).Error().Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)
 			return
 		}
-		_, filename, err := paths.DisectLeaf(info.PackagePath)
+		_, _, err := paths.DisectLeaf(info.PackagePath)
 		if err != nil {
 			log.Ctx(ctx2).Error().Msgf("error while disecting file name for [%s]: %v", info.PackagePath, err)
 			return
 		}
-		_, _, err = r.registryHelper.UploadPackage(ctx2, info, closer2, filename)
+		_, _, err = r.registryHelper.UploadPackage(ctx2, info, closer2)
 		if err != nil {
 			log.Ctx(ctx2).Error().Stack().Err(err).Msgf("error while putting file to localRegistry, %v", err)
 			return
@@ -159,7 +159,8 @@ func (r *proxy) GetRepoData(
 	ctx context.Context,
 	info rpmtype.ArtifactInfo,
 	fileName string,
-) (*commons.ResponseHeaders,
+) (
+	*commons.ResponseHeaders,
 	*storage.FileReader,
 	io.ReadCloser,
 	string,

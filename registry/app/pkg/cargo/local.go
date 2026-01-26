@@ -179,7 +179,7 @@ func (c *localRegistry) downloadFileInternal(
 		Headers: make(map[string]string),
 		Code:    0,
 	}
-	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
+	fileReader, _, redirectURL, err := c.fileManager.DownloadFileByPath(ctx, path, info.RegistryID,
 		info.RegIdentifier, info.RootIdentifier, true)
 	if err != nil {
 		return responseHeaders, nil, "", fmt.Errorf("failed to download file %s: %w", path, err)

@@ -108,13 +108,13 @@ func (m *MockLocalBase) DeleteFile(
 	return args.Get(0).(*commons.ResponseHeaders), args.Error(1)
 }
 
-func (m *MockLocalBase) MoveTempFileAndCreateArtifact(
-	_ context.Context,
-	_ pkg.ArtifactInfo,
-	_, _, _ string,
-	_ metadata.Metadata,
-	_ types.FileInfo,
-	_ bool,
+func (m *MockLocalBase) UpdateFileManagerAndCreateArtifact(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	version, path string,
+	metadata metadata.Metadata,
+	fileInfo types.FileInfo,
+	failOnConflict bool,
 ) (*commons.ResponseHeaders, string, int64, bool, error) {
 	// TODO implement me
 	panic("implement me")
@@ -162,17 +162,6 @@ func (m *MockLocalBase) Upload(
 	return args.Get(0).(*commons.ResponseHeaders), args.String(1), args.Error(2) //nolint:errcheck
 }
 
-func (m *MockLocalBase) Move(
-	ctx context.Context,
-	info pkg.ArtifactInfo,
-	filename, version, path string,
-	metadata metadata.Metadata,
-	fileInfo types.FileInfo,
-) (*commons.ResponseHeaders, string, error) {
-	args := m.Called(ctx, info, filename, version, path, metadata, fileInfo)
-	return args.Get(0).(*commons.ResponseHeaders), args.String(1), args.Error(2) //nolint:errcheck
-}
-
 func (m *MockLocalBase) UploadFile(
 	ctx context.Context, info pkg.ArtifactInfo, filename, version, path string,
 	file multipart.File,
@@ -188,10 +177,9 @@ func (m *MockLocalBase) MoveMultipleTempFilesAndCreateArtifact(
 	pathPrefix string,
 	metadata metadata.Metadata,
 	filesInfo *[]types.FileInfo,
-	getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string,
 	version string,
 ) error {
-	args := m.Called(ctx, info, pathPrefix, metadata, filesInfo, getTempFilePath, version)
+	args := m.Called(ctx, info, pathPrefix, metadata, filesInfo, version)
 	return args.Error(0)
 }
 
@@ -426,15 +414,12 @@ func TestMockLocalBase_MoveMultipleTempFilesAndCreateArtifact(t *testing.T) {
 	filesInfo := &[]types.FileInfo{}
 	version := "1.0.0"
 
-	// Use mock.AnythingOfType for the func argument
 	mockLocalBase.On(
 		"MoveMultipleTempFilesAndCreateArtifact",
-		ctx, info, pathPrefix, meta, filesInfo, mock.AnythingOfType("func(*pkg.ArtifactInfo,"+
-			" *types.FileInfo) string"), version,
+		ctx, info, pathPrefix, meta, filesInfo, version,
 	).Return(nil)
 
-	err := mockLocalBase.MoveMultipleTempFilesAndCreateArtifact(ctx, info, pathPrefix, meta, filesInfo,
-		func(_ *pkg.ArtifactInfo, _ *types.FileInfo) string { return "temp/path" }, version)
+	err := mockLocalBase.MoveMultipleTempFilesAndCreateArtifact(ctx, info, pathPrefix, meta, filesInfo, version)
 	assert.Nil(t, err, "Expected no error from mock implementation")
 	mockLocalBase.AssertExpectations(t)
 }

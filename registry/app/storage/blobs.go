@@ -23,7 +23,6 @@ import (
 	"io"
 	"mime/multipart"
 
-	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/types"
 
@@ -102,6 +101,10 @@ type BlobWriter interface {
 		canonical manifest.Descriptor, err error,
 	)
 
+	// PlainCommit is dangerous and expects you to do validate and move blob.
+	// This is for backward compatibilty with generic, shall be removed soon.
+	PlainCommit(ctx context.Context, sha256 string) error
+
 	// Cancel ends the blob write without storing any data and frees any
 	// associated resources. Any data written thus far will be lost. Cancel
 	// implementations should allow multiple calls even after a commit that
@@ -172,19 +175,20 @@ type OciBlobStore interface {
 // GenericBlobStore represent the entire suite of Generic blob related operations. Such an
 // implementation can access, read, write, delete and serve blobs.
 type GenericBlobStore interface {
-
-	// Create allocates a new blob writer to add a blob to this service. The
+	GetV2NoRedirect(ctx context.Context, rootIdentifier string, sha256 string, fileSize int64) (*FileReader, error)
+	// CreateGeneric allocates a new blob writer to add a blob to this service. The
 	// returned handle can be written to and later resumed using an opaque
 	// identifier. With this approach, one can Close and Resume a BlobWriter
 	// multiple times until the BlobWriter is committed or cancelled.
-	Create(ctx context.Context, filePath string) (driver.FileWriter, error)
+	CreateGeneric(ctx context.Context, rootIdentifier string) (BlobWriter, error)
 
 	// Write writes the file to the blob store. There are two ways to write the file and fileReader takes the precedence.
-	Write(ctx context.Context, w driver.FileWriter, file multipart.File, fileReader io.Reader) (types.FileInfo, error)
-	Move(ctx context.Context, srcPath string, dstPath string) error
-	Delete(ctx context.Context, filePath string) error
-
-	Get(ctx context.Context, filePath string, size int64, filename string) (*FileReader, string, error)
+	Write(ctx context.Context, w BlobWriter, file multipart.File, fileReader io.Reader) (types.FileInfo, error)
+	GetGeneric(ctx context.Context, size int64, filename string, rootIdentifier string, sha256 string) (
+		*FileReader,
+		string,
+		error,
+	)
 	GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error)
-	Stat(ctx context.Context, filePath string) (int64, error)
+	StatByDigest(ctx context.Context, rootIdentifier, sha256 string) (int64, error)
 }

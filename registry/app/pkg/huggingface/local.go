@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -50,8 +49,6 @@ var (
 )
 
 const (
-	rootPathString   = "/"
-	tmp              = "tmp"
 	maxCommitEntries = 50000 // Add reasonable limit
 	contentTypeJSON  = "application/json"
 )
@@ -247,7 +244,7 @@ func (c *localRegistry) LfsInfo(
 			Size: obj.Size,
 		}
 
-		filePath, _ := c.fileManager.HeadSHA256(ctx, obj.Oid, info.RegistryID, info.RootParentID)
+		filePath, _ := c.fileManager.GetFilePath(ctx, obj.Oid, info.RegistryID, info.RootParentID)
 
 		exists := filePath != ""
 
@@ -294,18 +291,20 @@ func (c *localRegistry) LfsUpload(
 		Headers: map[string]string{"Content-Type": contentTypeJSON},
 	}
 	resp := &huggingfacetype.LfsUploadResponse{}
-	file := types.FileInfo{Sha256: info.SHA256}
-	info.Image = info.Repo
-	tmpFilePath := getTmpFilePath(&info.ArtifactInfo, &file)
 
-	fileInfo, tmpFileName, err := c.fileManager.UploadTempFileToPath(ctx, info.RootIdentifier, nil,
-		tmpFilePath, tmpFilePath, body)
+	// TODO(Arvind) Use this SHA256 to validate the checksum post upload is done
+	//file := types.FileInfo{Sha256: info.SHA256}
+
+	info.Image = info.Repo
+
+	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil,
+		body)
 	if err != nil {
-		log.Ctx(ctx).Info().Msgf("Upload failed for file %s, %v", tmpFileName, err)
+		log.Ctx(ctx).Info().Msgf("Upload failed for file with sha256: %s, %v", info.SHA256, err)
 		headers.Code = http.StatusInternalServerError
 		return headers, resp, err
 	}
-	log.Ctx(ctx).Info().Msgf("Uploaded file %s to %s", tmpFileName, fileInfo.Filename)
+	log.Ctx(ctx).Info().Msgf("Uploaded file %s with sha256: %s", fileInfo.Filename, info.SHA256)
 	resp.Success = true
 	headers.Code = http.StatusCreated
 	return headers, resp, nil
@@ -320,7 +319,7 @@ func (c *localRegistry) LfsVerify(
 	}
 	resp := &huggingfacetype.LfsVerifyResponse{}
 
-	filePath, _ := c.fileManager.HeadSHA256(ctx, info.SHA256, info.RegistryID, info.RootParentID)
+	filePath, _ := c.fileManager.GetFilePath(ctx, info.SHA256, info.RegistryID, info.RootParentID)
 	exists := c.FileExists(ctx, info)
 	if filePath == "" && !exists {
 		log.Ctx(ctx).Info().Msgf("File %s does not exist", info.SHA256)
@@ -418,7 +417,7 @@ func (c *localRegistry) CommitRevision(ctx context.Context, info huggingfacetype
 	info.Image = info.Repo
 	filePathPrefix := fmt.Sprintf("/%s/%s/%s", info.RepoType, info.Repo, info.Revision)
 	err = c.localBase.MoveMultipleTempFilesAndCreateArtifact(ctx, &info.ArtifactInfo, filePathPrefix, &hfMetadata,
-		&filesInfo, getTmpFilePath, info.Revision)
+		&filesInfo, info.Revision)
 	if err != nil {
 		return headers, nil, err
 	}
@@ -483,7 +482,7 @@ func (c *localRegistry) DownloadFile(ctx context.Context, info huggingfacetype.A
 		return headers, nil, "", err
 	}
 
-	body, _, redirectURL, err = c.fileManager.DownloadFile(ctx,
+	body, _, redirectURL, err = c.fileManager.DownloadFileByPath(ctx,
 		"/"+string(info.RepoType)+"/"+info.Repo+"/"+info.Revision+"/"+fileName, info.RegistryID,
 		info.RegIdentifier, info.RootIdentifier, true)
 	return headers, body, redirectURL, err
@@ -492,11 +491,9 @@ func (c *localRegistry) DownloadFile(ctx context.Context, info huggingfacetype.A
 func (c *localRegistry) FileExists(ctx context.Context, info huggingfacetype.ArtifactInfo) bool {
 	file := types.FileInfo{Sha256: info.SHA256}
 	info.Image = info.Repo
-	tmpFilePath := getTmpFilePath(&info.ArtifactInfo, &file)
-	tmpPath := path.Join(rootPathString, info.RootIdentifier, tmp, tmpFilePath)
-	exists, _, err := c.fileManager.FileExists(ctx, info.RootIdentifier, tmpPath)
+	exists, _, err := c.fileManager.HeadByDigest(ctx, info.RootIdentifier, file)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("Failed to check if file exists: %s", tmpPath)
+		log.Ctx(ctx).Error().Err(err).Msgf("Failed to check if file exists with sha256: %s", info.SHA256)
 	}
 	return exists
 }
@@ -512,17 +509,16 @@ func (c *localRegistry) readme(
 ) string {
 	for _, lfsFile := range *lfsFiles {
 		file := types.FileInfo{Sha256: lfsFile.Oid}
-		tmpFileName := getTmpFilePath(&info.ArtifactInfo, &file)
 		if strings.ToLower(lfsFile.Path) == "readme.md" {
-			reader, _, err := c.fileManager.DownloadTempFile(ctx, lfsFile.Size, tmpFileName, info.RootIdentifier)
+			reader, err := c.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, file)
 			if err != nil {
-				log.Ctx(ctx).Warn().Msgf("Failed to download readme file %s", tmpFileName)
+				log.Ctx(ctx).Warn().Msgf("Failed to download readme file %v", err)
 				return ""
 			}
 			defer reader.Close()
 			readmeBytes, err2 := io.ReadAll(reader)
 			if err2 != nil {
-				log.Ctx(ctx).Warn().Msgf("Failed to read readme file %s", tmpFileName)
+				log.Ctx(ctx).Warn().Msgf("Failed to read readme file %v", err2)
 				return ""
 			}
 			return string(readmeBytes)

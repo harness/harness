@@ -32,12 +32,7 @@ import (
 )
 
 type RegistryHelper interface {
-	UploadPackage(
-		ctx context.Context,
-		info rpm.ArtifactInfo,
-		file io.Reader,
-		fileName string,
-	) (*commons.ResponseHeaders, string, error)
+	UploadPackage(ctx context.Context, info rpm.ArtifactInfo, file io.Reader) (*commons.ResponseHeaders, string, error)
 }
 
 type registryHelper struct {
@@ -62,13 +57,12 @@ func (c *registryHelper) UploadPackage(
 	ctx context.Context,
 	info rpm.ArtifactInfo,
 	file io.Reader,
-	fileName string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	fileInfo, tempFileName, err := c.fileManager.UploadTempFile(ctx, info.RootIdentifier, nil, fileName, file)
+	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, file)
 	if err != nil {
 		return nil, "", err
 	}
-	r, _, err := c.fileManager.DownloadTempFile(ctx, fileInfo.Size, tempFileName, info.RootIdentifier)
+	r, err := c.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo)
 	if err != nil {
 		return nil, "", err
 	}
@@ -99,9 +93,8 @@ func (c *registryHelper) UploadPackage(
 	rpmFileName := fmt.Sprintf("%s-%s.%s.rpm", p.Name, p.Version, p.FileMetadata.Architecture)
 	path := fmt.Sprintf("%s/%s/%s", p.Name, pathVersion, rpmFileName)
 	fileInfo.Filename = rpmFileName
-	rs, sha256, artifactID, existent, err := c.localBase.MoveTempFileAndCreateArtifact(ctx, info.ArtifactInfo,
-		tempFileName, info.Version, path,
-		&rpmmetadata.RpmMetadata{
+	rs, sha256, artifactID, existent, err := c.localBase.UpdateFileManagerAndCreateArtifact(ctx, info.ArtifactInfo,
+		info.Version, path, &rpmmetadata.RpmMetadata{
 			Metadata: info.Metadata,
 		}, fileInfo, true)
 

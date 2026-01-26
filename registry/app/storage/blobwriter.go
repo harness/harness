@@ -42,8 +42,9 @@ const (
 // blobWriter is used to control the various aspects of resumable
 // blob upload.
 type blobWriter struct {
-	ctx       context.Context
-	blobStore *ociBlobStore
+	ctx              context.Context
+	blobStore        *ociBlobStore
+	genericBlobStore *genericBlobStore
 
 	id       string
 	digester digest.Digester
@@ -55,6 +56,9 @@ type blobWriter struct {
 
 	resumableDigestEnabled bool
 	committed              bool
+
+	// Used for generic flows - to be deprecated
+	rootIdentifier string
 }
 
 var _ BlobWriter = &blobWriter{}
@@ -93,6 +97,29 @@ func (bw *blobWriter) Commit(ctx context.Context, pathPrefix string, desc manife
 
 	bw.committed = true
 	return canonical, nil
+}
+
+// PlainCommit commits the files and move to desired location without any validity.
+// To be deprecated SOON after global storage takes over
+func (bw *blobWriter) PlainCommit(ctx context.Context, sha256 string) error {
+	log.Debug().Msg("(*blobWriter).Commit")
+
+	if err := bw.fileWriter.Commit(ctx); err != nil {
+		return err
+	}
+
+	err := bw.Close()
+	if err != nil {
+		return err
+	}
+
+	err = bw.genericBlobStore.move(ctx, bw.rootIdentifier, bw.id, sha256)
+
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to Move the file on permanent location for sha256: %s %v", sha256, err)
+		return fmt.Errorf("failed to Move the file on permanent location for sha256: %s %w", sha256, err)
+	}
+	return nil
 }
 
 // Cancel the blob upload process, releasing any resources associated with
