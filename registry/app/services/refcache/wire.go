@@ -33,6 +33,15 @@ func ProvideRegistryFinder(
 	return NewRegistryFinder(registryRepository, regIDCache, regRootRefCache, evictor, spaceFinder)
 }
 
+func ProvideUpstreamProxyFinder(
+	upstreamProxyRepository store.UpstreamProxyConfigRepository,
+	upstreamProxyRegistryIDCache store.UpstreamProxyRegistryIDCache,
+	evictor cache.Evictor[*types.UpstreamProxy],
+) UpstreamProxyFinder {
+	return NewUpstreamProxyFinder(upstreamProxyRepository, upstreamProxyRegistryIDCache, evictor)
+}
+
 var WireSet = wire.NewSet(
 	ProvideRegistryFinder,
+	ProvideUpstreamProxyFinder,
 )
