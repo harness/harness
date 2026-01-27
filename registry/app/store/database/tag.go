@@ -95,6 +95,7 @@ type artifactMetadataDB struct {
 	QuarantineReason *string                `db:"quarantine_reason"`
 	ArtifactType     *artifact.ArtifactType `db:"artifact_type"`
 	Tags             *string                `db:"tags"`
+	RegistryType     *artifact.RegistryType `db:"registry_type"`
 }
 
 type tagMetadataDB struct {
@@ -401,7 +402,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	finalQuery := fmt.Sprintf(`
     SELECT repo_name, name, package_type, version, modified_at,
            labels, download_count, is_quarantined, quarantine_reason, artifact_type,
-		   registry_uuid, uuid
+		   registry_uuid, uuid, registry_type
     FROM (%s UNION ALL %s) AS combined
 `, q1SQL, q2SQL)
 
@@ -448,6 +449,7 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		COALESCE(t2.download_count,0) as download_count,
         false as is_quarantined,
 		'' as quarantine_reason,
+        r.registry_type as registry_type,
         i.image_type as artifact_type `,
 	).
 		From("tags t").
@@ -568,6 +570,7 @@ func (t tagDao) getCoreArtifactsQuery(
 		r.registry_package_type as package_type,
 		ar.artifact_version as version, 
 		ar.artifact_updated_at as modified_at, 
+        r.registry_type as registry_type,
 		i.image_type as artifact_type`,
 	).
 		From("artifacts ar").
@@ -777,6 +780,7 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		COALESCE(t2.download_count, 0) as download_count,
         (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
         qp.quarantined_path_reason as quarantine_reason,
+        r.registry_type as registry_type,
         i.image_type as artifact_type`+suffix,
 	).
 		From("artifacts ar").
@@ -1843,6 +1847,7 @@ func (t tagDao) mapToArtifactMetadata(
 		IsQuarantined:    dst.IsQuarantined,
 		QuarantineReason: dst.QuarantineReason,
 		ArtifactType:     dst.ArtifactType,
+		RegistryType:     dst.RegistryType,
 	}
 
 	if dst.Tags != nil {

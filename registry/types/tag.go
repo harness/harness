@@ -50,6 +50,7 @@ type ArtifactMetadata struct {
 	Metadata         json.RawMessage
 	IsQuarantined    bool
 	QuarantineReason *string
+	RegistryType     *artifact.RegistryType
 	ArtifactType     *artifact.ArtifactType
 	Tags             []string
 }
