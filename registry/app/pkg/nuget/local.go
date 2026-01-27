@@ -88,8 +88,10 @@ func (c *localRegistry) GetServiceEndpointV2(
 	return serviceEndpoints
 }
 
-func (c *localRegistry) GetServiceMetadataV2(_ context.Context,
-	_ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
+func (c *localRegistry) GetServiceMetadataV2(
+	_ context.Context,
+	_ nugettype.ArtifactInfo,
+) *nugettype.ServiceMetadataV2 {
 	return getServiceMetadataV2()
 }
 
@@ -142,8 +144,10 @@ func (c *localRegistry) CountPackageVersionV2(
 	return count, nil
 }
 
-func (c *localRegistry) CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
-	searchTerm string) (count int64, err error) {
+func (c *localRegistry) CountPackageV2(
+	ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string,
+) (count int64, err error) {
 	count, err = c.artifactDao.CountByImageName(ctx, info.RegistryID, strings.ToLower(searchTerm))
 	if err != nil {
 		return 0, fmt.Errorf(
@@ -152,8 +156,10 @@ func (c *localRegistry) CountPackageV2(ctx context.Context, info nugettype.Artif
 	return count, nil
 }
 
-func (c *localRegistry) SearchPackageV2(ctx context.Context, info nugettype.ArtifactInfo,
-	searchTerm string, limit int, offset int) (*nugettype.FeedResponse, error) {
+func (c *localRegistry) SearchPackageV2(
+	ctx context.Context, info nugettype.ArtifactInfo,
+	searchTerm string, limit int, offset int,
+) (*nugettype.FeedResponse, error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, strings.ToLower(searchTerm), limit, offset)
 	if err != nil {
@@ -163,9 +169,11 @@ func (c *localRegistry) SearchPackageV2(ctx context.Context, info nugettype.Arti
 	return createSearchV2Response(packageURL, artifacts, searchTerm, limit, offset)
 }
 
-func (c *localRegistry) SearchPackage(ctx context.Context,
+func (c *localRegistry) SearchPackage(
+	ctx context.Context,
 	info nugettype.ArtifactInfo,
-	searchTerm string, limit int, offset int) (*nugettype.SearchResultResponse, error) {
+	searchTerm string, limit int, offset int,
+) (*nugettype.SearchResultResponse, error) {
 	packageURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	artifacts, err := c.artifactDao.SearchByImageName(ctx, info.RegistryID, strings.ToLower(searchTerm), limit, offset)
 	if err != nil {
@@ -242,16 +250,15 @@ func (c *localRegistry) UploadPackage(
 	var fileExtension string
 	metadata := nugetmetadata.Metadata{}
 
-	fileInfo, tempFileName, err := c.fileManager.UploadTempFile(ctx, info.RootIdentifier,
-		nil, tmpFileName, fileReader)
+	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, fileReader)
 	if err != nil {
 		return headers, "", fmt.Errorf(
 			"failed to upload file: %s with registry: %d with error: %w", tmpFileName, info.RegistryID, err)
 	}
-	r, _, err := c.fileManager.DownloadTempFile(ctx, fileInfo.Size, tempFileName, info.RootIdentifier)
+	r, err := c.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo)
 	if err != nil {
 		return headers, "", fmt.Errorf(
-			"failed to download file: %s with registry: %d with error: %w", tempFileName,
+			"failed to download file with registry: %d with error: %w",
 			info.RegistryID, err)
 	}
 	defer r.Close()
@@ -259,7 +266,7 @@ func (c *localRegistry) UploadPackage(
 	metadata, err = c.buildMetadata(r)
 	if err != nil {
 		return headers, "", fmt.Errorf(
-			"failed to build metadata for file: %s with registry: %d with error: %w", tempFileName,
+			"failed to build metadata for registry: %d with error: %w",
 			info.RegistryID, err)
 	}
 	info.Image = strings.ToLower(metadata.PackageMetadata.ID)
@@ -298,8 +305,7 @@ func (c *localRegistry) UploadPackage(
 		path = info.Image + "/" + info.Version + "/" + fileName
 	}
 
-	h, checkSum, _, _, err := c.localBase.MoveTempFileAndCreateArtifact(ctx, info.ArtifactInfo,
-		tempFileName, info.Version, path,
+	h, checkSum, _, _, err := c.localBase.UpdateFileManagerAndCreateArtifact(ctx, info.ArtifactInfo, info.Version, path,
 		&nugetmetadata.NugetMetadata{
 			Metadata: info.Metadata,
 		}, fileInfo, false)
@@ -377,7 +383,7 @@ func (c *localRegistry) DownloadPackage(
 			"with registry: %d with error: %w", info.Image, info.Version, info.RegistryID, err)
 	}
 
-	fileReader, size, redirectURL, err := c.fileManager.DownloadFile(ctx, path,
+	fileReader, size, redirectURL, err := c.fileManager.DownloadFileByPath(ctx, path,
 		info.RegistryID,
 		info.RegIdentifier, info.RootIdentifier, true)
 	if err != nil {

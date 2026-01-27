@@ -35,3 +35,18 @@ node_modules
 
 # adding support for .http files
 http-client.private.env.json
+
+# test file generated
+cargo_conformance_report.json
+go_conformance_report.json
+maven_conformance_report.json
+maven_junit_report.html
+maven_junit_report.xml
+npm_conformance_report.json
+test_output.txt
+
+registry/tests/cargo/cargo_conformance_report.json
+registry/tests/gopkg/go_conformance_report.json
+registry/tests/maven/maven_conformance_report.json
+registry/tests/npm/npm_conformance_report.json
+

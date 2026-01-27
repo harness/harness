@@ -121,14 +121,10 @@ func (h *registryHelper) uploadIndexMetadata(
 	rootParentID int64, registryID int64, image string,
 	versionList []string,
 ) error {
-	fileName := image
 	filePath := utils.GetIndexFilePath(image)
 
-	_, err := h.fileManager.UploadFile(
-		ctx, filePath, registryID, rootParentID, rootIdentifier, nil,
-		io.NopCloser(strings.NewReader(strings.Join(versionList, "\n"))),
-		fileName, principalID,
-	)
+	_, err := h.fileManager.UploadFile(ctx, filePath, registryID, rootParentID, rootIdentifier, nil,
+		io.NopCloser(strings.NewReader(strings.Join(versionList, "\n"))), principalID)
 	if err != nil {
 		return fmt.Errorf("failed to upload package index metadata: %w", err)
 	}
@@ -221,7 +217,7 @@ func (h *registryHelper) updatePackageMetadataFromInfoFile(
 ) error {
 	infoFileName := version + ".info"
 	infoFilePath := filepath.Join(path, infoFileName)
-	reader, _, _, err := h.fileManager.DownloadFile(
+	reader, _, _, err := h.fileManager.DownloadFileByPath(
 		ctx, infoFilePath, registry.ID, registry.Name, rootIdentifier, false,
 	)
 	if err != nil {
@@ -249,7 +245,7 @@ func (h *registryHelper) updatePackageMetadataFromModFile(
 ) error {
 	modFileName := version + ".mod"
 	modFilePath := filepath.Join(path, modFileName)
-	reader, _, _, err := h.fileManager.DownloadFile(
+	reader, _, _, err := h.fileManager.DownloadFileByPath(
 		ctx, modFilePath, registry.ID, registry.Name, rootIdentifier, false,
 	)
 	if err != nil {
@@ -274,7 +270,7 @@ func (h *registryHelper) updatePackageMetadataFromZipFile(
 ) error {
 	zipFileName := version + ".zip"
 	zipFilePath := filepath.Join(path, zipFileName)
-	reader, _, _, err := h.fileManager.DownloadFile(
+	reader, _, _, err := h.fileManager.DownloadFileByPath(
 		ctx, zipFilePath, registry.ID, registry.Name, rootIdentifier, false,
 	)
 	if err != nil {

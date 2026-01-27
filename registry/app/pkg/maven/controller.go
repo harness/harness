@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -51,13 +52,14 @@ const (
 var TypeRegistry = map[ArtifactType]Artifact{}
 
 type Controller struct {
-	local            *LocalRegistry
-	remote           *RemoteRegistry
-	authorizer       authz.Authorizer
-	DBStore          *DBStore
-	_                dbtx.Transactor
-	SpaceFinder      refcache.SpaceFinder
-	quarantineFinder quarantine.Finder
+	local                     *LocalRegistry
+	remote                    *RemoteRegistry
+	authorizer                authz.Authorizer
+	DBStore                   *DBStore
+	_                         dbtx.Transactor
+	SpaceFinder               refcache.SpaceFinder
+	quarantineFinder          quarantine.Finder
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker
 }
 
 type DBStore struct {
@@ -78,14 +80,16 @@ func NewController(
 	dBStore *DBStore,
 	spaceFinder refcache.SpaceFinder,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) *Controller {
 	c := &Controller{
-		local:            local,
-		remote:           remote,
-		authorizer:       authorizer,
-		DBStore:          dBStore,
-		SpaceFinder:      spaceFinder,
-		quarantineFinder: quarantineFinder,
+		local:                     local,
+		remote:                    remote,
+		authorizer:                authorizer,
+		DBStore:                   dBStore,
+		SpaceFinder:               spaceFinder,
+		quarantineFinder:          quarantineFinder,
+		dependencyFirewallChecker: dependencyFirewallChecker,
 	}
 
 	TypeRegistry[LocalRegistryType] = local
@@ -150,7 +154,7 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 			log.Ctx(ctx).Error().Stack().Msgf("Proxy wrapper has invalid registry set")
 			return nil
 		}
-		err := c.quarantineFinder.CheckArtifactQuarantineStatus(ctx, registry.ID, info.Image, info.Version, nil)
+		err = c.quarantineFinder.CheckArtifactQuarantineStatus(ctx, registry.ID, info.Image, info.Version, nil)
 		if err != nil {
 			if errors.Is(err, usererror.ErrQuarantinedArtifact) {
 				return &GetArtifactResponse{
@@ -162,6 +166,24 @@ func (c *Controller) GetArtifact(ctx context.Context, info pkg.MavenArtifactInfo
 				info.Image, info.Version, err)
 			return &GetArtifactResponse{
 				Errors: []error{err},
+			}
+		}
+
+		// Check dependency firewall violations if upstream proxy
+		if registry.Type == artifact.RegistryTypeUPSTREAM {
+			err = c.dependencyFirewallChecker.CheckPolicyViolation(ctx, registry.ID, info.Image, info.Version, nil)
+			if err != nil {
+				if errors.Is(err, usererror.ErrArtifactBlocked) {
+					return &GetArtifactResponse{
+						Errors: []error{err},
+					}
+				}
+				log.Ctx(ctx).Error().Stack().Err(err).Msgf("error"+
+					" while checking dependency firewall violations for artifact: [%s], version: [%s]",
+					info.Image, info.Version)
+				return &GetArtifactResponse{
+					Errors: []error{err},
+				}
 			}
 		}
 		headers, body, fileReader, redirectURL, e := r.GetArtifact(ctx, info) //nolint:errcheck

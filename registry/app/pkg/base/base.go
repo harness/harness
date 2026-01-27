@@ -72,12 +72,10 @@ type LocalBase interface {
 		file io.ReadCloser,
 		metadata metadata.Metadata,
 	) (*commons.ResponseHeaders, string, error)
-	MoveTempFileAndCreateArtifact(
+	UpdateFileManagerAndCreateArtifact(
 		ctx context.Context,
 		info pkg.ArtifactInfo,
-		tempFileName,
-		version,
-		path string,
+		version, path string,
 		metadata metadata.Metadata,
 		fileInfo types.FileInfo,
 		failOnConflict bool,
@@ -114,9 +112,12 @@ type LocalBase interface {
 	DeleteVersion(ctx context.Context, info pkg.PackageArtifactInfo) error
 
 	MoveMultipleTempFilesAndCreateArtifact(
-		ctx context.Context, info *pkg.ArtifactInfo, pathPrefix string,
-		metadata metadata.Metadata, filesInfo *[]types.FileInfo,
-		getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string,
+		ctx context.Context,
+		info *pkg.ArtifactInfo,
+		pathPrefix string,
+		metadata metadata.Metadata,
+		filesInfo *[]types.FileInfo,
+		version string,
 	) error
 }
 
@@ -186,12 +187,10 @@ func (l *localBase) Upload(
 	return l.uploadInternal(ctx, info, fileName, version, path, nil, file, metadata)
 }
 
-func (l *localBase) MoveTempFileAndCreateArtifact(
+func (l *localBase) UpdateFileManagerAndCreateArtifact(
 	ctx context.Context,
 	info pkg.ArtifactInfo,
-	tempFileName,
-	version,
-	path string,
+	version, path string,
 	metadata metadata.Metadata,
 	fileInfo types.FileInfo,
 	failOnConflict bool,
@@ -226,8 +225,8 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 		return responseHeaders, "", 0, false, errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	session, _ := request.AuthSessionFrom(ctx)
-	err = l.fileManager.MoveTempFile(ctx, path, registry.ID,
-		info.RootParentID, info.RootIdentifier, fileInfo, tempFileName, session.Principal.ID)
+	err = l.fileManager.PostFileUpload(ctx, path, registry.ID, info.RootParentID,
+		info.RootIdentifier, fileInfo, session.Principal.ID)
 	if err != nil {
 		return responseHeaders, "", 0, false, errcode.ErrCodeUnknown.WithDetail(err)
 	}
@@ -241,14 +240,17 @@ func (l *localBase) MoveTempFileAndCreateArtifact(
 }
 
 func (l *localBase) MoveMultipleTempFilesAndCreateArtifact(
-	ctx context.Context, info *pkg.ArtifactInfo,
-	pathPrefix string, metadata metadata.Metadata, filesInfo *[]types.FileInfo,
-	getTempFilePath func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, version string,
+	ctx context.Context,
+	info *pkg.ArtifactInfo,
+	pathPrefix string,
+	metadata metadata.Metadata,
+	filesInfo *[]types.FileInfo,
+	version string,
 ) error {
 	session, _ := request.AuthSessionFrom(ctx)
 	for _, fileInfo := range *filesInfo {
 		filePath := path.Join(pathPrefix, fileInfo.Filename)
-		_, err := l.fileManager.HeadSHA256(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID)
+		_, err := l.fileManager.GetFilePath(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID)
 		if err == nil {
 			// It means file already exist, or it was moved in some iteration, no need to move it, just save nodes
 			err = l.fileManager.SaveNodes(ctx, fileInfo.Sha256, info.RegistryID, info.RootParentID,
@@ -262,8 +264,8 @@ func (l *localBase) MoveMultipleTempFilesAndCreateArtifact(
 			continue
 		}
 		// Otherwise, move the file to permanent location and save nodes
-		err = l.fileManager.MoveTempFile(ctx, filePath, info.RegistryID, info.RootParentID, info.RootIdentifier,
-			fileInfo, getTempFilePath(info, &fileInfo), session.Principal.ID)
+		err = l.fileManager.PostFileUpload(ctx, filePath, info.RegistryID, info.RootParentID,
+			info.RootIdentifier, fileInfo, session.Principal.ID)
 		if err != nil {
 			log.Ctx(ctx).Info().Msgf("Failed to move filesInfo with sha %s to %s", fileInfo.Sha256,
 				fileInfo.Filename)
@@ -415,11 +417,12 @@ func (l *localBase) uploadInternal(
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
 	session, _ := request.AuthSessionFrom(ctx)
-	fileInfo, err := l.fileManager.UploadFile(ctx, path, registry.ID,
-		info.RootParentID, info.RootIdentifier, file, fileReadCloser, fileName, session.Principal.ID)
+	fileInfo, err := l.fileManager.UploadFile(ctx, path, registry.ID, info.RootParentID, info.RootIdentifier, file,
+		fileReadCloser, session.Principal.ID)
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
+	fileInfo.Filename = fileName
 	_, err = l.postUploadArtifact(ctx, info, registry, version, metadata, fileInfo)
 	if err != nil {
 		return responseHeaders, "", err
@@ -508,7 +511,7 @@ func (l *localBase) Download(
 	path := "/" + info.Image + "/" + version + "/" + fileName
 	reg, _ := l.registryFinder.FindByRootParentID(ctx, info.RootParentID, info.RegIdentifier)
 
-	fileReader, _, redirectURL, err := l.fileManager.DownloadFile(ctx, path, reg.ID,
+	fileReader, _, redirectURL, err := l.fileManager.DownloadFileByPath(ctx, path, reg.ID,
 		info.RegIdentifier, info.RootIdentifier, true)
 	if err != nil {
 		return responseHeaders, nil, "", err

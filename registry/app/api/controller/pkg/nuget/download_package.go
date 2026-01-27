@@ -52,7 +52,8 @@ func (c *controller) DownloadPackage(
 		}
 	}
 
-	result, err := base.ProxyWrapper(ctx, c.registryDao, c.quarantineFinder, f, info, true)
+	result, err := base.ProxyWrapperWithChecks(ctx, c.registryDao, c.quarantineFinder,
+		c.dependencyFirewallChecker, f, info, true, true)
 	if err != nil {
 		return &GetArtifactResponse{
 			BaseResponse{

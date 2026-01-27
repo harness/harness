@@ -67,6 +67,7 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected supportedScanners?: Scanners[]
   protected supportedUpstreamURLSources?: UpstreamRepositoryURLInputSource[]
   protected isWebhookSupported?: boolean
+  protected isDependencyFirewallSupported?: boolean
   isSupportCustomRegistrySuffix?: boolean
   supportedRepositoryTabs?: RepositoryDetailsTab[]
   supportedArtifactTypes?: LocalArtifactType[]
@@ -148,6 +149,10 @@ export abstract class RepositoryStep<T, U = unknown> {
 
   getIsWebhookSupported(): boolean {
     return this.isWebhookSupported ?? false
+  }
+
+  getIsDependencyFirewallSupported(): boolean {
+    return this.isDependencyFirewallSupported ?? false
   }
 
   getIsSupportCustomRegistrySuffix(): boolean {

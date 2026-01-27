@@ -47,11 +47,13 @@ type Registry interface {
 		string,
 		error,
 	)
-	GetRepoData(ctx context.Context, info rpm.ArtifactInfo, fileName string) (*commons.ResponseHeaders,
+	GetRepoData(ctx context.Context, info rpm.ArtifactInfo, fileName string) (
+		*commons.ResponseHeaders,
 		*storage.FileReader,
 		io.ReadCloser,
 		string,
-		error)
+		error,
+	)
 }
 
 func downloadPackageFile(
@@ -100,7 +102,7 @@ func getRepoData(
 		Headers: make(map[string]string),
 		Code:    0,
 	}
-	fileReader, _, redirectURL, err := fileManager.DownloadFile(
+	fileReader, _, redirectURL, err := fileManager.DownloadFileByPath(
 		ctx, "/"+rpmutil.RepoDataPrefix+fileName, info.RegistryID, info.RegIdentifier, info.RootIdentifier, true,
 	)
 	if err != nil {

@@ -55,6 +55,7 @@ export class HuggingfaceRepositoryType extends RepositoryStep<VirtualRegistryReq
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
   protected isWebhookSupported = false
+  protected isDependencyFirewallSupported = false
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.HuggingFace,
     UpstreamRepositoryURLInputSource.Custom

@@ -19,7 +19,6 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/app/services/merge"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -88,6 +87,7 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/branch"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
@@ -104,6 +104,7 @@ import (
 	svclabel "github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/languageanalyzer"
 	locker "github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/metric"
 	migrateservice "github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
@@ -325,6 +326,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		registryindex.WireSet,
 		cliserver.ProvideBranchConfig,
 		branch.WireSet,
+		autolink.WireSet,
 		cargoutils.WireSet,
 		gopackageutils.WireSet,
 		registrypostporcessingevents.ProvideAsyncProcessingReporter,

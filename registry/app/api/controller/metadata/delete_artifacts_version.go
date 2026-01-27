@@ -38,7 +38,8 @@ import (
 )
 
 func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.DeleteArtifactVersionRequestObject) (
-	artifact.DeleteArtifactVersionResponseObject, error) {
+	artifact.DeleteArtifactVersionResponseObject, error,
+) {
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 	if err != nil {
 		return artifact.DeleteArtifactVersion400JSONResponse{
@@ -274,7 +275,7 @@ func (c *APIController) deleteVersion(
 		ctx,
 		func(ctx context.Context) error {
 			// delete nodes from nodes store
-			err = c.fileManager.DeleteNode(ctx, regInfo.RegistryID, filePath)
+			err = c.fileManager.DeleteFile(ctx, regInfo.RegistryID, filePath)
 			if err != nil {
 				return err
 			}

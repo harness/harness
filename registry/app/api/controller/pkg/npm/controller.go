@@ -19,6 +19,7 @@ import (
 	"io"
 
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	npm2 "github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -29,17 +30,18 @@ import (
 
 // Controller handles PyPI package operations.
 type controller struct {
-	fileManager      filemanager.FileManager
-	proxyStore       store.UpstreamProxyConfigRepository
-	tx               dbtx.Transactor
-	registryDao      store.RegistryRepository
-	imageDao         store.ImageRepository
-	artifactDao      store.ArtifactRepository
-	urlProvider      urlprovider.Provider
-	downloadStat     store.DownloadStatRepository
-	local            npm2.LocalRegistry
-	proxy            npm2.Proxy
-	quarantineFinder quarantine.Finder
+	fileManager               filemanager.FileManager
+	proxyStore                store.UpstreamProxyConfigRepository
+	tx                        dbtx.Transactor
+	registryDao               store.RegistryRepository
+	imageDao                  store.ImageRepository
+	artifactDao               store.ArtifactRepository
+	urlProvider               urlprovider.Provider
+	downloadStat              store.DownloadStatRepository
+	local                     npm2.LocalRegistry
+	proxy                     npm2.Proxy
+	quarantineFinder          quarantine.Finder
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker
 }
 
 type Controller interface {
@@ -103,18 +105,20 @@ func NewController(
 	local npm2.LocalRegistry,
 	proxy npm2.Proxy,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) Controller {
 	return &controller{
-		proxyStore:       proxyStore,
-		registryDao:      registryDao,
-		imageDao:         imageDao,
-		artifactDao:      artifactDao,
-		downloadStat:     downloadStatsDao,
-		fileManager:      fileManager,
-		tx:               tx,
-		urlProvider:      urlProvider,
-		local:            local,
-		proxy:            proxy,
-		quarantineFinder: quarantineFinder,
+		proxyStore:                proxyStore,
+		registryDao:               registryDao,
+		imageDao:                  imageDao,
+		artifactDao:               artifactDao,
+		downloadStat:              downloadStatsDao,
+		fileManager:               fileManager,
+		tx:                        tx,
+		urlProvider:               urlProvider,
+		local:                     local,
+		proxy:                     proxy,
+		quarantineFinder:          quarantineFinder,
+		dependencyFirewallChecker: dependencyFirewallChecker,
 	}
 }

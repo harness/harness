@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/driver"
@@ -31,26 +30,6 @@ import (
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
-
-const (
-	HeaderAccept              = "Accept"
-	HeaderAuthorization       = "Authorization"
-	HeaderCacheControl        = "Cache-Control"
-	HeaderContentLength       = "Content-Length"
-	HeaderContentRange        = "Content-Range"
-	HeaderContentType         = "Content-Type"
-	HeaderDockerContentDigest = "Docker-Content-Digest"
-	HeaderDockerUploadUUID    = "Docker-Upload-UUID"
-	HeaderEtag                = "Etag"
-	HeaderIfNoneMatch         = "If-None-Match"
-	HeaderLink                = "Link"
-	HeaderLocation            = "Location"
-	HeaderOCIFiltersApplied   = "OCI-Filters-Applied"
-	HeaderOCISubject          = "OCI-Subject"
-	HeaderRange               = "Range"
-)
-
-const blobCacheControlMaxAge = 365 * 24 * time.Hour
 
 type ociBlobStore struct {
 	driverKey string

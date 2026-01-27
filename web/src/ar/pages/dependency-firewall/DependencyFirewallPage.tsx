@@ -24,6 +24,7 @@ import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
 
+import ViolationsListPage from '../violations-list/ViolationsListPage'
 import { DependencyFirewallTab, DependencyFirewallTabs } from './constants'
 
 import css from './DependencyFirewallPage.module.scss'
@@ -76,7 +77,7 @@ const DependencyFirewallPage: React.FC = () => {
           onLoad={() => {
             setActiveTab(DependencyFirewallTab.VIOLATIONS)
           }}>
-          <div>Violations</div>
+          <ViolationsListPage />
         </RouteProvider>
         <RouteProvider
           exact

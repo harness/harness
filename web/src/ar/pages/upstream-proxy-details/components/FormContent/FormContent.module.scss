@@ -38,3 +38,8 @@
 .cleanupPoliciesContainer {
   max-width: 80%;
 }
+
+.cardSelect {
+  display: flex;
+  gap: var(--spacing-medium);
+}

@@ -194,6 +194,10 @@ func ValidateUpstream(
 				return usererror.BadRequest("URL is required for upstream repository")
 			}
 		}
+		supportedAuthTypes := []a.AuthType{a.AuthTypeAccessKeySecretKey, a.AuthTypeAnonymous, a.AuthTypeUserPassword}
+		if !slices.Contains(supportedAuthTypes, upstreamConfig.AuthType) {
+			return usererror.BadRequest(fmt.Sprintf("Upstream auth type must be one of: %v", supportedAuthTypes))
+		}
 	}
 	return nil
 }

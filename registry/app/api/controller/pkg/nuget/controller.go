@@ -19,6 +19,7 @@ import (
 	"io"
 
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/nuget"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -76,16 +77,17 @@ type Controller interface {
 
 // Controller handles Python package operations.
 type controller struct {
-	fileManager      filemanager.FileManager
-	proxyStore       store.UpstreamProxyConfigRepository
-	tx               dbtx.Transactor
-	registryDao      store.RegistryRepository
-	imageDao         store.ImageRepository
-	artifactDao      store.ArtifactRepository
-	urlProvider      urlprovider.Provider
-	local            nuget.LocalRegistry
-	proxy            nuget.Proxy
-	quarantineFinder quarantine.Finder
+	fileManager               filemanager.FileManager
+	proxyStore                store.UpstreamProxyConfigRepository
+	tx                        dbtx.Transactor
+	registryDao               store.RegistryRepository
+	imageDao                  store.ImageRepository
+	artifactDao               store.ArtifactRepository
+	urlProvider               urlprovider.Provider
+	local                     nuget.LocalRegistry
+	proxy                     nuget.Proxy
+	quarantineFinder          quarantine.Finder
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker
 }
 
 // NewController creates a new Python controller.
@@ -100,17 +102,19 @@ func NewController(
 	local nuget.LocalRegistry,
 	proxy nuget.Proxy,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) Controller {
 	return &controller{
-		proxyStore:       proxyStore,
-		registryDao:      registryDao,
-		imageDao:         imageDao,
-		artifactDao:      artifactDao,
-		fileManager:      fileManager,
-		tx:               tx,
-		urlProvider:      urlProvider,
-		local:            local,
-		proxy:            proxy,
-		quarantineFinder: quarantineFinder,
+		proxyStore:                proxyStore,
+		registryDao:               registryDao,
+		imageDao:                  imageDao,
+		artifactDao:               artifactDao,
+		fileManager:               fileManager,
+		tx:                        tx,
+		urlProvider:               urlProvider,
+		local:                     local,
+		proxy:                     proxy,
+		quarantineFinder:          quarantineFinder,
+		dependencyFirewallChecker: dependencyFirewallChecker,
 	}
 }

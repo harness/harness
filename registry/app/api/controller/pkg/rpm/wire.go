@@ -16,6 +16,7 @@ package rpm
 
 import (
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/rpm"
@@ -36,6 +37,7 @@ func ControllerProvider(
 	local rpm.LocalRegistry,
 	proxy rpm.Proxy,
 	postProcessingReporter *registrypostprocessingevents.Reporter,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) Controller {
 	return NewController(
 		proxyStore,
@@ -49,6 +51,7 @@ func ControllerProvider(
 		proxy,
 		proxyStore,
 		postProcessingReporter,
+		dependencyFirewallChecker,
 	)
 }
 

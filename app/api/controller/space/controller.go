@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/importer"
@@ -108,6 +109,7 @@ type Controller struct {
 	repoIdentifierCheck check.RepoIdentifier
 	infraProviderSvc    *infraprovider.Service
 	favoriteStore       store.FavoriteStore
+	autolinkSvc         *autolink.Service
 	spaceSvc            *space.Service
 }
 
@@ -123,7 +125,8 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
 	instrumentation instrument.Service, executionStore store.ExecutionStore,
 	rulesSvc *rules.Service, usageMetricStore store.UsageMetricStore, repoIdentifierCheck check.RepoIdentifier,
-	infraProviderSvc *infraprovider.Service, favoriteStore store.FavoriteStore, spaceSvc *space.Service,
+	infraProviderSvc *infraprovider.Service, favoriteStore store.FavoriteStore, autolinkSvc *autolink.Service,
+	spaceSvc *space.Service,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
@@ -159,6 +162,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		repoIdentifierCheck: repoIdentifierCheck,
 		infraProviderSvc:    infraProviderSvc,
 		favoriteStore:       favoriteStore,
+		autolinkSvc:         autolinkSvc,
 		spaceSvc:            spaceSvc,
 	}
 }

@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -45,15 +46,16 @@ import (
 )
 
 type Controller struct {
-	SpaceStore       corestore.SpaceStore
-	Authorizer       authz.Authorizer
-	DBStore          *DBStore
-	fileManager      filemanager.FileManager
-	tx               dbtx.Transactor
-	spaceFinder      refcache.SpaceFinder
-	local            generic.LocalRegistry
-	proxy            generic.Proxy
-	quarantineFinder quarantine.Finder
+	SpaceStore                corestore.SpaceStore
+	Authorizer                authz.Authorizer
+	DBStore                   *DBStore
+	fileManager               filemanager.FileManager
+	tx                        dbtx.Transactor
+	spaceFinder               refcache.SpaceFinder
+	local                     generic.LocalRegistry
+	proxy                     generic.Proxy
+	quarantineFinder          quarantine.Finder
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker
 }
 
 type DBStore struct {
@@ -75,17 +77,19 @@ func NewController(
 	local generic.LocalRegistry,
 	proxy generic.Proxy,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) *Controller {
 	return &Controller{
-		SpaceStore:       spaceStore,
-		Authorizer:       authorizer,
-		fileManager:      fileManager,
-		DBStore:          dBStore,
-		tx:               tx,
-		spaceFinder:      spaceFinder,
-		local:            local,
-		proxy:            proxy,
-		quarantineFinder: quarantineFinder,
+		SpaceStore:                spaceStore,
+		Authorizer:                authorizer,
+		fileManager:               fileManager,
+		DBStore:                   dBStore,
+		tx:                        tx,
+		spaceFinder:               spaceFinder,
+		local:                     local,
+		proxy:                     proxy,
+		quarantineFinder:          quarantineFinder,
+		dependencyFirewallChecker: dependencyFirewallChecker,
 	}
 }
 
@@ -227,7 +231,8 @@ func (c Controller) updateMetadata(
 	return nil
 }
 
-func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactInfo) ( //nolint:staticcheck
+func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactInfo) (
+	//nolint:staticcheck
 	*commons.ResponseHeaders,
 	*storage.FileReader, string, errcode.Error,
 ) {
@@ -242,7 +247,7 @@ func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactIn
 	}
 
 	path := "/" + info.Image + "/" + info.Version + "/" + info.FileName
-	fileReader, _, redirectURL, err := c.fileManager.DownloadFile(ctx, path, info.RegistryID,
+	fileReader, _, redirectURL, err := c.fileManager.DownloadFileByPath(ctx, path, info.RegistryID,
 		info.RegIdentifier, info.RootIdentifier, true)
 	if err != nil {
 		return responseHeaders, nil, "", errcode.ErrCodeRootNotFound.WithDetail(err)
@@ -251,8 +256,10 @@ func (c Controller) PullArtifact(ctx context.Context, info pkg.GenericArtifactIn
 	return responseHeaders, fileReader, redirectURL, errcode.Error{}
 }
 
-func (c Controller) CheckIfFileAlreadyExist(ctx context.Context,
-	info pkg.GenericArtifactInfo) error { //nolint:staticcheck
+func (c Controller) CheckIfFileAlreadyExist(
+	ctx context.Context,
+	info pkg.GenericArtifactInfo,
+) error { //nolint:staticcheck
 	image, err := c.DBStore.ImageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err != nil && !strings.Contains(err.Error(), "resource not found") {
 		return fmt.Errorf("failed to fetch the image for artifact : [%s] with "+
@@ -289,13 +296,14 @@ func (c Controller) CheckIfFileAlreadyExist(ctx context.Context,
 }
 
 func (c Controller) ParseAndUploadToTmp(
-	ctx context.Context, reader *multipart.Reader,
-	info pkg.GenericArtifactInfo, fileToFind string, //nolint:staticcheck
+	ctx context.Context,
+	reader *multipart.Reader,
+	info pkg.GenericArtifactInfo,
+	fileToFind string,
 	formKeys []string,
-) (types.FileInfo, string, map[string]string, error) {
+) (types.FileInfo, map[string]string, error) {
 	formValues := make(map[string]string)
 	var fileInfo types.FileInfo
-	var filename string
 
 	// Track which keys we still need to find
 	keysToFind := make(map[string]bool)
@@ -309,17 +317,17 @@ func (c Controller) ParseAndUploadToTmp(
 			break
 		}
 		if err != nil {
-			return types.FileInfo{}, "", formValues, err
+			return types.FileInfo{}, formValues, err
 		}
 
 		formName := part.FormName()
 
 		// Check if this is the file part we're looking for
 		if formName == fileToFind {
-			fileInfo, filename, err = c.fileManager.UploadTempFile(ctx, info.RootIdentifier, nil, "", part)
+			fileInfo, err = c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, part)
 
 			if err != nil {
-				return types.FileInfo{}, "", formValues, err
+				return types.FileInfo{}, formValues, err
 			}
 			continue
 		}
@@ -344,7 +352,7 @@ func (c Controller) ParseAndUploadToTmp(
 				break
 			}
 			if err != nil {
-				return types.FileInfo{}, "", formValues, fmt.Errorf("error reading form value: %w", err)
+				return types.FileInfo{}, formValues, fmt.Errorf("error reading form value: %w", err)
 			}
 		}
 
@@ -359,24 +367,24 @@ func (c Controller) ParseAndUploadToTmp(
 	}
 
 	// If fileToFind was provided but not found, return an error
-	if fileToFind != "" && filename == "" {
-		return types.FileInfo{}, "", formValues, fmt.Errorf("file part with key '%s' not found", fileToFind)
+	if fileToFind != "" && fileInfo.Sha256 == "" {
+		return types.FileInfo{}, formValues, fmt.Errorf("file part with key '%s' not found", fileToFind)
 	}
 
-	return fileInfo, filename, formValues, nil
+	return fileInfo, formValues, nil
 }
 
 func (c Controller) UploadFile(
 	ctx context.Context, reader *multipart.Reader,
 	info *pkg.GenericArtifactInfo, //nolint:staticcheck
 ) (types.FileInfo, error) {
-	fileInfo, tmpFileName, formValues, err :=
+	fileInfo, formValues, err :=
 		c.ParseAndUploadToTmp(ctx, reader, *info, "file", []string{"filename", "description"})
 
 	if err != nil {
 		return types.FileInfo{},
 			fmt.Errorf("failed to Parse/upload "+
-				"the generic artifact file to temp location: [%s] with error: [%w] ", tmpFileName, err)
+				"the generic artifact file to temp location with error: [%w] ", err)
 	}
 
 	if err := validateFileName(formValues["filename"]); err != nil {
@@ -397,8 +405,8 @@ func (c Controller) UploadFile(
 
 	session, _ := request.AuthSessionFrom(ctx)
 	filePath := path.Join(info.Image, info.Version, fileInfo.Filename)
-	err = c.fileManager.MoveTempFile(ctx, filePath, info.RegistryID,
-		info.RootParentID, info.RootIdentifier, fileInfo, tmpFileName, session.Principal.ID)
+	err = c.fileManager.PostFileUpload(ctx, filePath, info.RegistryID, info.RootParentID,
+		info.RootIdentifier, fileInfo, session.Principal.ID)
 	if err != nil {
 		return types.FileInfo{}, err
 	}

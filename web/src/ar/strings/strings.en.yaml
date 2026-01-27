@@ -34,6 +34,8 @@ archived: 'Archived({{count}})'
 status:
   available: Available
   archived: Archived
+  blocked: Blocked
+  warning: Warning
 dateLabel: Date
 timeLabel: Time
 harnessAI: Harness AI

@@ -54,6 +54,7 @@ export class NuGetRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
   protected isWebhookSupported = false
+  protected isDependencyFirewallSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.NugetOrg,
     UpstreamRepositoryURLInputSource.Custom

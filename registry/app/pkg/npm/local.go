@@ -64,8 +64,10 @@ func (c *localRegistry) HeadPackageMetadata(ctx context.Context, info npm.Artifa
 	return c.localBase.CheckIfVersionExists(ctx, info)
 }
 
-func (c *localRegistry) DownloadPackageFile(ctx context.Context,
-	info npm.ArtifactInfo) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+func (c *localRegistry) DownloadPackageFile(
+	ctx context.Context,
+	info npm.ArtifactInfo,
+) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
 	headers, fileReader, redirectURL, err :=
 		c.localBase.Download(ctx, info.ArtifactInfo, info.Version,
 			info.Filename)
@@ -119,7 +121,7 @@ func (c *localRegistry) UploadPackageFile(
 	file io.ReadCloser,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
 	var packageMetadata npm2.PackageMetadata
-	fileInfo, tempFileName, err := c.parseAndUploadNPMPackage(ctx, info, file, &packageMetadata)
+	fileInfo, err := c.parseAndUploadNPMPackage(ctx, info, file, &packageMetadata)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to parse npm package: %v", err)
 		return nil, "", err
@@ -137,8 +139,8 @@ func (c *localRegistry) UploadPackageFile(
 	fileInfo.Filename = info.Filename
 	filePath := path.Join(info.Image, info.Version, fileInfo.Filename)
 
-	_, sha256, _, _, err = c.localBase.MoveTempFileAndCreateArtifact(ctx, info.ArtifactInfo,
-		tempFileName, info.Version, filePath,
+	_, sha256, _, _, err = c.localBase.UpdateFileManagerAndCreateArtifact(ctx, info.ArtifactInfo, info.Version,
+		filePath,
 		&npm2.NpmMetadata{
 			PackageMetadata: info.Metadata,
 		}, fileInfo, false)
@@ -168,7 +170,8 @@ func (c *localRegistry) GetPackageMetadata(ctx context.Context, info npm.Artifac
 
 	if len(*artifacts) == 0 {
 		return packageMetadata,
-			usererror.NotFound(fmt.Sprintf("no artifacts found for registry %s and image %s", info.Registry.Name, info.Image))
+			usererror.NotFound(fmt.Sprintf("no artifacts found for registry %s and image %s", info.Registry.Name,
+				info.Image))
 	}
 	regURL := c.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "npm")
 
@@ -194,8 +197,10 @@ func (c *localRegistry) GetPackageMetadata(ctx context.Context, info npm.Artifac
 	return packageMetadata, nil
 }
 
-func (c *localRegistry) SearchPackage(ctx context.Context, info npm.ArtifactInfo,
-	limit int, offset int) (*npm2.PackageSearch, error) {
+func (c *localRegistry) SearchPackage(
+	ctx context.Context, info npm.ArtifactInfo,
+	limit int, offset int,
+) (*npm2.PackageSearch, error) {
 	metadataList, err := c.artifactDao.SearchLatestByName(ctx, info.RegistryID, info.Image, limit, offset)
 
 	if err != nil {
@@ -286,8 +291,10 @@ func getScope(name string) string {
 	return "unscoped"
 }
 
-func CreatePackageMetadataVersion(registryURL string,
-	metadata *npm2.PackageMetadataVersion) *npm2.PackageMetadataVersion {
+func CreatePackageMetadataVersion(
+	registryURL string,
+	metadata *npm2.PackageMetadataVersion,
+) *npm2.PackageMetadataVersion {
 	return &npm2.PackageMetadataVersion{
 		ID:                   fmt.Sprintf("%s@%s", metadata.Name, metadata.Version),
 		Name:                 metadata.Name,
@@ -313,7 +320,7 @@ func CreatePackageMetadataVersion(registryURL string,
 }
 
 func (c *localRegistry) ListTags(ctx context.Context, info npm.ArtifactInfo) (map[string]string, error) {
-	tags, err := c.tagsDao.FindByImageNameAndRegID(ctx, info.Image, info.RegistryID)
+	tags, err := c.tagsDao.FindByImageNameAndRegID(ctx, info.Image, info.RegistryID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +334,7 @@ func (c *localRegistry) ListTags(ctx context.Context, info npm.ArtifactInfo) (ma
 }
 
 func (c *localRegistry) AddTag(ctx context.Context, info npm.ArtifactInfo) (map[string]string, error) {
-	image, err := c.imageDao.GetByRepoAndName(ctx, info.ParentID, info.RegIdentifier, info.Image)
+	image, err := c.imageDao.GetByName(ctx, info.RegistryID, info.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -339,6 +346,10 @@ func (c *localRegistry) AddTag(ctx context.Context, info npm.ArtifactInfo) (map[
 
 	if len(info.DistTags) == 0 {
 		return nil, usererror.BadRequest("Add tag error: distTags are empty")
+	}
+	if strings.TrimSpace(info.DistTags[0]) == "" {
+		log.Ctx(ctx).Warn().Msg("Add tag skipped: distTag is empty")
+		return map[string]string{}, nil
 	}
 	packageTag := &types.PackageTag{
 		ID:         uuid.NewString(),
@@ -371,8 +382,12 @@ func (c *localRegistry) DeleteVersion(ctx context.Context, info npm.ArtifactInfo
 	return c.localBase.DeleteVersion(ctx, info)
 }
 
-func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.ArtifactInfo,
-	reader io.Reader, packageMetadata *npm2.PackageMetadata) (types.FileInfo, string, error) {
+func (c *localRegistry) parseAndUploadNPMPackage(
+	ctx context.Context,
+	info npm.ArtifactInfo,
+	reader io.Reader,
+	packageMetadata *npm2.PackageMetadata,
+) (types.FileInfo, error) {
 	// Use a buffered reader with controlled buffer size instead of unlimited buffering
 	// This prevents the JSON decoder from buffering the entire file
 	bufferedReader := bufio.NewReaderSize(reader, 32*1024) // 32KB buffer instead of unlimited
@@ -381,7 +396,6 @@ func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.A
 	decoder := json.NewDecoder(bufferedReader)
 
 	var fileInfo types.FileInfo
-	var tmpFileName string
 
 	// Parse top-level fields
 	for {
@@ -392,7 +406,7 @@ func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.A
 			if errors.Is(err, io.EOF) || strings.Contains(err.Error(), "EOF") {
 				break
 			}
-			return types.FileInfo{}, "", fmt.Errorf("failed to parse JSON: %w", err)
+			return types.FileInfo{}, fmt.Errorf("failed to parse JSON: %w", err)
 		}
 
 		//nolint:nestif
@@ -400,100 +414,105 @@ func (c *localRegistry) parseAndUploadNPMPackage(ctx context.Context, info npm.A
 			switch token {
 			case "_id":
 				if err := decoder.Decode(&packageMetadata.ID); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse _id: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse _id: %w", err)
 				}
 			case "name":
 				if err := decoder.Decode(&packageMetadata.Name); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse name: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse name: %w", err)
 				}
 			case "description":
 				if err := decoder.Decode(&packageMetadata.Description); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse description: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse description: %w", err)
 				}
 			case "dist-tags":
 				packageMetadata.DistTags = make(map[string]string)
 				if err := decoder.Decode(&packageMetadata.DistTags); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse dist-tags: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse dist-tags: %w", err)
 				}
 			case "versions":
 				packageMetadata.Versions = make(map[string]*npm2.PackageMetadataVersion)
 				if err := decoder.Decode(&packageMetadata.Versions); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse versions: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse versions: %w", err)
 				}
 			case "readme":
 				if err := decoder.Decode(&packageMetadata.Readme); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse readme: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse readme: %w", err)
 				}
 			case "maintainers":
 				if err := decoder.Decode(&packageMetadata.Maintainers); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse maintainers: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse maintainers: %w", err)
 				}
 			case "time":
 				packageMetadata.Time = make(map[string]time.Time)
 				if err := decoder.Decode(&packageMetadata.Time); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse time: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse time: %w", err)
 				}
 			case "homepage":
 				if err := decoder.Decode(&packageMetadata.Homepage); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse homepage: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse homepage: %w", err)
 				}
 			case "keywords":
 				if err := decoder.Decode(&packageMetadata.Keywords); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse keywords: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse keywords: %w", err)
 				}
 			case "repository":
 				if err := decoder.Decode(&packageMetadata.Repository); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse repository: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse repository: %w", err)
 				}
 			case "author":
 				if err := decoder.Decode(&packageMetadata.Author); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse author: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse author: %w", err)
 				}
 			case "readmeFilename":
 				if err := decoder.Decode(&packageMetadata.ReadmeFilename); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse readmeFilename: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse readmeFilename: %w", err)
 				}
 			case "users":
 				if err := decoder.Decode(&packageMetadata.Users); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse users: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse users: %w", err)
 				}
 			case "license":
 				if err := decoder.Decode(&packageMetadata.License); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse license: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse license: %w", err)
 				}
 			case "_attachments":
 
 				// Process attachments with optimized streaming to minimize memory usage
-				fileInfo, tmpFileName, err = c.processAttachmentsOptimized(ctx, info, decoder, bufferedReader)
+				fileInfo, err = c.processAttachmentsOptimized(ctx, info, decoder, bufferedReader)
 				if err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to process attachments: %w", err)
+					return types.FileInfo{}, fmt.Errorf("failed to process attachments: %w", err)
 				}
-				log.Info().Str("packageName", info.Image).Msg("Successfully uploaded NPM package using optimized processing")
+				log.Info().Str("packageName",
+					info.Image).Msg("Successfully uploaded NPM package using optimized processing")
 
 				// We're done processing attachments, break out of the main parsing loop
-				return fileInfo, tmpFileName, nil
+				return fileInfo, nil
 			default:
 				var dummy any
 				if err := decoder.Decode(&dummy); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to parse field %s: %w", token, err)
+					return types.FileInfo{}, fmt.Errorf("failed to parse field %s: %w", token, err)
 				}
 			}
 		}
 	}
 
-	return fileInfo, tmpFileName, nil
+	return fileInfo, nil
 }
 
 // processAttachmentsOptimized handles attachment processing with minimal memory buffering.
-func (c *localRegistry) processAttachmentsOptimized(ctx context.Context, info npm.ArtifactInfo,
-	decoder *json.Decoder, bufferedReader *bufio.Reader) (types.FileInfo, string, error) {
+func (c *localRegistry) processAttachmentsOptimized(
+	ctx context.Context,
+	info npm.ArtifactInfo,
+	decoder *json.Decoder,
+	bufferedReader *bufio.Reader,
+) (types.FileInfo, error) {
 	// Parse the attachments map with minimal buffering
 	t, err := decoder.Token()
 	if err != nil {
-		return types.FileInfo{}, "", fmt.Errorf("failed to parse _attachments: %w", err)
+		return types.FileInfo{}, fmt.Errorf("failed to parse _attachments: %w", err)
 	}
 	if delim, ok := t.(json.Delim); !ok || delim != '{' {
-		return types.FileInfo{}, "", fmt.Errorf("expected '{' at start of _attachments")
+		return types.FileInfo{}, fmt.Errorf("expected '{' at start of _attachments")
 	}
 
 	// Process each attachment (e.g., "test-large-package-2.0.0.tgz")
@@ -504,23 +523,23 @@ func (c *localRegistry) processAttachmentsOptimized(ctx context.Context, info np
 			if err == io.EOF || strings.Contains(err.Error(), "EOF") {
 				break
 			}
-			return types.FileInfo{}, "", fmt.Errorf("failed to parse JSON: %w", err)
+			return types.FileInfo{}, fmt.Errorf("failed to parse JSON: %w", err)
 		}
 		if delim, ok := t.(json.Delim); ok && delim == '}' {
 			break // End of _attachments object
 		}
 		attachmentKey, ok := t.(string)
 		if !ok {
-			return types.FileInfo{}, "", fmt.Errorf("expected string key in _attachments")
+			return types.FileInfo{}, fmt.Errorf("expected string key in _attachments")
 		}
 
 		// Expect the start of the attachment object
 		t, err = decoder.Token()
 		if err != nil {
-			return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s: %w", attachmentKey, err)
+			return types.FileInfo{}, fmt.Errorf("failed to parse attachment %s: %w", attachmentKey, err)
 		}
 		if delim, ok := t.(json.Delim); !ok || delim != '{' {
-			return types.FileInfo{}, "", fmt.Errorf("expected '{' for attachment %s", attachmentKey)
+			return types.FileInfo{}, fmt.Errorf("expected '{' for attachment %s", attachmentKey)
 		}
 
 		// Process fields within the attachment object with optimized streaming
@@ -531,7 +550,7 @@ func (c *localRegistry) processAttachmentsOptimized(ctx context.Context, info np
 				if err == io.EOF || strings.Contains(err.Error(), "EOF") {
 					break
 				}
-				return types.FileInfo{}, "", fmt.Errorf("failed to parse attachment %s fields: %w", attachmentKey, err)
+				return types.FileInfo{}, fmt.Errorf("failed to parse attachment %s fields: %w", attachmentKey, err)
 			}
 			if delim, ok := t.(json.Delim); ok && delim == '}' {
 				break // End of attachment object
@@ -549,18 +568,23 @@ func (c *localRegistry) processAttachmentsOptimized(ctx context.Context, info np
 				// Skip other fields efficiently
 				var dummy any
 				if err := decoder.Decode(&dummy); err != nil {
-					return types.FileInfo{}, "", fmt.Errorf("failed to skip field %s: %w", field, err)
+					return types.FileInfo{}, fmt.Errorf("failed to skip field %s: %w", field, err)
 				}
 			}
 		}
 	}
 
-	return types.FileInfo{}, "", fmt.Errorf("no attachment data found")
+	return types.FileInfo{}, fmt.Errorf("no attachment data found")
 }
 
 // processBase64DataOptimized handles base64 data processing with minimal memory usage.
-func (c *localRegistry) processBase64DataOptimized(ctx context.Context, info npm.ArtifactInfo,
-	decoder *json.Decoder, bufferedReader *bufio.Reader, attachmentKey string) (types.FileInfo, string, error) {
+func (c *localRegistry) processBase64DataOptimized(
+	ctx context.Context,
+	info npm.ArtifactInfo,
+	decoder *json.Decoder,
+	bufferedReader *bufio.Reader,
+	attachmentKey string,
+) (types.FileInfo, error) {
 	// Get the remaining data from decoder's buffer + original reader
 	// This avoids the memory-heavy io.MultiReader approach
 	combinedReader := io.MultiReader(decoder.Buffered(), bufferedReader)
@@ -571,22 +595,22 @@ func (c *localRegistry) processBase64DataOptimized(ctx context.Context, info npm
 	// Expecting `:` character first
 	startByte, err := streamReader.ReadByte()
 	if err != nil {
-		return types.FileInfo{}, "",
-			fmt.Errorf("failed to upload attachment %s: Error while reading : character: %w", attachmentKey, err)
+		return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: Error while reading : character: %w",
+			attachmentKey, err)
 	}
 	if startByte != ':' {
-		return types.FileInfo{}, "",
-			fmt.Errorf("failed to upload attachment %s: Expected : character, got %c", attachmentKey, startByte)
+		return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: Expected : character, got %c",
+			attachmentKey, startByte)
 	}
 
 	// Now expecting `"`, marking start of JSON string
 	startByte, err = streamReader.ReadByte()
 	if err != nil {
-		return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
+		return types.FileInfo{}, fmt.Errorf("failed to upload"+
 			" attachment %s: Error while reading \" character: %w", attachmentKey, err)
 	}
 	if startByte != '"' {
-		return types.FileInfo{}, "", fmt.Errorf("failed to upload"+
+		return types.FileInfo{}, fmt.Errorf("failed to upload"+
 			" attachment %s: Expected \" character, got %c", attachmentKey, startByte)
 	}
 
@@ -597,18 +621,17 @@ func (c *localRegistry) processBase64DataOptimized(ctx context.Context, info npm
 	base64Reader := io.NopCloser(base64.NewDecoder(base64.StdEncoding, b64StreamReader))
 
 	log.Info().Str("packageName", info.Image).Msg("Uploading NPM package with optimized streaming")
-	fileInfo, tmpFileName, err := c.fileManager.UploadTempFile(ctx, info.RootIdentifier, nil, "tmp", base64Reader)
+	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, base64Reader)
 	if err != nil {
 		if strings.Contains(err.Error(), "unexpected EOF") {
-			return types.FileInfo{}, "",
-				fmt.Errorf("failed to upload attachment %s: "+
-					"base64 data may be corrupted or missing closing quote: %w", attachmentKey, err)
+			return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: "+
+				"base64 data may be corrupted or missing closing quote: %w", attachmentKey, err)
 		}
-		return types.FileInfo{}, "", fmt.Errorf("failed to upload attachment %s: %w", attachmentKey, err)
+		return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: %w", attachmentKey, err)
 	}
 
 	log.Info().Str("packageName", info.Image).Msg("Successfully uploaded NPM package with optimized streaming")
-	return fileInfo, tmpFileName, nil
+	return fileInfo, nil
 }
 
 // NewOptimizedJSONStringStreamReader returns an io.Reader that stops at the closing quote of a JSON string

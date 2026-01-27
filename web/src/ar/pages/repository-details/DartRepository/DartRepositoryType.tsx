@@ -54,6 +54,7 @@ export class DartRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
   protected isWebhookSupported = true
+  protected isDependencyFirewallSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.Pubdev,
     UpstreamRepositoryURLInputSource.Custom

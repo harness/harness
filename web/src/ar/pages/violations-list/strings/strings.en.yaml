@@ -1,1 +1,38 @@
 page: Violations List Page
+noViolationsFound: No Violations Found
+cards:
+  totalViolations: Total Violations
+  blockedViolations: Blocked Violations
+  warningViolations: Warning Violations
+  dependencies: Dependencies
+table:
+  columns:
+    package: Dependency And Version
+    registry: Upstream Registry
+    policySet: Policy Set Violated
+    status: Status
+    actions:
+      violationDetails: Violation Details
+violationDetailsModal:
+  title: Violation Details
+  basicInformationSection:
+    title: Basic Information
+    packageName: Package Name
+    upstreamProxy: Upstream Proxy
+    status: Status
+    policySetViolated: Policy Set Violated
+    category: Category
+  violatedPoliciesSection:
+    title: Violated Policies
+  fixInformationSection:
+    title: Fix Information
+    fixAvailable: Fix Available
+    fixedVersion: Fixed Version
+    currentVersion: Current Version
+  evaluationDetailsSection:
+    title: Evaluation
+    firstDetected: First Detected
+    lastDetected: Last Detected
+  actions:
+    requestException: Request Exception
+    reEvaluate: Re-Evaluate

@@ -107,13 +107,13 @@ func (r *LocalRegistry) FetchArtifact(ctx context.Context, info pkg.MavenArtifac
 		}
 	}
 
-	fileInfo, err := r.fileManager.GetFileMetadata(ctx, filePath, info.RegistryID)
+	fileInfo, err := r.fileManager.GetFileMetadata(ctx, info.RegistryID, filePath)
 	if err != nil {
 		return processError(err)
 	}
 	var fileReader *storage.FileReader
 	if serveFile {
-		fileReader, _, redirectURL, err = r.fileManager.DownloadFile(ctx, filePath, info.RegistryID,
+		fileReader, _, redirectURL, err = r.fileManager.DownloadFileByPath(ctx, filePath, info.RegistryID,
 			info.RootIdentifier, info.RootIdentifier, true)
 		if err != nil {
 			return processError(err)
@@ -132,13 +132,17 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	if !utils.IsMetadataFile(info.FileName) {
 		artifactExists, err := r.localBase.CheckIfVersionExists(ctx, info)
 		if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
-			return responseHeaders, []error{fmt.Errorf("failed to check if version: %s with artifact: %s "+
-				"exists: %w", info.Version, info.Image, err)}
+			return responseHeaders, []error{
+				fmt.Errorf("failed to check if version: %s with artifact: %s "+
+					"exists: %w", info.Version, info.Image, err),
+			}
 		}
 		fileExists, err := r.localBase.ExistsByFilePath(ctx, info.RegistryID, strings.TrimPrefix(filePath, "/"))
 		if err != nil {
-			return responseHeaders, []error{fmt.Errorf("failed to check if file with path: %s exists: %w",
-				filePath, err)}
+			return responseHeaders, []error{
+				fmt.Errorf("failed to check if file with path: %s exists: %w",
+					filePath, err),
+			}
 		}
 		if artifactExists && fileExists {
 			log.Ctx(ctx).Info().Msgf("file with path: %s already exists for artifact: %s with version: %s",
@@ -148,12 +152,12 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 		}
 	}
 	session, _ := request.AuthSessionFrom(ctx)
-	fileInfo, err := r.fileManager.UploadFile(ctx, filePath,
-		info.RegistryID, info.RootParentID, info.RootIdentifier, nil, fileReader, info.FileName, session.Principal.ID)
+	fileInfo, err := r.fileManager.UploadFile(ctx, filePath, info.RegistryID, info.RootParentID, info.RootIdentifier,
+		nil, fileReader, session.Principal.ID)
 	if err != nil {
 		return responseHeaders, []error{errcode.ErrCodeUnknown.WithDetail(err)}
 	}
-
+	fileInfo.Filename = info.FileName
 	var imageUUID string
 	var artifactUUID string
 	err = r.tx.WithTx(

@@ -47,6 +47,7 @@ const (
 	BypassActionCreated             = "created"
 	BypassActionCommitted           = "committed"
 	BypassActionMerged              = "merged"
+	BypassMessage                   = "bypass_message"
 	BypassSHALabelFormat            = "%s @%s"
 	BypassPullReqLabelFormat        = "%s #%s"
 )

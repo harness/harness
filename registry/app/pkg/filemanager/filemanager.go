@@ -1,4 +1,4 @@
-//  Copyright 2023 Harness, Inc.
+// Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"path"
 	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
@@ -31,19 +30,16 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	gitnesstypes "github.com/harness/gitness/types"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
 const (
 	rootPathString = "/"
-	tmp            = "tmp"
-	files          = "files"
 	nodeLimit      = 1000
 	pathFormat     = "for path: %s, with error %w"
-
-	failedToGetFile = "failed to get the file for path: %s, with error %w"
 )
+
+// FileManager defines the interface for file management operations.
 
 func NewFileManager(
 	registryDao store.RegistryRepository, genericBlobDao store.GenericBlobRepository,
@@ -52,7 +48,7 @@ func NewFileManager(
 	bucketService docker.BucketService, replicationReporter replication.Reporter,
 	blobCreationDBHook storage.BlobCreationDBHook,
 ) FileManager {
-	return FileManager{
+	return &fileManager{
 		registryDao:         registryDao,
 		genericBlobDao:      genericBlobDao,
 		nodesDao:            nodesDao,
@@ -65,7 +61,7 @@ func NewFileManager(
 	}
 }
 
-type FileManager struct {
+type fileManager struct {
 	config              *gitnesstypes.Config
 	storageService      *storage.Service
 	registryDao         store.RegistryRepository
@@ -77,7 +73,8 @@ type FileManager struct {
 	blobCreationDBHook  storage.BlobCreationDBHook
 }
 
-func (f *FileManager) UploadFile(
+// UploadFile - use it to upload file. Inputs can be file or fileReader.
+func (f *fileManager) UploadFile(
 	ctx context.Context,
 	filePath string,
 	regID int64,
@@ -85,25 +82,15 @@ func (f *FileManager) UploadFile(
 	rootIdentifier string,
 	file multipart.File,
 	fileReader io.Reader,
-	fileName string,
 	principalID int64,
 ) (types.FileInfo, error) {
-	// uploading the file to temporary path in file storage
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
-	tmpFileName := uuid.NewString()
-	fileInfo, tmpPath, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
-		file, fileName, fileReader, tmpFileName)
-	if err != nil {
-		return fileInfo, err
-	}
-	fileInfo.Filename = fileName
-
-	err = f.moveFile(ctx, rootIdentifier, fileInfo, blobContext, tmpPath)
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "")
+	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader)
 	if err != nil {
 		return fileInfo, err
 	}
 
-	blobID, created, err := f.dbSaveFile(ctx, blobContext, filePath, regID, rootParentID, fileInfo, principalID)
+	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo, principalID)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -119,7 +106,7 @@ func (f *FileManager) UploadFile(
 
 // GetBlobsContext context constructs the context object for the application. This only be
 // called once per request.
-func (f *FileManager) GetBlobsContext(
+func (f *fileManager) getBlobsContext(
 	c context.Context, registryIdentifier,
 	rootIdentifier, blobID, sha256 string,
 ) *Context {
@@ -139,17 +126,8 @@ func (f *FileManager) GetBlobsContext(
 	return ctx
 }
 
-func (f *FileManager) GetOCIBlobStore(
+func (f *fileManager) dbSaveFile(
 	ctx context.Context,
-	registryIdentifier string,
-	rootIdentifier string,
-) storage.OciBlobStore {
-	return f.storageService.OciBlobsStore(ctx, registryIdentifier, rootIdentifier)
-}
-
-func (f *FileManager) dbSaveFile(
-	ctx context.Context,
-	blobContext *Context,
 	filePath string,
 	regID int64,
 	rootParentID int64,
@@ -206,7 +184,7 @@ func (f *FileManager) dbSaveFile(
 	return blobID, created, nil
 }
 
-func (f *FileManager) SaveNodes(
+func (f *fileManager) SaveNodes(
 	ctx context.Context,
 	filePath string,
 	regID int64,
@@ -232,20 +210,7 @@ func (f *FileManager) SaveNodes(
 	return nil
 }
 
-func (f *FileManager) SaveNodesTx(
-	ctx context.Context,
-	filePath string,
-	regID int64,
-	rootParentID int64,
-	createdBy int64,
-	sha256 string,
-) error {
-	return f.tx.WithTx(ctx, func(ctx context.Context) error {
-		return f.SaveNodes(ctx, filePath, regID, rootParentID, createdBy, sha256)
-	})
-}
-
-func (f *FileManager) CreateNodesWithoutFileNode(
+func (f *fileManager) CreateNodesWithoutFileNode(
 	ctx context.Context,
 	path string,
 	regID int64,
@@ -277,27 +242,7 @@ func (f *FileManager) CreateNodesWithoutFileNode(
 	return nil
 }
 
-func (f *FileManager) moveFile(
-	ctx context.Context,
-	rootIdentifier string,
-	fileInfo types.FileInfo,
-	blobContext *Context,
-	tmpPath string,
-) error {
-	// Moving the file to permanent path in file storage
-	fileStoragePath := path.Join(rootPathString, rootIdentifier, files, fileInfo.Sha256)
-	err := blobContext.genericBlobStore.Move(ctx, tmpPath, fileStoragePath)
-
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("failed to Move the file on permanent location "+
-			"with name : %s with error : %s", fileInfo.Filename, err.Error())
-		return fmt.Errorf("failed to Move the file on permanent"+
-			" location with name : %s with error : %w", fileInfo.Filename, err)
-	}
-	return nil
-}
-
-func (f *FileManager) createNodes(
+func (f *fileManager) createNodes(
 	ctx context.Context,
 	filePath string,
 	blobID string,
@@ -337,7 +282,7 @@ func (f *FileManager) createNodes(
 	return nil
 }
 
-func (f *FileManager) SaveNode(
+func (f *fileManager) SaveNode(
 	ctx context.Context, filePath string, blobID string, regID int64, segment string,
 	parentID string, nodePath string, isFile bool, createdBy int64,
 ) (string, error) {
@@ -358,7 +303,7 @@ func (f *FileManager) SaveNode(
 	return node.ID, nil
 }
 
-func (f *FileManager) CopyNodes(
+func (f *fileManager) CopyNodes(
 	ctx context.Context,
 	rootParentID int64,
 	sourceRegistryID int64,
@@ -391,7 +336,7 @@ func (f *FileManager) CopyNodes(
 	return nil
 }
 
-func (f *FileManager) DownloadFile(
+func (f *fileManager) DownloadFileByPath(
 	ctx context.Context,
 	filePath string,
 	registryID int64,
@@ -410,23 +355,23 @@ func (f *FileManager) DownloadFile(
 		return nil, 0, "", usererror.NotFoundf("failed to get the blob for path: %s, "+
 			"with blob id: %s, with error %s", filePath, node.BlobID, err)
 	}
-	completeFilaPath := path.Join(rootPathString + rootIdentifier + rootPathString + files + rootPathString + blob.Sha256)
-	blobContext := f.GetBlobsContext(ctx, registryIdentifier, rootIdentifier, blob.ID, blob.Sha256)
+	blobContext := f.getBlobsContext(ctx, registryIdentifier, rootIdentifier, blob.ID, blob.Sha256)
 
 	if allowRedirect {
-		fileReader, redirectURL, err = blobContext.genericBlobStore.Get(ctx, completeFilaPath, blob.Size, node.Name)
+		fileReader, redirectURL, err = blobContext.genericBlobStore.GetGeneric(ctx, blob.Size, node.Name,
+			rootIdentifier, blob.Sha256)
 	} else {
-		fileReader, err = blobContext.genericBlobStore.GetWithNoRedirect(ctx, completeFilaPath, blob.Size)
+		fileReader, err = blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, blob.Sha256, blob.Size)
 	}
 
 	if err != nil {
-		return nil, 0, "", fmt.Errorf(failedToGetFile, completeFilaPath, err)
+		return nil, 0, "", fmt.Errorf("failed to get file with digest: %s %w", blob.Sha256, err)
 	}
 
 	return fileReader, blob.Size, redirectURL, nil
 }
 
-func (f *FileManager) DeleteNode(
+func (f *fileManager) DeleteFile(
 	ctx context.Context,
 	regID int64,
 	filePath string,
@@ -438,7 +383,7 @@ func (f *FileManager) DeleteNode(
 	return nil
 }
 
-func (f *FileManager) DeleteLeafNode(
+func (f *fileManager) DeleteLeafNode(
 	ctx context.Context,
 	regID int64,
 	filePath string,
@@ -453,7 +398,7 @@ func (f *FileManager) DeleteLeafNode(
 	return nil
 }
 
-func (f *FileManager) GetNode(
+func (f *fileManager) GetNode(
 	ctx context.Context,
 	regID int64,
 	filePath string,
@@ -465,7 +410,7 @@ func (f *FileManager) GetNode(
 	return node, nil
 }
 
-func (f *FileManager) HeadFile(
+func (f *fileManager) HeadFile(
 	ctx context.Context,
 	filePath string,
 	regID int64,
@@ -485,7 +430,7 @@ func (f *FileManager) HeadFile(
 	return blob.Sha256, blob.Size, nil
 }
 
-func (f *FileManager) HeadSHA256(
+func (f *fileManager) GetFilePath(
 	ctx context.Context,
 	sha256 string,
 	regID int64,
@@ -512,7 +457,7 @@ func (f *FileManager) HeadSHA256(
 	return node.NodePath, nil
 }
 
-func (f *FileManager) FindLatestFilePath(
+func (f *fileManager) FindLatestFilePath(
 	ctx context.Context, registryID int64,
 	filepathPrefix, filename string,
 ) (string, error) {
@@ -524,27 +469,7 @@ func (f *FileManager) FindLatestFilePath(
 	return fileNode.NodePath, nil
 }
 
-func (f *FileManager) HeadBlob(
-	ctx context.Context,
-	sha256 string,
-	rootParentID int64,
-) (string, error) {
-	blob, err := f.genericBlobDao.FindBySha256AndRootParentID(ctx, sha256, rootParentID)
-
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("failed to get the blob for sha256: %s, with root parent id: %d, with error %v",
-			sha256, rootParentID, err)
-		return "", fmt.Errorf("failed to get the blob for sha256: %s, with root parent id: %d, with error %w", sha256,
-			rootParentID, err)
-	}
-	return blob.ID, nil
-}
-
-func (f *FileManager) GetFileMetadata(
-	ctx context.Context,
-	filePath string,
-	regID int64,
-) (types.FileInfo, error) {
+func (f *fileManager) GetFileMetadata(ctx context.Context, regID int64, filePath string) (types.FileInfo, error) {
 	node, err := f.nodesDao.GetByPathAndRegistryID(ctx, regID, filePath)
 
 	if err != nil {
@@ -567,7 +492,7 @@ func (f *FileManager) GetFileMetadata(
 	}, nil
 }
 
-func (f *FileManager) GetFilesMetadata(
+func (f *fileManager) GetFilesMetadata(
 	ctx context.Context,
 	filePath string,
 	regID int64,
@@ -591,7 +516,7 @@ func (f *FileManager) GetFilesMetadata(
 	return node, nil
 }
 
-func (f *FileManager) CountFilesByPath(
+func (f *fileManager) CountFilesByPath(
 	ctx context.Context,
 	filePath string,
 	regID int64,
@@ -606,118 +531,89 @@ func (f *FileManager) CountFilesByPath(
 	return count, nil
 }
 
-func (f *FileManager) UploadTempFile(
+func (f *fileManager) UploadFileNoDBUpdate(
 	ctx context.Context,
 	rootIdentifier string,
 	file multipart.File,
-	fileName string,
 	fileReader io.Reader,
-) (types.FileInfo, string, error) {
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
-	tempFileName := uuid.NewString()
-	fileInfo, _, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
-		file, fileName, fileReader, tempFileName)
+) (types.FileInfo, error) {
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "")
+	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader)
 	if err != nil {
-		return fileInfo, tempFileName, err
+		return fileInfo, err
 	}
-	return fileInfo, tempFileName, nil
+	return fileInfo, nil
 }
 
-func (f *FileManager) UploadTempFileToPath(
-	ctx context.Context,
-	rootIdentifier string,
-	file multipart.File,
-	fileName string,
-	tempFileName string,
-	fileReader io.Reader,
-) (types.FileInfo, string, error) {
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
-	fileInfo, _, err := f.uploadTempFileInternal(ctx, blobContext, rootIdentifier,
-		file, fileName, fileReader, tempFileName)
+func (f *fileManager) HeadByDigest(ctx context.Context, rootIdentifier string, info types.FileInfo) (
+	bool,
+	int64,
+	error,
+) {
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "")
+	size, err := blobContext.genericBlobStore.StatByDigest(ctx, rootIdentifier, info.Sha256)
 	if err != nil {
-		return fileInfo, tempFileName, err
+		return false, 0, err
 	}
-	return fileInfo, tempFileName, nil
+	return true, size, nil
 }
 
-func (f *FileManager) FileExists(
-	ctx context.Context,
-	rootIdentifier string,
-	filePath string,
-) (bool, int64, error) {
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
-	size, err := blobContext.genericBlobStore.Stat(ctx, filePath)
-	if err != nil {
-		return false, -1, err
-	}
-	return size > 0, size, nil
-}
-
-func (f *FileManager) uploadTempFileInternal(
+func (f *fileManager) uploadAndMove(
 	ctx context.Context,
 	blobContext *Context,
 	rootIdentifier string,
 	file multipart.File,
-	fileName string,
 	fileReader io.Reader,
-	tempFileName string,
-) (types.FileInfo, string, error) {
-	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, tempFileName)
-	fw, err := blobContext.genericBlobStore.Create(ctx, tmpPath)
+) (types.FileInfo, error) {
+	fw, err := blobContext.genericBlobStore.CreateGeneric(ctx, rootIdentifier)
 
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("failed to initiate the file upload for file with"+
-			" name : %s with error : %s", fileName, err.Error())
-		return types.FileInfo{}, tmpPath, fmt.Errorf("failed to initiate the file upload "+
-			"for file with name : %s with error : %w", fileName, err)
+		log.Ctx(ctx).Error().Msgf("failed to initiate the file upload for file with error : %s", err.Error())
+		return types.FileInfo{}, fmt.Errorf("failed to initiate the file upload "+
+			"for file with error : %w", err)
 	}
 	defer fw.Close()
 
 	fileInfo, err := blobContext.genericBlobStore.Write(ctx, fw, file, fileReader)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to upload the file on temparary location"+
-			" with name : %s with error : %s", fileName, err.Error())
-		return types.FileInfo{}, tmpPath, fmt.Errorf("failed to upload the file on temparary "+
-			"location with name : %s with error : %w", fileName, err)
+			" with error : %s", err.Error())
+		return types.FileInfo{}, fmt.Errorf("failed to upload the file on temporary "+
+			"location with with error : %w", err)
 	}
-	return fileInfo, tmpPath, nil
-}
-
-func (f *FileManager) DownloadTempFile(
-	ctx context.Context,
-	fileSize int64,
-	fileName string,
-	rootIdentifier string,
-) (fileReader *storage.FileReader, size int64, err error) {
-	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, fileName)
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
-	reader, err := blobContext.genericBlobStore.GetWithNoRedirect(ctx, tmpPath, fileSize)
+	err = fw.PlainCommit(ctx, fileInfo.Sha256)
 	if err != nil {
-		return nil, 0, fmt.Errorf(failedToGetFile, tmpPath, err)
+		return types.FileInfo{}, err
 	}
-
-	return reader, fileSize, nil
+	return fileInfo, nil
 }
 
-func (f *FileManager) MoveTempFile(
+// DownloadTempFile These type of APIs should not be introduced. Difficult to track objects and all updates should be
+// done inside nodes tables owned by filemanager. If the object is not there, it is supposed to be GCed.
+func (f *fileManager) DownloadFileByDigest(
+	ctx context.Context,
+	rootIdentifier string,
+	fileInfo types.FileInfo,
+) (fileReader *storage.FileReader, err error) {
+	blobContext := f.getBlobsContext(ctx, "", rootIdentifier, "", "")
+	reader, err := blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, fileInfo.Sha256, fileInfo.Size)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get file with digest: %s %w", fileInfo.Sha256, err)
+	}
+
+	return reader, nil
+}
+
+func (f *fileManager) PostFileUpload(
 	ctx context.Context,
 	filePath string,
 	regID int64,
 	rootParentID int64,
 	rootIdentifier string,
 	fileInfo types.FileInfo,
-	tempFileName string,
 	principalID int64,
 ) error {
-	// uploading the file to temporary path in file storage
-	blobContext := f.GetBlobsContext(ctx, rootIdentifier, "", "", "")
-	tmpPath := path.Join(rootPathString, rootIdentifier, tmp, tempFileName)
-	err := f.moveFile(ctx, rootIdentifier, fileInfo, blobContext, tmpPath)
-	if err != nil {
-		return err
-	}
-
-	blobID, created, err := f.dbSaveFile(ctx, nil, filePath, regID, rootParentID, fileInfo, principalID)
+	blobID, created, err := f.dbSaveFile(ctx, filePath, regID, rootParentID, fileInfo, principalID)
 	if err != nil {
 		return err
 	}
@@ -729,16 +625,4 @@ func (f *FileManager) MoveTempFile(
 			f.config, destinations)
 	}
 	return nil
-}
-
-func (f *FileManager) GetFileMetadataByPathAndRegistryID(
-	ctx context.Context,
-	registryID int64,
-	path string,
-) (*types.FileNodeMetadata, error) {
-	metadata, err := f.nodesDao.GetFileMetadataByPathAndRegistryID(ctx, registryID, path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get [%s] for registry [%d], error: %w", path, registryID, err)
-	}
-	return metadata, nil
 }

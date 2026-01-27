@@ -373,7 +373,7 @@ func TestMavenPackageType_GetPkgDownloadURL(t *testing.T) {
 			name:               "simple maven artifact",
 			rootIdentifier:     "root1",
 			registryIdentifier: "registry1",
-			filepath:           "com/example/my-artifact/1.0.0/my-artifact-1.0.0.jar",
+			filepath:           "/com/example/my-artifact/1.0.0/my-artifact-1.0.0.jar",
 			expectedURL: "https://registry.example.com/root1/registry1/maven/" +
 				"com/example/my-artifact/1.0.0/my-artifact-1.0.0.jar",
 			expectError: false,
@@ -382,7 +382,7 @@ func TestMavenPackageType_GetPkgDownloadURL(t *testing.T) {
 			name:               "spring boot artifact",
 			rootIdentifier:     "root1",
 			registryIdentifier: "registry1",
-			filepath:           "org/springframework/boot/spring-boot-starter/2.7.0/spring-boot-starter-2.7.0.jar",
+			filepath:           "/org/springframework/boot/spring-boot-starter/2.7.0/spring-boot-starter-2.7.0.jar",
 			expectedURL: "https://registry.example.com/root1/registry1/maven/" +
 				"org/springframework/boot/spring-boot-starter/2.7.0/spring-boot-starter-2.7.0.jar",
 			expectError: false,
@@ -391,7 +391,7 @@ func TestMavenPackageType_GetPkgDownloadURL(t *testing.T) {
 			name:               "maven artifact with pom file",
 			rootIdentifier:     "myroot",
 			registryIdentifier: "myreg",
-			filepath:           "com/google/guava/guava/31.1-jre/guava-31.1-jre.pom",
+			filepath:           "/com/google/guava/guava/31.1-jre/guava-31.1-jre.pom",
 			expectedURL: "https://registry.example.com/myroot/myreg/maven/" +
 				"com/google/guava/guava/31.1-jre/guava-31.1-jre.pom",
 			expectError: false,

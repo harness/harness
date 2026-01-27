@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -60,8 +61,9 @@ func ControllerProvider(
 	dBStore *DBStore,
 	spaceFinder refcache.SpaceFinder,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) *Controller {
-	return NewController(local, remote, authorizer, dBStore, spaceFinder, quarantineFinder)
+	return NewController(local, remote, authorizer, dBStore, spaceFinder, quarantineFinder, dependencyFirewallChecker)
 }
 
 func DBStoreProvider(

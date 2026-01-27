@@ -291,6 +291,7 @@ func setupSpaces(
 			SetupSpaceLabels(r, spaceCtrl)
 			SetupWebhookSpace(r, webhookCtrl)
 			SetupRulesSpace(r, spaceCtrl)
+			SetupAutolinkSpace(r, spaceCtrl)
 
 			r.Get("/checks/recent", handlercheck.HandleCheckListRecentSpace(checkCtrl))
 			r.Route("/usage", func(r chi.Router) {
@@ -354,6 +355,19 @@ func SetupRulesSpace(r chi.Router, spaceCtrl *space.Controller) {
 			r.Patch("/", handlerspace.HandleRuleUpdate(spaceCtrl))
 			r.Delete("/", handlerspace.HandleRuleDelete(spaceCtrl))
 			r.Get("/", handlerspace.HandleRuleFind(spaceCtrl))
+		})
+	})
+}
+
+func SetupAutolinkSpace(r chi.Router, spaceCtrl *space.Controller) {
+	r.Route("/autolinks", func(r chi.Router) {
+		r.Get("/", handlerspace.HandleAutolinkList(spaceCtrl))
+		r.Post("/", handlerspace.HandleAutolinkCreate(spaceCtrl))
+
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamAutolinkID), func(r chi.Router) {
+			r.Get("/", handlerspace.HandleAutolinkFind(spaceCtrl))
+			r.Patch("/", handlerspace.HandleAutolinkUpdate(spaceCtrl))
+			r.Delete("/", handlerspace.HandleAutolinkDelete(spaceCtrl))
 		})
 	})
 }
@@ -491,6 +505,8 @@ func setupRepos(r chi.Router,
 			SetupRulesRepo(r, repoCtrl)
 
 			SetupRepoLabels(r, repoCtrl)
+
+			SetupAutolinkRepo(r, repoCtrl)
 		})
 	})
 }
@@ -778,6 +794,19 @@ func SetupRulesRepo(r chi.Router, repoCtrl *repo.Controller) {
 			r.Patch("/", handlerrepo.HandleRuleUpdate(repoCtrl))
 			r.Delete("/", handlerrepo.HandleRuleDelete(repoCtrl))
 			r.Get("/", handlerrepo.HandleRuleFind(repoCtrl))
+		})
+	})
+}
+
+func SetupAutolinkRepo(r chi.Router, repoCtrl *repo.Controller) {
+	r.Route("/autolinks", func(r chi.Router) {
+		r.Get("/", handlerrepo.HandleAutolinkList(repoCtrl))
+		r.Post("/", handlerrepo.HandleAutolinkCreate(repoCtrl))
+
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamAutolinkID), func(r chi.Router) {
+			r.Get("/", handlerrepo.HandleAutolinkFind(repoCtrl))
+			r.Patch("/", handlerrepo.HandleAutolinkUpdate(repoCtrl))
+			r.Delete("/", handlerrepo.HandleAutolinkDelete(repoCtrl))
 		})
 	})
 }

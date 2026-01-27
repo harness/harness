@@ -58,6 +58,7 @@ export class CargoRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
     UpstreamRepositoryURLInputSource.Crates,
     UpstreamRepositoryURLInputSource.Custom
   ]
+  protected isDependencyFirewallSupported = true
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.CARGO,

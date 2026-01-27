@@ -119,9 +119,15 @@ export interface StringsMap {
   'repositoryDetails.registries': string
   'repositoryDetails.repositoryForm.addPatterns': string
   'repositoryDetails.repositoryForm.advancedOptionsTitle': string
+  'repositoryDetails.repositoryForm.allow': string
+  'repositoryDetails.repositoryForm.allowSubtitle': string
+  'repositoryDetails.repositoryForm.block': string
+  'repositoryDetails.repositoryForm.blockSubtitle': string
   'repositoryDetails.repositoryForm.cleanupPoliciesSubTitle': string
   'repositoryDetails.repositoryForm.cleanupPoliciesTitle': string
   'repositoryDetails.repositoryForm.create': string
+  'repositoryDetails.repositoryForm.dependencyFirewallTitle': string
+  'repositoryDetails.repositoryForm.enableDependencyFirewall': string
   'repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle': string
   'repositoryDetails.repositoryForm.enterpriseAdvancedWithoutUpstreamOptionsSubTitle': string
   'repositoryDetails.repositoryForm.environment': string
@@ -165,6 +171,8 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.visibility.public': string
   'repositoryDetails.repositoryForm.visibility.publicDescription': string
   'repositoryDetails.repositoryForm.visibility.title': string
+  'repositoryDetails.repositoryForm.warn': string
+  'repositoryDetails.repositoryForm.warnSubtitle': string
   'repositoryDetails.tabs.configuration': string
   'repositoryDetails.tabs.datasets': string
   'repositoryDetails.tabs.models': string
@@ -406,7 +414,34 @@ export interface StringsMap {
   'versionList.table.columns.version': string
   'versionList.table.noArchivedVersionsTitle': string
   'versionList.table.noVersionsTitle': string
+  'violationsList.cards.blockedViolations': string
+  'violationsList.cards.dependencies': string
+  'violationsList.cards.totalViolations': string
+  'violationsList.cards.warningViolations': string
+  'violationsList.noViolationsFound': string
   'violationsList.page': string
+  'violationsList.table.columns.actions.violationDetails': string
+  'violationsList.table.columns.package': string
+  'violationsList.table.columns.policySet': string
+  'violationsList.table.columns.registry': string
+  'violationsList.table.columns.status': string
+  'violationsList.violationDetailsModal.actions.reEvaluate': string
+  'violationsList.violationDetailsModal.actions.requestException': string
+  'violationsList.violationDetailsModal.basicInformationSection.category': string
+  'violationsList.violationDetailsModal.basicInformationSection.packageName': string
+  'violationsList.violationDetailsModal.basicInformationSection.policySetViolated': string
+  'violationsList.violationDetailsModal.basicInformationSection.status': string
+  'violationsList.violationDetailsModal.basicInformationSection.title': string
+  'violationsList.violationDetailsModal.basicInformationSection.upstreamProxy': string
+  'violationsList.violationDetailsModal.evaluationDetailsSection.firstDetected': string
+  'violationsList.violationDetailsModal.evaluationDetailsSection.lastDetected': string
+  'violationsList.violationDetailsModal.evaluationDetailsSection.title': string
+  'violationsList.violationDetailsModal.fixInformationSection.currentVersion': string
+  'violationsList.violationDetailsModal.fixInformationSection.fixAvailable': string
+  'violationsList.violationDetailsModal.fixInformationSection.fixedVersion': string
+  'violationsList.violationDetailsModal.fixInformationSection.title': string
+  'violationsList.violationDetailsModal.title': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.title': string
   'webhookDetails.tabs.configuration': string
   'webhookDetails.tabs.executions': string
   'webhookExecutionList.executionDetailsDrawer.at': string
@@ -583,6 +618,8 @@ export interface StringsMap {
   soon: string
   'status.archived': string
   'status.available': string
+  'status.blocked': string
+  'status.warning': string
   stepNotFound: string
   success: string
   tabNotFound: string

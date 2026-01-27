@@ -41,7 +41,7 @@ var test05ErrorHandling = func() {
 				// The server returns 500 with a text/plain error response.
 				gomega.Expect(resp.StatusCode).To(gomega.Equal(500))
 				gomega.Expect(resp.Headers.Get("Content-Type")).To(
-					gomega.Equal("text/plain; charset=utf-8"))
+					gomega.Equal("application/json; charset=utf-8"))
 				gomega.Expect(string(resp.Body)).To(gomega.ContainSubstring("invalid path format"))
 			})
 
@@ -89,7 +89,7 @@ var test05ErrorHandling = func() {
 				// The server returns 500 with a text/plain error response.
 				gomega.Expect(resp.StatusCode).To(gomega.Equal(500))
 				gomega.Expect(resp.Headers.Get("Content-Type")).To(
-					gomega.Equal("text/plain; charset=utf-8"))
+					gomega.Equal("application/json; charset=utf-8"))
 				gomega.Expect(string(resp.Body)).To(gomega.ContainSubstring("ROOT_NOT_FOUND"))
 			})
 		})

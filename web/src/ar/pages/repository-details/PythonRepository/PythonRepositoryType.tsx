@@ -55,7 +55,7 @@ export class PythonRepositoryType extends RepositoryStep<VirtualRegistryRequest>
   protected supportsUpstreamProxy = true
   protected isWebhookSupported = false
   isSupportCustomRegistrySuffix = true
-
+  protected isDependencyFirewallSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.PyPi,
     UpstreamRepositoryURLInputSource.Custom

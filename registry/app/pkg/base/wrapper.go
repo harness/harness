@@ -64,7 +64,7 @@ func ProxyWrapper(
 	return proxyInternalWithChecks(ctx, registryDao, quarantineFinder, nil, f, info, true, checkQuarantine, false)
 }
 
-func ProxyWrapperWithDependencyFirewall(
+func ProxyWrapperWithChecks(
 	ctx context.Context,
 	registryDao store.RegistryRepository,
 	quarantineFinder quarantine.Finder,
@@ -82,6 +82,29 @@ func ProxyWrapperWithDependencyFirewall(
 		f,
 		info,
 		true,
+		checkQuarantine,
+		checkDependencyFirewall,
+	)
+}
+
+func NoProxyWrapperWithChecks(
+	ctx context.Context,
+	registryDao store.RegistryRepository,
+	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
+	f func(registry registrytypes.Registry, a pkg.Artifact) response.Response,
+	info pkg.PackageArtifactInfo,
+	checkQuarantine bool,
+	checkDependencyFirewall bool,
+) (response.Response, error) {
+	return proxyInternalWithChecks(
+		ctx,
+		registryDao,
+		quarantineFinder,
+		dependencyFirewallChecker,
+		f,
+		info,
+		false,
 		checkQuarantine,
 		checkDependencyFirewall,
 	)
@@ -134,8 +157,8 @@ func proxyInternalWithChecks(
 			}
 
 			// Check dependency firewall violations if enabled
-			if registry.Type == artifact.RegistryTypeUPSTREAM && checkDependencyFirewall && dependencyFirewallChecker != nil {
-				err := dependencyFirewallChecker.CheckPolicyVoilation(ctx, registry.ID, image, version, artifactType)
+			if registry.Type == artifact.RegistryTypeUPSTREAM && checkDependencyFirewall {
+				err = dependencyFirewallChecker.CheckPolicyViolation(ctx, registry.ID, image, version, artifactType)
 				if err != nil {
 					if errors.Is(err, usererror.ErrArtifactBlocked) {
 						return r, usererror.ErrArtifactBlocked

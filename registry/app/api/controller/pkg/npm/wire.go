@@ -16,6 +16,7 @@ package npm
 
 import (
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	npm2 "github.com/harness/gitness/registry/app/pkg/npm"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -37,9 +38,22 @@ func ControllerProvider(
 	local npm2.LocalRegistry,
 	proxy npm2.Proxy,
 	quarantineFinder quarantine.Finder,
+	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 ) Controller {
-	return NewController(proxyStore, registryDao, imageDao,
-		artifactDao, fileManager, downloadStatsDao, tx, urlProvider, local, proxy, quarantineFinder)
+	return NewController(
+		proxyStore,
+		registryDao,
+		imageDao,
+		artifactDao,
+		fileManager,
+		downloadStatsDao,
+		tx,
+		urlProvider,
+		local,
+		proxy,
+		quarantineFinder,
+		dependencyFirewallChecker,
+	)
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)

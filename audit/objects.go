@@ -36,6 +36,7 @@ type PullRequestObject struct {
 	PullReq        types.PullReq
 	RepoPath       string                 `yaml:"repo_path"`
 	RuleViolations []types.RuleViolations `yaml:"rule_violations"`
+	BypassMessage  string                 `yaml:"bypass_message,omitempty"`
 }
 
 type CommitObject struct {

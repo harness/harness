@@ -82,6 +82,7 @@ var WireSet = wire.NewSet(
 	ProvideUsageMetricStore,
 	ProvideCDEGatewayStore,
 	ProvideFavoriteStore,
+	ProvideAutolinkStore,
 	ProvideGitspaceSettingsStore,
 	ProvideAITaskStore,
 )
@@ -418,6 +419,10 @@ func ProvideCDEGatewayStore(db *sqlx.DB) store.CDEGatewayStore {
 
 func ProvideFavoriteStore(db *sqlx.DB) store.FavoriteStore {
 	return NewFavoriteStore(db)
+}
+
+func ProvideAutolinkStore(db *sqlx.DB) store.AutoLinkStore {
+	return NewAutoLinkStore(db)
 }
 
 func ProvideAITaskStore(db *sqlx.DB) store.AITaskStore {

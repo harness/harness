@@ -21,7 +21,7 @@ import (
 )
 
 type DependencyFirewallChecker interface {
-	CheckPolicyVoilation(
+	CheckPolicyViolation(
 		ctx context.Context,
 		registryID int64,
 		image string,

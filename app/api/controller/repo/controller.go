@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
@@ -124,6 +125,7 @@ type Controller struct {
 	lfsCtrl                *lfs.Controller
 	favoriteStore          store.FavoriteStore
 	signatureVerifyService publickey.SignatureVerifyService
+	autolinkSvc            *autolink.Service
 	connectorService       importer.ConnectorService
 	repoLangStore          store.RepoLangStore
 }
@@ -170,6 +172,7 @@ func NewController(
 	lfsCtrl *lfs.Controller,
 	favoriteStore store.FavoriteStore,
 	signatureVerifyService publickey.SignatureVerifyService,
+	autolinkSvc *autolink.Service,
 	connectorService importer.ConnectorService,
 	repoLangStore store.RepoLangStore,
 ) *Controller {
@@ -215,6 +218,7 @@ func NewController(
 		lfsCtrl:                lfsCtrl,
 		favoriteStore:          favoriteStore,
 		signatureVerifyService: signatureVerifyService,
+		autolinkSvc:            autolinkSvc,
 		connectorService:       connectorService,
 		repoLangStore:          repoLangStore,
 	}
