@@ -85,10 +85,10 @@ func TestNewDockerClientFactory(t *testing.T) {
 	factory := NewDockerClientFactory(config)
 
 	if factory == nil {
-		t.Error("NewDockerClientFactory() returned nil")
+		t.Fatal("NewDockerClientFactory() returned nil")
 	}
+
 	if factory.config != config {
 		t.Error("NewDockerClientFactory() did not set config correctly")
 	}
 }
-

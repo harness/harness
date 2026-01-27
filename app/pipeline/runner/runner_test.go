@@ -86,4 +86,3 @@ func TestDockerOptsAlwaysIncludesAPIVersionNegotiation(t *testing.T) {
 		t.Errorf("dockerOpts() with empty config should return exactly 1 option, got %d", len(opts))
 	}
 }
-
