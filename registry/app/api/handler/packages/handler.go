@@ -216,7 +216,8 @@ func (h *handler) GetArtifactInfo(r *http.Request) (pkg.ArtifactInfo, error) {
 
 	if registry.PackageType != artifact.PackageType(packageType) {
 		return pkg.ArtifactInfo{}, usererror.NotFoundf(
-			"Registry package type mismatch: %s != %s", registry.PackageType, pathPackageType,
+			"404 Not Found - Registry package type mismatch: %s != %s",
+			registry.PackageType, pathPackageType,
 		)
 	}
 
