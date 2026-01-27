@@ -125,16 +125,17 @@ func (c *APIController) CreateRegistry(
 
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
-			registryID, err = c.createRegistryWithAudit(ctx, registry, session.Principal, string(parentRef))
+			registryID, err = c.createRegistry(ctx, registry, string(parentRef), &session.Principal, true)
 
 			if err != nil {
 				return fmt.Errorf("%w", err)
 			}
 
 			upstreamproxy.RegistryID = registryID
+			registry.ID = registryID
 
 			_, err = c.createUpstreamProxyWithAudit(
-				ctx, upstreamproxy, session.Principal, string(parentRef), registry.Name,
+				ctx, registry, upstreamproxy, session.Principal, string(parentRef),
 			)
 
 			if err != nil {
@@ -195,7 +196,7 @@ func (c *APIController) createVirtualRegistry(
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil
 	}
-	id, err := c.createRegistryWithAudit(ctx, registry, session.Principal, string(parentRef))
+	id, err := c.createRegistry(ctx, registry, string(parentRef), &session.Principal, false)
 	if err != nil {
 		if isDuplicateKeyError(err) {
 			if err2 := c.handleDuplicateRegistryError(ctx, registry); err2 != nil {
@@ -236,8 +237,9 @@ func (c *APIController) createVirtualRegistry(
 
 func (c *APIController) createUpstreamProxyWithAudit(
 	ctx context.Context,
+	registry *registrytypes.Registry,
 	upstreamProxy *registrytypes.UpstreamProxyConfig, principal types.Principal,
-	parentRef string, registryName string,
+	parentRef string,
 ) (int64, error) {
 	id, err := c.UpstreamProxyStore.Create(ctx, upstreamProxy)
 	if err != nil {
@@ -246,20 +248,30 @@ func (c *APIController) createUpstreamProxyWithAudit(
 	auditErr := c.AuditService.Log(
 		ctx,
 		principal,
-		audit.NewResource(audit.ResourceTypeRegistryUpstreamProxy, registryName),
+		audit.NewResource(audit.ResourceTypeRegistryUpstreamProxy, registry.Name),
 		audit.ActionCreated,
 		parentRef,
 		audit.WithNewObject(
-			audit.RegistryUpstreamProxyConfigObject{
-				ID:         id,
-				RegistryID: upstreamProxy.RegistryID,
-				Source:     upstreamProxy.Source,
-				URL:        upstreamProxy.URL,
-				AuthType:   upstreamProxy.AuthType,
-				CreatedAt:  upstreamProxy.CreatedAt,
-				UpdatedAt:  upstreamProxy.UpdatedAt,
-				CreatedBy:  upstreamProxy.CreatedBy,
-				UpdatedBy:  upstreamProxy.UpdatedBy,
+			audit.RegistryUpstreamProxyConfigObjectEnhanced{
+				UUID:            registry.UUID,
+				Name:            registry.Name,
+				ParentID:        registry.ParentID,
+				RootParentID:    registry.RootParentID,
+				Description:     registry.Description,
+				Type:            string(registry.Type),
+				PackageType:     string(registry.PackageType),
+				UpstreamProxies: registry.UpstreamProxies,
+				AllowedPattern:  registry.AllowedPattern,
+				BlockedPattern:  registry.BlockedPattern,
+				Labels:          registry.Labels,
+				Source:          upstreamProxy.Source,
+				URL:             upstreamProxy.URL,
+				AuthType:        upstreamProxy.AuthType,
+				CreatedAt:       upstreamProxy.CreatedAt,
+				UpdatedAt:       upstreamProxy.UpdatedAt,
+				CreatedBy:       upstreamProxy.CreatedBy,
+				UpdatedBy:       upstreamProxy.UpdatedBy,
+				IsPublic:        registry.IsPublic,
 			},
 		),
 	)
@@ -272,9 +284,9 @@ func (c *APIController) createUpstreamProxyWithAudit(
 	return id, err
 }
 
-func (c *APIController) createRegistryWithAudit(
-	ctx context.Context, registry *registrytypes.Registry,
-	principal types.Principal, parentRef string,
+func (c *APIController) createRegistry(
+	ctx context.Context, registry *registrytypes.Registry, parentRef string,
+	principal *types.Principal, skipAudit bool,
 ) (int64, error) {
 	id, err := c.RegistryRepository.Create(ctx, registry)
 
@@ -289,27 +301,38 @@ func (c *APIController) createRegistryWithAudit(
 		}
 
 		if dErr := c.RegistryRepository.Delete(ctx, registry.ParentID, registry.Name); dErr != nil {
-			return 0, fmt.Errorf("failed to set repo public access (and registry delete: %w): %w", dErr, err)
+			return 0, fmt.Errorf("failed to set registry public access (and registry delete: %w): %w", dErr, err)
 		}
 
-		return 0, fmt.Errorf("failed to set repo public access (successful cleanup): %w", err)
+		return 0, fmt.Errorf("failed to set registry public access (successful cleanup): %w", err)
 	}
 
-	auditErr := c.AuditService.Log(
-		ctx,
-		principal,
-		audit.NewResource(audit.ResourceTypeRegistry, registry.Name),
-		audit.ActionCreated,
-		parentRef,
-		audit.WithNewObject(
-			audit.RegistryObject{
-				Registry: *registry,
-			},
-		),
-	)
-	if auditErr != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create registry operation: %s", auditErr)
+	// Fetch the UUID after creation
+	createdRegistry, getErr := c.RegistryRepository.Get(ctx, id)
+	if getErr == nil {
+		registry.UUID = createdRegistry.UUID
+	} else {
+		log.Ctx(ctx).Warn().Err(getErr).Msg("failed to fetch registry UUID after creation")
 	}
+
+	if !skipAudit && principal != nil {
+		auditErr := c.AuditService.Log(
+			ctx,
+			*principal,
+			audit.NewResource(audit.ResourceTypeRegistry, registry.Name),
+			audit.ActionCreated,
+			parentRef,
+			audit.WithNewObject(
+				audit.RegistryObject{
+					Registry: *registry,
+				},
+			),
+		)
+		if auditErr != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create registry operation: %s", auditErr)
+		}
+	}
+
 	return id, err
 }
 

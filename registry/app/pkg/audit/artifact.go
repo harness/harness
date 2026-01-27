@@ -29,7 +29,7 @@ import (
 const (
 	// Audit metadata keys.
 	AuditKeyResourceName = "resourceName"
-	AuditKeyArtifactUUID = "artifactUuid"
+	AuditKeyArtifactUUID = "artifactId"
 	AuditKeyImageUUID    = "imageUuid"
 )
 
