@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-import React, { useCallback } from 'react'
+import React, { useCallback, useContext } from 'react'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
 import type { ListVersion, VersionMetadata } from '@harnessio/react-har-service-client'
 
-import { useParentHooks } from '@ar/hooks'
+import { useAppStore, useFeatureFlags, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import type { SoftDeleteFilterEnum } from '@ar/constants'
+import type { RepositoryConfigType } from '@ar/common/types'
 import type { SortByType } from '@ar/frameworks/Version/Version'
-import type { IVersionListTableColumnConfigType, VersionListColumnEnum } from './types'
+import { RepositoryProviderContext } from '@ar/pages/repository-details/context/RepositoryProvider'
 
 import { getVersionListTableCellConfigs } from './utils'
+import type { IVersionListTableColumnConfigType, VersionListColumnEnum } from './types'
+
 import css from './VersionListTable.module.scss'
 
 export interface ArtifactVersionListColumnActions {
@@ -46,6 +49,11 @@ function VersionListTable(props: CommonVersionListTableProps): JSX.Element {
   const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, columnConfigs, softDeleteFilter } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
+  const featureFlags = useFeatureFlags()
+  const { parent } = useAppStore()
+  const { data: repositoryData } = useContext(RepositoryProviderContext)
+  const { config } = repositoryData || {}
+  const { type } = config || {}
 
   const { artifacts = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data || {}
   const paginationProps = useDefaultPaginationProps({
@@ -77,9 +85,12 @@ function VersionListTable(props: CommonVersionListTableProps): JSX.Element {
       columnConfigs,
       getServerSortProps,
       getString,
-      softDeleteFilter
+      softDeleteFilter,
+      parent,
+      featureFlags,
+      type as RepositoryConfigType
     ) as Column<VersionMetadata>[]
-  }, [getServerSortProps, columnConfigs, getString, softDeleteFilter])
+  }, [getServerSortProps, columnConfigs, getString, softDeleteFilter, parent, featureFlags, type])
 
   return (
     <TableV2<VersionMetadata>

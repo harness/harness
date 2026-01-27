@@ -36,6 +36,7 @@ status:
   archived: Archived
   blocked: Blocked
   warning: Warning
+  passed: Passed
 dateLabel: Date
 timeLabel: Time
 harnessAI: Harness AI

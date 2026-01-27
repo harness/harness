@@ -24,11 +24,18 @@ import '@ar/pages/repository-details/RepositoryFactory'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
+import { MockGetDockerRegistryResponseWithAllData } from '@ar/pages/repository-details/DockerRepository/__tests__/__mockData__'
 
 import ArtifactDetailsPage from '../ArtifactDetailsPage'
 import { MOCK_GENERIC_ARTIFACT_SUMMARY } from './__mockData__'
 
 jest.mock('@harnessio/react-har-service-client', () => ({
+  useGetRegistryQuery: jest.fn().mockImplementation(() => ({
+    isFetching: false,
+    refetch: jest.fn(),
+    error: false,
+    data: MockGetDockerRegistryResponseWithAllData
+  })),
   useGetArtifactSummaryQuery: jest.fn().mockImplementation(() => {
     return {
       data: MOCK_GENERIC_ARTIFACT_SUMMARY,

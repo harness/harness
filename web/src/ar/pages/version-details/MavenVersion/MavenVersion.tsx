@@ -60,6 +60,7 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
 
   versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
     [VersionListColumnEnum.Name]: { width: '100%' },
+    [VersionListColumnEnum.ScanStatus]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
     [VersionListColumnEnum.LastModified]: { width: '100%' },

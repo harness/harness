@@ -63,6 +63,7 @@ export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
 
   versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
     [VersionListColumnEnum.Name]: { width: '150%' },
+    [VersionListColumnEnum.ScanStatus]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
     [VersionListColumnEnum.DownloadCount]: { width: '100%' },

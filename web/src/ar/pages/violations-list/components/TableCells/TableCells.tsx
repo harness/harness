@@ -82,8 +82,8 @@ export const PolicySetName: CellType = ({ row }) => {
 
 export const StatusCell: CellType = ({ row }) => {
   const { original } = row
-  const { scanStatus } = original
-  return <ScanBadgeComponent status={scanStatus} />
+  const { scanStatus, id } = original
+  return <ScanBadgeComponent scanId={id} status={scanStatus} />
 }
 
 export const ViolationActionsCell: CellType = ({ row }) => {

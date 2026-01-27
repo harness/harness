@@ -15,6 +15,8 @@
  */
 
 import type { Column } from 'react-table'
+import type { Parent, RepositoryConfigType } from '@ar/common/types'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/strings/types'
 import { SoftDeleteFilterEnum } from '@ar/constants'
 import { VERSION_LIST_TABLE_CELL_CONFIG } from './constants'
@@ -40,18 +42,33 @@ export const getVersionListTableCellConfigs = (
   columnConfigs: CommonVersionListTableProps['columnConfigs'],
   getServerSortProps: (id: string) => void,
   getString: (key: keyof StringsMap) => string,
-  softDeleteFilter?: SoftDeleteFilterEnum
+  softDeleteFilter?: SoftDeleteFilterEnum,
+  parent?: Parent,
+  featureFlags?: Partial<Record<FeatureFlags, boolean>>,
+  registryType?: RepositoryConfigType
 ): Column[] => {
-  return Object.keys(columnConfigs).map(key => {
-    const columnConfig =
-      VERSION_LIST_TABLE_CELL_CONFIG[
+  return Object.keys(columnConfigs)
+    .map(key => ({
+      ...VERSION_LIST_TABLE_CELL_CONFIG[
         getColumnConfigBasedOnSoftDeleteFilter(key as VersionListColumnEnum, softDeleteFilter)
-      ]
-    return {
+      ],
+      ...columnConfigs[key as VersionListColumnEnum]
+    }))
+    .filter(columnConfig => {
+      if (columnConfig.parent && parent && columnConfig.parent !== parent) {
+        return false
+      }
+      if (columnConfig.featureFlag && featureFlags && !featureFlags[columnConfig.featureFlag]) {
+        return false
+      }
+      if (columnConfig.registryType && registryType && columnConfig.registryType !== registryType) {
+        return false
+      }
+      return true
+    })
+    .map(columnConfig => ({
       ...columnConfig,
       Header: columnConfig.Header ? getString(columnConfig.Header) : '',
-      serverSortProps: getServerSortProps(columnConfig.accessor),
-      ...columnConfigs[key as VersionListColumnEnum]
-    }
-  }, {})
+      serverSortProps: getServerSortProps(columnConfig.accessor)
+    }))
 }

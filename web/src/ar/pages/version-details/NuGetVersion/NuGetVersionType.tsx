@@ -62,6 +62,7 @@ export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
 
   versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
     [VersionListColumnEnum.Name]: { width: '100%' },
+    [VersionListColumnEnum.ScanStatus]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.DownloadCount]: { width: '100%' },
     [VersionListColumnEnum.PullCommand]: { width: '100%' },

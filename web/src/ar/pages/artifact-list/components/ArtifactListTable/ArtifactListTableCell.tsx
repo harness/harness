@@ -33,6 +33,9 @@ import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import { OCITags } from '@ar/pages/version-list/components/VersionListTable/VersionListCell'
+import { useViolationDetailsModal } from '@ar/pages/violations-list/hooks/useViolationDetailsModal/useViolationDetailsModal'
+import ScanBadge from '@ar/components/Badge/ScanBadge'
+import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -245,4 +248,15 @@ export const ArtifactVersionActions: CellType = ({ row }) => {
       digestCount={digestCount}
     />
   )
+}
+
+export const ViolationScanStatusCell: CellType = ({ row }) => {
+  const data = row.original
+  const { scanStatus, scanId, packageType } = data
+  const { getString } = useStrings()
+  const [showModal] = useViolationDetailsModal({ scanId: scanId || '' })
+  const repositoryType = repositoryFactory.getRepositoryType(packageType)
+  const isViolationScanSupported = repositoryType?.getIsDependencyFirewallSupported()
+  if (!isViolationScanSupported) return <TableCells.TextCell value={getString('na')} />
+  return <ScanBadge scanId={scanId} status={scanStatus} onClick={() => showModal()} />
 }

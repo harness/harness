@@ -61,6 +61,7 @@ function BasicInformationContent({ data }: BasicInformationContentProps) {
         <InformationMetrics.ScanStatus
           label={getString('violationsList.violationDetailsModal.basicInformationSection.status')}
           status={data.scanStatus}
+          scanId={data.id}
         />
         <div />
         <InformationMetrics.Link
