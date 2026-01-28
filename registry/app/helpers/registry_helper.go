@@ -75,23 +75,26 @@ func (r *registryHelper) GetAuthHeaderPrefix() string {
 	return r.SetupDetailsAuthHeaderPrefix
 }
 
-func (r *registryHelper) DeleteFileNode(ctx context.Context,
+func (r *registryHelper) DeleteFileNode(
+	ctx context.Context,
 	regInfo *types.RegistryRequestBaseInfo,
 	filePath string,
 ) error {
-	err := r.FileManager.DeleteNode(ctx, regInfo.RegistryID, filePath)
+	err := r.FileManager.DeleteFile(ctx, regInfo.RegistryID, filePath)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *registryHelper) DeleteVersion(ctx context.Context,
+func (r *registryHelper) DeleteVersion(
+	ctx context.Context,
 	regInfo *types.RegistryRequestBaseInfo,
 	imageInfo *types.Image,
 	artifactName string,
 	versionName string,
-	filePath string) error {
+	filePath string,
+) error {
 	_, err := r.ArtifactStore.GetByName(ctx, imageInfo.ID, versionName)
 	if err != nil {
 		return fmt.Errorf("version doesn't exist with for image %v: %w", imageInfo.Name, err)
@@ -101,7 +104,7 @@ func (r *registryHelper) DeleteVersion(ctx context.Context,
 		ctx,
 		func(ctx context.Context) error {
 			// delete nodes from nodes store
-			err = r.FileManager.DeleteNode(ctx, regInfo.RegistryID, filePath)
+			err = r.FileManager.DeleteFile(ctx, regInfo.RegistryID, filePath)
 			if err != nil {
 				return err
 			}
@@ -152,14 +155,15 @@ func (r *registryHelper) ReportBuildRegistryIndexEvent(
 	}
 }
 
-func (r *registryHelper) DeleteGenericImage(ctx context.Context,
+func (r *registryHelper) DeleteGenericImage(
+	ctx context.Context,
 	regInfo *types.RegistryRequestBaseInfo,
 	artifactName string, filePath string,
 ) error {
 	err := r.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			// Delete Artifact Files
-			err := r.FileManager.DeleteNode(ctx, regInfo.RegistryID, filePath)
+			err := r.FileManager.DeleteFile(ctx, regInfo.RegistryID, filePath)
 			if err != nil {
 				return fmt.Errorf("failed to delete artifact files: %w", err)
 			}
@@ -325,7 +329,8 @@ func (r *registryHelper) ReplacePlaceholders(
 				registryURL, groupID, uploadURL, hostname)
 		} else {
 			for j := range *tab.Tabs {
-				r.ReplacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, version, registryURL, groupID,
+				r.ReplacePlaceholders(ctx, (*tab.Tabs)[j].Sections, username, regRef, image, version, registryURL,
+					groupID,
 					uploadURL, hostname)
 			}
 			_ = (*clientSetupSections)[i].FromTabSetupStepConfig(tab)
@@ -389,7 +394,8 @@ func (r *registryHelper) ReplaceText(
 		}
 	}
 	if groupID != "" {
-		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<GROUP_ID>", groupID))
+		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<GROUP_ID>",
+			groupID))
 	}
 	if registryURL != "" {
 		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_URL>",
@@ -413,7 +419,8 @@ func (r *registryHelper) ReplaceText(
 			"<LOGIN_HOSTNAME>", common.GetHost(ctx, hostname)))
 	}
 	if repoName != "" {
-		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>",
+		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value,
+			"<REGISTRY_NAME>",
 			repoName))
 	}
 	if image != nil {
@@ -421,7 +428,8 @@ func (r *registryHelper) ReplaceText(
 			string(*image)))
 		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_ID>",
 			string(*image)))
-		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<ARTIFACT_NAME>",
+		(*st.Commands)[i].Value = registryutils.StringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value,
+			"<ARTIFACT_NAME>",
 			string(*image)))
 	}
 	if version != nil {

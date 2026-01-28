@@ -38,7 +38,6 @@ import (
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -219,19 +218,15 @@ func (r *proxy) putFileToLocal(
 		return fmt.Errorf("failed to get registry config: %w", err)
 	}
 	defer file.Close()
-	// upload to temporary path
-	tmpFileName := info.RootIdentifier + "-" + uuid.NewString()
-	fileInfo, tempFileName, err := r.fileManager.UploadTempFile(ctx, info.RootIdentifier,
-		nil, tmpFileName, file)
+	fileInfo, err := r.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, file)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to upload file: %s with registry: %d with error: %w", tmpFileName, info.RegistryID, err)
+			"failed to upload with registry: %d with error: %w", info.RegistryID, err)
 	}
-	// download the temporary file
-	tempFile, _, err := r.fileManager.DownloadTempFile(ctx, fileInfo.Size, tempFileName, info.RootIdentifier)
+	tempFile, err := r.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to download file: %s with registry: %d with error: %w", tempFileName,
+			"failed to download with registry: %d with error: %w",
 			info.RegistryID, err)
 	}
 	defer tempFile.Close()
@@ -243,9 +238,7 @@ func (r *proxy) putFileToLocal(
 
 	// move temporary file to correct location
 	fileInfo.Filename = getCrateFileName(info.Image, info.Version)
-	_, _, _, _, err = r.localRegistryHelper.MoveTempFile(
-		ctx, info, fileInfo, tempFileName, metadata,
-	)
+	_, _, _, _, err = r.localRegistryHelper.MoveTempFile(ctx, info, fileInfo, metadata)
 	if err != nil {
 		return fmt.Errorf("failed to move temp file: %w", err)
 	}

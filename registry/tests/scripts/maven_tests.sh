@@ -78,3 +78,5 @@ fi
 
 cd "$ORIGINAL_DIR"    
 echo "Maven tests completed with status: $MAVEN_EXIT_CODE"
+
+exit $MAVEN_EXIT_CODE

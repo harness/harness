@@ -34,8 +34,10 @@ type LocalRegistryHelper interface {
 		*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error,
 	)
 	MoveTempFile(
-		ctx context.Context, info *cargotype.ArtifactInfo, fileInfo types.FileInfo,
-		filename string, metadata *cargometadata.VersionMetadata,
+		ctx context.Context,
+		info *cargotype.ArtifactInfo,
+		fileInfo types.FileInfo,
+		metadata *cargometadata.VersionMetadata,
 	) (*commons.ResponseHeaders, string, int64, bool, error)
 	UpdatePackageIndex(
 		ctx context.Context, info cargotype.ArtifactInfo,
@@ -76,13 +78,13 @@ func (h *localRegistryHelper) UpdatePackageIndex(
 }
 
 func (h *localRegistryHelper) MoveTempFile(
-	ctx context.Context, info *cargotype.ArtifactInfo, fileInfo types.FileInfo,
-	filename string, metadata *cargometadata.VersionMetadata,
+	ctx context.Context,
+	info *cargotype.ArtifactInfo,
+	fileInfo types.FileInfo,
+	metadata *cargometadata.VersionMetadata,
 ) (*commons.ResponseHeaders, string, int64, bool, error) {
-	return h.localBase.MoveTempFileAndCreateArtifact(
-		ctx, info.ArtifactInfo, filename, info.Version,
-		getCrateFilePath(info.Image, info.Version),
-		&cargometadata.VersionMetadataDB{
+	return h.localBase.UpdateFileManagerAndCreateArtifact(ctx, info.ArtifactInfo, info.Version,
+		getCrateFilePath(info.Image, info.Version), &cargometadata.VersionMetadataDB{
 			VersionMetadata: *metadata,
 		}, fileInfo, false)
 }

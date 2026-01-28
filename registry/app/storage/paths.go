@@ -19,6 +19,7 @@ package storage
 import (
 	"fmt"
 	"path"
+	"slices"
 	"strings"
 
 	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -45,7 +46,7 @@ func pathFor(spec pathSpec) (string, error) {
 		blobsPathPrefix = append(blobsPathPrefix, blobs)
 		return path.Join(blobsPathPrefix...), nil
 	case blobPathSpec:
-		components, err := digestPathComponents(v.digest, true)
+		components, err := digestPathComponents(v.digest, 1)
 		if err != nil {
 			return "", err
 		}
@@ -53,7 +54,7 @@ func pathFor(spec pathSpec) (string, error) {
 		blobPathPrefix = append(blobPathPrefix, v.path, docker, blobs)
 		return path.Join(append(blobPathPrefix, components...)...), nil
 	case blobDataPathSpec:
-		components, err := digestPathComponents(v.digest, true)
+		components, err := digestPathComponents(v.digest, 1)
 		if err != nil {
 			return "", err
 		}
@@ -65,6 +66,10 @@ func pathFor(spec pathSpec) (string, error) {
 
 	case uploadDataPathSpec:
 		return path.Join(append(rootPrefix, v.path, docker, "_uploads", v.repoName, v.id, "data")...), nil
+	case genericUploadDataPathSpec:
+		return path.Join(append(rootPrefix, v.rootIdentifier, "tmp", v.id)...), nil
+	case genericDataPathSpec:
+		return path.Join(append(rootPrefix, v.rootIdentifier, "files", v.sha256)...), nil
 	case uploadHashStatePathSpec:
 		offset := fmt.Sprintf("%d", v.offset)
 		if v.list {
@@ -80,6 +85,17 @@ func pathFor(spec pathSpec) (string, error) {
 		return path.Join(rootPrefix...), nil
 	case uploadFilePathSpec:
 		return path.Join(append(rootPrefix, v.path)...), nil
+	case globalBlobPathSpec:
+		components, err := digestPathComponents(v.digest, 2)
+		if err != nil {
+			return "", err
+		}
+		components = append(components, "data")
+		blobsPrefix := slices.Clone(rootPrefix)
+		blobsPrefix = append(blobsPrefix, "blobs")
+		return path.Join(append(blobsPrefix, components...)...), nil
+	case globalUploadDataPathSpec:
+		return path.Join(append(rootPrefix, "_uploads", v.id, "data")...), nil
 	default:
 		return "", fmt.Errorf("unknown path spec: %#v", v)
 	}
@@ -100,6 +116,18 @@ var blobAlgorithmReplacer = strings.NewReplacer(
 	".", "/",
 	";", "/",
 )
+
+type globalBlobPathSpec struct {
+	digest digest.Digest
+}
+
+func (globalBlobPathSpec) pathSpec() {}
+
+type globalUploadDataPathSpec struct {
+	id string
+}
+
+func (globalUploadDataPathSpec) pathSpec() {}
 
 // blobsPathSpec contains the path for the blobs directory.
 type blobsPathSpec struct{}
@@ -141,6 +169,20 @@ type uploadFilePathSpec struct {
 
 func (uploadFilePathSpec) pathSpec() {}
 
+type genericUploadDataPathSpec struct {
+	rootIdentifier string
+	id             string
+}
+
+func (genericUploadDataPathSpec) pathSpec() {}
+
+type genericDataPathSpec struct {
+	rootIdentifier string
+	sha256         string
+}
+
+func (genericDataPathSpec) pathSpec() {}
+
 // uploadHashStatePathSpec defines the path parameters for the file that stores
 // the hash function state of an upload at a specific byte offset. If `list` is
 // set, then the path mapper will generate a list prefix for all hash state
@@ -166,11 +208,15 @@ func (repositoriesRootPathSpec) pathSpec() {}
 //
 //	<algorithm>/<hex digest>
 //
-// If multilevel is true, the first two bytes of the digest will separate
-// groups of digest folder. It will be as follows:
+// The levels parameter controls how many 2-character hex prefixes are added
+// as subdirectories:
 //
-//	<algorithm>/<first two bytes of digest>/<full digest>
-func digestPathComponents(dgst digest.Digest, multilevel bool) ([]string, error) {
+//	levels=0: <algorithm>/<full digest>
+//	levels=1: <algorithm>/<hex[0:2]>/<full digest>
+//	levels=2: <algorithm>/<hex[0:2]>/<hex[2:4]>/<full digest>
+//	levels=3: <algorithm>/<hex[0:2]>/<hex[2:4]>/<hex[4:6]>/<full digest>
+//	...and so on
+func digestPathComponents(dgst digest.Digest, levels int) ([]string, error) {
 	if err := dgst.Validate(); err != nil {
 		return nil, err
 	}
@@ -181,8 +227,14 @@ func digestPathComponents(dgst digest.Digest, multilevel bool) ([]string, error)
 
 	var suffix []string
 
-	if multilevel {
-		suffix = append(suffix, hex[:2])
+	// Add 2-character hex prefixes for each level
+	for i := 0; i < levels; i++ {
+		startIdx := i * 2
+		endIdx := startIdx + 2
+		// Ensure we don't exceed the hex string length
+		if endIdx <= len(hex) {
+			suffix = append(suffix, hex[startIdx:endIdx])
+		}
 	}
 
 	suffix = append(suffix, hex)

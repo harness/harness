@@ -84,20 +84,48 @@ createRegistry $1 $crossmount $space $token
 # Save current directory
 export CURRENT_DIR=$(pwd)
 
-bash "./registry/tests/scripts/oci_tests.sh" $1
-bash "./registry/tests/scripts/maven_tests.sh" $1
-bash "./registry/tests/scripts/cargo_tests.sh" $1
-bash "./registry/tests/scripts/go_tests.sh" $1
-bash "./registry/tests/scripts/npm_tests.sh" $1
+# Track test failures
+TEST_EXIT_CODE=0
 
+echo "Running OCI tests..."
+if ! bash "./registry/tests/scripts/oci_tests.sh" $1; then
+    echo "ERROR: OCI tests failed ARVIND"
+    TEST_EXIT_CODE=1
+fi
+
+echo "Running Maven tests..."
+if ! bash "./registry/tests/scripts/maven_tests.sh" $1; then
+    echo "ERROR: Maven tests failed ARVIND"
+    TEST_EXIT_CODE=1
+fi
+
+echo "Running Cargo tests..."
+if ! bash "./registry/tests/scripts/cargo_tests.sh" $1; then
+    echo "ERROR: Cargo tests failed ARVIND"
+    TEST_EXIT_CODE=1
+fi
+
+echo "Running Go tests..."
+if ! bash "./registry/tests/scripts/go_tests.sh" $1; then
+    echo "ERROR: Go tests failed ARVIND"
+    TEST_EXIT_CODE=1
+fi
+
+echo "Running NPM tests..."
+if ! bash "./registry/tests/scripts/npm_tests.sh" $1; then
+    echo "ERROR: NPM tests failed ARVIND"
+    TEST_EXIT_CODE=1
+fi
 
 cd "$CURRENT_DIR"
-
-echo "All tests passed successfully"
-TEST_EXIT_CODE=0
 
 # Cleanup temporary directory
 rm -rf "$TEMP_DIR"
 
-# Return the test exit code
-exit $TEST_EXIT_CODE
+if [ $TEST_EXIT_CODE -ne 0 ]; then
+    echo "Some tests failed"
+    exit $TEST_EXIT_CODE
+fi
+
+echo "All tests passed successfully"
+exit 0

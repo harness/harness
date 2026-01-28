@@ -87,14 +87,15 @@ func (c *localRegistry) UploadPackageFile(
 	file io.Reader,
 	fileName string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	return c.registryHelper.UploadPackage(ctx, info, file, fileName)
+	return c.registryHelper.UploadPackage(ctx, info, file)
 }
 
 func (c *localRegistry) GetRepoData(
 	ctx context.Context,
 	info rpmtype.ArtifactInfo,
 	fileName string,
-) (*commons.ResponseHeaders,
+) (
+	*commons.ResponseHeaders,
 	*storage.FileReader,
 	io.ReadCloser,
 	string,
