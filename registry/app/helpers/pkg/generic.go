@@ -250,3 +250,10 @@ func (c *genericPackageType) GetPkgDownloadURL(
 ) (string, error) {
 	return "", nil
 }
+
+func (c *genericPackageType) GetPurlForArtifact(
+	_ string,
+	_ string,
+) (string, error) {
+	return "", fmt.Errorf("PURL not supported for generic package type")
+}

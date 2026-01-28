@@ -254,3 +254,16 @@ func (c *pythonPackageType) GetPkgDownloadURL(
 ) (string, error) {
 	return "", nil
 }
+
+func (c *pythonPackageType) GetPurlForArtifact(
+	packageName string,
+	version string,
+) (string, error) {
+	if packageName == "" {
+		return "", fmt.Errorf("packageName cannot be empty")
+	}
+	if version == "" {
+		return "", fmt.Errorf("version cannot be empty")
+	}
+	return fmt.Sprintf("pkg:pypi/%s@%s", packageName, version), nil
+}

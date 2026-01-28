@@ -136,4 +136,9 @@ type PackageWrapper interface {
 		filename string,
 		filepath string,
 	) (string, error)
+	GetPurlForArtifact(
+		packageType string,
+		packageName string,
+		version string,
+	) (string, error)
 }

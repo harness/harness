@@ -263,3 +263,10 @@ func (c *dockerPackageType) GetPkgDownloadURL(
 ) (string, error) {
 	return "", nil
 }
+
+func (c *dockerPackageType) GetPurlForArtifact(
+	_ string,
+	_ string,
+) (string, error) {
+	return "", fmt.Errorf("PURL not supported for docker package type")
+}
