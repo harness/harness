@@ -96,7 +96,7 @@ func (bs *blobStore) GetGeneric(
 
 	path, err := pathFor(
 		globalBlobPathSpec{
-			digest: digest.Digest(sha256),
+			digest: digest.NewDigestFromEncoded(digest.SHA256, sha256),
 		},
 	)
 
@@ -218,7 +218,7 @@ func (bs *blobStore) move(
 	}
 	dstPath, err := pathFor(
 		globalBlobPathSpec{
-			digest: digest.Digest(sha256),
+			digest: digest.NewDigestFromEncoded(digest.SHA256, sha256),
 		},
 	)
 	if err != nil {
@@ -237,7 +237,7 @@ func (bs *blobStore) StatByDigest(ctx context.Context, rootIdentifier, sha256 st
 
 	path, err := pathFor(
 		globalBlobPathSpec{
-			digest: digest.Digest(sha256),
+			digest: digest.NewDigestFromEncoded(digest.SHA256, sha256),
 		},
 	)
 

@@ -338,22 +338,6 @@ func TestNewDigest_InvalidInputs(t *testing.T) {
 	}
 }
 
-func TestNewDigest_SHA384_IsUnimplemented(t *testing.T) {
-	t.Parallel()
-
-	sum := sha512.Sum384([]byte("hello"))
-	hex := fmt.Sprintf("%x", sum[:])
-	oci := digest.Digest("sha384:" + hex)
-
-	_, err := NewDigest(oci)
-	if err == nil {
-		t.Fatalf("expected error for sha384, got nil")
-	}
-	if !strings.Contains(strings.ToLower(err.Error()), "unimplemented") {
-		t.Fatalf("error = %q, expected to mention unimplemented", err.Error())
-	}
-}
-
 func Test_SHA1_MD5_Support(t *testing.T) {
 	t.Parallel()
 

@@ -84,6 +84,6 @@ func NewStaticDriverProvider(d driver.StorageDriver) DriverProvider {
 func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) (DriverResult, error) {
 	return &BaseDriverResult{
 		Driver: p.Driver,
-		Key:    DefaultKey,
+		Key:    "random",
 	}, nil
 }

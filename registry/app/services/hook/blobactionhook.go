@@ -17,8 +17,7 @@ package hook
 import (
 	"context"
 
-	"github.com/harness/gitness/registry/types"
-
+	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,10 +25,10 @@ type BlobActionHook interface {
 	Commit(
 		ctx context.Context,
 		rootIdentifier string,
-		sha1 types.Digest,
-		sha256 types.Digest,
-		sha512 types.Digest,
-		md5 types.Digest,
+		sha1 digest.Digest,
+		sha256 digest.Digest,
+		sha512 digest.Digest,
+		md5 digest.Digest,
 		size int64,
 		bucketKey string,
 	) error
@@ -37,14 +36,14 @@ type BlobActionHook interface {
 	EmitReadEvent(
 		ctx context.Context,
 		rootIdentifier string,
-		sha256 types.Digest,
+		sha256 digest.Digest,
 	) error
 }
 
 type noOpBlobActionHook struct {
 }
 
-func (b *noOpBlobActionHook) EmitReadEvent(_ context.Context, rootIdentifier string, sha256 types.Digest) error {
+func (b *noOpBlobActionHook) EmitReadEvent(_ context.Context, rootIdentifier string, sha256 digest.Digest) error {
 	log.Info().Msgf("BlobActionHook called for rootParentIdentifier: %s sha256: %s", rootIdentifier, sha256)
 	return nil
 }
@@ -52,10 +51,10 @@ func (b *noOpBlobActionHook) EmitReadEvent(_ context.Context, rootIdentifier str
 func (b *noOpBlobActionHook) Commit(
 	_ context.Context,
 	rootIdentifier string,
-	sha1 types.Digest,
-	sha256 types.Digest,
-	sha512 types.Digest,
-	md5 types.Digest,
+	sha1 digest.Digest,
+	sha256 digest.Digest,
+	sha512 digest.Digest,
+	md5 digest.Digest,
 	size int64,
 	bucketKey string,
 ) error {

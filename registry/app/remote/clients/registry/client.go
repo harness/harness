@@ -45,6 +45,7 @@ import (
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/rs/zerolog/log"
 
+	_ "github.com/harness/gitness/registry/app/crypto"
 	_ "github.com/harness/gitness/registry/app/manifest/ocischema" // register oci manifest unmarshal function
 )
 

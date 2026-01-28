@@ -19,8 +19,8 @@ import (
 	"time"
 
 	cfg "github.com/harness/gitness/registry/config"
-	"github.com/harness/gitness/registry/types"
 
+	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
@@ -33,7 +33,7 @@ func EmitReadEventAsync(
 	ctx context.Context,
 	blobActionHook BlobActionHook,
 	rootIdentifier string,
-	sha256Digest types.Digest,
+	sha256Digest digest.Digest,
 ) {
 	go func() {
 		ctx2 := context.WithoutCancel(ctx)

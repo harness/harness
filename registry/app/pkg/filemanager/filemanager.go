@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/registry/app/crypto"
 	"github.com/harness/gitness/registry/app/events/replication"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/services/hook"
@@ -30,6 +31,7 @@ import (
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 	gitnesstypes "github.com/harness/gitness/types"
+	"github.com/opencontainers/go-digest"
 
 	"github.com/rs/zerolog/log"
 )
@@ -349,7 +351,8 @@ func (f *fileManager) DownloadFileByPath(
 	if allowRedirect {
 		fileReader, redirectURL, err = blobContext.genericBlobStore.GetGeneric(ctx, blob.Size, node.Name,
 			rootIdentifier, blob.Sha256)
-		hook.EmitReadEventAsync(ctx, f.blobActionHook, rootIdentifier, types.Digest(blob.Sha256))
+		hook.EmitReadEventAsync(ctx, f.blobActionHook, rootIdentifier,
+			digest.NewDigestFromEncoded(digest.SHA256, blob.Sha256))
 	} else {
 		fileReader, err = blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, blob.Sha256, blob.Size)
 	}
@@ -576,13 +579,13 @@ func (f *fileManager) uploadAndMove(
 		return types.FileInfo{}, err
 	}
 
-	sha1, _ := types.NewDigestFromHex(types.AlgorithmSHA1, fileInfo.Sha1)
-	sha256, _ := types.NewDigestFromHex(types.AlgorithmSHA256, fileInfo.Sha256)
-	sha512, _ := types.NewDigestFromHex(types.AlgorithmSHA512, fileInfo.Sha512)
-	md5, _ := types.NewDigestFromHex(types.AlgorithmMD5, fileInfo.MD5)
 	bucketKey := hook.GetBucketKey(blobContext.genericBlobStore.GetDriverDetails())
 	err = f.blobActionHook.Commit(ctx, rootIdentifier,
-		sha1, sha256, sha512, md5, fileInfo.Size, bucketKey)
+		digest.NewDigestFromEncoded(crypto.SHA1, fileInfo.Sha1),
+		digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
+		digest.NewDigestFromEncoded(digest.SHA512, fileInfo.Sha512),
+		digest.NewDigestFromEncoded(crypto.MD5, fileInfo.MD5),
+		fileInfo.Size, bucketKey)
 	if err != nil {
 		return types.FileInfo{}, fmt.Errorf("failed to commit the file upload %w", err)
 	}

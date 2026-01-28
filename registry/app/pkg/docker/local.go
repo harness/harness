@@ -421,14 +421,7 @@ func (r *LocalRegistry) fetchBlobInternal(
 	}
 
 	if redirectURL != "" {
-		newDigest, err := types.NewDigest(dgst)
-		if err != nil {
-			//nolint:contextcheck
-			log.Ctx(ctx).Error().Msgf("error creating new digest: %v", err)
-		} else {
-			//nolint:contextcheck
-			hook.EmitReadEventAsync(ctx, r.blobActionHook, info.RootIdentifier, newDigest)
-		}
+		hook.EmitReadEventAsync(ctx, r.blobActionHook, info.RootIdentifier, dgst)
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
 
@@ -1156,16 +1149,9 @@ func (r *LocalRegistry) PushBlob(
 		return responseHeaders, errs
 	}
 
-	sha256Digest, err := types.NewDigest(desc.Digest)
-	if err != nil {
-		errs = append(errs, err)
-		//nolint:contextcheck
-		log.Ctx(ctx).Error().Msgf("error creating sha256 digest: %v", err)
-		return responseHeaders, errs
-	}
 	bucketKey := hook.GetBucketKey(ctx.OciBlobStore.GetDriverDetails())
 	//nolint:contextcheck
-	err = r.blobActionHook.Commit(ctx, artInfo.RootIdentifier, "", sha256Digest, "", "", desc.Size, bucketKey)
+	err = r.blobActionHook.Commit(ctx, artInfo.RootIdentifier, "", desc.Digest, "", "", desc.Size, bucketKey)
 	if err != nil {
 		errs = append(errs, err)
 		//nolint:contextcheck
