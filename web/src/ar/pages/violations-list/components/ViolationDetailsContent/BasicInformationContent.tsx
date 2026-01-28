@@ -25,6 +25,7 @@ import type { RepositoryPackageType } from '@ar/common/types'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 import InformationMetrics from './InformationMetrics'
+import useGetPolicySetDetailsPageUrl from '../../hooks/useGetPolicySetDetailsPageUrl'
 import css from './ViolationDetailsContent.module.scss'
 
 interface BasicInformationContentProps {
@@ -34,6 +35,7 @@ interface BasicInformationContentProps {
 function BasicInformationContent({ data }: BasicInformationContentProps) {
   const { getString } = useStrings()
   const routes = useRoutes()
+  const policySetUrl = useGetPolicySetDetailsPageUrl(data.policySetRef || '')
   return (
     <Layout.Vertical spacing="large">
       <Text font={{ variation: FontVariation.H5, weight: 'bold' }} color={Color.GREY_700}>
@@ -64,15 +66,17 @@ function BasicInformationContent({ data }: BasicInformationContentProps) {
           scanId={data.id}
         />
         <div />
-        <InformationMetrics.Link
-          label={getString('violationsList.violationDetailsModal.basicInformationSection.policySetViolated')}
-          value="test"
-          linkTo="/" // TODO: Replace with actual policy set details page URL
-        />
-        <InformationMetrics.Text
+        {data.policySetRef && (
+          <InformationMetrics.Link
+            label={getString('violationsList.violationDetailsModal.basicInformationSection.policySetViolated')}
+            value={data.policySetRef}
+            linkTo={policySetUrl}
+          />
+        )}
+        {/* <InformationMetrics.Text
           label={getString('violationsList.violationDetailsModal.basicInformationSection.category')}
           value="Security" // TODO: Replace with actual category
-        />
+        /> */}
       </Container>
     </Layout.Vertical>
   )

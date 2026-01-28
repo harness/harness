@@ -15,12 +15,13 @@
  */
 
 import React from 'react'
-import { Layout, Text } from '@harnessio/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation, type KVO } from '@harnessio/design-system'
 import type { ArtifactScanDetails } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import InformationMetrics from './InformationMetrics'
+import css from './ViolationDetailsContent.module.scss'
 
 interface ViolationFailureDetailsItemProps {
   data: KVO
@@ -34,12 +35,14 @@ function ViolationFailureDetailsItem({ data }: ViolationFailureDetailsItemProps)
       <Text font={{ variation: FontVariation.BODY, weight: 'bold' }} color={Color.PRIMARY_7}>
         {name}
       </Text>
-      {Object.entries(rest).map(([key, value]) => {
-        if (typeof value === 'string' || typeof value === 'number') {
-          return <InformationMetrics.Text key={key} label={key} value={value.toString()} />
-        }
-        return <></>
-      })}
+      <Container className={css.gridContainer}>
+        {Object.entries(rest).map(([key, value]) => {
+          if (typeof value === 'string' || typeof value === 'number') {
+            return <InformationMetrics.Text key={key} label={key} value={value.toString()} />
+          }
+          return <></>
+        })}
+      </Container>
     </Layout.Vertical>
   )
 }
