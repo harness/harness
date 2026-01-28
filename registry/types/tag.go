@@ -83,6 +83,7 @@ type OciVersionMetadata struct {
 	Tags             []string
 	IsQuarantined    bool
 	QuarantineReason string
+	ArtifactUUID     string
 }
 
 type TagDetail struct {

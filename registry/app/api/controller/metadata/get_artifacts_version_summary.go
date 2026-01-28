@@ -147,7 +147,9 @@ func (c *APIController) FetchArtifactSummary(
 			}
 		}
 
-		return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason, nil, "", "", nil
+		// Artifact UUID is fetched directly from the database via join in GetOCIVersionMetadata
+		return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason,
+			nil, ociVersion.ArtifactUUID, registry.UUID, nil
 	}
 	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
 		version, artifactType)
