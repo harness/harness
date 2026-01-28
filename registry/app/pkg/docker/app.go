@@ -76,7 +76,10 @@ func (app *App) StorageService() *registrystorage.Service {
 	return app.storageService
 }
 
-func GetStorageService(cfg *types.Config, provider registrystorage.DriverProvider) *registrystorage.Service {
+func GetStorageService(
+	cfg *types.Config,
+	provider registrystorage.DriverProvider,
+) *registrystorage.Service {
 	options := registrystorage.GetRegistryOptions()
 	if cfg.Registry.Storage.S3Storage.Delete {
 		options = append(options, registrystorage.EnableDelete)

@@ -32,9 +32,8 @@ import (
 )
 
 type ociBlobStore struct {
-	driverKey string
-	repoKey   string
-	driver    driver.StorageDriver
+	repoKey string
+	driver  driver.StorageDriver
 	// only to be used where context can't come through method args
 	ctx                    context.Context
 	deleteEnabled          bool
@@ -321,4 +320,8 @@ func (bs *ociBlobStore) newBlobUpload(
 	}
 
 	return bw, nil
+}
+
+func (bs *ociBlobStore) GetDriverDetails() DriverResult {
+	return nil
 }

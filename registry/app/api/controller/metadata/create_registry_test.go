@@ -212,10 +212,11 @@ func TestCreateRegistry(t *testing.T) {
 					mockGenericBlobRepo,
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
-					nil, // reporter - not needed for this test.
 					nil, // config - not needed for this test.
 					nil, // storageService - not needed for this test.
 					nil, // bucketService - not needed for this test.
+					nil, // replicationReporter - not needed for this test.
+					nil, // blobCreationDBHook - not needed for this test.
 				)
 
 				// Setup audit service mock.
@@ -240,12 +241,42 @@ func TestCreateRegistry(t *testing.T) {
 				packageWrapper := helpers.NewPackageWrapper(packageFactory, mockRegFinder)
 
 				// Create controller with updated signature.
-				return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil,
-					mockCleanupPolicyRepo, nil, mockSpaceFinder, mockTransactor, mockURLProvider, mockAuthorizer,
-					mockAuditService, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter, nil, "", nil,
-					mockRegFinder, nil, nil, nil, nil, nil, nil, func(_ context.Context) bool {
-						return true
-					}, packageWrapper, mockPublicAccessService, nil)
+				return metadata.NewAPIController(
+					mockRegistryRepo,           // repositoryStore
+					fileManager,                // fileManager
+					nil,                        // blobStore
+					nil,                        // genericBlobStore
+					nil,                        // upstreamProxyStore
+					nil,                        // tagStore
+					nil,                        // manifestStore
+					mockCleanupPolicyRepo,      // cleanupPolicyStore
+					nil,                        // imageStore
+					mockSpaceFinder,            // spaceFinder
+					mockTransactor,             // tx
+					mockURLProvider,            // urlProvider
+					mockAuthorizer,             // authorizer
+					mockAuditService,           // auditService
+					nil,                        // artifactStore
+					nil,                        // webhooksRepository
+					nil,                        // webhooksExecutionRepository
+					mockRegistryMetadataHelper, // registryMetadataHelper
+					nil,                        // webhookService
+					eventReporter,              // artifactEventReporter
+					nil,                        // downloadStatRepository
+					"",                         // setupDetailsAuthHeaderPrefix
+					nil,                        // registryBlobStore
+					mockRegFinder,              // regFinder
+					nil,                        // postProcessingReporter
+					nil,                        // cargoRegistryHelper
+					nil,                        // spaceController
+					nil,                        // quarantineArtifactRepository
+					nil,                        // quarantineFinder
+					nil,                        // spaceStore
+					func(_ context.Context) bool { return true }, // untaggedImagesEnabled
+					packageWrapper,          // packageWrapper
+					mockPublicAccessService, // publicAccess
+					nil,                     // storageService
+				)
 			},
 		},
 		{
@@ -288,17 +319,49 @@ func TestCreateRegistry(t *testing.T) {
 					mockGenericBlobRepo,
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
-					nil, // reporter - not needed for this test.
 					nil, // config - not needed for this test.
 					nil, // storageService - not needed for this test.
 					nil, // bucketService - not needed for this test.
+					nil, // replicationReporter - not needed for this test.
+					nil, // blobCreationDBHook - not needed for this test.
 				)
 
-				return metadata.NewAPIController(mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-					nil, mockTransactor, nil, nil, nil, nil, nil, nil, mockRegistryMetadataHelper, nil, eventReporter,
-					nil, "", nil, mockRegFinder, nil, nil, nil, nil, nil, nil, func(_ context.Context) bool {
-						return true
-					}, nil, nil)
+				return metadata.NewAPIController(
+					mockRegistryRepo,           // repositoryStore
+					fileManager,                // fileManager
+					nil,                        // blobStore
+					nil,                        // genericBlobStore
+					nil,                        // upstreamProxyStore
+					nil,                        // tagStore
+					nil,                        // manifestStore
+					nil,                        // cleanupPolicyStore
+					nil,                        // imageStore
+					nil,                        // spaceFinder
+					mockTransactor,             // tx
+					nil,                        // urlProvider
+					nil,                        // authorizer
+					nil,                        // auditService
+					nil,                        // artifactStore
+					nil,                        // webhooksRepository
+					nil,                        // webhooksExecutionRepository
+					mockRegistryMetadataHelper, // registryMetadataHelper
+					nil,                        // webhookService
+					eventReporter,              // artifactEventReporter
+					nil,                        // downloadStatRepository
+					"",                         // setupDetailsAuthHeaderPrefix
+					nil,                        // registryBlobStore
+					mockRegFinder,              // regFinder
+					nil,                        // postProcessingReporter
+					nil,                        // cargoRegistryHelper
+					nil,                        // spaceController
+					nil,                        // quarantineArtifactRepository
+					nil,                        // quarantineFinder
+					nil,                        // spaceStore
+					func(_ context.Context) bool { return true }, // untaggedImagesEnabled
+					nil, // packageWrapper
+					nil, // publicAccess
+					nil, // storageService
+				)
 			},
 		},
 	}

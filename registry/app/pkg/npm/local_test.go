@@ -51,11 +51,11 @@ type mockLocalBase struct {
 		ctx context.Context,
 		info pkg.ArtifactInfo, version, filename string,
 	) (*commons.ResponseHeaders, *storage.FileReader, string, error)
-	deletePackage     func(ctx context.Context, info pkg.PackageArtifactInfo) error
-	deleteVersion     func(ctx context.Context, info pkg.PackageArtifactInfo) error
-	moveTempAndCreate func(
+	deletePackage              func(ctx context.Context, info pkg.PackageArtifactInfo) error
+	deleteVersion              func(ctx context.Context, info pkg.PackageArtifactInfo) error
+	updateFileManagerAndCreate func(
 		ctx context.Context, info pkg.ArtifactInfo,
-		tmp, version, path string,
+		version, path string,
 		md metadata.Metadata, fi types.FileInfo, failOnConflict bool,
 	) (*commons.ResponseHeaders, string, int64, bool, error)
 	auditPush func(
@@ -78,13 +78,11 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("storage service init failed: %v", err)
 	}
-	fm := filemanager.NewFileManager(nil, nil, nil, nil, nil, svc, nil, nil)
+	fm := filemanager.NewFileManager(nil, nil, nil, nil, nil, svc, nil, nil, nil)
 
 	// Wire local registry with a real file manager
 	lr := newLocalForTests(&mockLocalBase{}, nil, nil, nil, nil)
 	lr.fileManager = fm
-	// Prepare blob store for verification of upload
-	blobStore := svc.GenericBlobsStore(ctx, info.RootIdentifier)
 
 	// Prepare base64 data for attachment
 	content := []byte("test tarball bytes")
@@ -121,22 +119,15 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
     }`
 
 	var meta npmmeta.PackageMetadata
-	fi, tmp, err := lr.parseAndUploadNPMPackage(ctx, info, bytes.NewReader([]byte(body)), &meta)
+	fi, err := lr.parseAndUploadNPMPackage(ctx, info, bytes.NewReader([]byte(body)), &meta)
 	assert.NoError(t, err)
 
 	// Metadata should be parsed
 	assert.Equal(t, "pkg", meta.Name)
 	assert.Equal(t, "1.0.0", meta.Versions["1.0.0"].Version)
 
-	// Upload should have occurred
-	assert.NotEqual(t, "", tmp)
+	// Upload should have occurred - verify file info has content
 	assert.Greater(t, fi.Size, int64(0))
-
-	// Verify data present at temp path in storage
-	tmpPath := "/" + info.RootIdentifier + "/tmp/" + tmp
-	sz, statErr := blobStore.Stat(ctx, tmpPath)
-	assert.NoError(t, statErr)
-	assert.Equal(t, int64(len(content)), sz)
 }
 
 // Satisfy base.LocalBase interface with exact signatures.
@@ -156,12 +147,12 @@ func (m *mockLocalBase) Upload(
 	panic("not implemented in tests")
 }
 
-func (m *mockLocalBase) MoveTempFileAndCreateArtifact(
+func (m *mockLocalBase) UpdateFileManagerAndCreateArtifact(
 	ctx context.Context,
-	info pkg.ArtifactInfo, tmp,
+	info pkg.ArtifactInfo,
 	version, p string, md metadata.Metadata, fi types.FileInfo, foC bool,
 ) (*commons.ResponseHeaders, string, int64, bool, error) {
-	return m.moveTempAndCreate(ctx, info, tmp, version, p, md, fi, foC)
+	return m.updateFileManagerAndCreate(ctx, info, version, p, md, fi, foC)
 }
 
 func (m *mockLocalBase) Download(
@@ -193,7 +184,7 @@ func (m *mockLocalBase) DeleteVersion(ctx context.Context, info pkg.PackageArtif
 func (m *mockLocalBase) MoveMultipleTempFilesAndCreateArtifact(
 	context.Context,
 	*pkg.ArtifactInfo, string, metadata.Metadata,
-	*[]types.FileInfo, func(info *pkg.ArtifactInfo, fileInfo *types.FileInfo) string, string,
+	*[]types.FileInfo, string,
 ) error {
 	return nil
 }
@@ -208,16 +199,21 @@ func (m *mockLocalBase) AuditPush(
 }
 
 type mockTagsDAO struct {
-	findByImageNameAndRegID func(ctx context.Context, image string, regID int64) ([]*types.PackageTagMetadata, error)
+	findByImageNameAndRegID func(
+		ctx context.Context,
+		image string,
+		regID int64,
+		imageType *string,
+	) ([]*types.PackageTagMetadata, error)
 	create                  func(ctx context.Context, tag *types.PackageTag) (string, error)
 	deleteByTagAndImageName func(ctx context.Context, tag string, image string, regID int64) error
 }
 
 func (m *mockTagsDAO) FindByImageNameAndRegID(
 	ctx context.Context,
-	image string, regID int64,
+	image string, regID int64, imageType *string,
 ) ([]*types.PackageTagMetadata, error) {
-	return m.findByImageNameAndRegID(ctx, image, regID)
+	return m.findByImageNameAndRegID(ctx, image, regID, imageType)
 }
 func (m *mockTagsDAO) Create(ctx context.Context, tag *types.PackageTag) (string, error) {
 	return m.create(ctx, tag)
@@ -229,6 +225,7 @@ func (m *mockTagsDAO) DeleteByImageNameAndRegID(context.Context, string, int64) 
 
 type mockImageDAO struct {
 	getByRepoAndName func(ctx context.Context, parentID int64, repo, name string) (*types.Image, error)
+	getByName        func(ctx context.Context, regID int64, name string) (*types.Image, error)
 }
 
 func (m *mockImageDAO) DuplicateImage(
@@ -243,7 +240,10 @@ func (m *mockImageDAO) GetByUUID(context.Context, string) (*types.Image, error) 
 	return nil, nil //nolint:nilnil
 }
 func (m *mockImageDAO) Get(context.Context, int64) (*types.Image, error) { return nil, nil } //nolint:nilnil
-func (m *mockImageDAO) GetByName(context.Context, int64, string) (*types.Image, error) {
+func (m *mockImageDAO) GetByName(ctx context.Context, regID int64, name string) (*types.Image, error) {
+	if m.getByName != nil {
+		return m.getByName(ctx, regID, name)
+	}
 	return nil, nil //nolint:nilnil
 }
 func (m *mockImageDAO) GetByNameAndType(context.Context, int64, string, *artifact.ArtifactType) (*types.Image, error) {
@@ -482,7 +482,7 @@ func newLocalForTests(
 ) *localRegistry {
 	return &localRegistry{
 		localBase:   lb,
-		fileManager: filemanager.FileManager{},
+		fileManager: nil,
 		proxyStore:  nil,
 		tx:          nil,
 		registryDao: nil,
@@ -554,7 +554,10 @@ func TestListTags(t *testing.T) {
 	info := sampleArtifactInfo()
 	tags := []*types.PackageTagMetadata{{Name: "latest", Version: "1.0.0"}, {Name: "beta", Version: "2.0.0"}}
 	tdao := &mockTagsDAO{
-		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64) ([]*types.PackageTagMetadata, error) {
+		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64, _ *string) (
+			[]*types.PackageTagMetadata,
+			error,
+		) {
 			return tags, nil
 		},
 	}
@@ -569,7 +572,7 @@ func TestAddTag_Success(t *testing.T) {
 	info := sampleArtifactInfo()
 	info.DistTags = []string{"latest"}
 	imgDAO := &mockImageDAO{
-		getByRepoAndName: func(_ context.Context, _ int64, _, _ string) (*types.Image, error) {
+		getByName: func(_ context.Context, _ int64, _ string) (*types.Image, error) {
 			return &types.Image{ID: 5}, nil
 		},
 	}
@@ -587,7 +590,10 @@ func TestAddTag_Success(t *testing.T) {
 			created = true
 			return tag.ID, nil
 		},
-		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64) ([]*types.PackageTagMetadata, error) {
+		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64, _ *string) (
+			[]*types.PackageTagMetadata,
+			error,
+		) {
 			return []*types.PackageTagMetadata{{Name: "latest", Version: info.Version}}, nil
 		},
 	}
@@ -602,7 +608,7 @@ func TestAddTag_NoDistTags(t *testing.T) {
 	ctx := context.Background()
 	info := sampleArtifactInfo()
 	imgDAO := &mockImageDAO{
-		getByRepoAndName: func(_ context.Context, _ int64, _, _ string) (*types.Image, error) {
+		getByName: func(_ context.Context, _ int64, _ string) (*types.Image, error) {
 			return &types.Image{ID: 5}, nil
 		},
 	}
@@ -631,7 +637,10 @@ func TestDeleteTag_Success(t *testing.T) {
 			deleted = true
 			return nil
 		},
-		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64) ([]*types.PackageTagMetadata, error) {
+		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64, _ *string) (
+			[]*types.PackageTagMetadata,
+			error,
+		) {
 			return []*types.PackageTagMetadata{}, nil
 		},
 	}
@@ -662,7 +671,10 @@ func TestGetPackageMetadata_Success(t *testing.T) {
 		},
 	}
 	tdao := &mockTagsDAO{
-		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64) ([]*types.PackageTagMetadata, error) {
+		findByImageNameAndRegID: func(_ context.Context, _ string, _ int64, _ *string) (
+			[]*types.PackageTagMetadata,
+			error,
+		) {
 			return []*types.PackageTagMetadata{{Name: "latest", Version: "1.0.0"}}, nil
 		},
 	}
@@ -750,10 +762,9 @@ func TestParseAndUploadNPMPackage_ParseOnly_NoAttachments(t *testing.T) {
 	buf, _ := json.Marshal(body)
 	lr := newLocalForTests(&mockLocalBase{}, nil, nil, nil, nil)
 	var meta npmmeta.PackageMetadata
-	fi, tmp, err := lr.parseAndUploadNPMPackage(ctx, info, bytes.NewReader(buf), &meta)
+	fi, err := lr.parseAndUploadNPMPackage(ctx, info, bytes.NewReader(buf), &meta)
 	assert.NoError(t, err)
 	assert.Equal(t, types.FileInfo{}, fi)
-	assert.Equal(t, "", tmp)
 	assert.Equal(t, "pkg", meta.Name)
 	assert.Equal(t, "1.0.0", meta.Versions["1.0.0"].Version)
 }
@@ -766,6 +777,6 @@ func TestProcessAttachmentsOptimized_NoData(t *testing.T) {
 	bufReader := bufio.NewReader(bytes.NewReader([]byte(jsonStr)))
 	dec := json.NewDecoder(bufReader)
 	lr := newLocalForTests(&mockLocalBase{}, nil, nil, nil, nil)
-	_, _, err := lr.processAttachmentsOptimized(ctx, info, dec, bufReader)
+	_, err := lr.processAttachmentsOptimized(ctx, info, dec, bufReader)
 	assert.Error(t, err)
 }

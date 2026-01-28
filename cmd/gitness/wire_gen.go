@@ -166,9 +166,9 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/pkg/rpm"
+	"github.com/harness/gitness/registry/app/services/hook"
 	publicaccess2 "github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
-	storage3 "github.com/harness/gitness/registry/app/services/storage"
 	storage2 "github.com/harness/gitness/registry/app/storage"
 	cache2 "github.com/harness/gitness/registry/app/store/cache"
 	database2 "github.com/harness/gitness/registry/app/store/database"
@@ -593,7 +593,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	localRegistry := docker.LocalRegistryProvider(app, manifestService, blobRepository, registryRepository, registryFinder, manifestRepository, registryBlobRepository, mediaTypesRepository, tagRepository, imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, gcService, transactor, quarantineArtifactRepository, replicationReporter)
+	blobActionHook := hook.ProvideBlobCommitHook()
+	localRegistry := docker.LocalRegistryProvider(app, manifestService, blobRepository, registryRepository, registryFinder, manifestRepository, registryBlobRepository, mediaTypesRepository, tagRepository, imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository, gcService, transactor, quarantineArtifactRepository, replicationReporter, blobActionHook)
 	upstreamProxyConfigRepository := database2.ProvideUpstreamDao(db, registryRepository, spaceFinder)
 	proxyController := docker.ProvideProxyController(localRegistry, manifestService, secretService, spaceFinder)
 	remoteRegistry := docker.RemoteRegistryProvider(localRegistry, app, upstreamProxyConfigRepository, spaceFinder, secretService, proxyController)
@@ -611,8 +612,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryOCIHandler := router.OCIHandlerProvider(handler)
 	genericBlobRepository := database2.ProvideGenericBlobDao(db)
 	nodesRepository := database2.ProvideNodeDao(db)
-	blobCreationDBHook := storage3.ProvideBlobCreationDBHook()
-	fileManager := filemanager.Provider(registryRepository, genericBlobRepository, nodesRepository, transactor, config, storageService, bucketService, replicationReporter, blobCreationDBHook)
+	fileManager := filemanager.Provider(registryRepository, genericBlobRepository, nodesRepository, transactor, config, storageService, bucketService, replicationReporter, blobActionHook)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	webhooksRepository := database2.ProvideWebhookDao(db)
 	webhooksExecutionRepository := database2.ProvideWebhookExecutionDao(db)

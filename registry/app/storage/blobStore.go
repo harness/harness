@@ -25,27 +25,22 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/types"
+
+	"github.com/google/uuid"
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	HeaderContentDigest = "Content-Digest"
-)
-
-type PathFunc func(dgst types.Digest) (string, error)
-type TempPathFunc func() (string, error)
-
 type genericBlobStore struct {
-	DriverMeta    DriverResult
 	driver        driver.StorageDriver
 	rootParentRef string
 	redirect      bool
 }
+
+var _ GenericBlobStore = &genericBlobStore{}
 
 func (bs *genericBlobStore) GetV2NoRedirect(
 	ctx context.Context,
@@ -111,18 +106,6 @@ func (bs *genericBlobStore) GetGeneric(
 	}
 	return br, "", nil
 }
-
-func (bs *genericBlobStore) GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error) {
-	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*genericBlobStore).Get")
-
-	br, err := NewFileReader(ctx, bs.driver, filePath, size)
-	if err != nil {
-		return nil, err
-	}
-	return br, nil
-}
-
-var _ GenericBlobStore = &genericBlobStore{}
 
 // Create begins a blob write session, returning a handle.
 func (bs *genericBlobStore) CreateGeneric(ctx context.Context, rootIdentifier string) (BlobWriter, error) {
@@ -266,5 +249,5 @@ func (bs *genericBlobStore) StatByDigest(ctx context.Context, rootIdentifier, sh
 }
 
 func (bs *genericBlobStore) GetDriverDetails() DriverResult {
-	return bs.DriverMeta
+	return nil
 }

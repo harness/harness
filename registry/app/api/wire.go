@@ -64,7 +64,6 @@ import (
 	rpmregistry "github.com/harness/gitness/registry/app/pkg/rpm"
 	publicaccess2 "github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
-	"github.com/harness/gitness/registry/app/services/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/cache"
 	"github.com/harness/gitness/registry/app/store/database"
@@ -256,7 +255,6 @@ var WireSet = wire.NewSet(
 	NewGoPackageHandlerProvider,
 	database.WireSet,
 	cache.WireSet,
-	storage.ProvideBlobCreationDBHook,
 	refcache2.WireSet,
 	pkg.WireSet,
 	docker.OpenSourceWireSet,

@@ -33,4 +33,5 @@ const (
 	HeaderOCISubject          = "OCI-Subject"
 	HeaderRange               = "Range"
 	blobCacheControlMaxAge    = 365 * 24 * time.Hour
+	HeaderContentDigest       = "Content-Digest"
 )

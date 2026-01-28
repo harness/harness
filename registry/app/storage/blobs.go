@@ -143,8 +143,6 @@ type OciBlobStore interface {
 		dgst digest.Digest,
 	) (*FileReader, int64, error)
 
-	Delete(ctx context.Context, pathPrefix string, dgst digest.Digest) error
-
 	// Stat provides metadata about a blob identified by the digest. If the
 	// blob is unknown to the describer, ErrBlobUnknown will be returned.
 	Stat(ctx context.Context, pathPrefix string, dgst digest.Digest) (manifest.Descriptor, error)
@@ -170,6 +168,7 @@ type OciBlobStore interface {
 	Resume(ctx context.Context, id string) (BlobWriter, error)
 
 	Path() string
+	GetDriverDetails() DriverResult
 }
 
 // GenericBlobStore represent the entire suite of Generic blob related operations. Such an
@@ -189,20 +188,11 @@ type GenericBlobStore interface {
 		string,
 		error,
 	)
-	GetWithNoRedirect(ctx context.Context, filePath string, size int64) (*FileReader, error)
-	GetDriverDetails() DriverResult
 	StatByDigest(ctx context.Context, rootIdentifier, sha256 string) (int64, error)
+	GetDriverDetails() DriverResult
 }
 
-type BlobCreationDBHook interface {
-	AfterBlobCreate(
-		ctx context.Context,
-		rootParentID int64,
-		sha1 types.Digest,
-		sha256 types.Digest,
-		sha512 types.Digest,
-		md5 types.Digest,
-		size int64,
-		bucketID int64,
-	) error
+type GlobalBlobStore interface {
+	GenericBlobStore
+	OciBlobStore
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/registry/app/events/replication"
 	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/app/services/hook"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
@@ -46,7 +47,7 @@ func NewFileManager(
 	nodesDao store.NodesRepository, tx dbtx.Transactor,
 	config *gitnesstypes.Config, storageService *storage.Service,
 	bucketService docker.BucketService, replicationReporter replication.Reporter,
-	blobCreationDBHook storage.BlobCreationDBHook,
+	blobActionHook hook.BlobActionHook,
 ) FileManager {
 	return &fileManager{
 		registryDao:         registryDao,
@@ -57,7 +58,7 @@ func NewFileManager(
 		storageService:      storageService,
 		bucketService:       bucketService,
 		replicationReporter: replicationReporter,
-		blobCreationDBHook:  blobCreationDBHook,
+		blobActionHook:      blobActionHook,
 	}
 }
 
@@ -70,7 +71,7 @@ type fileManager struct {
 	tx                  dbtx.Transactor
 	bucketService       docker.BucketService
 	replicationReporter replication.Reporter
-	blobCreationDBHook  storage.BlobCreationDBHook
+	blobActionHook      hook.BlobActionHook
 }
 
 // UploadFile - use it to upload file. Inputs can be file or fileReader.
@@ -158,18 +159,6 @@ func (f *fileManager) dbSaveFile(
 				" in db with sha256 : %s, err: %w", fileInfo.Sha256, err)
 		}
 		err = f.createNodes(ctx, filePath, blobID, regID, createdBy)
-		if err != nil {
-			return err
-		}
-		err = f.blobCreationDBHook.AfterBlobCreate(ctx,
-			rootParentID,
-			types.Digest(gb.Sha1),
-			types.Digest(gb.Sha256),
-			types.Digest(gb.Sha512),
-			types.Digest(gb.MD5),
-			gb.Size,
-			// TODO(Arvind) This should be provided by storage layer
-			-1)
 		if err != nil {
 			return err
 		}
@@ -360,6 +349,7 @@ func (f *fileManager) DownloadFileByPath(
 	if allowRedirect {
 		fileReader, redirectURL, err = blobContext.genericBlobStore.GetGeneric(ctx, blob.Size, node.Name,
 			rootIdentifier, blob.Sha256)
+		hook.EmitReadEventAsync(ctx, f.blobActionHook, rootIdentifier, types.Digest(blob.Sha256))
 	} else {
 		fileReader, err = blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, blob.Sha256, blob.Size)
 	}
@@ -585,6 +575,18 @@ func (f *fileManager) uploadAndMove(
 	if err != nil {
 		return types.FileInfo{}, err
 	}
+
+	sha1, _ := types.NewDigestFromHex(types.AlgorithmSHA1, fileInfo.Sha1)
+	sha256, _ := types.NewDigestFromHex(types.AlgorithmSHA256, fileInfo.Sha256)
+	sha512, _ := types.NewDigestFromHex(types.AlgorithmSHA512, fileInfo.Sha512)
+	md5, _ := types.NewDigestFromHex(types.AlgorithmMD5, fileInfo.MD5)
+	bucketKey := hook.GetBucketKey(blobContext.genericBlobStore.GetDriverDetails())
+	err = f.blobActionHook.Commit(ctx, rootIdentifier,
+		sha1, sha256, sha512, md5, fileInfo.Size, bucketKey)
+	if err != nil {
+		return types.FileInfo{}, fmt.Errorf("failed to commit the file upload %w", err)
+	}
+
 	return fileInfo, nil
 }
 

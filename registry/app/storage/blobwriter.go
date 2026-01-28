@@ -45,6 +45,7 @@ type blobWriter struct {
 	ctx              context.Context
 	blobStore        *ociBlobStore
 	genericBlobStore *genericBlobStore
+	globalBlobStore  *blobStore
 
 	id       string
 	digester digest.Digester
@@ -56,9 +57,10 @@ type blobWriter struct {
 
 	resumableDigestEnabled bool
 	committed              bool
+	rootIdentifier         string
 
-	// Used for generic flows - to be deprecated
-	rootIdentifier string
+	// For Global Blob Store
+	isMultiPart bool
 }
 
 var _ BlobWriter = &blobWriter{}
@@ -113,12 +115,17 @@ func (bw *blobWriter) PlainCommit(ctx context.Context, sha256 string) error {
 		return err
 	}
 
-	err = bw.genericBlobStore.move(ctx, bw.rootIdentifier, bw.id, sha256)
+	if bw.globalBlobStore != nil {
+		err = bw.globalBlobStore.move(ctx, bw.rootIdentifier, bw.id, sha256)
+	} else {
+		err = bw.genericBlobStore.move(ctx, bw.rootIdentifier, bw.id, sha256)
+	}
 
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to Move the file on permanent location for sha256: %s %v", sha256, err)
 		return fmt.Errorf("failed to Move the file on permanent location for sha256: %s %w", sha256, err)
 	}
+
 	return nil
 }
 
@@ -143,7 +150,7 @@ func (bw *blobWriter) Size() int64 {
 
 func (bw *blobWriter) Write(p []byte) (int, error) {
 	// We don't support multipart uploads in generic.
-	if bw.genericBlobStore != nil {
+	if !bw.isMultiPart {
 		return bw.fileWriter.Write(p)
 	}
 	// Ensure that the current write offset matches how many bytes have been
@@ -166,7 +173,7 @@ func (bw *blobWriter) Write(p []byte) (int, error) {
 
 func (bw *blobWriter) Close() error {
 	// We don't support multipart uploads in Generic
-	if bw.genericBlobStore != nil {
+	if !bw.isMultiPart {
 		return bw.fileWriter.Close()
 	}
 	if bw.committed {

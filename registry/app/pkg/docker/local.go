@@ -46,6 +46,7 @@ import (
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/services/hook"
 	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -121,7 +122,7 @@ func NewLocalRegistry(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
-	replicationReporter replication.Reporter,
+	replicationReporter replication.Reporter, blobActionHook hook.BlobActionHook,
 ) Registry {
 	return &LocalRegistry{
 		App:                   app,
@@ -141,6 +142,7 @@ func NewLocalRegistry(
 		tx:                    tx,
 		quarantineArtifactDao: quarantineArtifactDao,
 		replicationReporter:   replicationReporter,
+		blobActionHook:        blobActionHook,
 	}
 }
 
@@ -162,6 +164,7 @@ type LocalRegistry struct {
 	tx                    dbtx.Transactor
 	quarantineArtifactDao store.QuarantineArtifactRepository
 	replicationReporter   replication.Reporter
+	blobActionHook        hook.BlobActionHook
 }
 
 func (r *LocalRegistry) Base() error {
@@ -416,7 +419,16 @@ func (r *LocalRegistry) fetchBlobInternal(
 		}
 		return responseHeaders, nil, -1, nil, "", errs
 	}
+
 	if redirectURL != "" {
+		newDigest, err := types.NewDigest(dgst)
+		if err != nil {
+			//nolint:contextcheck
+			log.Ctx(ctx).Error().Msgf("error creating new digest: %v", err)
+		} else {
+			//nolint:contextcheck
+			hook.EmitReadEventAsync(ctx, r.blobActionHook, info.RootIdentifier, newDigest)
+		}
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
 
@@ -1139,8 +1151,25 @@ func (r *LocalRegistry) PushBlob(
 		// Clean up the backend blob data if there was an error.
 		if err := ctx.Upload.Cancel(ctx); err != nil {
 			// If the cleanup fails, all we can do is observe and report.
-			log.Ctx(ctx).Error().Stack().Err(err).Msgf("error canceling upload after error: %v", err)
+			log.Ctx(ctx).Error().Msgf("error canceling upload after error: %v", err)
 		}
+		return responseHeaders, errs
+	}
+
+	sha256Digest, err := types.NewDigest(desc.Digest)
+	if err != nil {
+		errs = append(errs, err)
+		//nolint:contextcheck
+		log.Ctx(ctx).Error().Msgf("error creating sha256 digest: %v", err)
+		return responseHeaders, errs
+	}
+	bucketKey := hook.GetBucketKey(ctx.OciBlobStore.GetDriverDetails())
+	//nolint:contextcheck
+	err = r.blobActionHook.Commit(ctx, artInfo.RootIdentifier, "", sha256Digest, "", "", desc.Size, bucketKey)
+	if err != nil {
+		errs = append(errs, err)
+		//nolint:contextcheck
+		log.Ctx(ctx).Error().Err(err).Msgf("error committing blob")
 		return responseHeaders, errs
 	}
 

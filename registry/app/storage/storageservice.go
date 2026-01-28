@@ -63,16 +63,19 @@ func NewStorageService(provider DriverProvider, options ...Option) (*Service, er
 }
 
 func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootParentRef string) OciBlobStore {
-	result, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
+	driver, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
 	if err != nil {
 		// TODO(Arvind): Return this error
 		log.Fatal().Err(err).Msg("Failed to get storage Driver")
 	}
+	if !driver.IsDefault() {
+		return storage.GlobalBlobsStore(ctx, repoKey, rootParentRef, driver, true)
+	}
+
 	return &ociBlobStore{
-		driverKey:              result.GetKey(),
 		repoKey:                repoKey,
 		ctx:                    ctx,
-		driver:                 result.GetDriver(),
+		driver:                 driver.GetDriver(),
 		pathFn:                 PathFn,
 		redirect:               storage.redirect,
 		deleteEnabled:          storage.deleteEnabled,
@@ -88,11 +91,34 @@ func (storage *Service) GenericBlobsStore(ctx context.Context, rootParentRef str
 		log.Fatal().Err(err).Msg("Failed to get storage Driver")
 	}
 
+	if !result.IsDefault() {
+		return storage.GlobalBlobsStore(ctx, "", rootParentRef, result, false)
+	}
+
 	return &genericBlobStore{
-		DriverMeta:    result,
 		driver:        result.GetDriver(),
 		redirect:      storage.redirect,
 		rootParentRef: rootParentRef,
+	}
+}
+
+func (storage *Service) GlobalBlobsStore(
+	ctx context.Context,
+	repoKey string,
+	rootParentRef string,
+	result DriverResult,
+	oci bool,
+) GlobalBlobStore {
+	return &blobStore{
+		DriverMeta:             result,
+		driver:                 result.GetDriver(),
+		ctx:                    ctx,
+		resumableDigestEnabled: storage.resumableDigestEnabled,
+		redirect:               storage.redirect,
+		deleteEnabled:          storage.deleteEnabled,
+		rootParentRef:          rootParentRef,
+		repoKey:                repoKey,
+		multipartEnabled:       oci,
 	}
 }
 

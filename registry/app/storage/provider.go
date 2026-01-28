@@ -1,24 +1,25 @@
 //  Copyright 2023 Harness, Inc.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package storage
 
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/harness/gitness/registry/app/driver"
+
+	"github.com/google/uuid"
 )
 
 type Mode string
@@ -42,7 +43,8 @@ type DriverSelector struct {
 // Implementers can embed BaseDriverResult and add custom fields/methods.
 type DriverResult interface {
 	GetDriver() driver.StorageDriver
-	GetKey() string
+	GetBucketKey() string
+	IsDefault() bool
 }
 
 // BaseDriverResult provides a default implementation of DriverResult.
@@ -55,8 +57,12 @@ func (r *BaseDriverResult) GetDriver() driver.StorageDriver {
 	return r.Driver
 }
 
-func (r *BaseDriverResult) GetKey() string {
+func (r *BaseDriverResult) GetBucketKey() string {
 	return r.Key
+}
+
+func (r *BaseDriverResult) IsDefault() bool {
+	return r.Key == DefaultKey
 }
 
 // DriverProvider interface is for provider storage drivers dynamically.

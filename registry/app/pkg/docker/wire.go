@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
 	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
+	"github.com/harness/gitness/registry/app/services/hook"
 	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -50,12 +51,12 @@ func LocalRegistryProvider(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
-	replicationReporter replication.Reporter,
+	replicationReporter replication.Reporter, blobActionHook hook.BlobActionHook,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryFinder, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
-		gcService, tx, quarantineArtifactDao, replicationReporter,
+		gcService, tx, quarantineArtifactDao, replicationReporter, blobActionHook,
 	).(*LocalRegistry)
 	if !ok {
 		return nil
@@ -118,7 +119,10 @@ func DBStoreProvider(
 	return NewDBStore(blobRepo, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, manifestDao, quarantineDao)
 }
 
-func StorageServiceProvider(cfg *types.Config, driverProvider storage.DriverProvider) *storage.Service {
+func StorageServiceProvider(
+	cfg *types.Config,
+	driverProvider storage.DriverProvider,
+) *storage.Service {
 	return GetStorageService(cfg, driverProvider)
 }
 
@@ -195,5 +199,6 @@ var OpenSourceWireSet = wire.NewSet(
 	WireSet,
 	OciBlobStoreSet,
 	BucketServiceSet,
+	hook.ProvideBlobCommitHook,
 	storage.NewStaticDriverProvider,
 )
