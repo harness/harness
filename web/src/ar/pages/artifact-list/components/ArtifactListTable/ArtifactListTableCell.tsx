@@ -26,7 +26,7 @@ import { useGetVersionDisplayName, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
-import { PageType, type RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
@@ -253,11 +253,12 @@ export const ArtifactVersionActions: CellType = ({ row }) => {
 
 export const ViolationScanStatusCell: CellType = ({ row }) => {
   const data = row.original
-  const { scanStatus, scanId, packageType } = data
+  const { scanStatus, scanId, packageType, registryType } = data
   const { getString } = useStrings()
   const [showModal] = useViolationDetailsModal({ scanId: scanId || '' })
   const repositoryType = repositoryFactory.getRepositoryType(packageType)
-  const isViolationScanSupported = repositoryType?.getIsDependencyFirewallSupported()
+  const isViolationScanSupported =
+    repositoryType?.getIsDependencyFirewallSupported() && registryType === RepositoryConfigType.UPSTREAM
   if (!isViolationScanSupported) return <TableCells.TextCell value={getString('na')} />
   return <ScanBadge scanId={scanId} status={scanStatus} onClick={() => showModal()} />
 }

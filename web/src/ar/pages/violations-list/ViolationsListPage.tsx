@@ -68,6 +68,9 @@ export default function ViolationsListPage() {
       size,
       search_term: searchTerm,
       scan_status: status
+    },
+    stringifyQueryParamsOptions: {
+      arrayFormat: 'repeat'
     }
   })
 
