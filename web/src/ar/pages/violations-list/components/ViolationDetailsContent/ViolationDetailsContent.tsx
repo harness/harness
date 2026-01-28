@@ -15,12 +15,20 @@
  */
 
 import React from 'react'
-import { Container, Layout, Page, Text } from '@harnessio/uicore'
+import { ButtonVariation, Container, Layout, Text, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import { useGetArtifactScanDetailsQuery } from '@harnessio/react-har-service-client'
+import {
+  Error,
+  evaluateArtifactScan,
+  useGetArtifactScanDetailsQuery,
+  V3Error
+} from '@harnessio/react-har-service-client'
 
-import { useAppStore } from '@ar/hooks'
+import { useAppStore, useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import { queryClient } from '@ar/utils/queryClient'
+import PageContent from '@ar/components/PageContent/PageContent'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import BasicInformationContent from './BasicInformationContent'
 import EvaluationInformationContent from './EvaluationInformationContent'
@@ -31,10 +39,13 @@ import css from './ViolationDetailsContent.module.scss'
 
 interface ViolationDetailsContentProps {
   scanId: string
+  onClose?: () => void
 }
 
 function ViolationDetailsContent(props: ViolationDetailsContentProps) {
   const { scope } = useAppStore()
+  const { RbacButton } = useParentComponents()
+  const { clear, showSuccess, showError } = useToaster()
   const { getString } = useStrings()
   const {
     data,
@@ -50,27 +61,62 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
 
   const responseData = data?.content?.data
 
+  const handleRescan = (scanId: string) => {
+    return evaluateArtifactScan({
+      queryParams: { account_identifier: scope.accountId || '' },
+      body: { scanId }
+    })
+      .then(() => {
+        clear()
+        showSuccess(getString('versionList.messages.reEvaluateSuccess'))
+      })
+      .catch((err: V3Error) => {
+        clear()
+        showError(err?.error?.message ?? getString('versionList.messages.reEvaluateFailed'))
+      })
+      .finally(() => {
+        queryClient.invalidateQueries(['GetArtifactScans'])
+        props.onClose?.()
+      })
+  }
+
   return (
-    <Container>
-      <Layout.Vertical>
-        <Layout.Horizontal data-testid="setup-client-header" className={css.titleContainer} spacing="medium">
-          <Text font={{ variation: FontVariation.H3 }}>{getString('violationsList.violationDetailsModal.title')}</Text>
-        </Layout.Horizontal>
-      </Layout.Vertical>
-      <Page.Body
-        className={css.pageBody}
-        loading={loading}
-        error={error?.error?.message}
-        retryOnError={() => refetch()}>
+    <Container className={css.container}>
+      <Container>
+        <Layout.Vertical>
+          <Layout.Horizontal data-testid="policy-evaluation-header" className={css.titleContainer} spacing="medium">
+            <Text font={{ variation: FontVariation.H3 }}>
+              {getString('violationsList.violationDetailsModal.title')}
+            </Text>
+          </Layout.Horizontal>
+        </Layout.Vertical>
+        <PageContent loading={loading} error={error?.error as Error} refetch={refetch}>
+          {!!responseData && (
+            <Layout.Vertical data-testid="policy-evaluation-body" className={css.contentContainer} spacing="medium">
+              <BasicInformationContent data={responseData} />
+              <FixInformationContent data={responseData} />
+              <ViolationFailureDetails data={responseData} />
+              <EvaluationInformationContent data={responseData} />
+            </Layout.Vertical>
+          )}
+        </PageContent>
+      </Container>
+      <Layout.Horizontal className={css.footerContainer} data-testid="policy-evaluation-footer" spacing="medium">
         {!!responseData && (
-          <Layout.Vertical data-testid="setup-client-body" className={css.contentContainer} spacing="medium">
-            <BasicInformationContent data={responseData} />
-            <FixInformationContent data={responseData} />
-            <ViolationFailureDetails data={responseData} />
-            <EvaluationInformationContent data={responseData} />
-          </Layout.Vertical>
+          <RbacButton
+            text={getString('versionList.actions.reEvaluate')}
+            variation={ButtonVariation.SECONDARY}
+            onClick={() => handleRescan(responseData.id)}
+            permission={{
+              permission: PermissionIdentifier.UPLOAD_ARTIFACT,
+              resource: {
+                resourceType: ResourceType.ARTIFACT_REGISTRY,
+                resourceIdentifier: responseData.registryName
+              }
+            }}
+          />
         )}
-      </Page.Body>
+      </Layout.Horizontal>
     </Container>
   )
 }

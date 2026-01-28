@@ -399,8 +399,11 @@ export interface StringsMap {
   'versionList.actions.archiveVersion': string
   'versionList.actions.deleteVersion': string
   'versionList.actions.quarantine': string
+  'versionList.actions.reEvaluate': string
   'versionList.actions.removeQuarantine': string
   'versionList.actions.restoreVersion': string
+  'versionList.messages.reEvaluateFailed': string
+  'versionList.messages.reEvaluateSuccess': string
   'versionList.page': string
   'versionList.table.columns.activelyDeployed': string
   'versionList.table.columns.archivedAt': string

@@ -26,7 +26,7 @@ import { useGetVersionDisplayName, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import TableCells from '@ar/components/TableCells/TableCells'
 import versionFactory from '@ar/frameworks/Version/VersionFactory'
-import { PageType, RepositoryPackageType } from '@ar/common/types'
+import { PageType, type RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
@@ -246,6 +246,7 @@ export const ArtifactVersionActions: CellType = ({ row }) => {
       versionKey={original.version}
       packageType={original.packageType as RepositoryPackageType}
       digestCount={digestCount}
+      repoType={original.registryType as RepositoryConfigType}
     />
   )
 }

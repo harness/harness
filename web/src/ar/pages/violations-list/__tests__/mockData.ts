@@ -73,6 +73,14 @@ export const mockArtifactScanDetails: ArtifactScanDetails = {
     {
       name: 'Policy 2',
       description: 'Policy 2 description'
+    },
+    {
+      name: 'Policy 3',
+      description: 'Policy 3 description'
+    },
+    {
+      name: 'Policy 4',
+      description: 'Policy 4 description'
     }
   ]
 }

@@ -31,7 +31,7 @@ import { useDecodedParams, useRoutes } from '@ar/hooks'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import TableCells from '@ar/components/TableCells/TableCells'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
-import { PageType, type RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
@@ -144,6 +144,7 @@ export const VersionActionsCell: CellType = ({ row }) => {
       artifactKey={artifactIdentifier}
       versionKey={original.version}
       digestCount={original.digestCount}
+      repoType={original.registryType as RepositoryConfigType}
     />
   )
 }

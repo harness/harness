@@ -17,6 +17,7 @@
 import React, { useState } from 'react'
 import { get } from 'lodash-es'
 
+import { RepositoryConfigType } from '@ar/common/types'
 import { useAppStore, useBulkDownloadFile, useAllowSoftDelete, useFeatureFlags, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
@@ -32,11 +33,13 @@ import { VersionDetailsTab } from '../VersionDetailsTabs/constants'
 import RemoveQurantineMenuItem from './RemoveQurantineMenuItem'
 import DownloadVersionMenuItem from './DownloadVersionMenuItem'
 import SoftDeleteVersionMenuItem from './SoftDeleteVersionMenuItem'
+import ReEvaluateMenuItem from './ReEvaluateMenuItem'
 
 export default function VersionActions({
   data,
   repoKey,
   artifactKey,
+  repoType,
   versionKey,
   pageType,
   readonly,
@@ -49,9 +52,10 @@ export default function VersionActions({
   const routes = useRoutes()
   const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
-  const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
+  const { HAR_ARTIFACT_QUARANTINE_ENABLED, HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
   const isBulkDownloadFileEnabled = useBulkDownloadFile()
   const allowSoftDelete = useAllowSoftDelete()
+  const allowReEvaluate = HAR_DEPENDENCY_FIREWALL && repoType === RepositoryConfigType.UPSTREAM
 
   const isAllowed = (action: VersionAction): boolean => {
     if (!allowedActions) return true
@@ -156,6 +160,20 @@ export default function VersionActions({
         )}
       {isBulkDownloadFileEnabled && isAllowed(VersionAction.Download) && (
         <DownloadVersionMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={digest ?? versionKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
+      {allowReEvaluate && isAllowed(VersionAction.ReEvaluate) && (
+        <ReEvaluateMenuItem
           artifactKey={artifactKey}
           repoKey={repoKey}
           versionKey={digest ?? versionKey}

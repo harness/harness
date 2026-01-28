@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { Text } from '@harnessio/uicore'
-import type { ArtifactScan } from '@harnessio/react-har-service-client'
+import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 
@@ -25,7 +25,7 @@ import css from './Badge.module.scss'
 
 interface ScanBadgeProps {
   scanId?: string
-  status?: ArtifactScan['scanStatus']
+  status?: ArtifactVersionSummary['scanStatus']
   onClick?: () => void
 }
 

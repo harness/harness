@@ -76,13 +76,15 @@ export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.DownloadCommand,
     VersionAction.ViewVersionDetails,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.ReEvaluate
   ]
 
   protected allowedActionsOnVersionDetailsPage = [
     VersionAction.Delete,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.ReEvaluate
   ]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {

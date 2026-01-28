@@ -22,3 +22,7 @@ actions:
   restoreVersion: Restore
   quarantine: Quarantine
   removeQuarantine: Remove From Quarantine
+  reEvaluate: Re-Evaluate
+messages:
+  reEvaluateSuccess: Submitted request for Re-Evaluation successfully!
+  reEvaluateFailed: Failed to submit request!
