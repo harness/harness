@@ -26,14 +26,16 @@ import type { ArtifactMetadata, VersionMetadata } from '@harnessio/react-har-ser
 import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
 import OCITag from '@ar/components/Badge/OCITag'
+import ScanBadge from '@ar/components/Badge/ScanBadge'
 import { useDecodedParams, useRoutes } from '@ar/hooks'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
 import TableCells from '@ar/components/TableCells/TableCells'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
-import { PageType, type RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
 import { LocalArtifactType } from '@ar/pages/repository-details/constants'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+import { useViolationDetailsModal } from '@ar/pages/violations-list/hooks/useViolationDetailsModal/useViolationDetailsModal'
 
 import type { VersionListExpandedColumnProps } from './types'
 import css from './VersionListTable.module.scss'
@@ -142,6 +144,7 @@ export const VersionActionsCell: CellType = ({ row }) => {
       artifactKey={artifactIdentifier}
       versionKey={original.version}
       digestCount={original.digestCount}
+      repoType={original.registryType as RepositoryConfigType}
     />
   )
 }
@@ -223,4 +226,11 @@ export const OCITagsCell: CellType = ({ row }) => {
   }
 
   return <OCITags tags={tags} onClick={handleTagClick} />
+}
+
+export const ScanStatusCell: CellType = ({ row }) => {
+  const data = row.original
+  const { scanStatus, scanId } = data
+  const [showModal] = useViolationDetailsModal({ scanId: scanId || '' })
+  return <ScanBadge scanId={scanId} status={scanStatus} onClick={() => showModal()} />
 }

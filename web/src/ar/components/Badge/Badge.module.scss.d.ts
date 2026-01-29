@@ -21,6 +21,7 @@ export declare const badge: string
 export declare const blockedStatus: string
 export declare const dockerTag: string
 export declare const hover: string
+export declare const passedStatus: string
 export declare const quarantineBadge: string
 export declare const visibilityBadge: string
 export declare const warningStatus: string

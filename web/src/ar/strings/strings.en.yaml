@@ -36,6 +36,7 @@ status:
   archived: Archived
   blocked: Blocked
   warning: Warning
+  passed: Passed
 dateLabel: Date
 timeLabel: Time
 harnessAI: Harness AI
@@ -160,7 +161,7 @@ validationMessages:
   stringMax: '{{entity}} must be 50 characters or less'
   noNewLine: '{{entity}} cannot contain new lines'
   uniqueValues: '{{entity}} must be unique'
-  equals: '{{entity}} must be equal to {{value}}'
+  equals: '{{{entity}}} must be equal to {{{value}}}'
 vulnerabilityStatus:
   critical: 'C {{count}}'
   high: 'H {{count}}'

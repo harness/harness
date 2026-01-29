@@ -520,3 +520,16 @@ func (c *cargoPackageType) GetPkgDownloadURL(
 ) (string, error) {
 	return "", nil
 }
+
+func (c *cargoPackageType) GetPurlForArtifact(
+	packageName string,
+	version string,
+) (string, error) {
+	if packageName == "" {
+		return "", fmt.Errorf("packageName cannot be empty")
+	}
+	if version == "" {
+		return "", fmt.Errorf("version cannot be empty")
+	}
+	return fmt.Sprintf("pkg:cargo/%s@%s", packageName, version), nil
+}

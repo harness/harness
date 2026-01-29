@@ -15,7 +15,15 @@
  */
 
 .pageBody {
-  --page-header-height: 0px;
+  --page-header-height: 300px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  height: 100vh;
+  justify-content: space-between;
 }
 
 .gridContainer {
@@ -37,6 +45,19 @@
 }
 
 .contentContainer {
+  flex: 1;
   padding: var(--spacing-xlarge) !important;
   padding-top: var(--spacing-medium) !important;
+}
+
+.footerContainer {
+  position: sticky;
+  bottom: 0px;
+  z-index: 10;
+  background-color: var(--grey-0) !important;
+  padding-left: var(--spacing-xlarge) !important;
+  padding-right: var(--spacing-xlarge) !important;
+  padding-bottom: var(--spacing-xlarge) !important;
+  padding-top: var(--spacing-medium) !important;
+  border-top: 1px solid var(--grey-200) !important;
 }

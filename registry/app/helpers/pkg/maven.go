@@ -268,3 +268,20 @@ func (c *mavenPackageType) GetPkgDownloadURL(
 	downloadURL := fmt.Sprintf("%s%s", baseURL, filepath)
 	return downloadURL, nil
 }
+
+func (c *mavenPackageType) GetPurlForArtifact(
+	packageName string,
+	version string,
+) (string, error) {
+	if packageName == "" {
+		return "", fmt.Errorf("packageName cannot be empty")
+	}
+	if version == "" {
+		return "", fmt.Errorf("version cannot be empty")
+	}
+	parts := strings.SplitN(packageName, ":", 2)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid maven package name format, expected groupId:artifactId")
+	}
+	return fmt.Sprintf("pkg:maven/%s/%s@%s", parts[0], parts[1], version), nil
+}

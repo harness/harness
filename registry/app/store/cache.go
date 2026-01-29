@@ -20,6 +20,7 @@ import (
 )
 
 type (
-	RegistryIDCache      cache.Cache[int64, *types.Registry]
-	RegistryRootRefCache cache.Cache[types.RegistryRootRefCacheKey, int64]
+	RegistryIDCache              cache.Cache[int64, *types.Registry]
+	RegistryRootRefCache         cache.Cache[types.RegistryRootRefCacheKey, int64]
+	UpstreamProxyRegistryIDCache cache.Cache[int64, *types.UpstreamProxy]
 )

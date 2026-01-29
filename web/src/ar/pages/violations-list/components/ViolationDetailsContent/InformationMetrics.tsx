@@ -81,6 +81,7 @@ interface StatusMetricProps {
   label: string
   labelIconProps?: IconProps
   status: ArtifactScan['scanStatus']
+  scanId: string
 }
 
 function ScanStatusMetric(props: StatusMetricProps) {
@@ -93,7 +94,7 @@ function ScanStatusMetric(props: StatusMetricProps) {
         iconProps={props.labelIconProps}>
         {props.label}
       </Text>
-      <ScanBadge status={props.status} />
+      <ScanBadge scanId={props.scanId} status={props.status} />
     </Layout.Vertical>
   )
 }

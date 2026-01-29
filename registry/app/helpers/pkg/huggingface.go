@@ -253,3 +253,10 @@ func (c *huggingFacePackageType) GetPkgDownloadURL(
 ) (string, error) {
 	return "", nil
 }
+
+func (c *huggingFacePackageType) GetPurlForArtifact(
+	_ string,
+	_ string,
+) (string, error) {
+	return "", fmt.Errorf("PURL not supported for huggingface package type")
+}

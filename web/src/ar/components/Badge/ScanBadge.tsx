@@ -15,7 +15,8 @@
  */
 
 import React from 'react'
-import type { ArtifactScan } from '@harnessio/react-har-service-client'
+import { Text } from '@harnessio/uicore'
+import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 
@@ -23,13 +24,15 @@ import Badge from './Badge'
 import css from './Badge.module.scss'
 
 interface ScanBadgeProps {
-  status: ArtifactScan['scanStatus']
+  scanId?: string
+  status?: ArtifactVersionSummary['scanStatus']
   onClick?: () => void
 }
 
 export default function ScanBadge(props: ScanBadgeProps): JSX.Element {
-  const { status, onClick } = props
+  const { status, onClick, scanId } = props
   const { getString } = useStrings()
+  if (!scanId) return <Text>{getString('versionList.table.notScanned')}</Text>
   switch (status) {
     case 'BLOCKED':
       return (
@@ -44,6 +47,10 @@ export default function ScanBadge(props: ScanBadgeProps): JSX.Element {
         </Badge>
       )
     default:
-      return <></>
+      return (
+        <Badge className={css.passedStatus} icon="tick-circle" iconProps={{ size: 12 }} onClick={onClick}>
+          {getString('status.passed')}
+        </Badge>
+      )
   }
 }

@@ -16,7 +16,7 @@
 
 import type { VersionMetadata } from '@harnessio/react-har-service-client'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
-import type { PageType } from '@ar/common/types'
+import type { PageType, RepositoryConfigType } from '@ar/common/types'
 
 export interface VersionActionProps {
   data: ArtifactVersionSummary | VersionMetadata
@@ -24,6 +24,7 @@ export interface VersionActionProps {
   artifactKey: string
   repoKey: string
   pageType: PageType
+  repoType?: RepositoryConfigType
   digest?: string
   digestCount?: number
   readonly?: boolean
@@ -37,5 +38,6 @@ export enum VersionAction {
   DownloadCommand = 'downloadCommand',
   ViewVersionDetails = 'viewVersionDetails',
   Quarantine = 'quarantine',
-  Download = 'download'
+  Download = 'download',
+  ReEvaluate = 'reEvaluate'
 }

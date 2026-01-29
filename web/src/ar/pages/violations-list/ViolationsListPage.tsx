@@ -68,6 +68,9 @@ export default function ViolationsListPage() {
       size,
       search_term: searchTerm,
       scan_status: status
+    },
+    stringifyQueryParamsOptions: {
+      arrayFormat: 'repeat'
     }
   })
 
@@ -108,6 +111,35 @@ export default function ViolationsListPage() {
           />
         </div>
       </Page.SubHeader>
+      {responseData && (
+        <Layout.Horizontal className={classNames(css.cardsContainer)} spacing="large">
+          <TableCard
+            title={getString('violationsList.cards.totalViolations')}
+            value={responseData.meta.totalCount?.toLocaleString() || '0'}
+            subText={getString('violationsList.cards.dependencies')}
+            onClick={() => updateQueryParams({ status: undefined, page: DEFAULT_PAGE_INDEX })}
+            active={!status}
+          />
+          <TableCard
+            title={getString('violationsList.cards.blockedViolations')}
+            titleIcon="warning-sign"
+            iconProps={{ size: 12, color: Color.RED_600 }}
+            value={responseData.meta.blockedCount?.toLocaleString() || '0'}
+            subText={getString('violationsList.cards.dependencies')}
+            onClick={() => updateQueryParams({ status: 'BLOCKED', page: DEFAULT_PAGE_INDEX })}
+            active={status === 'BLOCKED'}
+          />
+          <TableCard
+            title={getString('violationsList.cards.warningViolations')}
+            titleIcon="warning-icon"
+            iconProps={{ size: 12, color: Color.ORANGE_700 }}
+            value={responseData.meta.warnCount?.toLocaleString() || '0'}
+            subText={getString('violationsList.cards.dependencies')}
+            onClick={() => updateQueryParams({ status: 'WARN', page: DEFAULT_PAGE_INDEX })}
+            active={status === 'WARN'}
+          />
+        </Layout.Horizontal>
+      )}
       <Page.Body
         className={classNames(css.pageBody)}
         loading={loading}
@@ -123,33 +155,6 @@ export default function ViolationsListPage() {
         }}>
         {responseData && (
           <Layout.Vertical spacing="large">
-            <Layout.Horizontal spacing="large">
-              <TableCard
-                title={getString('violationsList.cards.totalViolations')}
-                value={responseData.meta.totalCount?.toLocaleString() || '0'}
-                subText={getString('violationsList.cards.dependencies')}
-                onClick={() => updateQueryParams({ status: undefined, page: DEFAULT_PAGE_INDEX })}
-                active={!status}
-              />
-              <TableCard
-                title={getString('violationsList.cards.blockedViolations')}
-                titleIcon="warning-sign"
-                iconProps={{ size: 12, color: Color.RED_600 }}
-                value={responseData.meta.blockedCount?.toLocaleString() || '0'}
-                subText={getString('violationsList.cards.dependencies')}
-                onClick={() => updateQueryParams({ status: 'BLOCKED', page: DEFAULT_PAGE_INDEX })}
-                active={status === 'BLOCKED'}
-              />
-              <TableCard
-                title={getString('violationsList.cards.warningViolations')}
-                titleIcon="warning-icon"
-                iconProps={{ size: 12, color: Color.ORANGE_700 }}
-                value={responseData.meta.warnCount?.toLocaleString() || '0'}
-                subText={getString('violationsList.cards.dependencies')}
-                onClick={() => updateQueryParams({ status: 'WARN', page: DEFAULT_PAGE_INDEX })}
-                active={status === 'WARN'}
-              />
-            </Layout.Horizontal>
             <ViolationsListTable
               data={responseData}
               gotoPage={pageNumber => updateQueryParams({ page: pageNumber })}

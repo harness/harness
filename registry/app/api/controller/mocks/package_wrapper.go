@@ -1875,3 +1875,75 @@ func (_c *MockPackageWrapper_GetPkgDownloadURL_Call) RunAndReturn(run func(ctx c
 	_c.Call.Return(run)
 	return _c
 }
+
+// GetPurlForArtifact provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) GetPurlForArtifact(packageType string, packageName string, version string) (string, error) {
+	ret := _mock.Called(packageType, packageName, version)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPurlForArtifact")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string, string, string) (string, error)); ok {
+		return returnFunc(packageType, packageName, version)
+	}
+	if returnFunc, ok := ret.Get(0).(func(string, string, string) string); ok {
+		r0 = returnFunc(packageType, packageName, version)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(string, string, string) error); ok {
+		r1 = returnFunc(packageType, packageName, version)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockPackageWrapper_GetPurlForArtifact_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPurlForArtifact'
+type MockPackageWrapper_GetPurlForArtifact_Call struct {
+	*mock.Call
+}
+
+// GetPurlForArtifact is a helper method to define mock.On call
+//   - packageType string
+//   - packageName string
+//   - version string
+func (_e *MockPackageWrapper_Expecter) GetPurlForArtifact(packageType interface{}, packageName interface{}, version interface{}) *MockPackageWrapper_GetPurlForArtifact_Call {
+	return &MockPackageWrapper_GetPurlForArtifact_Call{Call: _e.mock.On("GetPurlForArtifact", packageType, packageName, version)}
+}
+
+func (_c *MockPackageWrapper_GetPurlForArtifact_Call) Run(run func(packageType string, packageName string, version string)) *MockPackageWrapper_GetPurlForArtifact_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPurlForArtifact_Call) Return(s string, err error) *MockPackageWrapper_GetPurlForArtifact_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPurlForArtifact_Call) RunAndReturn(run func(packageType string, packageName string, version string) (string, error)) *MockPackageWrapper_GetPurlForArtifact_Call {
+	_c.Call.Return(run)
+	return _c
+}

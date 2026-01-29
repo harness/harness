@@ -113,4 +113,8 @@ type PackageHelper interface {
 		filename string,
 		filepath string,
 	) (string, error)
+	GetPurlForArtifact(
+		packageName string,
+		version string,
+	) (string, error)
 }

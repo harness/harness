@@ -20,7 +20,7 @@ import type { Column, Row } from 'react-table'
 import { Container, PaginationProps, TableV2 } from '@harnessio/uicore'
 import type { ListVersion, VersionMetadata } from '@harnessio/react-har-service-client'
 
-import { useParentHooks } from '@ar/hooks'
+import { useFeatureFlags, useParentHooks } from '@ar/hooks'
 import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryPackageType } from '@ar/common/types'
@@ -37,7 +37,8 @@ import {
   ArtifactVersionActions,
   ArtifactVersionCell,
   LatestArtifactCell,
-  ToggleAccordionCell
+  ToggleAccordionCell,
+  ViolationScanStatusCell
 } from './ArtifactListTableCell'
 import { RepositoryNameCell } from '../RegistryArtifactListTable/RegistryArtifactListTableCell'
 import css from './ArtifactListTable.module.scss'
@@ -58,6 +59,7 @@ export interface ArtifactListTableProps extends ArtifactListColumnActions {
 export default function ArtifactListTable(props: ArtifactListTableProps): JSX.Element {
   const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, softDeleteFilter } = props
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(new Set())
+  const { HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
 
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
@@ -121,6 +123,17 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         disableSortBy: true,
         width: '100%'
       },
+      ...(HAR_DEPENDENCY_FIREWALL
+        ? [
+            {
+              Header: getString('artifactList.table.columns.scanStatus'),
+              accessor: 'scanStatus',
+              Cell: ViolationScanStatusCell,
+              disableSortBy: true,
+              width: '100%'
+            }
+          ]
+        : []),
       {
         Header: getString('artifactList.table.columns.repository'),
         accessor: 'registryIdentifier',

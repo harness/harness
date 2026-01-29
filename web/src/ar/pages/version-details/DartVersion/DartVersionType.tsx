@@ -62,6 +62,7 @@ export class DartVersionType extends VersionStep<ArtifactVersionSummary> {
 
   versionListTableColumnConfig: CommonVersionListTableProps['columnConfigs'] = {
     [VersionListColumnEnum.Name]: { width: '150%' },
+    [VersionListColumnEnum.ScanStatus]: { width: '100%' },
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
     [VersionListColumnEnum.DownloadCount]: { width: '100%' },
@@ -75,13 +76,15 @@ export class DartVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.SetupClient,
     VersionAction.ViewVersionDetails,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.ReEvaluate
   ]
 
   protected allowedActionsOnVersionDetailsPage = [
     VersionAction.Delete,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.ReEvaluate
   ]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {

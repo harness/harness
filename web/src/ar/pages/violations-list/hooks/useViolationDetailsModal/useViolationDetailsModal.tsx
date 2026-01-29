@@ -51,7 +51,7 @@ export function useViolationDetailsModal(props: useViolationDetailsModalProps) {
           withoutBoxShadow
           onClick={handleCloseModal}
         />
-        <ViolationDetailsContent scanId={props.scanId} />
+        <ViolationDetailsContent scanId={props.scanId} onClose={handleCloseModal} />
       </Drawer>
     )
   })

@@ -21,14 +21,17 @@ import { Layout } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useDecodedParams, useRoutes } from '@ar/hooks'
-import { PageType, type RepositoryPackageType } from '@ar/common/types'
+import { PageType, RepositoryConfigType, type RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import QuarantineBadge from '@ar/components/Badge/QuarantineBadge'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import VersionActionsWidget from '@ar/frameworks/Version/VersionActionsWidget'
 import SetupClientButton from '@ar/components/SetupClientButton/SetupClientButton'
 
+import ScanBadge from '@ar/components/Badge/ScanBadge'
 import AvailablityBadge, { AvailablityBadgeType } from '@ar/components/Badge/AvailablityBadge'
+import { useViolationDetailsModal } from '@ar/pages/violations-list/hooks/useViolationDetailsModal/useViolationDetailsModal'
+
 import VersionNameContent from './VersionNameContent'
 
 interface VersionDetailsHeaderContentProps {
@@ -55,6 +58,8 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
     )
   }
 
+  const [openModal] = useViolationDetailsModal({ scanId: data.scanId || '' })
+
   return (
     <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }}>
       <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: iconSize }} />
@@ -66,6 +71,7 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
       />
       {data.isQuarantined && <QuarantineBadge reason={data.quarantineReason} />}
       <AvailablityBadge type={data.isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
+      {data.scanStatus && <ScanBadge scanId={data.scanId} status={data.scanStatus} onClick={openModal} />}
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}
@@ -81,6 +87,7 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
           versionKey={pathParams.versionIdentifier}
           pageType={PageType.Details}
           data={data}
+          repoType={data.registryType as RepositoryConfigType}
         />
       )}
     </Layout.Horizontal>

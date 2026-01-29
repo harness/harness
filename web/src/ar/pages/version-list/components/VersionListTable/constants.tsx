@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+import { Parent, RepositoryConfigType } from '@ar/common/types'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 import {
   DigestNameCell,
   OCITagsCell,
   PullCommandCell,
+  ScanStatusCell,
   VersionActionsCell,
   VersionDownloadsCell,
   VersionFileCountCell,
@@ -38,6 +41,15 @@ export const VERSION_LIST_TABLE_CELL_CONFIG: Record<VersionListColumnEnum, IVers
     accessor: 'version',
     Cell: DigestNameCell,
     disableSortBy: true
+  },
+  [VersionListColumnEnum.ScanStatus]: {
+    Header: 'versionList.table.columns.scanStatus',
+    accessor: 'scanStatus',
+    Cell: ScanStatusCell,
+    parent: Parent.Enterprise,
+    featureFlag: FeatureFlags.HAR_DEPENDENCY_FIREWALL,
+    disableSortBy: true,
+    registryType: RepositoryConfigType.UPSTREAM
   },
   [VersionListColumnEnum.Tags]: {
     Header: 'versionList.table.columns.tags',

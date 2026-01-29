@@ -27,16 +27,22 @@ import (
 )
 
 const (
-	registryCacheDuration = 15 * time.Minute
+	registryCacheDuration      = 15 * time.Minute
+	upstreamProxyCacheDuration = 15 * time.Minute
 )
 
 const (
-	pubsubNamespace          = "cache-evictor"
-	pubsubTopicRegCoreUpdate = "reg-core-update"
+	pubsubNamespace                = "cache-evictor"
+	pubsubTopicRegCoreUpdate       = "reg-core-update"
+	pubsubTopicUpstreamProxyUpdate = "upstream-proxy-update"
 )
 
 func ProvideEvictorRegistryCore(pubsub pubsub.PubSub) cache.Evictor[*types.Registry] {
 	return cache.NewEvictor[*types.Registry](pubsubNamespace, pubsubTopicRegCoreUpdate, pubsub)
+}
+
+func ProvideEvictorUpstreamProxy(pubsub pubsub.PubSub) cache.Evictor[*types.UpstreamProxy] {
+	return cache.NewEvictor[*types.UpstreamProxy](pubsubNamespace, pubsubTopicUpstreamProxyUpdate, pubsub)
 }
 
 func ProvideRegistryIDCache(
@@ -55,8 +61,18 @@ func ProvideRegRootRefCache(
 	return NewRegistryRootRefCache(appCtx, regSource, evictorRepo, registryCacheDuration)
 }
 
+func ProvideUpstreamProxyRegistryIDCache(
+	appCtx context.Context,
+	upstreamProxySource store.UpstreamProxyConfigRepository,
+	evictor cache.Evictor[*types.UpstreamProxy],
+) store.UpstreamProxyRegistryIDCache {
+	return NewUpstreamProxyRegistryIDCache(appCtx, upstreamProxySource, evictor, upstreamProxyCacheDuration)
+}
+
 var WireSet = wire.NewSet(
 	ProvideEvictorRegistryCore,
+	ProvideEvictorUpstreamProxy,
 	ProvideRegRootRefCache,
 	ProvideRegistryIDCache,
+	ProvideUpstreamProxyRegistryIDCache,
 )

@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const cardsContainer: string
 export declare const pageBody: string
 export declare const subHeader: string
 export declare const subHeaderItems: string

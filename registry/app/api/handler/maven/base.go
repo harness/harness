@@ -17,6 +17,7 @@ package maven
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -24,12 +25,12 @@ import (
 
 	usercontroller "github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/render"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -104,6 +105,17 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 		)
 		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRegNotFound
 	}
+
+	if registry.PackageType != artifact.PackageTypeMAVEN {
+		log.Ctx(ctx).Error().Msgf(
+			"Package type mismatch: registry %s is type %s, but Maven artifact upload attempted",
+			registryIdentifier, registry.PackageType,
+		)
+		return pkg.MavenArtifactInfo{}, usererror.NotFoundf(
+			"404 Not Found - Registry package type mismatch: %s != %s", registry.PackageType, artifact.PackageTypeMAVEN,
+		)
+	}
+
 	_, err = h.SpaceFinder.FindByID(r.Context(), registry.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)

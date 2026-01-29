@@ -261,3 +261,16 @@ func (c *npmPackageType) GetPkgDownloadURL(
 	downloadURL := fmt.Sprintf("%s/%s/-/%s/%s", baseURL, packageName, version, filename)
 	return downloadURL, nil
 }
+
+func (c *npmPackageType) GetPurlForArtifact(
+	packageName string,
+	version string,
+) (string, error) {
+	if packageName == "" {
+		return "", fmt.Errorf("packageName cannot be empty")
+	}
+	if version == "" {
+		return "", fmt.Errorf("version cannot be empty")
+	}
+	return fmt.Sprintf("pkg:npm/%s@%s", packageName, version), nil
+}

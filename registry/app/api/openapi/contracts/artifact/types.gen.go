@@ -314,9 +314,12 @@ type ArtifactMetadata struct {
 	QuarantineReason   *string     `json:"quarantineReason,omitempty"`
 	RegistryIdentifier string      `json:"registryIdentifier"`
 	RegistryPath       string      `json:"registryPath"`
-	RegistryUUID       string      `json:"registryUUID"`
-	Uuid               string      `json:"uuid"`
-	Version            *string     `json:"version,omitempty"`
+
+	// RegistryType refers to type of registry i.e virtual or upstream
+	RegistryType *RegistryType `json:"registryType,omitempty"`
+	RegistryUUID string        `json:"registryUUID"`
+	Uuid         string        `json:"uuid"`
+	Version      *string       `json:"version,omitempty"`
 }
 
 // ArtifactStats Harness Artifact Stats

@@ -25,7 +25,7 @@ import type {
 } from '@harnessio/react-har-service-client'
 import type { PackageMetadata } from '@harnessio/react-har-service-client'
 
-import type { PageType, Parent, RepositoryPackageType } from '@ar/common/types'
+import type { PageType, Parent, RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 import { ArtifactDetailsTab } from '@ar/pages/artifact-details/constants'
 import type { SoftDeleteFilterEnum } from '@ar/constants'
@@ -70,6 +70,7 @@ export interface VersionActionProps {
   digestCount?: number
   readonly?: boolean
   onClose?: () => void
+  repoType?: RepositoryConfigType
 }
 
 export interface ArtifactRowSubComponentProps {

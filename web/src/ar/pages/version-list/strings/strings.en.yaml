@@ -2,6 +2,7 @@ page: Version List Page
 table:
   noVersionsTitle: There are no versions available.
   noArchivedVersionsTitle: There are no archived versions.
+  notScanned: Not Scanned
   columns:
     version: Version
     size: '{{ $.digestList.table.columns.size }}'
@@ -14,9 +15,14 @@ table:
     archivedAt: Archived At
     deployments: '{{ $.versionDetails.tabs.deployments }}'
     tags: Tags
+    scanStatus: Scan Status
 actions:
   deleteVersion: Delete
   archiveVersion: Archive
   restoreVersion: Restore
   quarantine: Quarantine
   removeQuarantine: Remove From Quarantine
+  reEvaluate: Re-Evaluate
+messages:
+  reEvaluateSuccess: Submitted request for Re-Evaluation successfully!
+  reEvaluateFailed: Failed to submit request!

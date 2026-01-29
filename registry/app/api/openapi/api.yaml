@@ -2361,6 +2361,8 @@ components:
         isDeleted:
           type: boolean
           description: True if the registry is soft-deleted
+        registryType:
+          $ref: "#/components/schemas/RegistryType"
       required:
         - name
         - registryIdentifier

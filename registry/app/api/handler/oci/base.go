@@ -16,6 +16,7 @@ package oci
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -218,16 +219,12 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 	rootIdentifier, registryIdentifier, image, ref, dgst, tag := ExtractPathVars(r.Context(), path, paramMap)
 	// Skip rootIdentifier validation since it may not be OCI compliant. We do modifications on it before it reaches here.
 
-	rootSpaceID, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceFinder.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root spaceID not found: %s", rootIdentifier)
+		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
 		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
-	rootSpace, err := h.SpaceFinder.FindByID(ctx, rootSpaceID)
-	if err != nil {
-		log.Ctx(ctx).Error().Msgf("Root space not found: %d", rootSpaceID)
-		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
-	}
+	rootSpaceID := rootSpace.ID
 
 	registry, err := h.registryFinder.FindByRootParentID(ctx, rootSpaceID, registryIdentifier)
 	if err != nil {
@@ -236,6 +233,20 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 		)
 		return pkg.RegistryInfo{}, errcode.ErrCodeRegNotFound
 	}
+
+	if registry.PackageType != artifact.PackageTypeDOCKER {
+		log.Ctx(ctx).Error().Msgf(
+			"Package type mismatch: registry %s is type %s, but Docker/OCI artifact upload attempted",
+			registryIdentifier, registry.PackageType,
+		)
+		return pkg.RegistryInfo{}, errcode.ErrCodeNameUnknown.WithMessage(
+			fmt.Sprintf(
+				"404 Not Found - Registry package type mismatch: %s != %s",
+				registry.PackageType, artifact.PackageTypeDOCKER,
+			),
+		)
+	}
+
 	_, err = h.SpaceFinder.FindByID(r.Context(), registry.ParentID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Parent space not found: %d", registry.ParentID)

@@ -41,7 +41,7 @@ function EvaluationInformationContent({ data }: EvaluationInformationContentProp
       <Container className={css.gridContainer}>
         <InformationMetrics.Text
           label={getString('violationsList.violationDetailsModal.evaluationDetailsSection.firstDetected')}
-          value={getReadableDateTime(Number(data.lastEvaluatedAt), DEFAULT_DATE_TIME_FORMAT) || getString('na')}
+          value={getReadableDateTime(Number(data.createdAt), DEFAULT_DATE_TIME_FORMAT) || getString('na')}
         />
         <InformationMetrics.Text
           label={getString('violationsList.violationDetailsModal.evaluationDetailsSection.lastDetected')}

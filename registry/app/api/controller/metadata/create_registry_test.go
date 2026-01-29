@@ -190,7 +190,8 @@ func TestCreateRegistry(t *testing.T) {
 					})).Return(baseInfo.RegistryID, nil).Once()
 
 				// 5. Mock registry retrieval.
-				mockRegistryRepo.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
+				// Get is called twice: once in createRegistry to fetch UUID, once in main flow
+				mockRegistryRepo.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Twice()
 				mockRegFinder.On("Get", mock.Anything, baseInfo.RegistryID).Return(registry, nil).Once()
 				mockSpaceFinder.On("FindByID", mock.Anything, mock.Anything).Return(space, nil).Once()
 				mockPublicAccessService.On("Set", mock.Anything, mock.Anything, mock.Anything,

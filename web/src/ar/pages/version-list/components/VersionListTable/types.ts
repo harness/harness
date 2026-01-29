@@ -16,6 +16,8 @@
 
 import type { CellProps, Renderer } from 'react-table'
 import type { StringsMap } from '@ar/strings/types'
+import type { Parent, RepositoryConfigType } from '@ar/common/types'
+import type { FeatureFlags } from '@ar/MFEAppTypes'
 
 export interface VersionListExpandedColumnProps {
   expandedRows: Set<string>
@@ -25,6 +27,7 @@ export interface VersionListExpandedColumnProps {
 export enum VersionListColumnEnum {
   Name = 'Name',
   Size = 'Size',
+  ScanStatus = 'ScanStatus',
   DownloadCount = 'DownloadCount',
   FileCount = 'FileCount',
   LastModified = 'LastModified',
@@ -42,4 +45,7 @@ export interface IVersionListTableColumnConfigType<T = unknown> {
   hidden?: boolean
   width?: string
   disableSortBy?: boolean
+  parent?: Parent
+  featureFlag?: FeatureFlags
+  registryType?: RepositoryConfigType
 }

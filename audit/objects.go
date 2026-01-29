@@ -68,3 +68,25 @@ type RegistryUpstreamProxyConfigObject struct {
 	CreatedBy  int64
 	UpdatedBy  int64
 }
+
+type RegistryUpstreamProxyConfigObjectEnhanced struct {
+	UUID            string
+	Name            string
+	ParentID        int64
+	RootParentID    int64
+	Description     string
+	Type            string
+	PackageType     string
+	UpstreamProxies []int64
+	AllowedPattern  []string
+	BlockedPattern  []string
+	Labels          []string
+	Source          string
+	URL             string
+	AuthType        string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	CreatedBy       int64
+	UpdatedBy       int64
+	IsPublic        bool
+}

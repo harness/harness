@@ -48,6 +48,7 @@ const (
 	labelSeparatorEnd   string          = "^_%"
 	downloadCount       string          = "download_count"
 	imageName           string          = "image_name"
+	driverPostgres      string          = "postgres"
 	name                string          = "name"
 	postgresStringAgg   string          = "string_agg"
 	sqliteGroupConcat   string          = "group_concat"
@@ -95,6 +96,7 @@ type artifactMetadataDB struct {
 	QuarantineReason *string                `db:"quarantine_reason"`
 	ArtifactType     *artifact.ArtifactType `db:"artifact_type"`
 	Tags             *string                `db:"tags"`
+	RegistryType     *artifact.RegistryType `db:"registry_type"`
 }
 
 type tagMetadataDB struct {
@@ -109,6 +111,7 @@ type tagMetadataDB struct {
 	MediaType     string               `db:"mt_media_type"`
 	Digest        []byte               `db:"manifest_digest"`
 	DownloadCount int64                `db:"download_count"`
+	ArtifactUUID  sql.NullString       `db:"artifact_uuid"`
 }
 
 type ociVersionMetadataDB struct {
@@ -123,6 +126,7 @@ type ociVersionMetadataDB struct {
 	Digest        []byte               `db:"manifest_digest"`
 	DownloadCount int64                `db:"download_count"`
 	Tags          *string              `db:"tags"`
+	ArtifactUUID  sql.NullString       `db:"artifact_uuid"`
 }
 
 type tagDetailDB struct {
@@ -401,7 +405,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	finalQuery := fmt.Sprintf(`
     SELECT repo_name, name, package_type, version, modified_at,
            labels, download_count, is_quarantined, quarantine_reason, artifact_type,
-		   registry_uuid, uuid
+		   registry_uuid, uuid, registry_type
     FROM (%s UNION ALL %s) AS combined
 `, q1SQL, q2SQL)
 
@@ -448,6 +452,7 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		COALESCE(t2.download_count,0) as download_count,
         false as is_quarantined,
 		'' as quarantine_reason,
+        r.registry_type as registry_type,
         i.image_type as artifact_type `,
 	).
 		From("tags t").
@@ -568,6 +573,7 @@ func (t tagDao) getCoreArtifactsQuery(
 		r.registry_package_type as package_type,
 		ar.artifact_version as version, 
 		ar.artifact_updated_at as modified_at, 
+        r.registry_type as registry_type,
 		i.image_type as artifact_type`,
 	).
 		From("artifacts ar").
@@ -614,7 +620,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 
 	// Pick aggregation function and decode function depending on database
 	var tagAggExpr, decodeFunction string
-	if driver == "postgres" {
+	if driver == driverPostgres {
 		tagAggExpr = "STRING_AGG(t.tag_name, ',')"
 		decodeFunction = "decode(ar.artifact_version, 'hex')"
 	} else {
@@ -628,7 +634,7 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 	const placeholderSeparator = ", ?"
 
 	// nolint:nestif
-	if driver == "postgres" {
+	if driver == driverPostgres {
 		// PostgreSQL: sequential parameter numbering across entire query
 		paramIndex := 1
 
@@ -777,6 +783,7 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		COALESCE(t2.download_count, 0) as download_count,
         (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
         qp.quarantined_path_reason as quarantine_reason,
+        r.registry_type as registry_type,
         i.image_type as artifact_type`+suffix,
 	).
 		From("artifacts ar").
@@ -1144,13 +1151,24 @@ func (t tagDao) GetTagMetadata(
 	imageName string,
 	name string,
 ) (*types.OciVersionMetadata, error) {
+	// Build query with database-specific decode function for artifact version comparison
+	var decodeFunction string
+	if t.db.DriverName() == driverPostgres {
+		decodeFunction = "decode(a.artifact_version, 'hex')"
+	} else {
+		decodeFunction = "unhex(a.artifact_version)"
+	}
+
 	q := databaseg.Builder.Select(
-		"registry_package_type as package_type, tag_name as name,"+
-			"tag_updated_at as modified_at, manifest_total_size as size",
+		"registry_package_type as package_type, tag_name as name, "+
+			"tag_updated_at as modified_at, manifest_total_size as size, "+
+			"a.artifact_uuid as artifact_uuid",
 	).
 		From("tags").
 		Join("registries ON tag_registry_id = registry_id").
 		Join("manifests ON manifest_id = tag_manifest_id").
+		LeftJoin("images i ON i.image_registry_id = registry_id AND i.image_name = tag_image_name").
+		LeftJoin("artifacts a ON a.artifact_image_id = i.image_id AND manifest_digest = "+decodeFunction).
 		Where(
 			"registry_parent_id = ? AND registry_name = ?"+
 				" AND tag_image_name = ? AND tag_name = ?", parentID, repoKey, imageName, name,
@@ -1182,12 +1200,24 @@ func (t tagDao) GetOCIVersionMetadata(
 	if err != nil {
 		return nil, err
 	}
+
+	// Build query with database-specific decode function for artifact version comparison
+	var decodeFunction string
+	if t.db.DriverName() == driverPostgres {
+		decodeFunction = "decode(a.artifact_version, 'hex')"
+	} else {
+		decodeFunction = "unhex(a.artifact_version)"
+	}
+
 	q := databaseg.Builder.Select(
 		"registry_package_type as package_type, manifest_digest, "+
-			"manifest_created_at as modified_at, manifest_total_size as size",
+			"manifest_created_at as modified_at, manifest_total_size as size, "+
+			"a.artifact_uuid as artifact_uuid",
 	).
 		From("manifests").
 		Join("registries ON manifest_registry_id = registry_id").
+		LeftJoin("images i ON i.image_registry_id = registry_id AND i.image_name = manifest_image_name").
+		LeftJoin("artifacts a ON a.artifact_image_id = i.image_id AND manifest_digest = "+decodeFunction).
 		Where(
 			"registry_parent_id = ? AND registry_name = ?"+
 				" AND manifest_image_name = ? AND manifest_digest = ?", parentID, repoKey, imageName, digestBytes,
@@ -1843,6 +1873,7 @@ func (t tagDao) mapToArtifactMetadata(
 		IsQuarantined:    dst.IsQuarantined,
 		QuarantineReason: dst.QuarantineReason,
 		ArtifactType:     dst.ArtifactType,
+		RegistryType:     dst.RegistryType,
 	}
 
 	if dst.Tags != nil {
@@ -1924,6 +1955,10 @@ func (t tagDao) mapToTagMetadata(
 		tagMetadata.Digest = string(dgst)
 	}
 
+	if dst.ArtifactUUID.Valid {
+		tagMetadata.ArtifactUUID = dst.ArtifactUUID.String
+	}
+
 	return tagMetadata, nil
 }
 
@@ -1944,6 +1979,10 @@ func (t tagDao) mapToOciVersion(
 		ociVersion.Tags = strings.Split(*dst.Tags, ",")
 	} else {
 		ociVersion.Tags = []string{}
+	}
+
+	if dst.ArtifactUUID.Valid {
+		ociVersion.ArtifactUUID = dst.ArtifactUUID.String
 	}
 
 	dgst := types.Digest(util.GetHexEncodedString(dst.Digest))

@@ -426,3 +426,15 @@ func (p *packageWrapper) GetPkgDownloadURL(
 		ctx, rootIdentifier, registryIdentifier, packageName, artifactType, version, filename, filepath,
 	)
 }
+
+func (p *packageWrapper) GetPurlForArtifact(
+	packageType string,
+	packageName string,
+	version string,
+) (string, error) {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return "", fmt.Errorf("unsupported package type: %s", packageType)
+	}
+	return pkg.GetPurlForArtifact(packageName, version)
+}

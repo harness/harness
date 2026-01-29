@@ -25,20 +25,23 @@ import (
 )
 
 type SpaceFinder struct {
-	spaceIDCache   store.SpaceIDCache
-	spacePathCache store.SpacePathCache
-	evictor        cache.Evictor[*types.SpaceCore]
+	spaceIDCache              store.SpaceIDCache
+	spacePathCache            store.SpacePathCache
+	spaceCaseInsensitiveCache store.SpaceCaseInsensitiveCache
+	evictor                   cache.Evictor[*types.SpaceCore]
 }
 
 func NewSpaceFinder(
 	spaceIDCache store.SpaceIDCache,
 	spacePathCache store.SpacePathCache,
+	spaceCaseInsensitiveCache store.SpaceCaseInsensitiveCache,
 	evictor cache.Evictor[*types.SpaceCore],
 ) SpaceFinder {
 	s := SpaceFinder{
-		spaceIDCache:   spaceIDCache,
-		spacePathCache: spacePathCache,
-		evictor:        evictor,
+		spaceIDCache:              spaceIDCache,
+		spacePathCache:            spacePathCache,
+		spaceCaseInsensitiveCache: spaceCaseInsensitiveCache,
+		evictor:                   evictor,
 	}
 
 	return s
@@ -68,6 +71,27 @@ func (s SpaceFinder) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 		spaceID = spacePath.SpaceID
 	}
 
+	spaceCore, err := s.spaceIDCache.Get(ctx, spaceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get space by ID from cache: %w", err)
+	}
+
+	return spaceCore, nil
+}
+
+// FindByRefCaseInsensitive finds a space by reference using case-insensitive lookup.
+func (s SpaceFinder) FindByRefCaseInsensitive(ctx context.Context, spaceRef string) (*types.SpaceCore, error) {
+	// Try parsing as numeric ID first
+	spaceID, err := strconv.ParseInt(spaceRef, 10, 64)
+	if err != nil || spaceID <= 0 {
+		// Not a numeric ID, use case-insensitive cache lookup
+		spaceID, err = s.spaceCaseInsensitiveCache.Get(ctx, spaceRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get space ID by case-insensitive ref from cache: %w", err)
+		}
+	}
+
+	// Now fetch the full space core using the ID
 	spaceCore, err := s.spaceIDCache.Get(ctx, spaceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get space by ID from cache: %w", err)
