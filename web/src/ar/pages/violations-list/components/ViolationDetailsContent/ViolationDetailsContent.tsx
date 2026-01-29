@@ -39,6 +39,7 @@ import css from './ViolationDetailsContent.module.scss'
 
 interface ViolationDetailsContentProps {
   scanId: string
+  policySetRef?: string
   onClose?: () => void
 }
 
@@ -54,7 +55,8 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
     refetch
   } = useGetArtifactScanDetailsQuery({
     queryParams: {
-      account_identifier: scope.accountId || ''
+      account_identifier: scope.accountId || '',
+      policy_set_ref: props.policySetRef
     },
     scan_id: props.scanId
   })

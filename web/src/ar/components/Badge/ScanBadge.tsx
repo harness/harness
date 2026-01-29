@@ -48,7 +48,7 @@ export default function ScanBadge(props: ScanBadgeProps): JSX.Element {
       )
     default:
       return (
-        <Badge className={css.passedStatus} icon="tick-circle" iconProps={{ size: 12 }} onClick={onClick}>
+        <Badge className={css.passedStatus} icon="tick-circle" iconProps={{ size: 12 }}>
           {getString('status.passed')}
         </Badge>
       )

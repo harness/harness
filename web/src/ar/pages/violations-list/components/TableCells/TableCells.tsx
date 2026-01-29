@@ -88,9 +88,9 @@ export const StatusCell: CellType = ({ row }) => {
 
 export const ViolationActionsCell: CellType = ({ row }) => {
   const { original } = row
-  const { id } = original
+  const { id, policySetRef } = original
   const { getString } = useStrings()
-  const [showModal] = useViolationDetailsModal({ scanId: id })
+  const [showModal] = useViolationDetailsModal({ scanId: id, policySetRef })
   return (
     <Button variation={ButtonVariation.SECONDARY} size={ButtonSize.SMALL} onClick={showModal}>
       {getString('violationsList.table.columns.actions.violationDetails')}
