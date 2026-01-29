@@ -19,6 +19,8 @@ package storage
 import (
 	"context"
 
+	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/registry/types"
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
@@ -62,20 +64,30 @@ func NewStorageService(provider DriverProvider, options ...Option) (*Service, er
 	return registry, nil
 }
 
-func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootParentRef string) OciBlobStore {
-	driver, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
+func (storage *Service) OciBlobsStore(
+	ctx context.Context,
+	repoKey string,
+	rootParentRef string,
+	info types.BlobRequestInfo,
+) OciBlobStore {
+	driverResult, err := storage.driverProvider.GetDriver(
+		ctx,
+		types.DriverRequest{
+			BlobRequestInfo: info,
+			ClientIP:        audit.GetRealIP(ctx),
+		})
 	if err != nil {
 		// TODO(Arvind): Return this error
 		log.Fatal().Err(err).Msg("Failed to get storage Driver")
 	}
-	if !driver.IsDefault() {
-		return storage.GlobalBlobsStore(ctx, repoKey, rootParentRef, driver, true)
+	if !driverResult.Default() {
+		return storage.GlobalBlobsStore(ctx, repoKey, rootParentRef, driverResult, true)
 	}
 
 	return &ociBlobStore{
 		repoKey:                repoKey,
 		ctx:                    ctx,
-		driver:                 driver.GetDriver(),
+		driver:                 driverResult.Driver,
 		pathFn:                 PathFn,
 		redirect:               storage.redirect,
 		deleteEnabled:          storage.deleteEnabled,
@@ -84,19 +96,28 @@ func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootP
 	}
 }
 
-func (storage *Service) GenericBlobsStore(ctx context.Context, rootParentRef string) GenericBlobStore {
-	result, err := storage.driverProvider.GetDriver(ctx, DriverSelector{})
+func (storage *Service) GenericBlobsStore(
+	ctx context.Context,
+	rootParentRef string,
+	info types.BlobRequestInfo,
+) GenericBlobStore {
+	result, err := storage.driverProvider.GetDriver(
+		ctx,
+		types.DriverRequest{
+			BlobRequestInfo: info,
+			ClientIP:        audit.GetRealIP(ctx),
+		})
 	if err != nil {
 		// TODO(Arvind): Return this error
 		log.Fatal().Err(err).Msg("Failed to get storage Driver")
 	}
 
-	if !result.IsDefault() {
+	if !result.Default() {
 		return storage.GlobalBlobsStore(ctx, "", rootParentRef, result, false)
 	}
 
 	return &genericBlobStore{
-		driver:        result.GetDriver(),
+		driver:        result.Driver,
 		redirect:      storage.redirect,
 		rootParentRef: rootParentRef,
 	}
@@ -106,12 +127,12 @@ func (storage *Service) GlobalBlobsStore(
 	ctx context.Context,
 	repoKey string,
 	rootParentRef string,
-	result DriverResult,
+	result DriverInfo,
 	oci bool,
 ) GlobalBlobStore {
 	return &blobStore{
 		DriverMeta:             result,
-		driver:                 result.GetDriver(),
+		driver:                 result.Driver,
 		ctx:                    ctx,
 		resumableDigestEnabled: storage.resumableDigestEnabled,
 		redirect:               storage.redirect,

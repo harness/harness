@@ -389,7 +389,12 @@ func (r *LocalRegistry) fetchBlobInternal(
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
-	ctx := r.App.GetBlobsContext(ctx2, info, blobID)
+	ctx := r.App.GetBlobsContext(ctx2, info, types.BlobRequestInfo{
+		Digest:       digest.Digest(info.Digest),
+		BlobID:       blobID,
+		RegistryID:   info.RegistryID,
+		RootParentID: info.RootParentID,
+	})
 	blobs := ctx.OciBlobStore
 
 	dgst = ctx.Digest
@@ -421,7 +426,7 @@ func (r *LocalRegistry) fetchBlobInternal(
 	}
 
 	if redirectURL != "" {
-		hook.EmitReadEventAsync(ctx, r.blobActionHook, info.RootIdentifier, dgst)
+		hook.EmitReadEventAsync(ctx, r.blobActionHook, dgst, blobs.DriverInfo().Req)
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
 
@@ -913,7 +918,10 @@ func (r *LocalRegistry) InitBlobUpload(
 	artInfo pkg.RegistryInfo,
 	fromRepo, mountDigest string,
 ) (*commons.ResponseHeaders, []error) {
-	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, nil)
+	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobRequestInfo{
+		RegistryID:   artInfo.RegistryID,
+		RootParentID: artInfo.RootParentID,
+	})
 	var errList []error
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
@@ -1059,7 +1067,10 @@ func (r *LocalRegistry) PushBlob(
 		Code:    0,
 		Headers: make(map[string]string),
 	}
-	ctx := r.App.GetBlobsContext(ctx2, artInfo, nil)
+	ctx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobRequestInfo{
+		RegistryID:   artInfo.RegistryID,
+		RootParentID: artInfo.RootParentID,
+	})
 	if ctx.UUID != "" {
 		resumeErrs := ResumeBlobUpload(ctx, stateToken) //nolint:contextcheck
 		errs = append(errs, resumeErrs...)
@@ -1149,9 +1160,9 @@ func (r *LocalRegistry) PushBlob(
 		return responseHeaders, errs
 	}
 
-	bucketKey := hook.GetBucketKey(ctx.OciBlobStore.GetDriverDetails())
 	//nolint:contextcheck
-	err = r.blobActionHook.Commit(ctx, artInfo.RootIdentifier, "", desc.Digest, "", "", desc.Size, bucketKey)
+	err = r.blobActionHook.Commit(ctx, "", desc.Digest, "", "", desc.Size, ctx.OciBlobStore.DriverInfo().BucketKey,
+		ctx.OciBlobStore.DriverInfo().Req)
 	if err != nil {
 		errs = append(errs, err)
 		//nolint:contextcheck

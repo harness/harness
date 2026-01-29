@@ -21,6 +21,7 @@ import (
 	"mime/multipart"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/registry/app/crypto"
 	"github.com/harness/gitness/registry/app/events/replication"
@@ -87,7 +88,11 @@ func (f *fileManager) UploadFile(
 	fileReader io.Reader,
 	principalID int64,
 ) (types.FileInfo, error) {
-	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "")
+	info := types.BlobRequestInfo{
+		RegistryID:   regID,
+		RootParentID: rootParentID,
+	}
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", info)
 	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader)
 	if err != nil {
 		return fileInfo, err
@@ -111,7 +116,7 @@ func (f *fileManager) UploadFile(
 // called once per request.
 func (f *fileManager) getBlobsContext(
 	c context.Context, registryIdentifier,
-	rootIdentifier, blobID, sha256 string,
+	rootIdentifier, blobID, sha256 string, info types.BlobRequestInfo,
 ) *Context {
 	ctx := &Context{Context: c}
 
@@ -125,7 +130,7 @@ func (f *fileManager) getBlobsContext(
 	}
 
 	// For default flows
-	ctx.genericBlobStore = f.storageService.GenericBlobsStore(c, rootIdentifier)
+	ctx.genericBlobStore = f.storageService.GenericBlobsStore(c, rootIdentifier, info)
 	return ctx
 }
 
@@ -346,13 +351,21 @@ func (f *fileManager) DownloadFileByPath(
 		return nil, 0, "", usererror.NotFoundf("failed to get the blob for path: %s, "+
 			"with blob id: %s, with error %s", filePath, node.BlobID, err)
 	}
-	blobContext := f.getBlobsContext(ctx, registryIdentifier, rootIdentifier, blob.ID, blob.Sha256)
+
+	parsedUUID, err := uuid.Parse(blob.ID)
+	info := types.BlobRequestInfo{
+		Digest:        digest.NewDigestFromEncoded(digest.SHA256, blob.Sha256),
+		GenericBlobID: parsedUUID,
+		RootParentID:  blob.RootParentID,
+		RegistryID:    registryID,
+	}
+	blobContext := f.getBlobsContext(ctx, registryIdentifier, rootIdentifier, blob.ID, blob.Sha256, info)
 
 	if allowRedirect {
 		fileReader, redirectURL, err = blobContext.genericBlobStore.GetGeneric(ctx, blob.Size, node.Name,
 			rootIdentifier, blob.Sha256)
-		hook.EmitReadEventAsync(ctx, f.blobActionHook, rootIdentifier,
-			digest.NewDigestFromEncoded(digest.SHA256, blob.Sha256))
+		hook.EmitReadEventAsync(ctx, f.blobActionHook, digest.NewDigestFromEncoded(digest.SHA256, blob.Sha256),
+			blobContext.genericBlobStore.DriverInfo().Req)
 	} else {
 		fileReader, err = blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, blob.Sha256, blob.Size)
 	}
@@ -529,8 +542,14 @@ func (f *fileManager) UploadFileNoDBUpdate(
 	rootIdentifier string,
 	file multipart.File,
 	fileReader io.Reader,
+	rootParentID int64,
+	regID int64,
 ) (types.FileInfo, error) {
-	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "")
+	info := types.BlobRequestInfo{
+		RootParentID: rootParentID,
+		RegistryID:   regID,
+	}
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", info)
 	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader)
 	if err != nil {
 		return fileInfo, err
@@ -538,13 +557,20 @@ func (f *fileManager) UploadFileNoDBUpdate(
 	return fileInfo, nil
 }
 
-func (f *fileManager) HeadByDigest(ctx context.Context, rootIdentifier string, info types.FileInfo) (
-	bool,
-	int64,
-	error,
-) {
-	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "")
-	size, err := blobContext.genericBlobStore.StatByDigest(ctx, rootIdentifier, info.Sha256)
+func (f *fileManager) HeadByDigest(
+	ctx context.Context,
+	rootIdentifier string,
+	fileInfo types.FileInfo,
+	rootParentID int64,
+	registryID int64,
+) (bool, int64, error) {
+	info := types.BlobRequestInfo{
+		Digest:       digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
+		RootParentID: rootParentID,
+		RegistryID:   registryID,
+	}
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", info)
+	size, err := blobContext.genericBlobStore.StatByDigest(ctx, rootIdentifier, fileInfo.Sha256)
 	if err != nil {
 		return false, 0, err
 	}
@@ -579,13 +605,11 @@ func (f *fileManager) uploadAndMove(
 		return types.FileInfo{}, err
 	}
 
-	bucketKey := hook.GetBucketKey(blobContext.genericBlobStore.GetDriverDetails())
-	err = f.blobActionHook.Commit(ctx, rootIdentifier,
-		digest.NewDigestFromEncoded(crypto.SHA1, fileInfo.Sha1),
+	err = f.blobActionHook.Commit(ctx, digest.NewDigestFromEncoded(crypto.SHA1, fileInfo.Sha1),
 		digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
 		digest.NewDigestFromEncoded(digest.SHA512, fileInfo.Sha512),
-		digest.NewDigestFromEncoded(crypto.MD5, fileInfo.MD5),
-		fileInfo.Size, bucketKey)
+		digest.NewDigestFromEncoded(crypto.MD5, fileInfo.MD5), fileInfo.Size,
+		blobContext.genericBlobStore.DriverInfo().BucketKey, blobContext.genericBlobStore.DriverInfo().Req)
 	if err != nil {
 		return types.FileInfo{}, fmt.Errorf("failed to commit the file upload %w", err)
 	}
@@ -593,14 +617,21 @@ func (f *fileManager) uploadAndMove(
 	return fileInfo, nil
 }
 
-// DownloadTempFile These type of APIs should not be introduced. Difficult to track objects and all updates should be
+// DownloadFileByDigest These type of APIs should not be introduced. Difficult to track objects and all updates should be
 // done inside nodes tables owned by filemanager. If the object is not there, it is supposed to be GCed.
 func (f *fileManager) DownloadFileByDigest(
 	ctx context.Context,
 	rootIdentifier string,
 	fileInfo types.FileInfo,
+	rootParentID int64,
+	registryID int64,
 ) (fileReader *storage.FileReader, err error) {
-	blobContext := f.getBlobsContext(ctx, "", rootIdentifier, "", "")
+	blobInfo := types.BlobRequestInfo{
+		Digest:       digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
+		RootParentID: rootParentID,
+		RegistryID:   registryID,
+	}
+	blobContext := f.getBlobsContext(ctx, "", rootIdentifier, "", "", blobInfo)
 	reader, err := blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, fileInfo.Sha256, fileInfo.Size)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file with digest: %s %w", fileInfo.Sha256, err)

@@ -23,8 +23,8 @@ import (
 	"strings"
 
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
-	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
 	gitnessenum "github.com/harness/gitness/types/enum"
 
@@ -147,15 +147,28 @@ func (c *APIController) GetRegistryRequestInfo(
 	}, nil
 }
 
-func getManifestConfig(
+// TODO(Arvind) - route via Local.go of docker instead of directly working with storage layer
+func (c *APIController) getManifestConfig(
 	ctx context.Context,
 	digest digest.Digest,
-	rootRef string,
-	store storage.OciBlobStore,
+	info *types.RegistryRequestBaseInfo,
 ) (*manifestConfig, error) {
+	blobsContext := c.App.GetBlobsContext(ctx, pkg.RegistryInfo{
+		ArtifactInfo: &pkg.ArtifactInfo{
+			RegIdentifier: info.RegistryIdentifier,
+			BaseInfo: &pkg.BaseInfo{
+				RootIdentifier: info.RootIdentifier,
+			},
+		},
+		Digest: digest.String(),
+	}, types.BlobRequestInfo{
+		Digest:       digest,
+		RegistryID:   info.RegistryID,
+		RootParentID: info.RootIdentifierID,
+	})
 	var config manifestConfig
 
-	content, err := store.Get(ctx, strings.ToLower(rootRef), digest)
+	content, err := blobsContext.OciBlobStore.Get(ctx, strings.ToLower(info.RootIdentifier), digest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get content for image config: %w", err)
 	}

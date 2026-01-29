@@ -17,6 +17,7 @@ package hook
 import (
 	"context"
 
+	"github.com/harness/gitness/registry/types"
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
@@ -24,43 +25,39 @@ import (
 type BlobActionHook interface {
 	Commit(
 		ctx context.Context,
-		rootIdentifier string,
 		sha1 digest.Digest,
 		sha256 digest.Digest,
 		sha512 digest.Digest,
 		md5 digest.Digest,
 		size int64,
 		bucketKey string,
+		req types.DriverRequest,
 	) error
 
-	EmitReadEvent(
-		ctx context.Context,
-		rootIdentifier string,
-		sha256 digest.Digest,
-	) error
+	EmitReadEvent(ctx context.Context, sha256 digest.Digest, req types.DriverRequest) error
 }
 
 type noOpBlobActionHook struct {
 }
 
-func (b *noOpBlobActionHook) EmitReadEvent(_ context.Context, rootIdentifier string, sha256 digest.Digest) error {
-	log.Info().Msgf("BlobActionHook called for rootParentIdentifier: %s sha256: %s", rootIdentifier, sha256)
+func (b *noOpBlobActionHook) EmitReadEvent(ctx context.Context, sha256 digest.Digest, req types.DriverRequest) error {
+	log.Ctx(ctx).Info().Msgf("BlobActionHook called for data: %v sha256: %s", req, sha256)
 	return nil
 }
 
 func (b *noOpBlobActionHook) Commit(
-	_ context.Context,
-	rootIdentifier string,
+	ctx context.Context,
 	sha1 digest.Digest,
 	sha256 digest.Digest,
 	sha512 digest.Digest,
 	md5 digest.Digest,
 	size int64,
 	bucketKey string,
+	req types.DriverRequest,
 ) error {
-	log.Info().Msgf("BlobActionHook called for rootParentIdentifier: %s sha1: %s sha256: %s "+
+	log.Ctx(ctx).Info().Msgf("BlobActionHook called for data: %v sha1: %s sha256: %s "+
 		"sha512: %s md5: %s size: %d bucketKey: %s",
-		rootIdentifier, sha1, sha256, sha512, md5, size, bucketKey)
+		req, sha1, sha256, sha512, md5, size, bucketKey)
 	return nil
 }
 

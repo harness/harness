@@ -250,12 +250,13 @@ func (c *localRegistry) UploadPackage(
 	var fileExtension string
 	metadata := nugetmetadata.Metadata{}
 
-	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, fileReader)
+	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, fileReader, info.RootParentID,
+		info.RegistryID)
 	if err != nil {
 		return headers, "", fmt.Errorf(
 			"failed to upload file: %s with registry: %d with error: %w", tmpFileName, info.RegistryID, err)
 	}
-	r, err := c.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo)
+	r, err := c.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo, 0, 0)
 	if err != nil {
 		return headers, "", fmt.Errorf(
 			"failed to download file with registry: %d with error: %w",

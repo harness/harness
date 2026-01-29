@@ -44,10 +44,13 @@ type FileManager interface {
 		allowRedirect bool,
 	) (fileReader *storage.FileReader, size int64, redirectURL string, err error)
 
-	DownloadFileByDigest(ctx context.Context, rootIdentifier string, info types.FileInfo) (
-		fileReader *storage.FileReader,
-		err error,
-	)
+	DownloadFileByDigest(
+		ctx context.Context,
+		rootIdentifier string,
+		info types.FileInfo,
+		rootParentID int64,
+		registryID int64,
+	) (fileReader *storage.FileReader, err error)
 
 	DeleteFile(
 		ctx context.Context,
@@ -102,7 +105,17 @@ type FileManager interface {
 		principalID int64,
 	) error
 
-	HeadByDigest(ctx context.Context, rootIdentifier string, filePath types.FileInfo) (bool, int64, error)
+	HeadByDigest(
+		ctx context.Context,
+		rootIdentifier string,
+		filePath types.FileInfo,
+		rootParentID int64,
+		registryID int64,
+	) (
+		bool,
+		int64,
+		error,
+	)
 
 	// SaveNodes TODO: Need to understand the usecase OR deprecate this function
 	SaveNodes(
@@ -164,5 +177,7 @@ type FileManager interface {
 		rootIdentifier string,
 		file multipart.File,
 		fileReader io.Reader,
+		rootParentID int64,
+		regID int64,
 	) (types.FileInfo, error)
 }

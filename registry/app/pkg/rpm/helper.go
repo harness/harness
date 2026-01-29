@@ -58,11 +58,12 @@ func (c *registryHelper) UploadPackage(
 	info rpm.ArtifactInfo,
 	file io.Reader,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
-	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, file)
+	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, file, info.RootParentID,
+		info.RegistryID)
 	if err != nil {
 		return nil, "", err
 	}
-	r, err := c.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo)
+	r, err := c.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo, 0, 0)
 	if err != nil {
 		return nil, "", err
 	}

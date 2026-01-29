@@ -18,56 +18,27 @@ import (
 	"context"
 
 	"github.com/harness/gitness/registry/app/driver"
-
-	"github.com/google/uuid"
+	"github.com/harness/gitness/registry/types"
 )
 
 type Mode string
 
 const (
-	ModeWrite  Mode   = "WRITE"
-	ModeRead   Mode   = "READ"
 	DefaultKey string = "default"
 )
 
-type DriverSelector struct {
-	BucketID      uuid.UUID
-	RootParentID  int64
-	BlobID        int64
-	GenericBlobID uuid.UUID
-	GlobalBlobID  uuid.UUID
-	Mode          Mode
+type DriverInfo struct {
+	Req       types.DriverRequest
+	Driver    driver.StorageDriver
+	BucketKey string
 }
 
-// DriverResult is an extensible interface for GetDriver responses.
-// Implementers can embed BaseDriverResult and add custom fields/methods.
-type DriverResult interface {
-	GetDriver() driver.StorageDriver
-	GetBucketKey() string
-	IsDefault() bool
-}
-
-// BaseDriverResult provides a default implementation of DriverResult.
-type BaseDriverResult struct {
-	Driver driver.StorageDriver
-	Key    string
-}
-
-func (r *BaseDriverResult) GetDriver() driver.StorageDriver {
-	return r.Driver
-}
-
-func (r *BaseDriverResult) GetBucketKey() string {
-	return r.Key
-}
-
-func (r *BaseDriverResult) IsDefault() bool {
-	return r.Key == DefaultKey
-}
-
-// DriverProvider interface is for provider storage drivers dynamically.
 type DriverProvider interface {
-	GetDriver(ctx context.Context, selector DriverSelector) (DriverResult, error)
+	GetDriver(ctx context.Context, selector types.DriverRequest) (DriverInfo, error)
+}
+
+func (r DriverInfo) Default() bool {
+	return r.BucketKey == DefaultKey
 }
 
 // StaticDriverProvider is a simple implementation of StorageDriverProvider
@@ -80,10 +51,10 @@ func NewStaticDriverProvider(d driver.StorageDriver) DriverProvider {
 	return &StaticDriverProvider{Driver: d}
 }
 
-// GetDriver returns the static Driver.
-func (p *StaticDriverProvider) GetDriver(_ context.Context, _ DriverSelector) (DriverResult, error) {
-	return &BaseDriverResult{
-		Driver: p.Driver,
-		Key:    "random",
+func (p *StaticDriverProvider) GetDriver(_ context.Context, req types.DriverRequest) (DriverInfo, error) {
+	return DriverInfo{
+		Req:       req,
+		Driver:    p.Driver,
+		BucketKey: DefaultKey,
 	}, nil
 }

@@ -168,7 +168,7 @@ type OciBlobStore interface {
 	Resume(ctx context.Context, id string) (BlobWriter, error)
 
 	Path() string
-	GetDriverDetails() DriverResult
+	DriverInfo() DriverInfo
 }
 
 // GenericBlobStore represent the entire suite of Generic blob related operations. Such an
@@ -189,7 +189,7 @@ type GenericBlobStore interface {
 		error,
 	)
 	StatByDigest(ctx context.Context, rootIdentifier, sha256 string) (int64, error)
-	GetDriverDetails() DriverResult
+	DriverInfo() DriverInfo
 }
 
 type GlobalBlobStore interface {

@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
+	types2 "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -160,7 +161,12 @@ var StorageServiceSet = wire.NewSet(StorageServiceProvider)
 var AppSet = wire.NewSet(NewApp)
 
 // OciBlobStoreFactory is a function that creates an OciBlobStore with the provided context and identifiers.
-type OciBlobStoreFactory func(ctx context.Context, repoKey string, rootParentRef string) storage.OciBlobStore
+type OciBlobStoreFactory func(
+	ctx context.Context,
+	repoKey string,
+	rootParentRef string,
+	info types2.BlobRequestInfo,
+) storage.OciBlobStore
 
 // ProvideOciBlobStore returns a factory function that creates an OciBlobStore with the provided context.
 func ProvideOciBlobStore(storageService *storage.Service) OciBlobStoreFactory {

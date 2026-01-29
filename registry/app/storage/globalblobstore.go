@@ -44,7 +44,7 @@ Important notes:
  2.All Path for S3 should remain here.
 */
 type blobStore struct {
-	DriverMeta DriverResult
+	DriverMeta DriverInfo
 	driver     driver.StorageDriver
 	// only to be used where context can't come through method args
 	ctx                    context.Context
@@ -68,11 +68,7 @@ func (bs *blobStore) GetV2NoRedirect(
 ) (*FileReader, error) {
 	log.Ctx(ctx).Debug().Msg("(*globalBlobStore).GetV2")
 
-	path, err := pathFor(
-		globalBlobPathSpec{
-			digest: digest.Digest(sha256),
-		},
-	)
+	path, err := bs.globalPathFn(digest.Digest(sha256))
 
 	if err != nil {
 		return nil, err
@@ -94,11 +90,7 @@ func (bs *blobStore) GetGeneric(
 ) (*FileReader, string, error) {
 	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*globalBlobStore).Get")
 
-	path, err := pathFor(
-		globalBlobPathSpec{
-			digest: digest.NewDigestFromEncoded(digest.SHA256, sha256),
-		},
-	)
+	path, err := bs.globalPathFn(digest.NewDigestFromEncoded(digest.SHA256, sha256))
 
 	if err != nil {
 		return nil, "", err
@@ -216,11 +208,8 @@ func (bs *blobStore) move(
 		return fmt.Errorf("failed to create srcPath for root: %s, id: %s, digest: %s, %w", rootIdentifier, id, sha256,
 			err)
 	}
-	dstPath, err := pathFor(
-		globalBlobPathSpec{
-			digest: digest.NewDigestFromEncoded(digest.SHA256, sha256),
-		},
-	)
+
+	dstPath, err := bs.globalPathFn(digest.NewDigestFromEncoded(digest.SHA256, sha256))
 	if err != nil {
 		return fmt.Errorf("failed to create dstPath for root: %s, id: %s, digest: %s, %w", rootIdentifier, id, sha256,
 			err)
@@ -235,12 +224,7 @@ func (bs *blobStore) move(
 func (bs *blobStore) StatByDigest(ctx context.Context, rootIdentifier, sha256 string) (int64, error) {
 	log.Ctx(ctx).Debug().Msg("(*globalBlobStore).StatByDigest")
 
-	path, err := pathFor(
-		globalBlobPathSpec{
-			digest: digest.NewDigestFromEncoded(digest.SHA256, sha256),
-		},
-	)
-
+	path, err := bs.globalPathFn(digest.NewDigestFromEncoded(digest.SHA256, sha256))
 	if err != nil {
 		return 0, err
 	}
@@ -252,7 +236,7 @@ func (bs *blobStore) StatByDigest(ctx context.Context, rootIdentifier, sha256 st
 	return fileInfo.Size(), nil
 }
 
-func (bs *blobStore) GetDriverDetails() DriverResult {
+func (bs *blobStore) DriverInfo() DriverInfo {
 	return bs.DriverMeta
 }
 
@@ -468,11 +452,8 @@ func (bs *blobStore) Stat(
 	ctx context.Context, pathPrefix string,
 	dgst digest.Digest,
 ) (manifest.Descriptor, error) {
-	path, err := pathFor(
-		globalBlobPathSpec{
-			digest: dgst,
-		},
-	)
+
+	path, err := bs.globalPathFn(dgst)
 	if err != nil {
 		return manifest.Descriptor{}, err
 	}

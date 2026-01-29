@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/refcache"
@@ -78,6 +79,7 @@ type APIController struct {
 	PackageWrapper               interfaces.PackageWrapper
 	PublicAccess                 publicaccess.Service
 	StorageService               *storage.Service
+	App                          *docker.App
 }
 
 func NewAPIController(

@@ -28,6 +28,7 @@ import (
 	registrystorage "github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
+	registryTypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
 
 	"github.com/opencontainers/go-digest"
@@ -124,7 +125,11 @@ func (app *App) configureSecret(configuration *types.Config) {
 
 // context constructs the context object for the application. This only be
 // called once per request.
-func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID any) *Context {
+func (app *App) GetBlobsContext(
+	c context.Context,
+	info pkg.RegistryInfo,
+	blobInfo registryTypes.BlobRequestInfo,
+) *Context {
 	ctx := &Context{
 		App:          app,
 		Context:      c,
@@ -135,14 +140,14 @@ func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID
 	}
 
 	// For reads and lazy replication
-	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobID,
+	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobInfo.BlobID,
 		digest.Digest(info.Digest).String()); result != nil {
 		ctx.OciBlobStore = result.OciStore
 	}
 
 	// Default read/write
 	if ctx.OciBlobStore == nil {
-		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier)
+		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier, blobInfo)
 	}
 	return ctx
 }

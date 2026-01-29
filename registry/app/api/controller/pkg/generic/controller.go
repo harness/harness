@@ -324,7 +324,8 @@ func (c Controller) ParseAndUploadToTmp(
 
 		// Check if this is the file part we're looking for
 		if formName == fileToFind {
-			fileInfo, err = c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, part)
+			fileInfo, err = c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, part, info.RootParentID,
+				info.RegistryID)
 
 			if err != nil {
 				return types.FileInfo{}, formValues, err

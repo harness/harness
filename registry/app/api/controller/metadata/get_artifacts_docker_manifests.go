@@ -120,8 +120,7 @@ func (c *APIController) getManifestList(
 			}
 			return nil, err
 		}
-		mConfig, err := getManifestConfig(ctx, referencedManifest.Configuration.Digest, regInfo.RootIdentifier,
-			c.StorageService.OciBlobsStore(ctx, regInfo.RegistryRef, regInfo.RootIdentifier))
+		mConfig, err := c.getManifestConfig(ctx, referencedManifest.Configuration.Digest, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -226,8 +225,7 @@ func (c *APIController) ProcessManifest(
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	switch reqManifest := manifest.(type) {
 	case *schema2.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier,
-			c.StorageService.OciBlobsStore(ctx, regInfo.RegistryRef, regInfo.RootIdentifier))
+		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -237,8 +235,7 @@ func (c *APIController) ProcessManifest(
 		}
 		manifestDetailsList = append(manifestDetailsList, md)
 	case *ocischema.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier,
-			c.StorageService.OciBlobsStore(ctx, regInfo.RegistryRef, regInfo.RootIdentifier))
+		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, nil)
 		if err != nil {
 			return nil, err
 		}

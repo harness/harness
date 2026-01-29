@@ -322,6 +322,6 @@ func (bs *ociBlobStore) newBlobUpload(
 	return bw, nil
 }
 
-func (bs *ociBlobStore) GetDriverDetails() DriverResult {
-	return nil
+func (bs *ociBlobStore) DriverInfo() DriverInfo {
+	return DriverInfo{}
 }
