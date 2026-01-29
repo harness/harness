@@ -46,3 +46,20 @@
   --typography-weight: 400;
   --line-height: 20px;
 }
+
+.tableRow {
+  position: relative;
+}
+
+.tableRowSubComponent {
+  position: relative;
+  min-height: 100px;
+}
+
+.activeRow {
+  border-color: var(--primary-7) !important;
+  :global(.TableV2--cells) {
+    background-color: var(--primary-1) !important;
+    border: 1px solid var(--primary-2) !important;
+  }
+}

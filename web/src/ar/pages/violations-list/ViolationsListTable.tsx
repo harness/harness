@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import classNames from 'classnames'
-import type { Column } from 'react-table'
-import { PaginationProps, TableV2 } from '@harnessio/uicore'
+import type { Column, Row } from 'react-table'
+import { Container, PaginationProps, TableV2 } from '@harnessio/uicore'
 import type { ArtifactScan, ListArtifactScanResponseResponse } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
+import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
+import { handleToggleExpandableRow } from '@ar/components/TableCells/utils'
 
 import {
   DependencyAndVersionCell,
   PolicySetName,
+  PolicySetSpec,
   RegistryNameCell,
   StatusCell,
+  ToggleAccordionCell,
   ViolationActionsCell
 } from './components/TableCells/TableCells'
 import css from './ViolationsListPage.module.scss'
@@ -43,6 +47,7 @@ export interface ViolationsListTableProps {
 
 export default function ViolationsListTable(props: ViolationsListTableProps): JSX.Element {
   const { data, gotoPage, onPageSizeChange } = props
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
@@ -57,8 +62,28 @@ export default function ViolationsListTable(props: ViolationsListTableProps): JS
     onPageSizeChange
   })
 
+  const getRowId = (rowData: ArtifactScan) => {
+    return `${rowData.registryId}/${rowData.packageName}:${rowData.version}`
+  }
+
+  const onToggleRow = useCallback((rowData: ArtifactScan): void => {
+    const value = getRowId(rowData)
+    setExpandedRows(handleToggleExpandableRow(value))
+  }, [])
+
   const columns: Column<ArtifactScan>[] = React.useMemo(() => {
     return [
+      {
+        Header: '',
+        accessor: 'select',
+        id: 'rowSelectOrExpander',
+        Cell: ToggleAccordionCell,
+        disableSortBy: true,
+        expandedRows,
+        setExpandedRows,
+        getRowId,
+        width: '10%'
+      },
       {
         Header: getString('violationsList.table.columns.package'),
         accessor: 'packageName',
@@ -74,16 +99,21 @@ export default function ViolationsListTable(props: ViolationsListTableProps): JS
         width: '100%'
       },
       {
-        Header: getString('violationsList.table.columns.policySet'),
-        accessor: 'policySetName',
-        Cell: PolicySetName,
-        disableSortBy: true,
-        width: '100%'
-      },
-      {
         Header: getString('violationsList.table.columns.status'),
         accessor: 'scanStatus',
         Cell: StatusCell,
+        disableSortBy: true,
+        width: '100%'
+      }
+    ].filter(Boolean) as unknown as Column<ArtifactScan>[]
+  }, [getString, expandedRows, setExpandedRows])
+
+  const subRowColumns: Column<PolicySetSpec>[] = React.useMemo(() => {
+    return [
+      {
+        Header: getString('violationsList.table.columns.policySet'),
+        accessor: 'name',
+        Cell: PolicySetName,
         disableSortBy: true,
         width: '100%'
       },
@@ -94,8 +124,26 @@ export default function ViolationsListTable(props: ViolationsListTableProps): JS
         disableSortBy: true,
         width: '100%'
       }
-    ].filter(Boolean) as unknown as Column<ArtifactScan>[]
+    ].filter(Boolean) as unknown as Column<PolicySetSpec>[]
   }, [getString])
+
+  const renderRowSubComponent = useCallback(
+    ({ row }: { row: Row<ArtifactScan> }) => (
+      <Container onClick={killEvent}>
+        <TableV2<PolicySetSpec>
+          className={classNames(css.table)}
+          columns={subRowColumns}
+          data={row.original.policySets.map(each => ({
+            name: each.policySetName,
+            identifier: each.policySetRef,
+            scanId: row.original.id
+          }))}
+          sortable={false}
+        />
+      </Container>
+    ),
+    [subRowColumns]
+  )
 
   return (
     <TableV2<ArtifactScan>
@@ -104,6 +152,10 @@ export default function ViolationsListTable(props: ViolationsListTableProps): JS
       data={scans}
       pagination={paginationProps}
       sortable={false}
+      renderRowSubComponent={renderRowSubComponent}
+      getRowClassName={row => classNames(css.tableRow, { [css.activeRow]: expandedRows.has(getRowId(row.original)) })}
+      onRowClick={onToggleRow}
+      autoResetExpanded={false}
     />
   )
 }

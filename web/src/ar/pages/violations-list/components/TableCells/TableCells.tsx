@@ -16,7 +16,7 @@
 
 import React from 'react'
 import type { ArtifactScan } from '@harnessio/react-har-service-client'
-import type { TableInstance, ColumnInstance, Row, Cell, CellValue, Renderer } from 'react-table'
+import type { TableInstance, ColumnInstance, Row, Cell, CellValue, Renderer, UseExpandedRowProps } from 'react-table'
 import { Button, ButtonSize, ButtonVariation, Layout } from '@harnessio/uicore'
 import TableCells from '@ar/components/TableCells/TableCells'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
@@ -35,7 +35,37 @@ type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance
   value: CellValue<V>
 }
 
+export interface PolicySetSpec {
+  name?: string
+  identifier: string
+  scanId: string
+}
+
 type CellType = Renderer<CellTypeWithActions<ArtifactScan>>
+
+export type ArtifactListExpandedColumnProps = {
+  expandedRows: Set<string>
+  setExpandedRows: React.Dispatch<React.SetStateAction<Set<string>>>
+  getRowId: (rowData: ArtifactScan) => string
+}
+
+export const ToggleAccordionCell: Renderer<{
+  row: UseExpandedRowProps<ArtifactScan> & Row<ArtifactScan>
+  column: ColumnInstance<ArtifactScan> & ArtifactListExpandedColumnProps
+}> = ({ row, column }) => {
+  const { expandedRows, setExpandedRows, getRowId } = column
+  const data = row.original
+  return (
+    <TableCells.ToggleAccordionCell
+      expandedRows={expandedRows}
+      setExpandedRows={setExpandedRows}
+      value={getRowId(data)}
+      initialIsExpanded={row.isExpanded}
+      getToggleRowExpandedProps={row.getToggleRowExpandedProps}
+      onToggleRowExpanded={row.toggleRowExpanded}
+    />
+  )
+}
 
 export const DependencyAndVersionCell: CellType = ({ row }) => {
   const { original } = row
@@ -73,24 +103,26 @@ export const RegistryNameCell: CellType = ({ row }) => {
   )
 }
 
-export const PolicySetName: CellType = ({ row }) => {
-  const { original } = row
-  const { policySetName, policySetRef } = original
-  const getPolicySetDetailsPageUrl = useGetPolicySetDetailsPageUrl(policySetRef)
-  return <TableCells.LinkCell linkTo={getPolicySetDetailsPageUrl} label={policySetName || policySetRef} />
-}
-
 export const StatusCell: CellType = ({ row }) => {
   const { original } = row
   const { scanStatus, id } = original
   return <ScanBadgeComponent scanId={id} status={scanStatus} />
 }
 
-export const ViolationActionsCell: CellType = ({ row }) => {
+type PolicySetCellType = Renderer<CellTypeWithActions<PolicySetSpec>>
+
+export const PolicySetName: PolicySetCellType = ({ row }) => {
   const { original } = row
-  const { id, policySetRef } = original
+  const { name, identifier } = original
+  const getPolicySetDetailsPageUrl = useGetPolicySetDetailsPageUrl(identifier)
+  return <TableCells.LinkCell linkTo={getPolicySetDetailsPageUrl} label={name || identifier} />
+}
+
+export const ViolationActionsCell: PolicySetCellType = ({ row }) => {
+  const { original } = row
+  const { scanId, identifier } = original
   const { getString } = useStrings()
-  const [showModal] = useViolationDetailsModal({ scanId: id, policySetRef })
+  const [showModal] = useViolationDetailsModal({ scanId, policySetRef: identifier })
   return (
     <Button variation={ButtonVariation.SECONDARY} size={ButtonSize.SMALL} onClick={showModal}>
       {getString('violationsList.table.columns.actions.violationDetails')}

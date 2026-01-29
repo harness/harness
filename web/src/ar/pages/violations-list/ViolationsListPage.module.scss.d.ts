@@ -16,8 +16,11 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const activeRow: string
 export declare const cardsContainer: string
 export declare const pageBody: string
 export declare const subHeader: string
 export declare const subHeaderItems: string
 export declare const table: string
+export declare const tableRow: string
+export declare const tableRowSubComponent: string

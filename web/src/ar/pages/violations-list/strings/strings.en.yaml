@@ -21,9 +21,19 @@ violationDetailsModal:
     upstreamProxy: Upstream Proxy
     status: Status
     policySetViolated: Policy Set Violated
-    category: Category
   violatedPoliciesSection:
+    category: Category
     title: Violated Policies
+    packageAgeViolation:
+      packageAgeThreshold: Package Age Threshold
+      publishedOn: Published On
+    licenseViolation:
+      allowedLicenses: Allowed Licenses
+      blockedLicense: Blocked License
+    securityViolation:
+      cveId: CVE ID
+      cvssScore: CVSS Score
+      cvssThreshold: CVSS Threshold
   fixInformationSection:
     title: Fix Information
     fixAvailable: Fix Available

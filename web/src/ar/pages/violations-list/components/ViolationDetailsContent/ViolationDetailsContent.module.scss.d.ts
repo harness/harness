@@ -21,4 +21,5 @@ export declare const contentContainer: string
 export declare const footerContainer: string
 export declare const gridContainer: string
 export declare const pageBody: string
+export declare const securityViolationGridContainer: string
 export declare const titleContainer: string

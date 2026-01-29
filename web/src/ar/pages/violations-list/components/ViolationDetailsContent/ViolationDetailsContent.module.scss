@@ -32,6 +32,12 @@
   gap: var(--spacing-medium);
 }
 
+.securityViolationGridContainer {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  gap: var(--spacing-medium);
+}
+
 .titleContainer {
   position: sticky;
   top: 0px;

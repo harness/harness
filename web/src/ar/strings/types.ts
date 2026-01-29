@@ -433,7 +433,6 @@ export interface StringsMap {
   'violationsList.table.columns.status': string
   'violationsList.violationDetailsModal.actions.reEvaluate': string
   'violationsList.violationDetailsModal.actions.requestException': string
-  'violationsList.violationDetailsModal.basicInformationSection.category': string
   'violationsList.violationDetailsModal.basicInformationSection.packageName': string
   'violationsList.violationDetailsModal.basicInformationSection.policySetViolated': string
   'violationsList.violationDetailsModal.basicInformationSection.status': string
@@ -447,6 +446,14 @@ export interface StringsMap {
   'violationsList.violationDetailsModal.fixInformationSection.fixedVersion': string
   'violationsList.violationDetailsModal.fixInformationSection.title': string
   'violationsList.violationDetailsModal.title': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.category': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.licenseViolation.allowedLicenses': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.licenseViolation.blockedLicense': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.packageAgeViolation.packageAgeThreshold': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.packageAgeViolation.publishedOn': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cveId': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssScore': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssThreshold': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.title': string
   'webhookDetails.tabs.configuration': string
   'webhookDetails.tabs.executions': string
