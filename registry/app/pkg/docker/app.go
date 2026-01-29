@@ -57,7 +57,7 @@ func NewApp(
 	spaceStore corestore.SpaceStore,
 	cfg *types.Config,
 	storageService *registrystorage.Service,
-	driverProvider registrystorage.DriverProvider,
+	storageResolver registrystorage.StorageResolver,
 	gcService gc.Service,
 	bucketService BucketService,
 ) *App {
@@ -68,7 +68,7 @@ func NewApp(
 		bucketService:  bucketService,
 	}
 	app.configureSecret(cfg) //nolint:contextcheck
-	gcService.Start(ctx, spaceStore, blobRepo, driverProvider, cfg)
+	gcService.Start(ctx, spaceStore, blobRepo, storageResolver, cfg)
 	return app
 }
 
@@ -79,7 +79,7 @@ func (app *App) StorageService() *registrystorage.Service {
 
 func GetStorageService(
 	cfg *types.Config,
-	provider registrystorage.DriverProvider,
+	resolver registrystorage.StorageResolver,
 ) *registrystorage.Service {
 	options := registrystorage.GetRegistryOptions()
 	if cfg.Registry.Storage.S3Storage.Delete {
@@ -92,7 +92,7 @@ func GetStorageService(
 		log.Info().Msg("backend redirection disabled")
 	}
 
-	storageService, err := registrystorage.NewStorageService(provider, options...)
+	storageService, err := registrystorage.NewStorageService(resolver, options...)
 	if err != nil {
 		panic("could not create storage service: " + err.Error())
 	}
@@ -128,7 +128,7 @@ func (app *App) configureSecret(configuration *types.Config) {
 func (app *App) GetBlobsContext(
 	c context.Context,
 	info pkg.RegistryInfo,
-	blobInfo registryTypes.BlobRequestInfo,
+	blobLocator registryTypes.BlobLocator,
 ) *Context {
 	ctx := &Context{
 		App:          app,
@@ -140,14 +140,14 @@ func (app *App) GetBlobsContext(
 	}
 
 	// For reads and lazy replication
-	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobInfo.BlobID,
+	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator.BlobID,
 		digest.Digest(info.Digest).String()); result != nil {
 		ctx.OciBlobStore = result.OciStore
 	}
 
 	// Default read/write
 	if ctx.OciBlobStore == nil {
-		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier, blobInfo)
+		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator)
 	}
 	return ctx
 }

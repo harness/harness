@@ -79,7 +79,7 @@ type APIController struct {
 	PackageWrapper               interfaces.PackageWrapper
 	PublicAccess                 publicaccess.Service
 	StorageService               *storage.Service
-	App                          *docker.App
+	app                          *docker.App
 }
 
 func NewAPIController(
@@ -117,6 +117,7 @@ func NewAPIController(
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.Service,
 	storageService *storage.Service,
+	app *docker.App,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
@@ -153,5 +154,6 @@ func NewAPIController(
 		PackageWrapper:               packageWrapper,
 		PublicAccess:                 publicAccess,
 		StorageService:               storageService,
+		app:                          app,
 	}
 }

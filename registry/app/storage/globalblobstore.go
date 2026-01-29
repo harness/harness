@@ -36,31 +36,27 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// blobStore
+// blobStore implements both OciBlobStore and GenericBlobStore for global/non-default buckets.
 /*
 Important notes:
- 1.This relies on digest.Digest as Storage relies only on sha256 and cannot rely on types.Digest. Any caller should
-   do the conversion before reaching here.
- 2.All Path for S3 should remain here.
+ 1. This relies on digest.Digest as Storage relies only on sha256 and cannot rely on types.Digest.
+    Any caller should do the conversion before reaching here.
+ 2. All Path for S3 should remain here.
 */
-type blobStore struct {
-	DriverMeta DriverInfo
-	driver     driver.StorageDriver
-	// only to be used where context can't come through method args
+type globalBlobStore struct {
+	bucketKey              string
+	driver                 driver.StorageDriver
 	ctx                    context.Context
 	resumableDigestEnabled bool
 	redirect               bool
 	deleteEnabled          bool
-	// To be cleaned up
-	rootParentRef    string
-	repoKey          string
-	multipartEnabled bool
+	multipartEnabled       bool
 }
 
-var _ OciBlobStore = &blobStore{}
-var _ GenericBlobStore = &blobStore{}
+var _ OciBlobStore = &globalBlobStore{}
+var _ GenericBlobStore = &globalBlobStore{}
 
-func (bs *blobStore) GetV2NoRedirect(
+func (bs *globalBlobStore) GetV2NoRedirect(
 	ctx context.Context,
 	_ string,
 	sha256 string,
@@ -81,7 +77,7 @@ func (bs *blobStore) GetV2NoRedirect(
 	return br, nil
 }
 
-func (bs *blobStore) GetGeneric(
+func (bs *globalBlobStore) GetGeneric(
 	ctx context.Context,
 	size int64,
 	filename string,
@@ -116,7 +112,7 @@ func (bs *blobStore) GetGeneric(
 }
 
 // Create begins a blob write session, returning a handle.
-func (bs *blobStore) CreateGeneric(ctx context.Context, rootIdentifier string) (BlobWriter, error) {
+func (bs *globalBlobStore) CreateGeneric(ctx context.Context, rootIdentifier string) (BlobWriter, error) {
 	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*globalBlobStore).Create")
 
 	id := uuid.NewString()
@@ -129,19 +125,16 @@ func (bs *blobStore) CreateGeneric(ctx context.Context, rootIdentifier string) (
 		return nil, err
 	}
 
-	return bs.newBlobUpload(ctx, id, path, rootIdentifier, false)
+	return bs.newBlobUpload(ctx, id, path, false)
 }
 
-func (bs *blobStore) newBlobUpload(ctx context.Context, id, path, rootIdentifier string, appendMode bool) (
-	BlobWriter,
-	error,
-) {
+func (bs *globalBlobStore) newBlobUpload(ctx context.Context, id, path string, appendMode bool) (BlobWriter, error) {
 	fw, err := bs.driver.Writer(ctx, path, appendMode)
 	if err != nil {
 		return nil, err
 	}
 
-	bw := &blobWriter{
+	bw := &globalBlobWriter{
 		ctx:                    ctx,
 		globalBlobStore:        bs,
 		id:                     id,
@@ -150,7 +143,6 @@ func (bs *blobStore) newBlobUpload(ctx context.Context, id, path, rootIdentifier
 		driver:                 bs.driver,
 		path:                   path,
 		resumableDigestEnabled: true,
-		rootIdentifier:         rootIdentifier,
 		isMultiPart:            bs.multipartEnabled,
 	}
 
@@ -159,7 +151,7 @@ func (bs *blobStore) newBlobUpload(ctx context.Context, id, path, rootIdentifier
 
 // Write takes a file writer and a multipart form file or file reader,
 // streams the file to the writer, and calculates hashes.
-func (bs *blobStore) Write(
+func (bs *globalBlobStore) Write(
 	ctx context.Context, w BlobWriter, file multipart.File,
 	fileReader io.Reader,
 ) (types.FileInfo, error) {
@@ -192,12 +184,7 @@ func (bs *blobStore) Write(
 	}, nil
 }
 
-func (bs *blobStore) move(
-	ctx context.Context,
-	rootIdentifier string,
-	id string,
-	sha256 string,
-) error {
+func (bs *globalBlobStore) move(ctx context.Context, id string, sha256 string) error {
 	log.Ctx(ctx).Debug().Msg("(*globalBlobStore).Move")
 	srcPath, err := pathFor(
 		globalUploadDataPathSpec{
@@ -205,13 +192,13 @@ func (bs *blobStore) move(
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create srcPath for root: %s, id: %s, digest: %s, %w", rootIdentifier, id, sha256,
+		return fmt.Errorf("failed to create srcPath id: %s, digest: %s, %w", id, sha256,
 			err)
 	}
 
 	dstPath, err := bs.globalPathFn(digest.NewDigestFromEncoded(digest.SHA256, sha256))
 	if err != nil {
-		return fmt.Errorf("failed to create dstPath for root: %s, id: %s, digest: %s, %w", rootIdentifier, id, sha256,
+		return fmt.Errorf("failed to create dstPath id: %s, digest: %s, %w", id, sha256,
 			err)
 	}
 	err = bs.driver.Move(ctx, srcPath, dstPath)
@@ -221,7 +208,7 @@ func (bs *blobStore) move(
 	return nil
 }
 
-func (bs *blobStore) StatByDigest(ctx context.Context, rootIdentifier, sha256 string) (int64, error) {
+func (bs *globalBlobStore) StatByDigest(ctx context.Context, rootIdentifier, sha256 string) (int64, error) {
 	log.Ctx(ctx).Debug().Msg("(*globalBlobStore).StatByDigest")
 
 	path, err := bs.globalPathFn(digest.NewDigestFromEncoded(digest.SHA256, sha256))
@@ -236,16 +223,16 @@ func (bs *blobStore) StatByDigest(ctx context.Context, rootIdentifier, sha256 st
 	return fileInfo.Size(), nil
 }
 
-func (bs *blobStore) DriverInfo() DriverInfo {
-	return bs.DriverMeta
+func (bs *globalBlobStore) BucketKey() string {
+	return bs.bucketKey
 }
 
-func (bs *blobStore) Path() string {
+func (bs *globalBlobStore) Path() string {
 	return ""
 }
 
 // Create begins a blob write session, returning a handle.
-func (bs *blobStore) Create(ctx context.Context) (BlobWriter, error) {
+func (bs *globalBlobStore) Create(ctx context.Context) (BlobWriter, error) {
 	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*ociBlobStore).Create")
 	uuid := uuid.NewString()
 
@@ -258,10 +245,10 @@ func (bs *blobStore) Create(ctx context.Context) (BlobWriter, error) {
 		return nil, err
 	}
 
-	return bs.newBlobUpload(ctx, uuid, path, bs.rootParentRef, false)
+	return bs.newBlobUpload(ctx, uuid, path, false)
 }
 
-func (bs *blobStore) Resume(ctx context.Context, id string) (BlobWriter, error) {
+func (bs *globalBlobStore) Resume(ctx context.Context, id string) (BlobWriter, error) {
 	dcontext.GetLogger(ctx, log.Ctx(ctx).Debug()).Msg("(*ociBlobStore).Resume")
 
 	path, err := pathFor(
@@ -273,10 +260,10 @@ func (bs *blobStore) Resume(ctx context.Context, id string) (BlobWriter, error) 
 		return nil, err
 	}
 
-	return bs.newBlobUpload(ctx, id, path, bs.rootParentRef, true)
+	return bs.newBlobUpload(ctx, id, path, true)
 }
 
-func (bs *blobStore) ServeBlobInternal(
+func (bs *globalBlobStore) ServeBlobInternal(
 	ctx context.Context,
 	pathPrefix string,
 	dgst digest.Digest,
@@ -342,7 +329,7 @@ func (bs *blobStore) ServeBlobInternal(
 	return br, "", size, err
 }
 
-func (bs *blobStore) GetBlobInternal(
+func (bs *globalBlobStore) GetBlobInternal(
 	ctx context.Context,
 	pathPrefix string,
 	dgst digest.Digest,
@@ -367,7 +354,7 @@ func (bs *blobStore) GetBlobInternal(
 	return br, size, err
 }
 
-func (bs *blobStore) Get(
+func (bs *globalBlobStore) Get(
 	ctx context.Context, pathPrefix string,
 	dgst digest.Digest,
 ) ([]byte, error) {
@@ -392,7 +379,7 @@ func (bs *blobStore) Get(
 	return p, nil
 }
 
-func (bs *blobStore) Open(
+func (bs *globalBlobStore) Open(
 	ctx context.Context, pathPrefix string,
 	dgst digest.Digest,
 ) (io.ReadSeekCloser, error) {
@@ -413,7 +400,7 @@ func (bs *blobStore) Open(
 // If thebcontent is already present, only the digest will be returned.
 // This shouldbonly be used for small objects, such as manifests.
 // This implemented as a convenience for other Put implementations.
-func (bs *blobStore) Put(
+func (bs *globalBlobStore) Put(
 	ctx context.Context, pathPrefix string,
 	p []byte,
 ) (manifest.Descriptor, error) {
@@ -448,11 +435,10 @@ func (bs *blobStore) Put(
 // Stat returns the descriptor for the blob
 // in the main blob store. If this method returns successfully, there is
 // strong guarantee that the blob exists and is available.
-func (bs *blobStore) Stat(
+func (bs *globalBlobStore) Stat(
 	ctx context.Context, pathPrefix string,
 	dgst digest.Digest,
 ) (manifest.Descriptor, error) {
-
 	path, err := bs.globalPathFn(dgst)
 	if err != nil {
 		return manifest.Descriptor{}, err
@@ -481,7 +467,7 @@ func (bs *blobStore) Stat(
 	}, nil
 }
 
-func (bs *blobStore) globalPathFn(dgst digest.Digest) (string, error) {
+func (bs *globalBlobStore) globalPathFn(dgst digest.Digest) (string, error) {
 	bp, err := pathFor(
 		globalBlobPathSpec{
 			digest: dgst,

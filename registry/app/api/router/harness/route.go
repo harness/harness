@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/refcache"
@@ -95,6 +96,7 @@ func NewAPIHandler(
 	publicAccess publicaccess.Service,
 	quarantineFinder quarantine.Finder,
 	storageService *storage.Service,
+	app *docker.App,
 ) APIHandler {
 	r := chi.NewRouter()
 	r.Use(audit.Middleware())
@@ -138,6 +140,7 @@ func NewAPIHandler(
 		packageWrapper,
 		publicAccess,
 		storageService,
+		app,
 	)
 
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})

@@ -42,6 +42,7 @@ import (
 	packagerrouter "github.com/harness/gitness/registry/app/api/router/packages"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/publicaccess"
@@ -99,13 +100,14 @@ func APIHandlerProvider(
 	publicAccess publicaccess.CacheService,
 	quarantineFinder quarantine.Finder,
 	storageService *storage.Service,
+	app *docker.App,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(repoDao, fileManager, upstreamproxyDao, tagDao, manifestDao, cleanupPolicyDao,
 		imageDao, config.APIURL, spaceFinder, tx, authenticator, urlProvider, authorizer, auditService, artifactStore,
 		webhooksRepository, webhooksExecutionRepository, *webhookService, spacePathStore, *artifactEventReporter,
 		downloadStatRepository, gitnessConfig, registryBlobsDao, regFinder, postProcessingReporter, cargoRegistryHelper,
 		spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, publicAccess, quarantineFinder,
-		storageService)
+		storageService, app)
 }
 
 func OCIHandlerProvider(handlerV2 *hoci.Handler) oci.RegistryOCIHandler {

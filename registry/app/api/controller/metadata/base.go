@@ -153,7 +153,7 @@ func (c *APIController) getManifestConfig(
 	digest digest.Digest,
 	info *types.RegistryRequestBaseInfo,
 ) (*manifestConfig, error) {
-	blobsContext := c.App.GetBlobsContext(ctx, pkg.RegistryInfo{
+	blobsContext := c.app.GetBlobsContext(ctx, pkg.RegistryInfo{
 		ArtifactInfo: &pkg.ArtifactInfo{
 			RegIdentifier: info.RegistryIdentifier,
 			BaseInfo: &pkg.BaseInfo{
@@ -161,7 +161,7 @@ func (c *APIController) getManifestConfig(
 			},
 		},
 		Digest: digest.String(),
-	}, types.BlobRequestInfo{
+	}, types.BlobLocator{
 		Digest:       digest,
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootIdentifierID,

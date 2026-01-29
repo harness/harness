@@ -19,27 +19,32 @@ import (
 	"time"
 
 	cfg "github.com/harness/gitness/registry/config"
-	"github.com/harness/gitness/registry/types"
 
-	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	// DefaultAsyncTimeout is the default timeout for async hook operations.
+	DefaultAsyncTimeout = 10 * time.Second
+)
+
 // EmitReadEventAsync emits a read event asynchronously in a goroutine.
+// The event contains all necessary context for external tracking/billing.
 func EmitReadEventAsync(
 	ctx context.Context,
-	blobActionHook BlobActionHook,
-	sha256Digest digest.Digest,
-	req types.DriverRequest,
+	hook BlobActionHook,
+	event BlobReadEvent,
 ) {
 	go func() {
 		ctx2 := context.WithoutCancel(ctx)
-		ctx2, cancel := context.WithTimeout(ctx2, 10*time.Second)
+		ctx2, cancel := context.WithTimeout(ctx2, DefaultAsyncTimeout)
 		defer cancel()
-		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "Emit Generic Read Event")
-		err := blobActionHook.EmitReadEvent(ctx2, sha256Digest, req)
-		if err != nil {
-			log.Ctx(ctx2).Error().Err(err).Msgf("Failed to emit Read Event for digest: %s", sha256Digest)
+		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "Emit Blob Read Event")
+
+		if err := hook.OnRead(ctx2, event); err != nil {
+			log.Ctx(ctx2).Error().Err(err).
+				Str("digest", event.BlobLocator.Digest.String()).
+				Msg("failed to emit read event")
 		}
 	}()
 }

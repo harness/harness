@@ -19,8 +19,8 @@ package storage
 import (
 	"context"
 
-	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/types"
+
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
@@ -29,7 +29,7 @@ type Service struct {
 	deleteEnabled          bool
 	resumableDigestEnabled bool
 	redirect               bool
-	driverProvider         DriverProvider
+	storageResolver        StorageResolver
 }
 
 // Option is the type used for functional options for NewRegistry.
@@ -49,96 +49,83 @@ func EnableDelete(registry *Service) error {
 	return nil
 }
 
-func NewStorageService(provider DriverProvider, options ...Option) (*Service, error) {
-	registry := &Service{
+func NewStorageService(resolver StorageResolver, options ...Option) (*Service, error) {
+	svc := &Service{
 		resumableDigestEnabled: true,
-		driverProvider:         provider,
+		storageResolver:        resolver,
 	}
 
 	for _, option := range options {
-		if err := option(registry); err != nil {
+		if err := option(svc); err != nil {
 			return nil, err
 		}
 	}
 
-	return registry, nil
+	return svc, nil
 }
 
-func (storage *Service) OciBlobsStore(
+func (s *Service) OciBlobsStore(
 	ctx context.Context,
 	repoKey string,
 	rootParentRef string,
-	info types.BlobRequestInfo,
+	locator types.BlobLocator,
 ) OciBlobStore {
-	driverResult, err := storage.driverProvider.GetDriver(
-		ctx,
-		types.DriverRequest{
-			BlobRequestInfo: info,
-			ClientIP:        audit.GetRealIP(ctx),
-		})
+	target, err := s.storageResolver.Resolve(ctx, types.StorageLookup{
+		BlobLocator: locator,
+	})
 	if err != nil {
 		// TODO(Arvind): Return this error
-		log.Fatal().Err(err).Msg("Failed to get storage Driver")
+		log.Fatal().Err(err).Msg("Failed to resolve storage target")
 	}
-	if !driverResult.Default() {
-		return storage.GlobalBlobsStore(ctx, repoKey, rootParentRef, driverResult, true)
+
+	if !target.IsDefault() {
+		return s.GlobalBlobsStore(ctx, target, true)
 	}
 
 	return &ociBlobStore{
 		repoKey:                repoKey,
 		ctx:                    ctx,
-		driver:                 driverResult.Driver,
+		driver:                 target.Driver,
 		pathFn:                 PathFn,
-		redirect:               storage.redirect,
-		deleteEnabled:          storage.deleteEnabled,
-		resumableDigestEnabled: storage.resumableDigestEnabled,
+		redirect:               s.redirect,
+		deleteEnabled:          s.deleteEnabled,
+		resumableDigestEnabled: s.resumableDigestEnabled,
 		rootParentRef:          rootParentRef,
 	}
 }
 
-func (storage *Service) GenericBlobsStore(
+func (s *Service) GenericBlobsStore(
 	ctx context.Context,
 	rootParentRef string,
-	info types.BlobRequestInfo,
+	locator types.BlobLocator,
 ) GenericBlobStore {
-	result, err := storage.driverProvider.GetDriver(
-		ctx,
-		types.DriverRequest{
-			BlobRequestInfo: info,
-			ClientIP:        audit.GetRealIP(ctx),
-		})
+	target, err := s.storageResolver.Resolve(ctx, types.StorageLookup{
+		BlobLocator: locator,
+	})
 	if err != nil {
 		// TODO(Arvind): Return this error
-		log.Fatal().Err(err).Msg("Failed to get storage Driver")
+		log.Fatal().Err(err).Msg("Failed to resolve storage target")
 	}
 
-	if !result.Default() {
-		return storage.GlobalBlobsStore(ctx, "", rootParentRef, result, false)
+	if !target.IsDefault() {
+		return s.GlobalBlobsStore(ctx, target, false)
 	}
 
 	return &genericBlobStore{
-		driver:        result.Driver,
-		redirect:      storage.redirect,
+		driver:        target.Driver,
+		redirect:      s.redirect,
 		rootParentRef: rootParentRef,
 	}
 }
 
-func (storage *Service) GlobalBlobsStore(
-	ctx context.Context,
-	repoKey string,
-	rootParentRef string,
-	result DriverInfo,
-	oci bool,
-) GlobalBlobStore {
-	return &blobStore{
-		DriverMeta:             result,
-		driver:                 result.Driver,
+func (s *Service) GlobalBlobsStore(ctx context.Context, target StorageTarget, oci bool) GlobalBlobStore {
+	return &globalBlobStore{
+		bucketKey:              target.BucketKey,
+		driver:                 target.Driver,
 		ctx:                    ctx,
-		resumableDigestEnabled: storage.resumableDigestEnabled,
-		redirect:               storage.redirect,
-		deleteEnabled:          storage.deleteEnabled,
-		rootParentRef:          rootParentRef,
-		repoKey:                repoKey,
+		resumableDigestEnabled: s.resumableDigestEnabled,
+		redirect:               s.redirect,
+		deleteEnabled:          s.deleteEnabled,
 		multipartEnabled:       oci,
 	}
 }

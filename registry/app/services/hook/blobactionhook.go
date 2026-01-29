@@ -18,46 +18,60 @@ import (
 	"context"
 
 	"github.com/harness/gitness/registry/types"
-	"github.com/opencontainers/go-digest"
+
 	"github.com/rs/zerolog/log"
 )
 
+// BlobCommitEvent contains all information about a blob commit operation.
+type BlobCommitEvent struct {
+	BlobLocator types.BlobLocator
+
+	Digests types.BlobDigests
+	Size    int64
+
+	// Result from storage resolution
+	BucketKey string
+}
+
+// BlobReadEvent contains information about a blob read operation.
+type BlobReadEvent struct {
+	BlobLocator types.BlobLocator
+
+	// Result from storage resolution
+	BucketKey string
+}
+
 type BlobActionHook interface {
-	Commit(
-		ctx context.Context,
-		sha1 digest.Digest,
-		sha256 digest.Digest,
-		sha512 digest.Digest,
-		md5 digest.Digest,
-		size int64,
-		bucketKey string,
-		req types.DriverRequest,
-	) error
+	// OnCommit is called when a blob is successfully committed to storage.
+	OnCommit(ctx context.Context, event BlobCommitEvent) error
 
-	EmitReadEvent(ctx context.Context, sha256 digest.Digest, req types.DriverRequest) error
+	// OnRead is called when a blob is read.
+	OnRead(ctx context.Context, event BlobReadEvent) error
 }
 
-type noOpBlobActionHook struct {
-}
+type noOpBlobActionHook struct{}
 
-func (b *noOpBlobActionHook) EmitReadEvent(ctx context.Context, sha256 digest.Digest, req types.DriverRequest) error {
-	log.Ctx(ctx).Info().Msgf("BlobActionHook called for data: %v sha256: %s", req, sha256)
+func (b *noOpBlobActionHook) OnRead(ctx context.Context, event BlobReadEvent) error {
+	log.Ctx(ctx).Info().
+		Str("sha256", event.BlobLocator.Digest.String()).
+		Int64("registry_id", event.BlobLocator.RegistryID).
+		Int64("root_parent_id", event.BlobLocator.RootParentID).
+		Str("bucket_key", event.BucketKey).
+		Msg("BlobActionHook.OnRead called")
 	return nil
 }
 
-func (b *noOpBlobActionHook) Commit(
-	ctx context.Context,
-	sha1 digest.Digest,
-	sha256 digest.Digest,
-	sha512 digest.Digest,
-	md5 digest.Digest,
-	size int64,
-	bucketKey string,
-	req types.DriverRequest,
-) error {
-	log.Ctx(ctx).Info().Msgf("BlobActionHook called for data: %v sha1: %s sha256: %s "+
-		"sha512: %s md5: %s size: %d bucketKey: %s",
-		req, sha1, sha256, sha512, md5, size, bucketKey)
+func (b *noOpBlobActionHook) OnCommit(ctx context.Context, event BlobCommitEvent) error {
+	log.Ctx(ctx).Info().
+		Str("sha1", event.Digests.SHA1.String()).
+		Str("sha256", event.Digests.SHA256.String()).
+		Str("sha512", event.Digests.SHA512.String()).
+		Str("md5", event.Digests.MD5.String()).
+		Int64("size", event.Size).
+		Str("bucket_key", event.BucketKey).
+		Int64("registry_id", event.BlobLocator.RegistryID).
+		Int64("root_parent_id", event.BlobLocator.RootParentID).
+		Msg("BlobActionHook.OnCommit called")
 	return nil
 }
 

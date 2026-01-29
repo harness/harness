@@ -566,12 +566,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	driverProvider := storage2.NewStaticDriverProvider(storageDriver)
-	storageService := docker.StorageServiceProvider(config, driverProvider)
+	storageResolver := storage2.NewStaticStorageResolver(storageDriver)
+	storageService := docker.StorageServiceProvider(config, storageResolver)
 	gcService := gc.ServiceProvider()
 	ociBlobStoreFactory := docker.ProvideOciBlobStore(storageService)
 	bucketService := docker.ProvideBucketService(ociBlobStoreFactory)
-	app := docker.NewApp(ctx, blobRepository, spaceStore, config, storageService, driverProvider, gcService, bucketService)
+	app := docker.NewApp(ctx, blobRepository, spaceStore, config, storageService, storageResolver, gcService, bucketService)
 	manifestRepository := database2.ProvideManifestDao(db, mediaTypesRepository)
 	manifestReferenceRepository := database2.ProvideManifestRefDao(db)
 	tagRepository := database2.ProvideTagDao(db)
@@ -634,7 +634,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
 	interfacesRegistryHelper := helpers.ProvideRegistryHelper(artifactRepository, fileManager, imageRepository, artifactReporter, asyncprocessingReporter, transactor, provider, config)
 	packageWrapper := helpers.ProvidePackageWrapperProvider(interfacesRegistryHelper, registryFinder, registryHelper)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder, storageService)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder, storageService, app)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, registryFinder, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository, authorizer, spaceFinder, auditService)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)

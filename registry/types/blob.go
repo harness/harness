@@ -36,3 +36,10 @@ type Blob struct {
 
 // Blobs is a slice of Blob pointers.
 type Blobs []*Blob
+
+type BlobDigests struct {
+	SHA1   digest.Digest
+	SHA256 digest.Digest
+	SHA512 digest.Digest
+	MD5    digest.Digest
+}

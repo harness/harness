@@ -122,9 +122,9 @@ func DBStoreProvider(
 
 func StorageServiceProvider(
 	cfg *types.Config,
-	driverProvider storage.DriverProvider,
+	storageResolver storage.StorageResolver,
 ) *storage.Service {
-	return GetStorageService(cfg, driverProvider)
+	return GetStorageService(cfg, storageResolver)
 }
 
 func ProvideReporter() event.Reporter {
@@ -165,7 +165,7 @@ type OciBlobStoreFactory func(
 	ctx context.Context,
 	repoKey string,
 	rootParentRef string,
-	info types2.BlobRequestInfo,
+	blobLocator types2.BlobLocator,
 ) storage.OciBlobStore
 
 // ProvideOciBlobStore returns a factory function that creates an OciBlobStore with the provided context.
@@ -206,5 +206,5 @@ var OpenSourceWireSet = wire.NewSet(
 	OciBlobStoreSet,
 	BucketServiceSet,
 	hook.ProvideBlobCommitHook,
-	storage.NewStaticDriverProvider,
+	storage.NewStaticStorageResolver,
 )

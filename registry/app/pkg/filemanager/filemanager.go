@@ -21,7 +21,6 @@ import (
 	"mime/multipart"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/registry/app/crypto"
 	"github.com/harness/gitness/registry/app/events/replication"
@@ -32,8 +31,9 @@ import (
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 	gitnesstypes "github.com/harness/gitness/types"
-	"github.com/opencontainers/go-digest"
 
+	"github.com/google/uuid"
+	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
@@ -88,12 +88,12 @@ func (f *fileManager) UploadFile(
 	fileReader io.Reader,
 	principalID int64,
 ) (types.FileInfo, error) {
-	info := types.BlobRequestInfo{
+	blobLocator := types.BlobLocator{
 		RegistryID:   regID,
 		RootParentID: rootParentID,
 	}
-	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", info)
-	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader)
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", blobLocator)
+	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader, blobLocator)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -116,7 +116,7 @@ func (f *fileManager) UploadFile(
 // called once per request.
 func (f *fileManager) getBlobsContext(
 	c context.Context, registryIdentifier,
-	rootIdentifier, blobID, sha256 string, info types.BlobRequestInfo,
+	rootIdentifier, blobID, sha256 string, info types.BlobLocator,
 ) *Context {
 	ctx := &Context{Context: c}
 
@@ -353,19 +353,24 @@ func (f *fileManager) DownloadFileByPath(
 	}
 
 	parsedUUID, err := uuid.Parse(blob.ID)
-	info := types.BlobRequestInfo{
+	if err != nil {
+		return nil, 0, "", usererror.NotFoundf("failed to parse the blob UUID for blobID: %s", blob.ID)
+	}
+	blobLocator := types.BlobLocator{
 		Digest:        digest.NewDigestFromEncoded(digest.SHA256, blob.Sha256),
 		GenericBlobID: parsedUUID,
 		RootParentID:  blob.RootParentID,
 		RegistryID:    registryID,
 	}
-	blobContext := f.getBlobsContext(ctx, registryIdentifier, rootIdentifier, blob.ID, blob.Sha256, info)
+	blobContext := f.getBlobsContext(ctx, registryIdentifier, rootIdentifier, blob.ID, blob.Sha256, blobLocator)
 
 	if allowRedirect {
 		fileReader, redirectURL, err = blobContext.genericBlobStore.GetGeneric(ctx, blob.Size, node.Name,
 			rootIdentifier, blob.Sha256)
-		hook.EmitReadEventAsync(ctx, f.blobActionHook, digest.NewDigestFromEncoded(digest.SHA256, blob.Sha256),
-			blobContext.genericBlobStore.DriverInfo().Req)
+		hook.EmitReadEventAsync(ctx, f.blobActionHook, hook.BlobReadEvent{
+			BlobLocator: blobLocator,
+			BucketKey:   blobContext.genericBlobStore.BucketKey(),
+		})
 	} else {
 		fileReader, err = blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, blob.Sha256, blob.Size)
 	}
@@ -545,12 +550,12 @@ func (f *fileManager) UploadFileNoDBUpdate(
 	rootParentID int64,
 	regID int64,
 ) (types.FileInfo, error) {
-	info := types.BlobRequestInfo{
+	blobLocator := types.BlobLocator{
 		RootParentID: rootParentID,
 		RegistryID:   regID,
 	}
-	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", info)
-	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader)
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", blobLocator)
+	fileInfo, err := f.uploadAndMove(ctx, blobContext, rootIdentifier, file, fileReader, blobLocator)
 	if err != nil {
 		return fileInfo, err
 	}
@@ -564,12 +569,12 @@ func (f *fileManager) HeadByDigest(
 	rootParentID int64,
 	registryID int64,
 ) (bool, int64, error) {
-	info := types.BlobRequestInfo{
+	blobLocator := types.BlobLocator{
 		Digest:       digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
 		RootParentID: rootParentID,
 		RegistryID:   registryID,
 	}
-	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", info)
+	blobContext := f.getBlobsContext(ctx, rootIdentifier, "", "", "", blobLocator)
 	size, err := blobContext.genericBlobStore.StatByDigest(ctx, rootIdentifier, fileInfo.Sha256)
 	if err != nil {
 		return false, 0, err
@@ -583,6 +588,7 @@ func (f *fileManager) uploadAndMove(
 	rootIdentifier string,
 	file multipart.File,
 	fileReader io.Reader,
+	blobLocator types.BlobLocator,
 ) (types.FileInfo, error) {
 	fw, err := blobContext.genericBlobStore.CreateGeneric(ctx, rootIdentifier)
 
@@ -605,11 +611,18 @@ func (f *fileManager) uploadAndMove(
 		return types.FileInfo{}, err
 	}
 
-	err = f.blobActionHook.Commit(ctx, digest.NewDigestFromEncoded(crypto.SHA1, fileInfo.Sha1),
-		digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
-		digest.NewDigestFromEncoded(digest.SHA512, fileInfo.Sha512),
-		digest.NewDigestFromEncoded(crypto.MD5, fileInfo.MD5), fileInfo.Size,
-		blobContext.genericBlobStore.DriverInfo().BucketKey, blobContext.genericBlobStore.DriverInfo().Req)
+	// Emit commit event with all computed digests and request context
+	err = f.blobActionHook.OnCommit(ctx, hook.BlobCommitEvent{
+		BlobLocator: blobLocator,
+		Digests: types.BlobDigests{
+			SHA1:   digest.NewDigestFromEncoded(crypto.SHA1, fileInfo.Sha1),
+			SHA256: digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
+			SHA512: digest.NewDigestFromEncoded(digest.SHA512, fileInfo.Sha512),
+			MD5:    digest.NewDigestFromEncoded(crypto.MD5, fileInfo.MD5),
+		},
+		Size:      fileInfo.Size,
+		BucketKey: blobContext.genericBlobStore.BucketKey(),
+	})
 	if err != nil {
 		return types.FileInfo{}, fmt.Errorf("failed to commit the file upload %w", err)
 	}
@@ -617,8 +630,9 @@ func (f *fileManager) uploadAndMove(
 	return fileInfo, nil
 }
 
-// DownloadFileByDigest These type of APIs should not be introduced. Difficult to track objects and all updates should be
-// done inside nodes tables owned by filemanager. If the object is not there, it is supposed to be GCed.
+// DownloadFileByDigest These type of APIs should not be introduced. Difficult to track objects and all
+// updates should be done inside nodes tables owned by filemanager. If the object is not there, it is supposed
+// to be GCed.
 func (f *fileManager) DownloadFileByDigest(
 	ctx context.Context,
 	rootIdentifier string,
@@ -626,12 +640,12 @@ func (f *fileManager) DownloadFileByDigest(
 	rootParentID int64,
 	registryID int64,
 ) (fileReader *storage.FileReader, err error) {
-	blobInfo := types.BlobRequestInfo{
+	blobLocator := types.BlobLocator{
 		Digest:       digest.NewDigestFromEncoded(digest.SHA256, fileInfo.Sha256),
 		RootParentID: rootParentID,
 		RegistryID:   registryID,
 	}
-	blobContext := f.getBlobsContext(ctx, "", rootIdentifier, "", "", blobInfo)
+	blobContext := f.getBlobsContext(ctx, "", rootIdentifier, "", "", blobLocator)
 	reader, err := blobContext.genericBlobStore.GetV2NoRedirect(ctx, rootIdentifier, fileInfo.Sha256, fileInfo.Size)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file with digest: %s %w", fileInfo.Sha256, err)

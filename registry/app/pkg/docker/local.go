@@ -389,7 +389,7 @@ func (r *LocalRegistry) fetchBlobInternal(
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
-	ctx := r.App.GetBlobsContext(ctx2, info, types.BlobRequestInfo{
+	ctx := r.App.GetBlobsContext(ctx2, info, types.BlobLocator{
 		Digest:       digest.Digest(info.Digest),
 		BlobID:       blobID,
 		RegistryID:   info.RegistryID,
@@ -426,7 +426,15 @@ func (r *LocalRegistry) fetchBlobInternal(
 	}
 
 	if redirectURL != "" {
-		hook.EmitReadEventAsync(ctx, r.blobActionHook, dgst, blobs.DriverInfo().Req)
+		hook.EmitReadEventAsync(ctx2, r.blobActionHook, hook.BlobReadEvent{
+			BlobLocator: types.BlobLocator{
+				Digest:       dgst,
+				BlobID:       blobID,
+				RegistryID:   info.RegistryID,
+				RootParentID: info.RootParentID,
+			},
+			BucketKey: blobs.BucketKey(),
+		})
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
 
@@ -918,7 +926,7 @@ func (r *LocalRegistry) InitBlobUpload(
 	artInfo pkg.RegistryInfo,
 	fromRepo, mountDigest string,
 ) (*commons.ResponseHeaders, []error) {
-	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobRequestInfo{
+	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
 		RegistryID:   artInfo.RegistryID,
 		RootParentID: artInfo.RootParentID,
 	})
@@ -1067,7 +1075,7 @@ func (r *LocalRegistry) PushBlob(
 		Code:    0,
 		Headers: make(map[string]string),
 	}
-	ctx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobRequestInfo{
+	ctx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
 		RegistryID:   artInfo.RegistryID,
 		RootParentID: artInfo.RootParentID,
 	})
@@ -1161,8 +1169,18 @@ func (r *LocalRegistry) PushBlob(
 	}
 
 	//nolint:contextcheck
-	err = r.blobActionHook.Commit(ctx, "", desc.Digest, "", "", desc.Size, ctx.OciBlobStore.DriverInfo().BucketKey,
-		ctx.OciBlobStore.DriverInfo().Req)
+	err = r.blobActionHook.OnCommit(ctx, hook.BlobCommitEvent{
+		BlobLocator: types.BlobLocator{
+			Digest:       desc.Digest,
+			RegistryID:   artInfo.RegistryID,
+			RootParentID: artInfo.RootParentID,
+		},
+		Digests: types.BlobDigests{
+			SHA256: desc.Digest,
+		},
+		Size:      desc.Size,
+		BucketKey: ctx.OciBlobStore.BucketKey(),
+	})
 	if err != nil {
 		errs = append(errs, err)
 		//nolint:contextcheck

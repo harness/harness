@@ -14,7 +14,12 @@
 
 package storage
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var errResumableDigestNotAvailable = errors.New("resumable digest not available")
 
 const (
 	HeaderAccept              = "Accept"
@@ -34,4 +39,6 @@ const (
 	HeaderRange               = "Range"
 	blobCacheControlMaxAge    = 365 * 24 * time.Hour
 	HeaderContentDigest       = "Content-Digest"
+
+	digestSha256Empty = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 )

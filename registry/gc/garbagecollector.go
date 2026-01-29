@@ -35,7 +35,7 @@ func (s *Noop) Start(
 	context.Context,
 	corestore.SpaceStore,
 	store.BlobRepository,
-	storage.DriverProvider,
+	storage.StorageResolver,
 	*types.Config,
 ) {
 	// NOOP

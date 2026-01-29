@@ -21,40 +21,38 @@ import (
 	"github.com/harness/gitness/registry/types"
 )
 
-type Mode string
-
 const (
-	DefaultKey string = "default"
+	DefaultBucketKey string = "default"
 )
 
-type DriverInfo struct {
-	Req       types.DriverRequest
+type StorageTarget struct {
 	Driver    driver.StorageDriver
 	BucketKey string
 }
 
-type DriverProvider interface {
-	GetDriver(ctx context.Context, selector types.DriverRequest) (DriverInfo, error)
+func (t StorageTarget) IsDefault() bool {
+	return t.BucketKey == DefaultBucketKey
 }
 
-func (r DriverInfo) Default() bool {
-	return r.BucketKey == DefaultKey
+// StorageResolver resolves storage backends based on blob and location.
+type StorageResolver interface {
+	Resolve(ctx context.Context, lookup types.StorageLookup) (StorageTarget, error)
 }
 
-// StaticDriverProvider is a simple implementation of StorageDriverProvider
-// that always returns the same Driver.
-type StaticDriverProvider struct {
+// StaticStorageResolver is a simple implementation of StorageResolver
+// that always returns the same driver with the default bucket.
+type StaticStorageResolver struct {
 	Driver driver.StorageDriver
 }
 
-func NewStaticDriverProvider(d driver.StorageDriver) DriverProvider {
-	return &StaticDriverProvider{Driver: d}
+// NewStaticStorageResolver creates a resolver that always returns the given driver.
+func NewStaticStorageResolver(d driver.StorageDriver) StorageResolver {
+	return &StaticStorageResolver{Driver: d}
 }
 
-func (p *StaticDriverProvider) GetDriver(_ context.Context, req types.DriverRequest) (DriverInfo, error) {
-	return DriverInfo{
-		Req:       req,
-		Driver:    p.Driver,
-		BucketKey: DefaultKey,
+func (r *StaticStorageResolver) Resolve(_ context.Context, _ types.StorageLookup) (StorageTarget, error) {
+	return StorageTarget{
+		Driver:    r.Driver,
+		BucketKey: DefaultBucketKey,
 	}, nil
 }

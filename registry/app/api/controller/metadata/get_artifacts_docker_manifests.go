@@ -120,7 +120,7 @@ func (c *APIController) getManifestList(
 			}
 			return nil, err
 		}
-		mConfig, err := c.getManifestConfig(ctx, referencedManifest.Configuration.Digest, nil)
+		mConfig, err := c.getManifestConfig(ctx, referencedManifest.Configuration.Digest, regInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -225,7 +225,7 @@ func (c *APIController) ProcessManifest(
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	switch reqManifest := manifest.(type) {
 	case *schema2.DeserializedManifest:
-		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, nil)
+		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, regInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -235,7 +235,7 @@ func (c *APIController) ProcessManifest(
 		}
 		manifestDetailsList = append(manifestDetailsList, md)
 	case *ocischema.DeserializedManifest:
-		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, nil)
+		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, regInfo)
 		if err != nil {
 			return nil, err
 		}

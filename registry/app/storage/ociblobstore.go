@@ -322,6 +322,6 @@ func (bs *ociBlobStore) newBlobUpload(
 	return bw, nil
 }
 
-func (bs *ociBlobStore) DriverInfo() DriverInfo {
-	return DriverInfo{}
+func (bs *ociBlobStore) BucketKey() string {
+	return DefaultBucketKey
 }

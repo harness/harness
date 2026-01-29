@@ -248,6 +248,6 @@ func (bs *genericBlobStore) StatByDigest(ctx context.Context, rootIdentifier, sh
 	return fileInfo.Size(), nil
 }
 
-func (bs *genericBlobStore) DriverInfo() DriverInfo {
-	return DriverInfo{}
+func (bs *genericBlobStore) BucketKey() string {
+	return DefaultBucketKey
 }

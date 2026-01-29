@@ -74,7 +74,7 @@ func TestParseAndUploadNPMPackage_WithAttachment_UploadsData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("filesystem driver init failed: %v", err)
 	}
-	svc, err := storage.NewStorageService(&storage.StaticDriverProvider{Driver: drv}, nil)
+	svc, err := storage.NewStorageService(&storage.StaticStorageResolver{Driver: drv}, nil)
 	if err != nil {
 		t.Fatalf("storage service init failed: %v", err)
 	}

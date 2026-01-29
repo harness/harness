@@ -1,12 +1,10 @@
-// Source: https://github.com/distribution/distribution
-
-// Copyright 2014 https://github.com/distribution/distribution Authors
+//  Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,10 +32,9 @@ import (
 
 // blobWriter is used to control the various aspects of resumable
 // blob upload.
-type blobWriter struct {
-	ctx              context.Context
-	blobStore        *ociBlobStore
-	genericBlobStore *genericBlobStore
+type globalBlobWriter struct {
+	ctx             context.Context
+	globalBlobStore *globalBlobStore
 
 	id       string
 	digester digest.Digester
@@ -49,25 +46,23 @@ type blobWriter struct {
 
 	resumableDigestEnabled bool
 	committed              bool
-	rootIdentifier         string
-
 	// For Global Blob Store
 	isMultiPart bool
 }
 
-var _ BlobWriter = &blobWriter{}
+var _ BlobWriter = &globalBlobWriter{}
 
 // ID returns the identifier for this upload.
-func (bw *blobWriter) ID() string {
+func (bw *globalBlobWriter) ID() string {
 	return bw.id
 }
 
 // Commit marks the upload as completed, returning a valid descriptor. The
 // final size and digest are checked against the first descriptor provided.
-func (bw *blobWriter) Commit(ctx context.Context, pathPrefix string, desc manifest.Descriptor) (
+func (bw *globalBlobWriter) Commit(ctx context.Context, pathPrefix string, desc manifest.Descriptor) (
 	manifest.Descriptor, error,
 ) {
-	dcontext.GetLogger(ctx, log.Debug()).Msg("(*blobWriter).Commit")
+	log.Debug().Msg("(*globalBlobWriter).Commit")
 
 	if err := bw.fileWriter.Commit(ctx); err != nil {
 		return manifest.Descriptor{}, err
@@ -95,8 +90,8 @@ func (bw *blobWriter) Commit(ctx context.Context, pathPrefix string, desc manife
 
 // PlainCommit commits the files and move to desired location without any validity.
 // To be deprecated SOON after global storage takes over.
-func (bw *blobWriter) PlainCommit(ctx context.Context, sha256 string) error {
-	log.Debug().Msg("(*blobWriter).Commit")
+func (bw *globalBlobWriter) PlainCommit(ctx context.Context, sha256 string) error {
+	log.Debug().Msg("(*globalBlobWriter).Commit")
 
 	if err := bw.fileWriter.Commit(ctx); err != nil {
 		return err
@@ -107,7 +102,7 @@ func (bw *blobWriter) PlainCommit(ctx context.Context, sha256 string) error {
 		return err
 	}
 
-	err = bw.genericBlobStore.move(ctx, bw.rootIdentifier, bw.id, sha256)
+	err = bw.globalBlobStore.move(ctx, bw.id, sha256)
 
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to Move the file on permanent location for sha256: %s %v", sha256, err)
@@ -119,8 +114,8 @@ func (bw *blobWriter) PlainCommit(ctx context.Context, sha256 string) error {
 
 // Cancel the blob upload process, releasing any resources associated with
 // the writer and canceling the operation.
-func (bw *blobWriter) Cancel(ctx context.Context) error {
-	dcontext.GetLogger(ctx, log.Debug()).Msg("(*blobWriter).Cancel")
+func (bw *globalBlobWriter) Cancel(ctx context.Context) error {
+	log.Debug().Msg("(*globalBlobWriter).Cancel")
 	if err := bw.fileWriter.Cancel(ctx); err != nil {
 		return err
 	}
@@ -132,11 +127,11 @@ func (bw *blobWriter) Cancel(ctx context.Context) error {
 	return bw.removeResources(ctx)
 }
 
-func (bw *blobWriter) Size() int64 {
+func (bw *globalBlobWriter) Size() int64 {
 	return bw.fileWriter.Size()
 }
 
-func (bw *blobWriter) Write(p []byte) (int, error) {
+func (bw *globalBlobWriter) Write(p []byte) (int, error) {
 	// We don't support multipart uploads in generic.
 	if !bw.isMultiPart {
 		return bw.fileWriter.Write(p)
@@ -144,7 +139,7 @@ func (bw *blobWriter) Write(p []byte) (int, error) {
 	// Ensure that the current write offset matches how many bytes have been
 	// written to the digester. If not, we need to update the digest state to
 	// match the current write position.
-	if err := bw.resumeDigest(bw.blobStore.ctx); err != nil && !errors.Is(err, errResumableDigestNotAvailable) {
+	if err := bw.resumeDigest(bw.globalBlobStore.ctx); err != nil && !errors.Is(err, errResumableDigestNotAvailable) {
 		return 0, err
 	}
 
@@ -159,7 +154,7 @@ func (bw *blobWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-func (bw *blobWriter) Close() error {
+func (bw *globalBlobWriter) Close() error {
 	// We don't support multipart uploads in Generic
 	if !bw.isMultiPart {
 		return bw.fileWriter.Close()
@@ -168,7 +163,7 @@ func (bw *blobWriter) Close() error {
 		return errors.New("blobwriter close after commit")
 	}
 
-	if err := bw.storeHashState(bw.blobStore.ctx); err != nil && !errors.Is(err, errResumableDigestNotAvailable) {
+	if err := bw.storeHashState(bw.globalBlobStore.ctx); err != nil && !errors.Is(err, errResumableDigestNotAvailable) {
 		return err
 	}
 
@@ -177,7 +172,7 @@ func (bw *blobWriter) Close() error {
 
 // validateBlob checks the data against the digest, returning an error if it
 // does not match. The canonical descriptor is returned.
-func (bw *blobWriter) validateBlob(ctx context.Context, desc manifest.Descriptor) (manifest.Descriptor, error) {
+func (bw *globalBlobWriter) validateBlob(ctx context.Context, desc manifest.Descriptor) (manifest.Descriptor, error) {
 	var (
 		verified, fullHash bool
 		canonical          digest.Digest
@@ -299,11 +294,10 @@ func (bw *blobWriter) validateBlob(ctx context.Context, desc manifest.Descriptor
 // moveBlob moves the data into its final, hash-qualified destination,
 // identified by dgst. The layer should be validated before commencing the
 // move.
-func (bw *blobWriter) moveBlob(ctx context.Context, pathPrefix string, desc manifest.Descriptor) error {
+func (bw *globalBlobWriter) moveBlob(ctx context.Context, _ string, desc manifest.Descriptor) error {
 	blobPath, err := pathFor(
-		blobDataPathSpec{
+		globalBlobPathSpec{
 			digest: desc.Digest,
-			path:   pathPrefix,
 		},
 	)
 	if err != nil {
@@ -311,7 +305,7 @@ func (bw *blobWriter) moveBlob(ctx context.Context, pathPrefix string, desc mani
 	}
 
 	// Check for existence
-	if _, err := bw.blobStore.driver.Stat(ctx, blobPath); err != nil {
+	if _, err := bw.globalBlobStore.driver.Stat(ctx, blobPath); err != nil {
 		log.Ctx(ctx).Info().Msgf("Error type: %T, value: %v\n", err, err)
 		if !errors.As(err, &driver.PathNotFoundError{}) {
 			return err
@@ -328,10 +322,10 @@ func (bw *blobWriter) moveBlob(ctx context.Context, pathPrefix string, desc mani
 	// the size here and write a zero-length file to blobPath if this is the
 	// case. For the most part, this should only ever happen with zero-length
 	// blobs.
-	if _, err := bw.blobStore.driver.Stat(ctx, bw.path); err != nil {
+	if _, err := bw.globalBlobStore.driver.Stat(ctx, bw.path); err != nil {
 		if errors.As(err, &driver.PathNotFoundError{}) {
 			if desc.Digest == digestSha256Empty {
-				return bw.blobStore.driver.PutContent(ctx, blobPath, []byte{})
+				return bw.globalBlobStore.driver.PutContent(ctx, blobPath, []byte{})
 			}
 
 			// We let this fail during the move below.
@@ -344,18 +338,16 @@ func (bw *blobWriter) moveBlob(ctx context.Context, pathPrefix string, desc mani
 		}
 	}
 
-	return bw.blobStore.driver.Move(ctx, bw.path, blobPath)
+	return bw.globalBlobStore.driver.Move(ctx, bw.path, blobPath)
 }
 
 // removeResources should clean up all resources associated with the upload
 // instance. An error will be returned if the clean up cannot proceed. If the
 // resources are already not present, no error will be returned.
-func (bw *blobWriter) removeResources(ctx context.Context) error {
+func (bw *globalBlobWriter) removeResources(ctx context.Context) error {
 	dataPath, err := pathFor(
-		uploadDataPathSpec{
-			path:     bw.blobStore.rootParentRef,
-			repoName: bw.blobStore.repoKey,
-			id:       bw.id,
+		globalUploadDataPathSpec{
+			id: bw.id,
 		},
 	)
 	if err != nil {
@@ -365,7 +357,7 @@ func (bw *blobWriter) removeResources(ctx context.Context) error {
 	// Resolve and delete the containing directory, which should include any
 	// upload related files.
 	dirPath := path.Dir(dataPath)
-	if err := bw.blobStore.driver.Delete(ctx, dirPath); err != nil {
+	if err := bw.globalBlobStore.driver.Delete(ctx, dirPath); err != nil {
 		if !errors.As(err, &driver.PathNotFoundError{}) {
 			// This should be uncommon enough such that returning an error
 			// should be okay. At this point, the upload should be mostly
@@ -378,7 +370,7 @@ func (bw *blobWriter) removeResources(ctx context.Context) error {
 	return nil
 }
 
-func (bw *blobWriter) Reader() (io.ReadCloser, error) {
+func (bw *globalBlobWriter) Reader() (io.ReadCloser, error) {
 	try := 1
 	for try <= 5 {
 		_, err := bw.driver.Stat(bw.ctx, bw.path)

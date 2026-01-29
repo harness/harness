@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
+
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/rs/zerolog/log"
 )
@@ -332,7 +333,7 @@ func (c *Controller) GetUploadBlobStatus(
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
 	}
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobRequestInfo{
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
@@ -350,7 +351,7 @@ func (c *Controller) PatchBlobUpload(
 	token string,
 	body io.ReadCloser,
 ) (responseHeaders *commons.ResponseHeaders, errors []error) {
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobRequestInfo{
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
@@ -403,7 +404,7 @@ func (c *Controller) CancelBlobUpload(
 		return nil, []error{errcode.ErrCodeDenied}
 	}
 
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobRequestInfo{
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
@@ -446,7 +447,7 @@ func (c *Controller) DeleteBlob(
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
 	}
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobRequestInfo{
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
