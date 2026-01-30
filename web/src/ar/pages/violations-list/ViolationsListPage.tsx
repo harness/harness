@@ -29,15 +29,18 @@ import {
   Page
 } from '@harnessio/uicore'
 
-import { useAppStore, useParentHooks } from '@ar/hooks'
 import { DEFAULT_PAGE_INDEX } from '@ar/constants'
 import { useStrings } from '@ar/frameworks/strings'
+import { EntityScope } from '@ar/common/types'
+import { useAppStore, useParentHooks } from '@ar/hooks'
+import useGetPageScope from '@ar/hooks/useGetPageScope'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 
 import ViolationsListTable from './ViolationsListTable'
 import TableCard from './components/TableCard/TableCard'
 import RepositorySelector from '../artifact-list/components/RepositorySelector/RepositorySelector'
 import { useViolationsListQueryParamOptions, type ViolationsListPageQueryParams } from './utils'
+import ScopeSelector from '../repository-list/components/RepositoryScopeSelector/RepositoryScopeSelector'
 
 import css from './ViolationsListPage.module.scss'
 
@@ -49,8 +52,9 @@ export default function ViolationsListPage() {
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<ViolationsListPageQueryParams>>()
   const queryParams = useQueryParams<ViolationsListPageQueryParams>(useViolationsListQueryParamOptions())
 
+  const pageScope = useGetPageScope()
   const searchRef = useRef({} as ExpandingSearchInputHandle)
-  const { searchTerm, repositoryIds, packageTypes, page, size, sort, status } = queryParams
+  const { searchTerm, repositoryIds, packageTypes, page, size, sort, status, scope: scopeParam } = queryParams
 
   const {
     data,
@@ -67,7 +71,8 @@ export default function ViolationsListPage() {
       page,
       size,
       search_term: searchTerm,
-      scan_status: status
+      scan_status: status,
+      scope: scopeParam
     },
     stringifyQueryParamsOptions: {
       arrayFormat: 'repeat'
@@ -86,6 +91,18 @@ export default function ViolationsListPage() {
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
           <Expander />
+          {pageScope !== EntityScope.PROJECT && (
+            <ScopeSelector
+              scope={pageScope}
+              value={scopeParam}
+              onChange={val => {
+                updateQueryParams({
+                  scope: val,
+                  page: DEFAULT_PAGE_INDEX
+                })
+              }}
+            />
+          )}
           <RepositorySelector
             value={repositoryIds}
             valueKey="uuid"

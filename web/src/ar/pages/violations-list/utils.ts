@@ -19,7 +19,7 @@ import type { ArtifactScan } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_VIOLATIONS_LIST_TABLE_SORT } from '@ar/constants'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { type RepositoryPackageType, RepositoryScopeType } from '@ar/common/types'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
 export type ViolationsListPageQueryParams = {
@@ -30,6 +30,7 @@ export type ViolationsListPageQueryParams = {
   packageTypes: RepositoryPackageType[]
   status?: ArtifactScan['scanStatus']
   searchTerm?: string
+  scope: RepositoryScopeType
 }
 
 export const useViolationsListQueryParamOptions = (): UseQueryParamsOptions<ViolationsListPageQueryParams> => {
@@ -40,7 +41,8 @@ export const useViolationsListQueryParamOptions = (): UseQueryParamsOptions<Viol
       size: DEFAULT_PAGE_SIZE,
       packageTypes: [],
       repositoryIds: [],
-      sort: DEFAULT_VIOLATIONS_LIST_TABLE_SORT
+      sort: DEFAULT_VIOLATIONS_LIST_TABLE_SORT,
+      scope: RepositoryScopeType.NONE
     },
     { ignoreEmptyString: true }
   )
