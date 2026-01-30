@@ -469,6 +469,15 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 	if dto.BlockedPattern != nil {
 		blockedPattern = *dto.BlockedPattern
 	}
+	description := ""
+	if dto.Description != nil {
+		description = *dto.Description
+	}
+	labels := []string{}
+	if dto.Labels != nil {
+		labels = *dto.Labels
+	}
+
 	e := ValidatePackageTypeChange(string(u.PackageType), string(dto.PackageType))
 	if e != nil {
 		return nil, nil, e
@@ -491,6 +500,8 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 	repoEntity := &types.Registry{
 		ID:             u.RegistryID,
 		Name:           dto.Identifier,
+		Labels:         labels,
+		Description:    description,
 		ParentID:       parentID,
 		RootParentID:   rootParentID,
 		AllowedPattern: allowedPattern,

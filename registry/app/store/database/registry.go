@@ -728,7 +728,7 @@ func (r registryDao) Delete(ctx context.Context, parentID int64, name string) (e
 }
 
 func (r registryDao) Update(ctx context.Context, registry *types.Registry) (err error) {
-	var sqlQuery = " UPDATE registries SET " + util.GetSetDBKeys(registryDB{}, "registry_id, registry_uuid") +
+	var sqlQuery = " UPDATE registries SET " + util.GetSetDBKeys(registryDB{}, "registry_id", "registry_uuid") +
 		" WHERE registry_id = :registry_id "
 
 	dbRepo := mapToInternalRegistry(ctx, registry)
