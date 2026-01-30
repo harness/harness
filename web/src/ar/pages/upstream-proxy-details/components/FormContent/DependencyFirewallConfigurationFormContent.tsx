@@ -52,6 +52,7 @@ function DependencyFirewallConfigurationFormContent(props: DependencyFirewallCon
         <Checkbox
           label={getString('repositoryDetails.repositoryForm.enableDependencyFirewall')}
           disabled={props.disabled}
+          checked={enabled}
           onClick={e => {
             const isChecked = e.currentTarget.checked
             if (isChecked) {

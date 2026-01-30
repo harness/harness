@@ -69,7 +69,7 @@ function BasicInformationContent({ data }: BasicInformationContentProps) {
         {data.policySetRef && (
           <InformationMetrics.Link
             label={getString('violationsList.violationDetailsModal.basicInformationSection.policySetViolated')}
-            value={data.policySetRef}
+            value={data.policySetName || data.policySetRef}
             linkTo={policySetUrl}
           />
         )}

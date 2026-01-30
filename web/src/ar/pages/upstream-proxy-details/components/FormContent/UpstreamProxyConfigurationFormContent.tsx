@@ -35,7 +35,7 @@ import UpstreamProxyDetailsFormContent from './UpstreamProxyDetailsFormContent'
 import UpstreamProxyAuthenticationFormContent from './UpstreamProxyAuthenticationFormContent'
 import UpstreamProxyIncludeExcludePatternFormContent from './UpstreamProxyIncludeExcludePatternFormContent'
 import UpstreamProxyCleanupPoliciesFormContent from './UpstreamProxyCleanupPoliciesFormContent'
-import type { UpstreamRegistryRequest } from '../../types'
+import { UpstreamProxyConfigFirewallModeEnum, type UpstreamRegistryRequest } from '../../types'
 import DependencyFirewallConfigurationFormContent from './DependencyFirewallConfigurationFormContent'
 
 import css from './FormContent.module.scss'
@@ -64,7 +64,9 @@ export default function UpstreamProxyConfigurationFormContent(
 
   function getInitialStateOfCollapse(): boolean {
     const isCleanupPoliciesAdded = !!values.cleanupPolicy?.length
-    return isCleanupPoliciesAdded
+    const isDependencyFirewallEnabled =
+      !!values.config.firewallMode && values.config.firewallMode !== UpstreamProxyConfigFirewallModeEnum.ALLOW
+    return isCleanupPoliciesAdded || isDependencyFirewallEnabled
   }
 
   const advancedOptionsTitle = useMemo(() => {
