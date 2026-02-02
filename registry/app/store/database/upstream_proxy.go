@@ -84,6 +84,8 @@ type upstreamProxyDB struct {
 	RegistryID               int64                `db:"registry_id"`
 	RepoKey                  string               `db:"repo_key"`
 	ParentID                 string               `db:"parent_id"`
+	Description              sql.NullString       `db:"description"`
+	Labels                   sql.NullString       `db:"labels"`
 	PackageType              artifact.PackageType `db:"package_type"`
 	AllowedPattern           sql.NullString       `db:"allowed_pattern"`
 	BlockedPattern           sql.NullString       `db:"blocked_pattern"`
@@ -110,6 +112,8 @@ func getUpstreamProxyQuery() squirrel.SelectBuilder {
 			" r.registry_uuid as registry_uuid," +
 			" r.registry_id as registry_id," +
 			" r.registry_name as repo_key," +
+			" r.registry_labels as labels," +
+			" r.registry_description as description," +
 			" r.registry_parent_id as parent_id," +
 			" r.registry_package_type as package_type," +
 			" r.registry_allowed_pattern as allowed_pattern," +
@@ -518,6 +522,8 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 		RegistryID:               dst.RegistryID,
 		RepoKey:                  dst.RepoKey,
 		ParentID:                 dst.ParentID,
+		Description:              dst.Description.String,
+		Labels:                   util.StringToArr(dst.Labels.String),
 		PackageType:              dst.PackageType,
 		AllowedPattern:           util.StringToArr(dst.AllowedPattern.String),
 		BlockedPattern:           util.StringToArr(dst.BlockedPattern.String),

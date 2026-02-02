@@ -380,14 +380,7 @@ func (c *APIController) CreateRegistryEntity(
 func (c *APIController) CreateUpstreamProxyEntity(
 	ctx context.Context, dto artifact.RegistryRequest, parentID int64, rootParentID int64,
 ) (*registrytypes.Registry, *registrytypes.UpstreamProxyConfig, error) {
-	allowedPattern := []string{}
-	if dto.AllowedPattern != nil {
-		allowedPattern = *dto.AllowedPattern
-	}
-	blockedPattern := []string{}
-	if dto.BlockedPattern != nil {
-		blockedPattern = *dto.BlockedPattern
-	}
+	allowedPattern, blockedPattern, description, labels := getRepoEntityFields(dto)
 	ok := c.PackageWrapper.IsValidPackageType(string(dto.PackageType))
 	if !ok {
 		return nil, nil, usererror.BadRequest(fmt.Sprintf("invalid package type: %s", dto.PackageType))
@@ -420,6 +413,8 @@ func (c *APIController) CreateUpstreamProxyEntity(
 
 	repoEntity := &registrytypes.Registry{
 		Name:           dto.Identifier,
+		Description:    description,
+		Labels:         labels,
 		ParentID:       parentID,
 		RootParentID:   rootParentID,
 		AllowedPattern: allowedPattern,

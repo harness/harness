@@ -47,7 +47,9 @@ type UpstreamProxy struct {
 	RegistryID               int64
 	RepoKey                  string
 	ParentID                 string
+	Description              string
 	PackageType              artifact.PackageType
+	Labels                   []string
 	AllowedPattern           []string
 	BlockedPattern           []string
 	Config                   *RegistryConfig
