@@ -54,7 +54,7 @@ export class CondaRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
   protected isWebhookSupported = true
-  protected isDependencyFirewallSupported = true
+  protected isDependencyFirewallSupported = false
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.Anaconda,
     UpstreamRepositoryURLInputSource.Custom
