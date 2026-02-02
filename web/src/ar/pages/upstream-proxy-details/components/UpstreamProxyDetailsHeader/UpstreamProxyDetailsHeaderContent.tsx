@@ -44,7 +44,7 @@ interface UpstreamProxyDetailsHeaderContentProps {
 
 export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDetailsHeaderContentProps): JSX.Element {
   const { data, iconSize = 40 } = props
-  const { identifier, modifiedAt, packageType, labels, description, isPublic, isDeleted } = data
+  const { identifier, modifiedAt, packageType, labels, description, isPublic, deletedAt } = data
   const { getString } = useStrings()
   const { isCurrentSessionPublic } = useAppStore()
 
@@ -71,7 +71,7 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
               />
             )}
             <RepositoryVisibilityBadge type={isPublic ? RepositoryVisibility.PUBLIC : RepositoryVisibility.PRIVATE} />
-            <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
+            <AvailablityBadge type={deletedAt ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
           </Layout.Horizontal>
           <Text
             data-testid="registry-description"

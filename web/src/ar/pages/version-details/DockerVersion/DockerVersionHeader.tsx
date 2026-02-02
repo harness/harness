@@ -39,7 +39,7 @@ interface DockerVersionHeaderProps {
 
 export default function DockerVersionHeader(props: DockerVersionHeaderProps): JSX.Element {
   const { iconSize = 40, data } = props
-  const { imageName: name, version, packageType, isQuarantined, quarantineReason, isDeleted } = data
+  const { imageName: name, version, packageType, isQuarantined, quarantineReason, deletedAt } = data
   const { isCurrentSessionPublic } = useAppStore()
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
@@ -79,7 +79,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
         tag={tag}
       />
       {isQuarantined && <QuarantineBadge reason={quarantineReason} />}
-      <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
+      <AvailablityBadge type={deletedAt ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}

@@ -34,8 +34,7 @@ export const mockGenericLatestVersionListTableData: ListArtifactVersion = {
       registryPath: '',
       size: '69.56MB',
       uuid: 'uuid',
-      registryUUID: 'uuid',
-      isDeleted: false
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -50,8 +49,7 @@ export const mockGenericVersionSummary: ArtifactVersionSummaryResponseResponse =
     packageType: 'GENERIC',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid',
-    isDeleted: false
+    registryUUID: 'uuid'
   },
   status: 'SUCCESS'
 }
@@ -74,8 +72,7 @@ export const mockGenericVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.43MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -92,8 +89,7 @@ export const mockGenericVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -110,8 +106,7 @@ export const mockGenericVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       }
     ],
     itemCount: 3,
@@ -129,8 +124,7 @@ export const mockGenericArtifactDetails: ArtifactDetailResponseResponse = {
     modifiedAt: '1738085520013',
     name: 'artifact',
     packageType: 'GENERIC',
-    version: 'v1',
-    isDeleted: false
+    version: 'v1'
   },
   status: 'SUCCESS'
 }

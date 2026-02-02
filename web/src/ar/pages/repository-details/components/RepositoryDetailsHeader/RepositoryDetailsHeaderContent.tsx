@@ -44,7 +44,7 @@ interface RepositoryDetailsHeaderContentProps {
 
 export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsHeaderContentProps): JSX.Element {
   const { data, iconSize = 40 } = props
-  const { identifier, labels, description, modifiedAt, packageType, isPublic, isDeleted } = data || {}
+  const { identifier, labels, description, modifiedAt, packageType, isPublic, deletedAt } = data || {}
   const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
   return (
@@ -67,7 +67,7 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
               />
             )}
             <RepositoryVisibilityBadge type={isPublic ? RepositoryVisibility.PUBLIC : RepositoryVisibility.PRIVATE} />
-            <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
+            <AvailablityBadge type={deletedAt ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
           </Layout.Horizontal>
           <Text
             data-testid="registry-description"

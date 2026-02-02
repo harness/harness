@@ -61,11 +61,12 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey?: string; artifact?: stri
   })
 
   const responseData = data?.content?.data
+  const isDeleted = !!responseData?.deletedAt
   return (
     <ArtifactProviderContext.Provider
       value={{
         data: responseData,
-        isReadonly: responseData?.isDeleted || false,
+        isReadonly: isDeleted,
         refetch,
         isDirty,
         isUpdating,

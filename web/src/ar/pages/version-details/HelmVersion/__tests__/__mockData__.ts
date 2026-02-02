@@ -35,8 +35,7 @@ export const mockHelmLatestVersionListTableData: ListArtifactVersion = {
       registryPath: '',
       size: '69.56MB',
       uuid: 'uuid',
-      registryUUID: 'uuid',
-      isDeleted: false
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -51,8 +50,7 @@ export const mockHelmVersionSummary: ArtifactVersionSummaryResponseResponse = {
     packageType: 'HELM',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid',
-    isDeleted: false
+    registryUUID: 'uuid'
   },
   status: 'SUCCESS'
 }
@@ -75,8 +73,7 @@ export const mockHelmVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.43MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -93,8 +90,7 @@ export const mockHelmVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -111,8 +107,7 @@ export const mockHelmVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       }
     ],
     itemCount: 3,

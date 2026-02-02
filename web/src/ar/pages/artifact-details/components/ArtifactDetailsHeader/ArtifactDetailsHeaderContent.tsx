@@ -47,7 +47,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
 
   const { repositoryIdentifier, artifactIdentifier } = pathParams
-  const { packageType, imageName, modifiedAt, downloadsCount, createdAt, isDeleted } = data as ArtifactSummary
+  const { packageType, imageName, modifiedAt, downloadsCount, createdAt, deletedAt } = data as ArtifactSummary
 
   return (
     <Layout.Vertical spacing="small">
@@ -59,7 +59,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
           flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <NameAndDescription name={imageName} hideDescription />
-            <AvailablityBadge type={isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
+            <AvailablityBadge type={deletedAt ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
           </Layout.Horizontal>
           <WeeklyDownloads downloads={downloadsCount} label={getString('artifactDetails.totalDownloads')} />
         </Layout.Vertical>

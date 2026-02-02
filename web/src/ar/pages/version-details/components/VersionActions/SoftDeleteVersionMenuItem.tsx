@@ -47,9 +47,11 @@ export default function SoftDeleteVersionMenuItem(props: VersionActionProps): JS
     uuid: data.uuid
   })
 
+  const isDeleted = !!data.deletedAt
+
   return (
     <>
-      {data.isDeleted && (
+      {isDeleted && (
         <RbacMenuItem
           icon="repeat"
           text={getString('versionList.actions.restoreVersion')}
@@ -64,7 +66,7 @@ export default function SoftDeleteVersionMenuItem(props: VersionActionProps): JS
           }}
         />
       )}
-      {!data.isDeleted && (
+      {!isDeleted && (
         <RbacMenuItem
           icon="archive"
           text={getString('versionList.actions.archiveVersion')}

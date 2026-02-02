@@ -73,12 +73,13 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
   })
 
   const responseData = data?.content?.data
+  const isDeleted = !!responseData?.deletedAt
 
   return (
     <VersionProviderContext.Provider
       value={{
         data: responseData,
-        isReadonly: responseData?.isDeleted || false,
+        isReadonly: isDeleted,
         refetch,
         isDirty,
         isUpdating,

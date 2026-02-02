@@ -97,6 +97,7 @@ const RepositoryProvider: FC<PropsWithChildren<unknown>> = ({ children }): JSX.E
   }, [repositoryData, loading])
 
   const data = repositoryData?.content?.data
+  const isDeleted = !!data?.deletedAt
 
   return (
     <RepositoryProviderContext.Provider
@@ -107,7 +108,7 @@ const RepositoryProvider: FC<PropsWithChildren<unknown>> = ({ children }): JSX.E
         setIsDirty,
         setIsLoading,
         setIsUpdating,
-        isReadonly: !isEdit || !!data?.isDeleted,
+        isReadonly: !isEdit || isDeleted,
         refetch
       }}>
       {loading ? <PageSpinner /> : null}

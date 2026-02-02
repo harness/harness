@@ -59,9 +59,11 @@ export default function SoftDeleteArtifactMenuItem(props: ArtifactActionProps): 
     uuid: data?.uuid
   })
 
+  const isDeleted = !!data.deletedAt
+
   return (
     <>
-      {data.isDeleted && (
+      {isDeleted && (
         <RbacMenuItem
           icon="repeat"
           text={getString('artifactList.table.actions.restorePackage')}
@@ -76,7 +78,7 @@ export default function SoftDeleteArtifactMenuItem(props: ArtifactActionProps): 
           }}
         />
       )}
-      {!data.isDeleted && (
+      {!isDeleted && (
         <RbacMenuItem
           icon="archive"
           text={getString('artifactList.table.actions.archivePackage')}

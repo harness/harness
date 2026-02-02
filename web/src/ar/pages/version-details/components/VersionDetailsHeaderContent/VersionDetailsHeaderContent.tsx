@@ -70,7 +70,7 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         isLatestVersion={false}
       />
       {data.isQuarantined && <QuarantineBadge reason={data.quarantineReason} />}
-      <AvailablityBadge type={data.isDeleted ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
+      <AvailablityBadge type={data.deletedAt ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
       {data.scanStatus && <ScanBadge scanId={data.scanId} status={data.scanStatus} onClick={openModal} />}
       <Expander />
       <SetupClientButton

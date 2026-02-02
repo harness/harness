@@ -42,8 +42,7 @@ export const mockDockerLatestVersionListTableData: ListArtifactVersion = {
       registryPath: '',
       size: '69.56MB',
       uuid: 'uuid',
-      registryUUID: 'uuid',
-      isDeleted: false
+      registryUUID: 'uuid'
     }
   ],
   itemCount: 55,
@@ -88,8 +87,7 @@ export const mockDockerVersionSummary: ArtifactVersionSummaryResponseResponse = 
     stoPipelineId: 'HARNESS_ARTIFACT_SCAN_PIPELINE',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid',
-    isDeleted: false
+    registryUUID: 'uuid'
   },
   status: 'SUCCESS'
 }
@@ -100,8 +98,7 @@ export const mockDockerVersionSummaryWithoutSscaAndStoData: ArtifactVersionSumma
     packageType: 'DOCKER',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid',
-    isDeleted: false
+    registryUUID: 'uuid'
   },
   status: 'SUCCESS'
 }
@@ -124,8 +121,7 @@ export const mockDockerVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.43MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -142,8 +138,7 @@ export const mockDockerVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       },
       {
         deploymentMetadata: {
@@ -160,8 +155,7 @@ export const mockDockerVersionList: ListArtifactVersionResponseResponse = {
         registryPath: '',
         size: '246.89MB',
         uuid: 'uuid',
-        registryUUID: 'uuid',
-        isDeleted: false
+        registryUUID: 'uuid'
       }
     ],
     itemCount: 3,

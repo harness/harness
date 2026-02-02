@@ -74,6 +74,7 @@ export const mockArtifactScanDetails: ArtifactScanDetails = {
   policyFailureDetails: [
     {
       policyName: 'Policy 1',
+      policyRef: 'policy1',
       category: 'Security',
       vulnerabilities: [
         {
@@ -90,12 +91,14 @@ export const mockArtifactScanDetails: ArtifactScanDetails = {
     },
     {
       policyName: 'Policy 2',
+      policyRef: 'policy2',
       category: 'License',
       allowedLicenses: ['Apache-2.0', 'MIT'],
       blockedLicense: 'GPL-3.0'
     },
     {
       policyName: 'Policy 3',
+      policyRef: 'policy3',
       category: 'PackageAge',
       packageAgeThreshold: '365',
       publishedOn: '2023-01-01'
