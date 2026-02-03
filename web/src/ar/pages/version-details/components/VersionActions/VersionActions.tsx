@@ -55,7 +55,8 @@ export default function VersionActions({
   const { HAR_ARTIFACT_QUARANTINE_ENABLED, HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
   const isBulkDownloadFileEnabled = useBulkDownloadFile()
   const allowSoftDelete = useAllowSoftDelete()
-  const allowReEvaluate = HAR_DEPENDENCY_FIREWALL && repoType === RepositoryConfigType.UPSTREAM
+  const isFirewallEnabled = data.firewallMode ? data.firewallMode !== 'ALLOW' : false
+  const allowReEvaluate = HAR_DEPENDENCY_FIREWALL && isFirewallEnabled && repoType === RepositoryConfigType.UPSTREAM
 
   const isAllowed = (action: VersionAction): boolean => {
     if (!allowedActions) return true
