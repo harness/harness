@@ -234,15 +234,15 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 		return pkg.RegistryInfo{}, errcode.ErrCodeRegNotFound
 	}
 
-	if registry.PackageType != artifact.PackageTypeDOCKER {
+	if registry.PackageType != artifact.PackageTypeDOCKER && registry.PackageType != artifact.PackageTypeHELM {
 		log.Ctx(ctx).Error().Msgf(
-			"Package type mismatch: registry %s is type %s, but Docker/OCI artifact upload attempted",
+			"Package type mismatch: registry %s is type %s, but Docker/HELM artifact upload attempted",
 			registryIdentifier, registry.PackageType,
 		)
 		return pkg.RegistryInfo{}, errcode.ErrCodeNameUnknown.WithMessage(
 			fmt.Sprintf(
-				"404 Not Found - Registry package type mismatch: %s != %s",
-				registry.PackageType, artifact.PackageTypeDOCKER,
+				"404 Not Found - Registry package type mismatch: %s is not OCI-compatible (expected DOCKER or HELM)",
+				registry.PackageType,
 			),
 		)
 	}
