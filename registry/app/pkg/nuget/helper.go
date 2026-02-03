@@ -666,11 +666,36 @@ func createDependencyGroups(metadata *nugetmetadata.NugetMetadata) []*nuget.Pack
 	if metadata.PackageMetadata.Dependencies == nil {
 		return nil
 	}
-	dependencyGroups := make([]*nuget.PackageDependencyGroup, 0,
-		len(metadata.PackageMetadata.Dependencies.Groups))
-	for _, group := range metadata.Metadata.PackageMetadata.Dependencies.Groups {
-		deps := make([]*nuget.PackageDependency, 0, len(group.Dependencies))
-		for _, dep := range group.Dependencies {
+
+	var dependencyGroups []*nuget.PackageDependencyGroup
+
+	// Handle grouped dependencies (e.g., <group targetFramework="..."><dependency.../></group>)
+	for _, group := range metadata.PackageMetadata.Dependencies.Groups {
+		var deps []*nuget.PackageDependency
+		if len(group.Dependencies) > 0 {
+			deps = make([]*nuget.PackageDependency, 0, len(group.Dependencies))
+			for _, dep := range group.Dependencies {
+				if dep.ID == "" || dep.Version == "" {
+					continue
+				}
+				deps = append(deps, &nuget.PackageDependency{
+					ID:    dep.ID,
+					Range: dep.Version,
+				})
+			}
+		}
+		// Always include the group, even if it has no dependencies (deps will be nil)
+		dependencyGroups = append(dependencyGroups, &nuget.PackageDependencyGroup{
+			TargetFramework: group.TargetFramework,
+			Dependencies:    deps,
+		})
+	}
+
+	// Handle direct dependencies (e.g., <dependencies><dependency.../></dependencies>)
+	// These are ungrouped dependencies without a targetFramework
+	if len(metadata.PackageMetadata.Dependencies.Dependencies) > 0 {
+		deps := make([]*nuget.PackageDependency, 0, len(metadata.PackageMetadata.Dependencies.Dependencies))
+		for _, dep := range metadata.PackageMetadata.Dependencies.Dependencies {
 			if dep.ID == "" || dep.Version == "" {
 				continue
 			}
@@ -680,11 +705,13 @@ func createDependencyGroups(metadata *nugetmetadata.NugetMetadata) []*nuget.Pack
 			})
 		}
 		if len(deps) > 0 {
+			// Add ungrouped dependencies as a group with no target framework
 			dependencyGroups = append(dependencyGroups, &nuget.PackageDependencyGroup{
-				TargetFramework: group.TargetFramework,
+				TargetFramework: "",
 				Dependencies:    deps,
 			})
 		}
 	}
+
 	return dependencyGroups
 }
