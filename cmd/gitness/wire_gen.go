@@ -180,6 +180,7 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/udp"
 
 	_ "github.com/lib/pq"
 
@@ -612,6 +613,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	nodesRepository := database2.ProvideNodeDao(db)
 	fileManager := filemanager.Provider(registryRepository, genericBlobRepository, nodesRepository, transactor, config, storageService, bucketService, replicationReporter)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
+	accessor := dbtx.ProvideAccessor(accessorTx)
+	udpService := udp.ProvideNoop()
 	webhooksRepository := database2.ProvideWebhookDao(db)
 	webhooksExecutionRepository := database2.ProvideWebhookExecutionDao(db)
 	readerFactory3, err := artifact.ProvideReaderFactory(eventsSystem)
@@ -632,7 +635,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
 	interfacesRegistryHelper := helpers.ProvideRegistryHelper(artifactRepository, fileManager, imageRepository, artifactReporter, asyncprocessingReporter, transactor, provider, config)
 	packageWrapper := helpers.ProvidePackageWrapperProvider(interfacesRegistryHelper, registryFinder, registryHelper)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceFinder, transactor, accessor, authenticator, provider, authorizer, auditService, udpService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, registryFinder, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository, authorizer, spaceFinder, auditService)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)

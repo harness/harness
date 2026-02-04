@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/registry/utils"
 	coretypes "github.com/harness/gitness/types"
 	gitnessenum "github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/udp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -237,7 +238,7 @@ func TestCreateRegistry(t *testing.T) {
 
 				packageFactory := factory.NewPackageFactory()
 				packageFactory.Register(pkg.NewDockerPackageType(nil))
-				packageWrapper := helpers.NewPackageWrapper(packageFactory, mockRegFinder)
+				mockPackageWrapper := helpers.NewPackageWrapper(packageFactory, mockRegFinder)
 
 				// Create controller with updated signature.
 				return metadata.NewAPIController(
@@ -253,29 +254,31 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // driver.
 					mockSpaceFinder,
 					mockTransactor,
+					nil, // db.
 					mockURLProvider,
 					mockAuthorizer,
 					mockAuditService,
-					nil, // artifactStore.
-					nil, // webhooksRepository.
-					nil, // webhooksExecutionRepository.
+					&udp.Noop{}, // udpService.
+					nil,         // artifactStore.
+					nil,         // webhooksRepository.
+					nil,         // webhooksExecutionRepository.
 					mockRegistryMetadataHelper,
 					nil, // webhookService.
 					eventReporter,
-					nil, //
-					"",  // downloadStatRepository.
-					nil,
+					nil, // downloadStatRepository.
+					"",  // setupDetailsAuthHeaderPrefix.
+					nil, // registryBlobStore.
 					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
+					nil, // cargoRegistryHelper.
+					nil, // spaceController.
+					nil, // quarantineArtifactRepository.
+					nil, // quarantineFinder.
+					nil, // spaceStore.
 					func(_ context.Context) bool {
 						return true
 					},
-					packageWrapper,
+					mockPackageWrapper,
 					mockPublicAccessService,
 				)
 			},
@@ -302,12 +305,17 @@ func TestCreateRegistry(t *testing.T) {
 				},
 			},
 			setupMocks: func() *metadata.APIController {
-				mockRegistryMetadataHelper := new(mocks.RegistryMetadataHelper)
-				mockRegistryRepo := new(mocks.RegistryRepository)
-				mockRegFinder := new(mocks.RegistryFinder)
-				mockTransactor := new(mocks.Transactor)
-				mockGenericBlobRepo := new(mocks.GenericBlobRepository)
-				mockPublicAccessService := new(mocks.Service)
+				mockRegistryRepo := &mocks.RegistryRepository{}
+				mockGenericBlobRepo := &mocks.GenericBlobRepository{}
+				mockTransactor := &mocks.Transactor{}
+				mockSpaceFinder := &mocks.SpaceFinder{}
+				mockURLProvider := &mocks.Provider{}
+				mockAuthorizer := &mocks.Authorizer{}
+				mockAuditService := &mocks.AuditService{}
+				mockRegistryMetadataHelper := &mocks.RegistryMetadataHelper{}
+				mockRegFinder := &mocks.RegistryFinder{}
+				mockPublicAccessService := &mocks.Service{}
+				mockPackageWrapper := &mocks.MockPackageWrapper{}
 
 				// Setup error case mock.
 				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "invalid", "").
@@ -333,34 +341,36 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // upstreamProxyStore.
 					nil, // tagStore.
 					nil, // manifestStore.
-					nil, // cleanupPolicyStore
+					nil, // cleanupPolicyStore.
 					nil, // imageStore.
 					nil, // driver.
-					nil, // spaceFinder
+					mockSpaceFinder,
 					mockTransactor,
-					nil, // urlProvider.
-					nil, // authorizer.
-					nil, // auditService.
-					nil, // artifactStore.
-					nil, // webhooksRepository.
-					nil, // webhooksExecutionRepository.
+					nil, // db.
+					mockURLProvider,
+					mockAuthorizer,
+					mockAuditService,
+					&udp.Noop{}, // udpService.
+					nil,         // artifactStore.
+					nil,         // webhooksRepository.
+					nil,         // webhooksExecutionRepository.
 					mockRegistryMetadataHelper,
 					nil, // webhookService.
 					eventReporter,
-					nil, //
-					"",  // downloadStatRepository.
-					nil,
+					nil, // downloadStatRepository.
+					"",  // setupDetailsAuthHeaderPrefix.
+					nil, // registryBlobStore.
 					mockRegFinder,
 					nil, // PostProcessingReporter - not needed for this test.
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
+					nil, // cargoRegistryHelper.
+					nil, // spaceController.
+					nil, // quarantineArtifactRepository.
+					nil, // quarantineFinder.
+					nil, // spaceStore.
 					func(_ context.Context) bool {
 						return true
 					},
-					nil,
+					mockPackageWrapper,
 					mockPublicAccessService,
 				)
 			},

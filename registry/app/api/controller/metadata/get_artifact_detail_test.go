@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/registry/types"
 	coretypes "github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/udp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -275,7 +276,7 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 
 	return metadata.NewAPIController(
 		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil,
+		mockSpaceFinder, nil, nil, nil, mockAuthorizer, nil, nil, mockArtifactStore, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, mockDownloadStatRepo, "",
 		nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
 		func(_ context.Context) bool { return false },
@@ -322,7 +323,7 @@ func setupControllerWithError(_ *testing.T, errorType string) *metadata.APIContr
 
 	return metadata.NewAPIController(
 		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
+		mockSpaceFinder, nil, nil, nil, mockAuthorizer, nil, &udp.Noop{}, nil, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
 		nil, nil, nil, nil, nil, nil, nil, nil,
 		func(_ context.Context) bool { return false },
@@ -481,7 +482,7 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 
 	return metadata.NewAPIController(
 		mockRegistryRepo, fileManager, nil, nil, nil, nil, nil, nil, mockImageStore, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, mockArtifactStore, nil, nil,
+		mockSpaceFinder, nil, nil, nil, mockAuthorizer, nil, nil, mockArtifactStore, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, mockDownloadStatRepo, "",
 		nil, nil, nil, nil, nil, mockQuarantineRepo, nil, nil,
 		func(_ context.Context) bool { return false },

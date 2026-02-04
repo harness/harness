@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/registry/types"
 	coretypes "github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/udp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -220,7 +221,7 @@ func setupArtifactsControllerWithError(_ *testing.T, errorType string) *metadata
 
 	return metadata.NewAPIController(
 		nil, fileManager, nil, nil, nil, nil, nil, nil, nil, nil,
-		mockSpaceFinder, nil, nil, mockAuthorizer, nil, nil, nil, nil,
+		mockSpaceFinder, nil, nil, nil, mockAuthorizer, nil, &udp.Noop{}, nil, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
 		nil, nil, nil, nil, nil, nil, nil, nil,
 		func(_ context.Context) bool { return false },
@@ -358,7 +359,7 @@ func setupArtifactsSnapshotController(
 
 	return metadata.NewAPIController(
 		mockRegistryRepo, fileManager, nil, nil, nil, mockTagStore, nil, nil, nil, nil,
-		mockSpaceFinder, nil, mockURLProvider, mockAuthorizer, nil, nil, nil, nil,
+		mockSpaceFinder, nil, nil, mockURLProvider, mockAuthorizer, nil, &udp.Noop{}, nil, nil, nil,
 		mockRegistryMetadataHelper, nil, eventReporter, nil, "",
 		nil, nil, nil, nil, nil, nil, nil, nil,
 		func(_ context.Context) bool { return untaggedImagesEnabled },

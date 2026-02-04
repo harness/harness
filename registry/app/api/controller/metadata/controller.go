@@ -33,8 +33,9 @@ import (
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
-	"github.com/harness/gitness/registry/services/webhook"
+	webhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/udp"
 )
 
 var errPublicArtifactRegistryCreationDisabled = usererror.BadRequest("Public artifact registry creation is disabled.")
@@ -55,10 +56,12 @@ type APIController struct {
 	CleanupPolicyStore           store.CleanupPolicyRepository
 	SpaceFinder                  interfaces.SpaceFinder
 	tx                           dbtx.Transactor
+	db                           dbtx.Accessor
 	StorageDriver                storagedriver.StorageDriver
 	URLProvider                  urlprovider.Provider
 	Authorizer                   authz.Authorizer
 	AuditService                 audit.Service
+	UDPService                   udp.Service
 	ArtifactStore                store.ArtifactRepository
 	WebhooksRepository           store.WebhooksRepository
 	WebhooksExecutionRepository  store.WebhooksExecutionRepository
@@ -93,9 +96,11 @@ func NewAPIController(
 	driver storagedriver.StorageDriver,
 	spaceFinder interfaces.SpaceFinder,
 	tx dbtx.Transactor,
+	db dbtx.Accessor,
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
 	auditService audit.Service,
+	udpService udp.Service,
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
@@ -129,9 +134,11 @@ func NewAPIController(
 		SpaceFinder:                  spaceFinder,
 		StorageDriver:                driver,
 		tx:                           tx,
+		db:                           db,
 		URLProvider:                  urlProvider,
 		Authorizer:                   authorizer,
 		AuditService:                 auditService,
+		UDPService:                   udpService,
 		ArtifactStore:                artifactStore,
 		WebhooksRepository:           webhooksRepository,
 		WebhooksExecutionRepository:  webhooksExecutionRepository,

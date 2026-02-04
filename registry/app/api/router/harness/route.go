@@ -41,6 +41,7 @@ import (
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/udp"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -73,10 +74,12 @@ func NewAPIHandler(
 	baseURL string,
 	spaceFinder interfaces.SpaceFinder,
 	tx dbtx.Transactor,
+	db dbtx.Accessor,
 	authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
 	auditService audit.Service,
+	udpService udp.Service,
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
@@ -114,9 +117,11 @@ func NewAPIHandler(
 		driver,
 		spaceFinder,
 		tx,
+		db,
 		urlProvider,
 		authorizer,
 		auditService,
+		udpService,
 		artifactStore,
 		webhooksRepository,
 		webhooksExecutionRepository,
