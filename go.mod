@@ -2,6 +2,8 @@ module github.com/drone/drone
 
 replace github.com/docker/docker => github.com/docker/engine v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible
 
+replace github.com/docker/go-units => github.com/docker/go-units v0.4.0
+
 require (
 	github.com/766b/chi-prometheus v0.0.0-20211217152057-87afa9aa2ca8
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e

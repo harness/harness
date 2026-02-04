@@ -617,7 +617,16 @@ var (
 	}
 
 	dummyYaml = &core.Config{
-		Data: "kind: pipeline\nsteps: [ ]",
+		Data: `kind: pipeline
+steps:
+- commands:
+  - ls
+  name: build
+  image: golang
+  resources:
+    limits:
+      memory: 16Mi
+`,
 	}
 
 	dummyYamlInvalid = &core.Config{
