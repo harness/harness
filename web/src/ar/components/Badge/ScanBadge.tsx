@@ -29,7 +29,7 @@ import css from './Badge.module.scss'
 function ScanBadgeTooltip({ value }: { value: string }) {
   const { getString } = useStrings()
   return (
-    <Container>
+    <Container padding="medium">
       <Text>
         {getString('violationsList.evaluatedAt', {
           value: getReadableDateTime(Number(value), DEFAULT_DATE_TIME_FORMAT)
