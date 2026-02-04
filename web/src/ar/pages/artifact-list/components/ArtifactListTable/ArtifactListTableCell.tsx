@@ -253,12 +253,12 @@ export const ArtifactVersionActions: CellType = ({ row }) => {
 
 export const ViolationScanStatusCell: CellType = ({ row }) => {
   const data = row.original
-  const { scanStatus, scanId, packageType, registryType } = data
+  const { scanStatus, scanId, packageType, registryType, lastScannedAt } = data
   const { getString } = useStrings()
   const [showModal] = useViolationDetailsModal({ scanId: scanId || '' })
   const repositoryType = repositoryFactory.getRepositoryType(packageType)
   const isViolationScanSupported =
     repositoryType?.getIsDependencyFirewallSupported() && registryType === RepositoryConfigType.UPSTREAM
   if (!isViolationScanSupported) return <TableCells.TextCell value={getString('na')} />
-  return <ScanBadge scanId={scanId} status={scanStatus} onClick={() => showModal()} />
+  return <ScanBadge scanId={scanId} evaluatedAt={lastScannedAt} status={scanStatus} onClick={() => showModal()} />
 }

@@ -26,7 +26,11 @@ import type {
 } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
+import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
+import { getReadableDateTime } from '@ar/common/dateUtils'
+
 import InformationMetrics from './InformationMetrics'
+
 import css from './ViolationDetailsContent.module.scss'
 
 interface ViolationFailureDetailsItemProps {
@@ -77,7 +81,7 @@ function LicensePolicyFailureDetailItem({ data }: { data: LicensePolicyFailureDe
       />
       <InformationMetrics.Text
         label={getString(
-          'violationsList.violationDetailsModal.violatedPoliciesSection.licenseViolation.blockedLicense'
+          'violationsList.violationDetailsModal.violatedPoliciesSection.licenseViolation.packageLicense'
         )}
         value={blockedLicense.toString()}
       />
@@ -100,7 +104,7 @@ function PackageAgeViolationPolicyFailureDetailItem({ data }: { data: PackageAge
         label={getString(
           'violationsList.violationDetailsModal.violatedPoliciesSection.packageAgeViolation.publishedOn'
         )}
-        value={publishedOn.toString()}
+        value={publishedOn ? getReadableDateTime(Number(publishedOn), DEFAULT_DATE_TIME_FORMAT) : getString('na')}
       />
     </Container>
   )
@@ -142,7 +146,7 @@ function ViolationFailureDetailsItem({ data }: ViolationFailureDetailsItemProps)
         margin={{ bottom: 'medium' }}
         font={{ variation: FontVariation.BODY, weight: 'bold' }}
         color={Color.PRIMARY_7}>
-        {policyName}
+        {getString('violationsList.violationDetailsModal.violatedPoliciesSection.policyName', { policyName })}
       </Text>
       <InformationMetrics.Text
         label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.category')}

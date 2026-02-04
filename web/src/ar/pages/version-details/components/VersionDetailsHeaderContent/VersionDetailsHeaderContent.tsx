@@ -71,7 +71,9 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
       />
       {data.isQuarantined && <QuarantineBadge reason={data.quarantineReason} />}
       <AvailablityBadge type={data.deletedAt ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
-      {data.scanStatus && <ScanBadge scanId={data.scanId} status={data.scanStatus} onClick={openModal} />}
+      {data.scanStatus && (
+        <ScanBadge scanId={data.scanId} evaluatedAt={data.lastScannedAt} status={data.scanStatus} onClick={openModal} />
+      )}
       <Expander />
       <SetupClientButton
         repositoryIdentifier={pathParams.repositoryIdentifier}

@@ -33,7 +33,7 @@ function TextMetric(props: TextMetricProps) {
   return (
     <Layout.Vertical spacing="xsmall">
       <Text
-        font={{ variation: FontVariation.BODY }}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
         color={Color.GREY_700}
         icon={props.labelIconProps?.name}
         iconProps={props.labelIconProps}
@@ -60,7 +60,7 @@ function LinkMetric(props: LinkMetricProps) {
   return (
     <Layout.Vertical spacing="xsmall">
       <Text
-        font={{ variation: FontVariation.BODY }}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
         color={Color.GREY_700}
         icon={props.labelIconProps?.name}
         iconProps={props.labelIconProps}
@@ -92,7 +92,7 @@ function ScanStatusMetric(props: StatusMetricProps) {
   return (
     <Layout.Vertical spacing="xsmall">
       <Text
-        font={{ variation: FontVariation.BODY }}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
         color={Color.GREY_700}
         icon={props.labelIconProps?.name}
         iconProps={props.labelIconProps}>

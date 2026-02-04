@@ -15,16 +15,33 @@
  */
 
 import React from 'react'
-import { Text } from '@harnessio/uicore'
+import { Position } from '@blueprintjs/core'
+import { Container, Text } from '@harnessio/uicore'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
+import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
+import { getReadableDateTime } from '@ar/common/dateUtils'
 
 import Badge from './Badge'
 import css from './Badge.module.scss'
 
+function ScanBadgeTooltip({ value }: { value: string }) {
+  const { getString } = useStrings()
+  return (
+    <Container>
+      <Text>
+        {getString('violationsList.evaluatedAt', {
+          value: getReadableDateTime(Number(value), DEFAULT_DATE_TIME_FORMAT)
+        })}
+      </Text>
+    </Container>
+  )
+}
+
 interface ScanBadgeProps {
   scanId?: string
+  evaluatedAt?: string
   status?: ArtifactVersionSummary['scanStatus']
   onClick?: () => void
 }
@@ -36,19 +53,45 @@ export default function ScanBadge(props: ScanBadgeProps): JSX.Element {
   switch (status) {
     case 'BLOCKED':
       return (
-        <Badge className={css.blockedStatus} icon="warning-sign" iconProps={{ size: 12 }} onClick={onClick}>
+        <Badge
+          className={css.blockedStatus}
+          tooltip={<ScanBadgeTooltip value={props.evaluatedAt || ''} />}
+          tooltipProps={{
+            position: Position.TOP,
+            disabled: !props.evaluatedAt
+          }}
+          icon="warning-sign"
+          iconProps={{ size: 12 }}
+          onClick={onClick}>
           {getString('status.blocked')}
         </Badge>
       )
     case 'WARN':
       return (
-        <Badge className={css.warningStatus} icon="warning-icon" iconProps={{ size: 12 }} onClick={onClick}>
+        <Badge
+          className={css.warningStatus}
+          tooltip={<ScanBadgeTooltip value={props.evaluatedAt || ''} />}
+          tooltipProps={{
+            position: Position.TOP,
+            disabled: !props.evaluatedAt
+          }}
+          icon="warning-icon"
+          iconProps={{ size: 12 }}
+          onClick={onClick}>
           {getString('status.warning')}
         </Badge>
       )
     default:
       return (
-        <Badge className={css.passedStatus} icon="tick-circle" iconProps={{ size: 12 }}>
+        <Badge
+          className={css.passedStatus}
+          tooltip={<ScanBadgeTooltip value={props.evaluatedAt || ''} />}
+          tooltipProps={{
+            position: Position.TOP,
+            disabled: !props.evaluatedAt
+          }}
+          icon="tick-circle"
+          iconProps={{ size: 12 }}>
           {getString('status.passed')}
         </Badge>
       )

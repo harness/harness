@@ -15,7 +15,7 @@ table:
     archivedAt: Archived At
     deployments: '{{ $.versionDetails.tabs.deployments }}'
     tags: Tags
-    scanStatus: Scan Status
+    scanStatus: Evaluation Status
 actions:
   deleteVersion: Delete
   archiveVersion: Archive

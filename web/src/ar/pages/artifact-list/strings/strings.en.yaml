@@ -11,7 +11,7 @@ table:
   columns:
     name: Name
     artifactName: Artifact Name
-    scanStatus: Scan Status
+    scanStatus: Evaluation Status
     repository: Registry
     tags: Labels
     downloads: Downloads
@@ -34,6 +34,6 @@ table:
     VulnerabilityStatus:
       scanned: Scanned
       nonScanned: Not Scanned
-      scanStatus: Scan Status
+      scanStatus: Evaluation Status
       partiallyScanned: '{{ scanned }}/{{ total }} Scanned'
       digestMenuItemText: '{{archName}} (digest: {{digest}})'

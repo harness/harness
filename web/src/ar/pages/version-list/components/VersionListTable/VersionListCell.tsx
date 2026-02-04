@@ -230,7 +230,7 @@ export const OCITagsCell: CellType = ({ row }) => {
 
 export const ScanStatusCell: CellType = ({ row }) => {
   const data = row.original
-  const { scanStatus, scanId } = data
+  const { scanStatus, scanId, lastScannedAt } = data
   const [showModal] = useViolationDetailsModal({ scanId: scanId || '' })
-  return <ScanBadge scanId={scanId} status={scanStatus} onClick={() => showModal()} />
+  return <ScanBadge scanId={scanId} status={scanStatus} evaluatedAt={lastScannedAt} onClick={() => showModal()} />
 }

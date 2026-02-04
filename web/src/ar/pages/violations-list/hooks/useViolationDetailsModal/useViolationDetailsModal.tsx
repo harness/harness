@@ -25,7 +25,6 @@ import css from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetup
 
 export interface useViolationDetailsModalProps {
   scanId: string
-  policySetRef?: string
   onClose?: () => void
 }
 
@@ -52,7 +51,7 @@ export function useViolationDetailsModal(props: useViolationDetailsModalProps) {
           withoutBoxShadow
           onClick={handleCloseModal}
         />
-        <ViolationDetailsContent scanId={props.scanId} policySetRef={props.policySetRef} onClose={handleCloseModal} />
+        <ViolationDetailsContent scanId={props.scanId} onClose={handleCloseModal} />
       </Drawer>
     )
   })

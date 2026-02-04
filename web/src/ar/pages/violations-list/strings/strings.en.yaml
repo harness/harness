@@ -1,5 +1,6 @@
 page: Violations List Page
 noViolationsFound: No Violations Found
+evaluatedAt: 'Evaluated At {{value}}'
 cards:
   totalViolations: Total Violations
   blockedViolations: Blocked Violations
@@ -11,6 +12,7 @@ table:
     registry: Upstream Registry
     policySet: Policy Set Violated
     status: Status
+    lastEvaluatedAt: Evaluated At
     actions:
       violationDetails: Violation Details
 violationDetailsModal:
@@ -22,6 +24,7 @@ violationDetailsModal:
     status: Status
     policySetViolated: Policy Set Violated
   violatedPoliciesSection:
+    policyName: 'Policy Name: {{{policyName}}}'
     category: Category
     title: Violated Policies
     packageAgeViolation:
@@ -30,6 +33,7 @@ violationDetailsModal:
     licenseViolation:
       allowedLicenses: Allowed Licenses
       blockedLicense: Blocked License
+      packageLicense: Package License
     securityViolation:
       cveId: CVE ID
       cvssScore: CVSS Score

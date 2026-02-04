@@ -164,7 +164,7 @@ export default function ViolationsListPage() {
         retryOnError={() => refetch()}
         noData={{
           when: () => !responseData?.data?.length,
-          icon: 'store-artifact-bundle',
+          icon: 'ccm-policy-shield-checked',
           messageTitle: hasFilter ? getString('noResultsFound') : getString('violationsList.noViolationsFound'),
           button: hasFilter ? (
             <Button text={getString('clearFilters')} variation={ButtonVariation.LINK} onClick={handleClearAllFilters} />

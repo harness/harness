@@ -15,9 +15,9 @@
  */
 
 import React from 'react'
-import { Container, Layout, Text } from '@harnessio/uicore'
+import { Container, DropDown, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { ArtifactScanDetails } from '@harnessio/react-har-service-client'
+import type { ArtifactScan } from '@harnessio/react-har-service-client'
 
 import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -25,17 +25,17 @@ import type { RepositoryPackageType } from '@ar/common/types'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 import InformationMetrics from './InformationMetrics'
-import useGetPolicySetDetailsPageUrl from '../../hooks/useGetPolicySetDetailsPageUrl'
 import css from './ViolationDetailsContent.module.scss'
 
 interface BasicInformationContentProps {
-  data: ArtifactScanDetails
+  data: ArtifactScan
+  selectedPolicySet?: string
+  onChangePolicySet: (policySetRef: string) => void
 }
 
-function BasicInformationContent({ data }: BasicInformationContentProps) {
+function BasicInformationContent({ data, selectedPolicySet, onChangePolicySet }: BasicInformationContentProps) {
   const { getString } = useStrings()
   const routes = useRoutes()
-  const policySetUrl = useGetPolicySetDetailsPageUrl(data.policySetRef || '')
   return (
     <Layout.Vertical spacing="large">
       <Text font={{ variation: FontVariation.H5, weight: 'bold' }} color={Color.GREY_700}>
@@ -60,23 +60,31 @@ function BasicInformationContent({ data }: BasicInformationContentProps) {
             repositoryIdentifier: data.registryName
           })}
         />
+        <Layout.Vertical spacing="xsmall">
+          <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }} color={Color.GREY_700}>
+            {getString('violationsList.violationDetailsModal.basicInformationSection.policySetViolated')}
+          </Text>
+          <DropDown
+            width={180}
+            usePortal
+            buttonTestId="policy-set-select"
+            items={data.policySets?.map(each => ({
+              ...each,
+              label: each.policySetName,
+              value: each.policySetRef
+            }))}
+            value={selectedPolicySet}
+            onChange={option => {
+              onChangePolicySet(option.value as string)
+            }}
+            addClearBtn={false}
+          />
+        </Layout.Vertical>
         <InformationMetrics.ScanStatus
           label={getString('violationsList.violationDetailsModal.basicInformationSection.status')}
           status={data.scanStatus}
           scanId={data.id}
         />
-        <div />
-        {data.policySetRef && (
-          <InformationMetrics.Link
-            label={getString('violationsList.violationDetailsModal.basicInformationSection.policySetViolated')}
-            value={data.policySetName || data.policySetRef}
-            linkTo={policySetUrl}
-          />
-        )}
-        {/* <InformationMetrics.Text
-          label={getString('violationsList.violationDetailsModal.basicInformationSection.category')}
-          value="Security" // TODO: Replace with actual category
-        /> */}
       </Container>
     </Layout.Vertical>
   )

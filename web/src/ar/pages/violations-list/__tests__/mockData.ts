@@ -66,6 +66,8 @@ export const mockArtifactScanDetails: ArtifactScanDetails = {
   scanStatus: 'BLOCKED',
   version: '1.0.0',
   registryId: '1',
+  policySetName: 'policy set 1',
+  policySetRef: 'policySetRef1',
   fixVersionDetails: {
     fixVersionAvailable: true,
     currentVersion: '1.0.0',
