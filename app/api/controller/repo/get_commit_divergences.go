@@ -77,7 +77,7 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 			options.Requests[i].To = repo.DefaultBranch
 		}
 
-		err = c.fetchCommitDivergenceObjectsFromUpstream(ctx, session, repo, &options.Requests[i])
+		err = c.dotRangeService.FetchCommitDivergenceObjectsFromUpstream(ctx, session, repo, &options.Requests[i])
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch object from upstream: %w", err)
 		}

@@ -21,6 +21,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/git"
 	gittypes "github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
@@ -41,12 +42,12 @@ func (c *Controller) RawDiff(
 		return err
 	}
 
-	dotRange, err := parseDotRangePath(path)
+	dotRange, err := dotrange.ParsePath(path)
 	if err != nil {
 		return err
 	}
 
-	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
+	err = c.dotRangeService.FetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
@@ -96,12 +97,12 @@ func (c *Controller) DiffStats(
 		return types.DiffStats{}, err
 	}
 
-	dotRange, err := parseDotRangePath(path)
+	dotRange, err := dotrange.ParsePath(path)
 	if err != nil {
 		return types.DiffStats{}, err
 	}
 
-	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
+	err = c.dotRangeService.FetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return types.DiffStats{}, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}
@@ -138,12 +139,12 @@ func (c *Controller) Diff(
 		return nil, err
 	}
 
-	dotRange, err := parseDotRangePath(path)
+	dotRange, err := dotrange.ParsePath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
+	err = c.dotRangeService.FetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}

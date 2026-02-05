@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types/enum"
@@ -41,12 +42,12 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, err
 	}
 
-	dotRange, err := parseDotRangePath(diffPath)
+	dotRange, err := dotrange.ParsePath(diffPath)
 	if err != nil {
 		return MergeCheck{}, err
 	}
 
-	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
+	err = c.dotRangeService.FetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return MergeCheck{}, fmt.Errorf("failed to fetch diff upstream ref: %w", err)
 	}

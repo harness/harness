@@ -19,6 +19,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
@@ -48,9 +49,11 @@ func ProvideController(
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 	auditService audit.Service,
-	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
+	pullReqStore store.PullReqStore,
+	pullReqActivityStore store.PullReqActivityStore,
 	codeCommentsView store.CodeCommentView,
-	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
+	pullReqReviewStore store.PullReqReviewStore,
+	pullReqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	userGroupStore store.UserGroupStore,
@@ -62,11 +65,17 @@ func ProvideController(
 	autoMergeStore store.AutoMergeStore,
 	rpcClient git.Interface,
 	repoFinder refcache.RepoFinder,
-	eventReporter *pullreqevents.Reporter, codeCommentMigrator *codecomments.Migrator,
-	pullreqService *pullreq.Service, pullreqListService *pullreq.ListService,
+	eventReporter *pullreqevents.Reporter,
+	codeCommentMigrator *codecomments.Migrator,
+	pullreqService *pullreq.Service,
+	pullreqListService *pullreq.ListService,
 	mergeService *merge.Service,
-	ruleManager *protection.Manager, sseStreamer sse.Streamer,
-	codeOwners *codeowners.Service, locker *locker.Locker, importer *migrate.PullReq,
+	ruleManager *protection.Manager,
+	sseStreamer sse.Streamer,
+	dotRangeService *dotrange.Service,
+	codeOwners *codeowners.Service,
+	locker *locker.Locker,
+	importer *migrate.PullReq,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
 	userGroupService usergroup.Service,
@@ -100,6 +109,7 @@ func ProvideController(
 		mergeService,
 		ruleManager,
 		sseStreamer,
+		dotRangeService,
 		codeOwners,
 		locker,
 		importer,

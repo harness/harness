@@ -87,7 +87,7 @@ func (c *Controller) ForkSync(
 			in.BranchCommitSHA, in.Branch)
 	}
 
-	branchUpstreamSHA, repoUpstreamCore, err := c.fetchUpstreamBranch(
+	branchUpstreamSHA, repoUpstreamCore, err := c.dotRangeService.FetchUpstreamBranch(
 		ctx,
 		session,
 		repoForkCore,

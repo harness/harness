@@ -64,10 +64,6 @@ func GetPullReqTargetBranchFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamTargetBranch)
 }
 
-func GetSourceRepoRefFromQueryOrDefault(r *http.Request, deflt string) string {
-	return QueryParamOrDefault(r, QueryParamSourceRepoRef, deflt)
-}
-
 // ParseSortPullReq extracts the pull request sort parameter from the url.
 func ParseSortPullReq(r *http.Request) enum.PullReqSort {
 	result, _ := enum.PullReqSort(r.URL.Query().Get(QueryParamSort)).Sanitize()

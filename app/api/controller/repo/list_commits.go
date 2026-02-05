@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -56,12 +57,12 @@ func (c *Controller) ListCommits(ctx context.Context,
 		return types.ListCommitResponse{}, fmt.Errorf("failed create author regex: %w", err)
 	}
 
-	dotRange, err := makeDotRange(filter.After, gitRef, true)
+	dotRange, err := dotrange.Make(filter.After, gitRef, true)
 	if err != nil {
 		return types.ListCommitResponse{}, fmt.Errorf("failed to parse dot range: %w", err)
 	}
 
-	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
+	err = c.dotRangeService.FetchDotRangeObjectsFromUpstream(ctx, session, repo, &dotRange)
 	if err != nil {
 		return types.ListCommitResponse{}, fmt.Errorf("failed to parse dot range: %w", err)
 	}

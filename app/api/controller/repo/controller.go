@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
@@ -31,6 +30,7 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -47,10 +47,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
-	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
-	gitenum "github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -126,6 +123,7 @@ type Controller struct {
 	favoriteStore          store.FavoriteStore
 	signatureVerifyService publickey.SignatureVerifyService
 	autolinkSvc            *autolink.Service
+	dotRangeService        *dotrange.Service
 	connectorService       importer.ConnectorService
 	repoLangStore          store.RepoLangStore
 }
@@ -173,6 +171,7 @@ func NewController(
 	favoriteStore store.FavoriteStore,
 	signatureVerifyService publickey.SignatureVerifyService,
 	autolinkSvc *autolink.Service,
+	dotRangeService *dotrange.Service,
 	connectorService importer.ConnectorService,
 	repoLangStore store.RepoLangStore,
 ) *Controller {
@@ -219,6 +218,7 @@ func NewController(
 		favoriteStore:          favoriteStore,
 		signatureVerifyService: signatureVerifyService,
 		autolinkSvc:            autolinkSvc,
+		dotRangeService:        dotRangeService,
 		connectorService:       connectorService,
 		repoLangStore:          repoLangStore,
 	}
@@ -347,220 +347,4 @@ func (c *Controller) fetchTagRules(
 	}
 
 	return protectionRules, isRepoOwner, nil
-}
-
-func (c *Controller) fetchUpstreamBranch(
-	ctx context.Context,
-	session *auth.Session,
-	repoForkCore *types.RepositoryCore,
-	branchName string,
-) (sha.SHA, *types.RepositoryCore, error) {
-	return c.fetchUpstreamObjects(
-		ctx,
-		session,
-		repoForkCore,
-		func(readParams git.ReadParams) (sha.SHA, error) {
-			result, err := c.git.GetRef(ctx, git.GetRefParams{
-				ReadParams: readParams,
-				Name:       branchName,
-				Type:       gitenum.RefTypeBranch,
-			})
-			if err != nil {
-				return sha.SHA{}, fmt.Errorf("failed to fetch branch %s: %w", branchName, err)
-			}
-
-			return result.SHA, nil
-		})
-}
-
-func (c *Controller) fetchUpstreamRevision(
-	ctx context.Context,
-	session *auth.Session,
-	repoForkCore *types.RepositoryCore,
-	revision string,
-) (sha.SHA, *types.RepositoryCore, error) {
-	return c.fetchUpstreamObjects(
-		ctx,
-		session,
-		repoForkCore,
-		func(readParams git.ReadParams) (sha.SHA, error) {
-			result, err := c.git.ResolveRevision(ctx, git.ResolveRevisionParams{
-				ReadParams: readParams,
-				Revision:   revision,
-			})
-			if err != nil {
-				return sha.SHA{}, fmt.Errorf("failed to resolve revision %s: %w", revision, err)
-			}
-
-			return result.SHA, nil
-		})
-}
-
-func (c *Controller) fetchUpstreamObjects(
-	ctx context.Context,
-	session *auth.Session,
-	repoForkCore *types.RepositoryCore,
-	getSHA func(params git.ReadParams) (sha.SHA, error),
-) (sha.SHA, *types.RepositoryCore, error) {
-	if repoForkCore.ForkID == 0 {
-		return sha.None, nil, errors.InvalidArgument("Repository is not a fork.")
-	}
-
-	repoUpstreamCore, err := c.repoFinder.FindByID(ctx, repoForkCore.ForkID)
-	if err != nil {
-		return sha.None, nil, fmt.Errorf("failed to find upstream repo: %w", err)
-	}
-
-	if err = apiauth.CheckRepo(
-		ctx,
-		c.authorizer,
-		session,
-		repoUpstreamCore,
-		enum.PermissionRepoView,
-	); errors.Is(err, apiauth.ErrForbidden) {
-		return sha.None, nil, usererror.BadRequest(
-			"Not enough permissions to view the upstream repository.",
-		)
-	} else if err != nil {
-		return sha.None, nil, fmt.Errorf("failed to check access to upstream repo: %w", err)
-	}
-
-	upstreamSHA, err := getSHA(git.CreateReadParams(repoUpstreamCore))
-	if err != nil {
-		return sha.None, nil, fmt.Errorf("failed to get upstream repo SHA: %w", err)
-	}
-
-	writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, repoForkCore)
-	if err != nil {
-		return sha.None, nil, fmt.Errorf("failed to create RPC write params: %w", err)
-	}
-
-	_, err = c.git.FetchObjects(ctx, &git.FetchObjectsParams{
-		WriteParams: writeParams,
-		Source:      repoUpstreamCore.GitUID,
-		ObjectSHAs:  []sha.SHA{upstreamSHA},
-	})
-	if err != nil {
-		return sha.None, nil, fmt.Errorf("failed to fetch commit from upstream repo: %w", err)
-	}
-
-	return upstreamSHA, repoUpstreamCore, nil
-}
-
-func (c *Controller) fetchCommitDivergenceObjectsFromUpstream(
-	ctx context.Context,
-	session *auth.Session,
-	repo *types.RepositoryCore,
-	div *git.CommitDivergenceRequest,
-) error {
-	dot, err := makeDotRange(div.To, div.From, true)
-	if err != nil {
-		return fmt.Errorf("failed to make dot range: %w", err)
-	}
-
-	err = c.fetchDotRangeObjectsFromUpstream(ctx, session, repo, &dot)
-	if err != nil {
-		return fmt.Errorf("failed to fetch dot range objects: %w", err)
-	}
-
-	div.To = dot.BaseRef
-	div.From = dot.HeadRef
-
-	return nil
-}
-
-func (c *Controller) fetchDotRangeObjectsFromUpstream(
-	ctx context.Context,
-	session *auth.Session,
-	repoForkCore *types.RepositoryCore,
-	dotRange *DotRange,
-) error {
-	if dotRange.BaseUpstream {
-		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.BaseRef)
-		if err != nil {
-			return fmt.Errorf("failed to fetch upstream objects: %w", err)
-		}
-
-		dotRange.BaseUpstream = false
-		dotRange.BaseRef = refSHA.String()
-	}
-
-	if dotRange.HeadUpstream {
-		refSHA, _, err := c.fetchUpstreamRevision(ctx, session, repoForkCore, dotRange.HeadRef)
-		if err != nil {
-			return fmt.Errorf("failed to fetch upstream objects: %w", err)
-		}
-
-		dotRange.HeadUpstream = false
-		dotRange.HeadRef = refSHA.String()
-	}
-
-	return nil
-}
-
-const dotRangeUpstreamMarker = "upstream:"
-
-type DotRange struct {
-	BaseRef      string
-	BaseUpstream bool
-	HeadRef      string
-	HeadUpstream bool
-	MergeBase    bool
-}
-
-func (r DotRange) String() string {
-	sb := strings.Builder{}
-
-	if r.BaseUpstream {
-		sb.WriteString(dotRangeUpstreamMarker)
-	}
-	sb.WriteString(r.BaseRef)
-
-	sb.WriteString("..")
-	if r.MergeBase {
-		sb.WriteByte('.')
-	}
-
-	if r.HeadUpstream {
-		sb.WriteString(dotRangeUpstreamMarker)
-	}
-	sb.WriteString(r.HeadRef)
-
-	return sb.String()
-}
-
-func parseDotRangePath(path string) (DotRange, error) {
-	mergeBase := true
-	parts := strings.SplitN(path, "...", 2)
-	if len(parts) != 2 {
-		mergeBase = false
-		parts = strings.SplitN(path, "..", 2)
-		if len(parts) != 2 {
-			return DotRange{}, usererror.BadRequestf("Invalid format %q", path)
-		}
-	}
-
-	dotRange, err := makeDotRange(parts[0], parts[1], mergeBase)
-	if err != nil {
-		return DotRange{}, err
-	}
-
-	return dotRange, nil
-}
-
-func makeDotRange(base, head string, mergeBase bool) (DotRange, error) {
-	dotRange := DotRange{
-		BaseRef:   base,
-		HeadRef:   head,
-		MergeBase: mergeBase,
-	}
-
-	dotRange.BaseRef, dotRange.BaseUpstream = strings.CutPrefix(dotRange.BaseRef, dotRangeUpstreamMarker)
-	dotRange.HeadRef, dotRange.HeadUpstream = strings.CutPrefix(dotRange.HeadRef, dotRangeUpstreamMarker)
-
-	if dotRange.BaseUpstream && dotRange.HeadUpstream {
-		return DotRange{}, usererror.BadRequestf("Only one upstream reference is allowed: %q", dotRange.String())
-	}
-
-	return dotRange, nil
 }

@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -63,7 +64,6 @@ func (c *Controller) FindByBranches(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef,
-	sourceRepoRef,
 	sourceBranch,
 	targetBranch string,
 	options types.PullReqMetadataOptions,
@@ -72,24 +72,39 @@ func (c *Controller) FindByBranches(
 		return nil, usererror.BadRequest("A valid source/target branch must be provided.")
 	}
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	dotRange, err := dotrange.Make(targetBranch, sourceBranch, true)
 	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
+		return nil, fmt.Errorf("failed to make dot range: %w", err)
 	}
 
-	sourceRepo := targetRepo
-	if sourceRepoRef != repoRef {
-		sourceRepo, err = c.getRepoCheckAccess(ctx, session, sourceRepoRef, enum.PermissionRepoPush)
+	if dotRange.HeadUpstream {
+		return nil, usererror.BadRequest("Source branch can't be on the upstream repository.")
+	}
+
+	sourceRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	if err != nil {
+		return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
+	}
+
+	targetRepo := sourceRepo
+
+	if dotRange.BaseUpstream {
+		if sourceRepo.ForkID == 0 {
+			return nil,
+				usererror.BadRequest("The repository is not a fork repository, so upstream can't be used.")
+		}
+
+		targetRepo, err = c.repoFinder.FindByID(ctx, sourceRepo.ForkID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
+			return nil, fmt.Errorf("failed to find upstream repo: %w", err)
 		}
 	}
 
 	prs, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
 		SourceRepoID: sourceRepo.ID,
-		SourceBranch: sourceBranch,
+		SourceBranch: dotRange.HeadRef,
 		TargetRepoID: targetRepo.ID,
-		TargetBranch: targetBranch,
+		TargetBranch: dotRange.BaseRef,
 		States:       []enum.PullReqState{enum.PullReqStateOpen},
 		Size:         1,
 		Sort:         enum.PullReqSortNumber,

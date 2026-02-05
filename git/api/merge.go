@@ -86,6 +86,13 @@ func (g *Git) GetMergeBase(
 				HeadRef: head,
 			}
 		}
+
+		msg := strings.TrimSpace(stderr.String())
+
+		if strings.HasPrefix(msg, "fatal: Not a valid object name") {
+			return sha.None, "", errors.NotFound(strings.TrimPrefix(msg, "fatal: "))
+		}
+
 		return sha.None, "", processGitErrorf(err, "failed to get merge-base [%s, %s]", base, head)
 	}
 

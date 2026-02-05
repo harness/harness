@@ -21,6 +21,7 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -94,6 +95,7 @@ func ProvideController(
 	favoriteStore store.FavoriteStore,
 	signatureVerifyService publickey.SignatureVerifyService,
 	autolinkSvc *autolink.Service,
+	dotRangeService *dotrange.Service,
 	connectorService importer.ConnectorService,
 	repoLangStore store.RepoLangStore,
 ) *Controller {
@@ -105,7 +107,8 @@ func ProvideController(
 		importer, referenceSync, importLinked,
 		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
-		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService, autolinkSvc, connectorService,
+		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService,
+		autolinkSvc, dotRangeService, connectorService,
 		repoLangStore,
 	)
 }

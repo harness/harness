@@ -70,8 +70,6 @@ func HandleFindByBranches(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		sourceRepoRef := request.GetSourceRepoRefFromQueryOrDefault(r, repoRef)
-
 		sourceBranch, err := request.GetPullReqSourceBranchFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
@@ -92,7 +90,7 @@ func HandleFindByBranches(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 
 		options.IncludeGitStats = true // always backfill PR git stats when fetching one PR.
 
-		pr, err := pullreqCtrl.FindByBranches(ctx, session, repoRef, sourceRepoRef, sourceBranch, targetBranch, options)
+		pr, err := pullreqCtrl.FindByBranches(ctx, session, repoRef, sourceBranch, targetBranch, options)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
