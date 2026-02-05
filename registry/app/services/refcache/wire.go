@@ -29,8 +29,9 @@ func ProvideRegistryFinder(
 	regRootRefCache store.RegistryRootRefCache,
 	evictor cache.Evictor[*types.Registry],
 	spaceFinder refcache.SpaceFinder,
+	upstreamProxyFinder UpstreamProxyFinder,
 ) RegistryFinder {
-	return NewRegistryFinder(registryRepository, regIDCache, regRootRefCache, evictor, spaceFinder)
+	return NewRegistryFinder(registryRepository, regIDCache, regRootRefCache, evictor, spaceFinder, upstreamProxyFinder)
 }
 
 func ProvideUpstreamProxyFinder(

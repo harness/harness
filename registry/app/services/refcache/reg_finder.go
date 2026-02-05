@@ -40,11 +40,12 @@ type RegistryFinder interface {
 }
 
 type registryFinder struct {
-	inner           store.RegistryRepository
-	regIDCache      store.RegistryIDCache
-	regRootRefCache store.RegistryRootRefCache
-	spaceFinder     refcache.SpaceFinder
-	evictor         cache.Evictor[*types.Registry]
+	inner               store.RegistryRepository
+	regIDCache          store.RegistryIDCache
+	regRootRefCache     store.RegistryRootRefCache
+	spaceFinder         refcache.SpaceFinder
+	evictor             cache.Evictor[*types.Registry]
+	upstreamProxyFinder UpstreamProxyFinder
 }
 
 func NewRegistryFinder(
@@ -53,18 +54,28 @@ func NewRegistryFinder(
 	regRootRefCache store.RegistryRootRefCache,
 	evictor cache.Evictor[*types.Registry],
 	spaceFinder refcache.SpaceFinder,
+	upstreamProxyFinder UpstreamProxyFinder,
 ) RegistryFinder {
 	return registryFinder{
-		inner:           registryRepository,
-		regIDCache:      regIDCache,
-		regRootRefCache: regRootRefCache,
-		evictor:         evictor,
-		spaceFinder:     spaceFinder,
+		inner:               registryRepository,
+		regIDCache:          regIDCache,
+		regRootRefCache:     regRootRefCache,
+		evictor:             evictor,
+		spaceFinder:         spaceFinder,
+		upstreamProxyFinder: upstreamProxyFinder,
 	}
 }
 
 func (r registryFinder) MarkChanged(ctx context.Context, reg *types.Registry) {
 	r.evictor.Evict(ctx, reg)
+	r.evictUpstreamProxyCache(ctx, reg.ID)
+}
+
+func (r registryFinder) evictUpstreamProxyCache(ctx context.Context, registryID int64) {
+	upstreamProxy, err := r.upstreamProxyFinder.Get(ctx, registryID)
+	if err == nil && upstreamProxy != nil {
+		r.upstreamProxyFinder.MarkChanged(ctx, upstreamProxy)
+	}
 }
 
 func (r registryFinder) FindByID(ctx context.Context, repoID int64) (*types.Registry, error) {
