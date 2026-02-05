@@ -9,7 +9,7 @@ cards:
 table:
   columns:
     package: Dependency And Version
-    registry: Upstream Registry
+    registry: Upstream Proxy
     policySet: Policy Set Violated
     status: Status
     lastEvaluatedAt: Evaluated At
