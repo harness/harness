@@ -347,6 +347,8 @@ type FeedEntryProperties struct {
 	ReleaseNotes             string                `xml:"d:ReleaseNotes,omitempty"`
 	RequireLicenseAcceptance TypedValue[bool]      `xml:"d:RequireLicenseAcceptance"`
 	Title                    string                `xml:"d:Title"`
+	LicenseURL               string                `xml:"d:LicenseUrl,omitempty"`
+	Tags                     string                `xml:"d:Tags,omitempty"`
 }
 
 // https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#catalog-entry
@@ -357,15 +359,20 @@ type CatalogEntry struct {
 	ID                string `json:"id"`
 	Version           string `json:"version"`
 	Description       string `json:"description"`
-	//nolint: tagliatelle
-	ReleaseNotes string `json:"releaseNotes"`
-	Authors      string `json:"authors"`
+	Authors           string `json:"authors"`
 	//nolint: tagliatelle
 	RequireLicenseAcceptance bool `json:"requireLicenseAcceptance"`
 	//nolint: tagliatelle
-	ProjectURL string `json:"projectURL"`
+	ProjectURL string `json:"projectUrl,omitempty"`
 	//nolint: tagliatelle
 	DependencyGroups []*PackageDependencyGroup `json:"dependencyGroups,omitempty"`
+	//nolint: tagliatelle
+	LicenseExpression string `json:"licenseExpression,omitempty"`
+	//nolint: tagliatelle
+	LicenseURL string `json:"licenseUrl,omitempty"`
+	Tags       string `json:"tags,omitempty"`
+	Title      string `json:"title,omitempty"`
+	Published  string `json:"published,omitempty"`
 }
 
 // https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#package-dependency-group

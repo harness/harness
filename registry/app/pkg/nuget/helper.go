@@ -566,6 +566,11 @@ func createFeedEntryResponse(baseURL string, info nuget.ArtifactInfo, artifact *
 		Value: artifact.CreatedAt,
 	}
 
+	title := metadata.PackageMetadata.Title
+	if title == "" {
+		title = info.Image
+	}
+
 	return &nuget.FeedEntryResponse{
 		Xmlns:  XMLNamespaceAtom,
 		Base:   baseURL,
@@ -573,7 +578,7 @@ func createFeedEntryResponse(baseURL string, info nuget.ArtifactInfo, artifact *
 		XmlnsM: XMLNamespaceDataServicesMetadata,
 		Category: nuget.FeedEntryCategory{Term: "NuGetGallery.OData.V2FeedPackage",
 			Scheme: "http://schemas.microsoft.com/ado/2007/08/dataservices/scheme"},
-		Title:   nuget.TypedValue[string]{Type: "text", Value: info.Image},
+		Title:   nuget.TypedValue[string]{Type: "text", Value: title},
 		Updated: artifact.UpdatedAt,
 		Author:  metadata.PackageMetadata.Authors,
 		Content: content,
@@ -584,7 +589,7 @@ func createFeedEntryResponse(baseURL string, info nuget.ArtifactInfo, artifact *
 			Authors:              metadata.PackageMetadata.Authors,
 			Dependencies:         buildDependencyString(metadata),
 			Description:          metadata.PackageMetadata.Description,
-			VersionDownloadCount: nuget.TypedValue[int64]{Type: "Edm.Int64", Value: 0}, //todo: fix this download count
+			VersionDownloadCount: nuget.TypedValue[int64]{Type: "Edm.Int64", Value: 0},
 			DownloadCount:        nuget.TypedValue[int64]{Type: "Edm.Int64", Value: 0},
 			PackageSize:          nuget.TypedValue[int64]{Type: "Edm.Int64", Value: metadata.Size},
 			Created:              createdValue,
@@ -594,7 +599,9 @@ func createFeedEntryResponse(baseURL string, info nuget.ArtifactInfo, artifact *
 			ReleaseNotes:         metadata.PackageMetadata.ReleaseNotes,
 			RequireLicenseAcceptance: nuget.TypedValue[bool]{Type: "Edm.Boolean",
 				Value: metadata.PackageMetadata.RequireLicenseAcceptance},
-			Title: info.Image,
+			Title:      title,
+			LicenseURL: metadata.PackageMetadata.LicenseURL,
+			Tags:       metadata.PackageMetadata.Tags,
 		},
 	}, nil
 }
@@ -642,23 +649,31 @@ func createRegistrationIndexPageItem(baseURL string, info nuget.ArtifactInfo, ar
 		return nil, fmt.Errorf("error unmarshalling nuget metadata: %w", err)
 	}
 
+	licenseExpression := ""
+	if metadata.PackageMetadata.License != nil && metadata.PackageMetadata.License.Text != "" {
+		licenseExpression = metadata.PackageMetadata.License.Text
+	}
+
 	res := &nuget.RegistrationIndexPageItem{
 		RegistrationLeafURL: getRegistrationLeafURL(baseURL, info.Image, artifact.Version),
 		PackageContentURL:   getPackageDownloadURL(baseURL, info.Image, artifact.Version),
 		CatalogEntry: &nuget.CatalogEntry{
-			CatalogLeafURL:    getRegistrationLeafURL(baseURL, info.Image, artifact.Version),
-			PackageContentURL: getPackageDownloadURL(baseURL, info.Image, artifact.Version),
-			ID:                info.Image,
-			Version:           artifact.Version,
-			Description:       metadata.PackageMetadata.Description,
-			ReleaseNotes:      metadata.PackageMetadata.ReleaseNotes,
-			Authors:           metadata.PackageMetadata.Authors,
-			ProjectURL:        metadata.PackageMetadata.ProjectURL,
-			DependencyGroups:  createDependencyGroups(metadata),
+			CatalogLeafURL:           getRegistrationLeafURL(baseURL, info.Image, artifact.Version),
+			PackageContentURL:        getPackageDownloadURL(baseURL, info.Image, artifact.Version),
+			ID:                       info.Image,
+			Version:                  artifact.Version,
+			Description:              metadata.PackageMetadata.Description,
+			Authors:                  metadata.PackageMetadata.Authors,
+			ProjectURL:               metadata.PackageMetadata.ProjectURL,
+			RequireLicenseAcceptance: metadata.PackageMetadata.RequireLicenseAcceptance,
+			DependencyGroups:         createDependencyGroups(metadata),
+			LicenseExpression:        licenseExpression,
+			LicenseURL:               metadata.PackageMetadata.LicenseURL,
+			Tags:                     metadata.PackageMetadata.Tags,
+			Title:                    metadata.PackageMetadata.Title,
+			Published:                artifact.CreatedAt.Format(time.RFC3339),
 		},
 	}
-	dependencyGroups := createDependencyGroups(metadata)
-	res.CatalogEntry.DependencyGroups = dependencyGroups
 	return res, nil
 }
 
