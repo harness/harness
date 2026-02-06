@@ -53,7 +53,7 @@ export const DependencyAndVersionCell: CellType = ({ row }) => {
     return (
       <Layout.Horizontal className={css.dependencyNameCell}>
         <RepositoryIcon packageType={packageType as RepositoryPackageType} />
-        <Layout.Vertical>
+        <Layout.Vertical className={css.labelCellContainer}>
           <Text color={Color.GREY_800} lineClamp={1}>
             {packageName}
           </Text>

@@ -19,4 +19,7 @@
   justify-content: flex-start;
   align-items: center;
   gap: var(--spacing-small);
+  & .labelCellContainer {
+    flex-shrink: 1;
+  }
 }
