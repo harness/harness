@@ -1151,38 +1151,56 @@ func (t tagDao) GetTagMetadata(
 	imageName string,
 	name string,
 ) (*types.OciVersionMetadata, error) {
-	// Build query with database-specific decode function for artifact version comparison
 	var decodeFunction string
 	if t.db.DriverName() == driverPostgres {
-		decodeFunction = "decode(a.artifact_version, 'hex')"
+		decodeFunction = "decode(oa.artifact_version, 'hex')"
 	} else {
-		decodeFunction = "unhex(a.artifact_version)"
+		decodeFunction = "unhex(oa.artifact_version)"
+	}
+
+	ociArtifactsCTE := databaseg.Builder.Select(
+		"a.artifact_uuid, a.artifact_image_id, a.artifact_version",
+	).
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Join("registries r ON r.registry_id = i.image_registry_id").
+		Where("r.registry_package_type IN ('DOCKER','HELM')")
+
+	ociArtifactsSQL, ociArtifactsArgs, err := ociArtifactsCTE.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert CTE to sql")
 	}
 
 	q := databaseg.Builder.Select(
 		"registry_package_type as package_type, tag_name as name, "+
 			"tag_updated_at as modified_at, manifest_total_size as size, "+
-			"a.artifact_uuid as artifact_uuid",
+			"oa.artifact_uuid as artifact_uuid",
 	).
 		From("tags").
 		Join("registries ON tag_registry_id = registry_id").
 		Join("manifests ON manifest_id = tag_manifest_id").
 		LeftJoin("images i ON i.image_registry_id = registry_id AND i.image_name = tag_image_name").
-		LeftJoin("artifacts a ON a.artifact_image_id = i.image_id AND manifest_digest = "+decodeFunction).
+		LeftJoin(fmt.Sprintf("oci_artifacts oa ON oa.artifact_image_id = i.image_id AND manifest_digest = %s",
+			decodeFunction)).
 		Where(
 			"registry_parent_id = ? AND registry_name = ?"+
 				" AND tag_image_name = ? AND tag_name = ?", parentID, repoKey, imageName, name,
 		)
 
+	withClause := fmt.Sprintf("WITH oci_artifacts AS (%s)", ociArtifactsSQL)
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
+	finalQuery := withClause + " " + sql
+	// nolint:gocritic
+	finalArgs := append(ociArtifactsArgs, args...)
+
 	db := dbtx.GetAccessor(ctx, t.db)
 
 	dst := new(tagMetadataDB)
-	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+	if err = db.GetContext(ctx, dst, finalQuery, finalArgs...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag metadata")
 	}
 
@@ -1201,37 +1219,55 @@ func (t tagDao) GetOCIVersionMetadata(
 		return nil, err
 	}
 
-	// Build query with database-specific decode function for artifact version comparison
 	var decodeFunction string
 	if t.db.DriverName() == driverPostgres {
-		decodeFunction = "decode(a.artifact_version, 'hex')"
+		decodeFunction = "decode(oa.artifact_version, 'hex')"
 	} else {
-		decodeFunction = "unhex(a.artifact_version)"
+		decodeFunction = "unhex(oa.artifact_version)"
+	}
+
+	ociArtifactsCTE := databaseg.Builder.Select(
+		"a.artifact_uuid, a.artifact_image_id, a.artifact_version",
+	).
+		From("artifacts a").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Join("registries r ON r.registry_id = i.image_registry_id").
+		Where("r.registry_package_type IN ('DOCKER','HELM')")
+
+	ociArtifactsSQL, ociArtifactsArgs, err := ociArtifactsCTE.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert CTE to sql")
 	}
 
 	q := databaseg.Builder.Select(
-		"registry_package_type as package_type, manifest_digest, "+
+		"r.registry_package_type as package_type, manifest_digest, "+
 			"manifest_created_at as modified_at, manifest_total_size as size, "+
-			"a.artifact_uuid as artifact_uuid",
+			"oa.artifact_uuid as artifact_uuid",
 	).
 		From("manifests").
 		Join("registries ON manifest_registry_id = registry_id").
 		LeftJoin("images i ON i.image_registry_id = registry_id AND i.image_name = manifest_image_name").
-		LeftJoin("artifacts a ON a.artifact_image_id = i.image_id AND manifest_digest = "+decodeFunction).
+		LeftJoin(fmt.Sprintf("oci_artifacts oa ON oa.artifact_image_id = i.image_id AND manifest_digest = %s",
+			decodeFunction)).
 		Where(
 			"registry_parent_id = ? AND registry_name = ?"+
 				" AND manifest_image_name = ? AND manifest_digest = ?", parentID, repoKey, imageName, digestBytes,
 		)
 
+	withClause := fmt.Sprintf("WITH oci_artifacts AS (%s)", ociArtifactsSQL)
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
+	finalQuery := withClause + " " + sql
+	// nolint:gocritic
+	finalArgs := append(ociArtifactsArgs, args...)
+
 	db := dbtx.GetAccessor(ctx, t.db)
 
 	dst := new(ociVersionMetadataDB)
-	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+	if err = db.GetContext(ctx, dst, finalQuery, finalArgs...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag metadata")
 	}
 
