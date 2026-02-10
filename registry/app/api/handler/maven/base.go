@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	liberrors "github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
@@ -227,31 +228,49 @@ func getPathRoot(ctx context.Context) string {
 }
 
 func handleErrors(ctx context.Context, errs errcode.Errors, w http.ResponseWriter, headers *commons.ResponseHeaders) {
-	if !commons.IsEmpty(errs) {
-		LogError(errs)
-		log.Ctx(ctx).Error().Errs("errs occurred during maven operation: ", errs).Msgf("Error occurred")
-		err := errs[0]
-		var e *commons.Error
-		switch {
-		case headers != nil:
-			headers.WriteToResponse(w)
-		case errors.As(err, &e):
-			code := e.Status
-			w.WriteHeader(code)
-		default:
-			render.TranslatedUserError(ctx, w, err)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(errs)
-		if err != nil {
-			log.Ctx(ctx).Error().Err(err).Msgf("Error occurred during maven error encoding")
-		}
+	if commons.IsEmpty(errs) {
+		return
+	}
+
+	LogError(ctx, errs)
+
+	err := errs[0]
+
+	// Set content type header first, before writing status
+	w.Header().Set("Content-Type", "application/json")
+
+	// Handle response headers and status code
+	if headers != nil {
+		headers.WriteToResponse(w)
+	} else if statusCode := getHTTPStatusFromError(err); statusCode > 0 {
+		w.WriteHeader(statusCode)
+	} else {
+		render.TranslatedUserError(ctx, w, err)
+	}
+
+	// Encode and write error response
+	if encodeErr := json.NewEncoder(w).Encode(errs); encodeErr != nil {
+		log.Ctx(ctx).Error().Err(encodeErr).Msgf("Error occurred during maven error encoding")
 	}
 }
 
-func LogError(errList errcode.Errors) {
+func getHTTPStatusFromError(err error) int {
+	var commonsErr *commons.Error
+	if errors.As(err, &commonsErr) {
+		return commonsErr.Status
+	}
+
+	var libErr *liberrors.Error
+	if errors.As(err, &libErr) {
+		return utils.MapLibErrorCodeToHTTPStatus(libErr.Code)
+	}
+
+	return 0
+}
+
+func LogError(ctx context.Context, errList errcode.Errors) {
 	for _, e1 := range errList {
-		log.Error().Err(e1).Msgf("error: %v", e1)
+		log.Ctx(ctx).Error().Err(e1).Msgf("error: %v", e1)
 	}
 }
 

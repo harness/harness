@@ -95,7 +95,7 @@ func (r *RemoteRegistry) fetchArtifact(ctx context.Context, info pkg.MavenArtifa
 	responseHeaders, readCloser, err = r.proxyController.ProxyFile(ctx, info, *upstreamProxy, serveFile)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("Failed to proxy file: %s", info.RegIdentifier)
-		return processError(err)
+		return responseHeaders, nil, nil, "", []error{err}
 	}
 	return responseHeaders, nil, readCloser, "", errs
 }

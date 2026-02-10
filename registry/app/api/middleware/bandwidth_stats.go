@@ -353,7 +353,7 @@ func getMavenArtifactFromUpstreamProxy(
 	c *maven2.Controller,
 	info pkg.MavenArtifactInfo,
 ) (*types.Image, error) {
-	repos, err := c.GetOrderedRepos(ctx, info.RegIdentifier, *info.BaseInfo)
+	repos, err := c.GetOrderedRepos(ctx, info.RegIdentifier, info.Registry)
 	if err != nil {
 		return nil, err
 	}
