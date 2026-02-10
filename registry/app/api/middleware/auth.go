@@ -48,8 +48,7 @@ func OciCheckAuth(h *oci.Handler) func(http.Handler) http.Handler {
 					info, err := h.GetRegistryInfo(r, true)
 					scope := getScope(r)
 
-					if strings.Contains(scope, ":push,") ||
-						strings.HasSuffix(scope, ",push") ||
+					if registryauth.HasWriteOrDeleteScope(scope) ||
 						strings.HasSuffix(r.RequestURI, "/v2/") ||
 						r.Header.Get("Authorization") == "" {
 						returnUnauthorised(ctx, w, url, scope)

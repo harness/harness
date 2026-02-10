@@ -164,3 +164,19 @@ func (ss stringSet) keys() []string {
 
 	return keys
 }
+
+func HasWriteOrDeleteScope(scope string) bool {
+	scopes := strings.Fields(scope)
+	for _, s := range scopes {
+		parts := strings.Split(s, ":")
+		if len(parts) >= 3 {
+			actions := strings.Split(parts[2], ",")
+			for _, action := range actions {
+				if action == "push" || action == "delete" || action == "*" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
