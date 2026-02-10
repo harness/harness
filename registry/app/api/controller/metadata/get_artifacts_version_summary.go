@@ -136,20 +136,32 @@ func (c *APIController) FetchArtifactSummary(
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
 		var ociVersion *types.OciVersionMetadata
 		if c.UntaggedImagesEnabled(ctx) {
-			ociVersion, err = c.TagStore.GetOCIVersionMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
+			var d string
+			if r.Params.Digest != nil && strings.TrimSpace(string(*r.Params.Digest)) != "" {
+				d = string(*r.Params.Digest)
+			} else {
+				d = version
+			}
+			parsedDigest, err := types.NewDigest(digest.Digest(d))
 			if err != nil {
 				return "", "", "", false, "", nil, "", "", err
 			}
+			art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
+				parsedDigest.String(), artifactType)
+			if err != nil {
+				return "", "", "", false, "", nil, "", "", err
+			}
+
+			return image, version, art.PackageType, isQuarantined, quarantineReason,
+				art.ArtifactType, art.UUID, registry.UUID, nil
 		} else {
 			ociVersion, err = c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
 			if err != nil {
 				return "", "", "", false, "", nil, "", "", err
 			}
+			return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason,
+				nil, ociVersion.ArtifactUUID, registry.UUID, nil
 		}
-
-		// Artifact UUID is fetched directly from the database via join in GetOCIVersionMetadata
-		return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason,
-			nil, ociVersion.ArtifactUUID, registry.UUID, nil
 	}
 	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
 		version, artifactType)
