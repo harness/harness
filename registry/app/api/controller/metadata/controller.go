@@ -35,7 +35,6 @@ import (
 	"github.com/harness/gitness/registry/app/utils/cargo"
 	webhook "github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
-	"github.com/harness/gitness/udp"
 )
 
 var errPublicArtifactRegistryCreationDisabled = usererror.BadRequest("Public artifact registry creation is disabled.")
@@ -61,7 +60,6 @@ type APIController struct {
 	URLProvider                  urlprovider.Provider
 	Authorizer                   authz.Authorizer
 	AuditService                 audit.Service
-	UDPService                   udp.Service
 	ArtifactStore                store.ArtifactRepository
 	WebhooksRepository           store.WebhooksRepository
 	WebhooksExecutionRepository  store.WebhooksExecutionRepository
@@ -100,7 +98,6 @@ func NewAPIController(
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
 	auditService audit.Service,
-	udpService udp.Service,
 	artifactStore store.ArtifactRepository,
 	webhooksRepository store.WebhooksRepository,
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
@@ -138,7 +135,6 @@ func NewAPIController(
 		URLProvider:                  urlProvider,
 		Authorizer:                   authorizer,
 		AuditService:                 auditService,
-		UDPService:                   udpService,
 		ArtifactStore:                artifactStore,
 		WebhooksRepository:           webhooksRepository,
 		WebhooksExecutionRepository:  webhooksExecutionRepository,

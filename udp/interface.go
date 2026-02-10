@@ -17,31 +17,16 @@ package udp
 import (
 	"context"
 
-	"github.com/harness/gitness/types"
-)
-
-// Action constants.
-const (
-	ActionRegistryCreated = "REGISTRY_CREATED"
-	ActionRegistryUpdated = "REGISTRY_UPDATED"
-	ActionRegistryDeleted = "REGISTRY_DELETED"
-)
-
-// Resource type constants.
-const (
-	ResourceTypeRegistryUpstreamProxy = "registry_upstream_proxy"
-	ResourceTypeRegistryVirtual       = "registry_virtual"
+	"github.com/harness/gitness/audit"
 )
 
 type Service interface {
 	InsertEvent(
 		ctx context.Context,
-		action string,
-		resourceType string,
-		resourceIdentifier string,
-		parentRef string,
-		principal types.Principal,
-		newObject interface{},
-		oldObject interface{},
+		event *audit.Event,
+		module string,
+		mappedAction string,
+		mappedResourceType string,
+		mappedPrincipalType string,
 	)
 }

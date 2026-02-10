@@ -159,7 +159,6 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
-	"github.com/harness/gitness/udp"
 
 	"github.com/google/wire"
 )
@@ -179,7 +178,6 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cache.WireSetSpace,
 		cache.WireSetRepo,
 		refcache.WireSet,
-		udp.ProvideNoop,
 		router.WireSet,
 		pullreqservice.WireSet,
 		services.WireSet,
