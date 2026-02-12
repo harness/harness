@@ -103,4 +103,4 @@ replace github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14
 
 replace github.com/containerd/containerd => github.com/containerd/containerd v1.7.29
 
-go 1.24.11
+go 1.24.13
