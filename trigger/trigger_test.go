@@ -657,3 +657,109 @@ trigger:
 	ignoreStageFields = cmpopts.IgnoreFields(core.Stage{},
 		"Created", "Updated")
 )
+
+func TestTrigger_MemoryLimitFormats(t *testing.T) {
+	tests := []struct {
+		name        string
+		memoryLimit string
+		description string
+	}{
+		{
+			name:        "Mi_format_without_B",
+			memoryLimit: "16Mi",
+			description: "Kubernetes-style mebibyte format without 'B' suffix (supported in v0.4.0, breaks in v0.5.0)",
+		},
+		{
+			name:        "Gi_format_without_B",
+			memoryLimit: "16Gi",
+			description: "Kubernetes-style gibibyte format without 'B' suffix (supported in v0.4.0, breaks in v0.5.0)",
+		},
+		{
+			name:        "MiB_format_with_B",
+			memoryLimit: "16MiB",
+			description: "Standard mebibyte format with 'B' suffix (works in both v0.4.0 and v0.5.0)",
+		},
+		{
+			name:        "GiB_format_with_B",
+			memoryLimit: "16GiB",
+			description: "Standard gibibyte format with 'B' suffix (works in both v0.4.0 and v0.5.0)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			controller := gomock.NewController(t)
+			defer controller.Finish()
+
+			mockUsers := mock.NewMockUserStore(controller)
+			mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(dummyUser, nil)
+
+			mockRepos := mock.NewMockRepositoryStore(controller)
+			mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
+
+			// Create YAML with the memory limit format being tested
+			yamlConfig := &core.Config{
+				Data: `
+kind: pipeline
+type: docker
+name: test-memory-limit-` + tt.name + `
+
+steps:
+- name: test
+  image: alpine:latest
+  resources:
+    limits:
+      memory: ` + tt.memoryLimit + `
+  commands:
+  - echo "Memory limit test"
+`,
+			}
+
+			mockConfigService := mock.NewMockConfigService(controller)
+			mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(yamlConfig, nil)
+
+			mockConvertService := mock.NewMockConvertService(controller)
+			mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(yamlConfig, nil)
+
+			mockValidateService := mock.NewMockValidateService(controller)
+			mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
+
+			mockStatus := mock.NewMockStatusService(controller)
+			mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			mockBuilds := mock.NewMockBuildStore(controller)
+			mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			mockQueue := mock.NewMockScheduler(controller)
+			mockQueue.EXPECT().Schedule(gomock.Any(), gomock.Any()).Return(nil)
+
+			mockWebhooks := mock.NewMockWebhookSender(controller)
+			mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
+
+			triggerer := New(
+				nil,
+				mockConfigService,
+				mockConvertService,
+				nil,
+				mockStatus,
+				mockBuilds,
+				mockQueue,
+				mockRepos,
+				mockUsers,
+				mockValidateService,
+				mockWebhooks,
+			)
+
+			build, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
+			if err != nil {
+				t.Errorf("Expected pipeline with '%s' memory limit to parse successfully with v0.4.0, but got error: %v\nDescription: %s", tt.memoryLimit, err, tt.description)
+				return
+			}
+
+			if build == nil {
+				t.Error("Expected build to be created, but got nil")
+				return
+			}
+		})
+	}
+}
