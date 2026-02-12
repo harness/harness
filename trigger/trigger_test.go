@@ -658,177 +658,108 @@ trigger:
 		"Created", "Updated")
 )
 
-// TestTrigger_MemoryLimitMiFormat tests that memory limits with "Mi" format
-// (without "B" suffix) are supported. This test documents the behavior
-// introduced in v2.27.0 when github.com/docker/go-units was upgraded to v0.5.0,
-// which removed regexp parsing support.
-//
-// With docker/go-units v0.4.0: "16Mi" and "16MiB" both work
-// With docker/go-units v0.5.0: "16Mi" fails with "invalid suffix: 'mi'", only "16MiB" works
-//
-// This test verifies the current behavior with v0.4.0. If you upgrade to v0.5.0,
-// this test will fail, demonstrating the breaking change.
-//
-// See commit d56011b for more details.
-func TestTrigger_MemoryLimitMiFormat(t *testing.T) {
-	controller := gomock.NewController(t)
-	defer controller.Finish()
+func TestTrigger_MemoryLimitFormats(t *testing.T) {
+	tests := []struct {
+		name        string
+		memoryLimit string
+		description string
+	}{
+		{
+			name:        "Mi_format_without_B",
+			memoryLimit: "16Mi",
+			description: "Kubernetes-style mebibyte format without 'B' suffix (supported in v0.4.0, breaks in v0.5.0)",
+		},
+		{
+			name:        "Gi_format_without_B",
+			memoryLimit: "16Gi",
+			description: "Kubernetes-style gibibyte format without 'B' suffix (supported in v0.4.0, breaks in v0.5.0)",
+		},
+		{
+			name:        "MiB_format_with_B",
+			memoryLimit: "16MiB",
+			description: "Standard mebibyte format with 'B' suffix (works in both v0.4.0 and v0.5.0)",
+		},
+		{
+			name:        "GiB_format_with_B",
+			memoryLimit: "16GiB",
+			description: "Standard gibibyte format with 'B' suffix (works in both v0.4.0 and v0.5.0)",
+		},
+	}
 
-	mockUsers := mock.NewMockUserStore(controller)
-	mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(dummyUser, nil)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			controller := gomock.NewController(t)
+			defer controller.Finish()
 
-	mockRepos := mock.NewMockRepositoryStore(controller)
-	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
+			mockUsers := mock.NewMockUserStore(controller)
+			mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(dummyUser, nil)
 
-	// Test YAML with memory limit using "Mi" format (Kubernetes-style)
-	yamlWithMi := &core.Config{
-		Data: `
+			mockRepos := mock.NewMockRepositoryStore(controller)
+			mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
+
+			// Create YAML with the memory limit format being tested
+			yamlConfig := &core.Config{
+				Data: `
 kind: pipeline
 type: docker
-name: test-memory-limit
+name: test-memory-limit-` + tt.name + `
 
 steps:
 - name: test
   image: alpine:latest
   resources:
     limits:
-      memory: 16Mi
+      memory: ` + tt.memoryLimit + `
   commands:
   - echo "Memory limit test"
 `,
+			}
+
+			mockConfigService := mock.NewMockConfigService(controller)
+			mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(yamlConfig, nil)
+
+			mockConvertService := mock.NewMockConvertService(controller)
+			mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(yamlConfig, nil)
+
+			mockValidateService := mock.NewMockValidateService(controller)
+			mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
+
+			mockStatus := mock.NewMockStatusService(controller)
+			mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			mockBuilds := mock.NewMockBuildStore(controller)
+			mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			mockQueue := mock.NewMockScheduler(controller)
+			mockQueue.EXPECT().Schedule(gomock.Any(), gomock.Any()).Return(nil)
+
+			mockWebhooks := mock.NewMockWebhookSender(controller)
+			mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
+
+			triggerer := New(
+				nil,
+				mockConfigService,
+				mockConvertService,
+				nil,
+				mockStatus,
+				mockBuilds,
+				mockQueue,
+				mockRepos,
+				mockUsers,
+				mockValidateService,
+				mockWebhooks,
+			)
+
+			build, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
+			if err != nil {
+				t.Errorf("Expected pipeline with '%s' memory limit to parse successfully with v0.4.0, but got error: %v\nDescription: %s", tt.memoryLimit, err, tt.description)
+				return
+			}
+
+			if build == nil {
+				t.Error("Expected build to be created, but got nil")
+				return
+			}
+		})
 	}
-
-	mockConfigService := mock.NewMockConfigService(controller)
-	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(yamlWithMi, nil)
-
-	mockConvertService := mock.NewMockConvertService(controller)
-	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(yamlWithMi, nil)
-
-	mockValidateService := mock.NewMockValidateService(controller)
-	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
-
-	mockStatus := mock.NewMockStatusService(controller)
-	mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-	mockBuilds := mock.NewMockBuildStore(controller)
-	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-	mockQueue := mock.NewMockScheduler(controller)
-	mockQueue.EXPECT().Schedule(gomock.Any(), gomock.Any()).Return(nil)
-
-	mockWebhooks := mock.NewMockWebhookSender(controller)
-	mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
-
-	triggerer := New(
-		nil,
-		mockConfigService,
-		mockConvertService,
-		nil,
-		mockStatus,
-		mockBuilds,
-		mockQueue,
-		mockRepos,
-		mockUsers,
-		mockValidateService,
-		mockWebhooks,
-	)
-
-	build, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
-	if err != nil {
-		// With docker/go-units v0.5.0, this would fail with:
-		// "invalid suffix: 'mi'" error
-		// With v0.4.0, it should succeed
-		t.Errorf("Expected pipeline with '16Mi' memory limit to parse successfully with v0.4.0, but got error: %v", err)
-		return
-	}
-
-	if build == nil {
-		t.Error("Expected build to be created, but got nil")
-		return
-	}
-
-	// If we reach here, the test passed - the "Mi" format was successfully parsed
-	// This demonstrates that v0.4.0 supports the regexp-based parsing that allows "Mi"
-}
-
-// TestTrigger_MemoryLimitGiFormat tests that memory limits with "Gi" format
-// (without "B" suffix) are supported, similar to TestTrigger_MemoryLimitMiFormat.
-func TestTrigger_MemoryLimitGiFormat(t *testing.T) {
-	controller := gomock.NewController(t)
-	defer controller.Finish()
-
-	mockUsers := mock.NewMockUserStore(controller)
-	mockUsers.EXPECT().Find(noContext, dummyRepo.UserID).Return(dummyUser, nil)
-
-	mockRepos := mock.NewMockRepositoryStore(controller)
-	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
-
-	// Test YAML with memory limit using "Gi" format (Kubernetes-style)
-	yamlWithGi := &core.Config{
-		Data: `
-kind: pipeline
-type: docker
-name: test-memory-limit-gi
-
-steps:
-- name: test
-  image: alpine:latest
-  resources:
-    limits:
-      memory: 16Gi
-  commands:
-  - echo "Memory limit test"
-`,
-	}
-
-	mockConfigService := mock.NewMockConfigService(controller)
-	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(yamlWithGi, nil)
-
-	mockConvertService := mock.NewMockConvertService(controller)
-	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(yamlWithGi, nil)
-
-	mockValidateService := mock.NewMockValidateService(controller)
-	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
-
-	mockStatus := mock.NewMockStatusService(controller)
-	mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-	mockBuilds := mock.NewMockBuildStore(controller)
-	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-	mockQueue := mock.NewMockScheduler(controller)
-	mockQueue.EXPECT().Schedule(gomock.Any(), gomock.Any()).Return(nil)
-
-	mockWebhooks := mock.NewMockWebhookSender(controller)
-	mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
-
-	triggerer := New(
-		nil,
-		mockConfigService,
-		mockConvertService,
-		nil,
-		mockStatus,
-		mockBuilds,
-		mockQueue,
-		mockRepos,
-		mockUsers,
-		mockValidateService,
-		mockWebhooks,
-	)
-
-	build, err := triggerer.Trigger(noContext, dummyRepo, dummyHook)
-	if err != nil {
-		// With docker/go-units v0.5.0, this would fail with:
-		// "invalid suffix: 'gi'" error
-		// With v0.4.0, it should succeed
-		t.Errorf("Expected pipeline with '16Gi' memory limit to parse successfully with v0.4.0, but got error: %v", err)
-		return
-	}
-
-	if build == nil {
-		t.Error("Expected build to be created, but got nil")
-		return
-	}
-
-	// If we reach here, the test passed - the "Gi" format was successfully parsed
 }
