@@ -18,8 +18,6 @@ import (
 	"context"
 
 	"github.com/harness/gitness/registry/app/storage"
-
-	v2 "github.com/distribution/distribution/v3/registry/api/v2"
 )
 
 // Context should contain the request specific context for use in across
@@ -27,9 +25,7 @@ import (
 // be on this object.
 type Context struct {
 	context.Context
-	URLBuilder       *v2.URLBuilder
 	genericBlobStore storage.GenericBlobStore
-	Upload           storage.BlobWriter
 }
 
 // Value overrides context.Context.Value to ensure that calls are routed to

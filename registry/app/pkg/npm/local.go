@@ -621,7 +621,8 @@ func (c *localRegistry) processBase64DataOptimized(
 	base64Reader := io.NopCloser(base64.NewDecoder(base64.StdEncoding, b64StreamReader))
 
 	log.Info().Str("packageName", info.Image).Msg("Uploading NPM package with optimized streaming")
-	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, base64Reader)
+	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, base64Reader, info.RootParentID,
+		info.RegistryID)
 	if err != nil {
 		if strings.Contains(err.Error(), "unexpected EOF") {
 			return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: "+

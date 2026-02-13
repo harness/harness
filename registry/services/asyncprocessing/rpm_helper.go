@@ -568,7 +568,7 @@ func (l *rpmHelper) buildPrimary(
 		}
 	}()
 
-	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr)
+	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr, rootParentID, registryID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
@@ -710,7 +710,7 @@ func (l *rpmHelper) buildOther(
 		}
 	}()
 
-	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr)
+	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr, rootParentID, registryID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
@@ -830,7 +830,7 @@ func (l *rpmHelper) buildFileLists(
 		}
 	}()
 
-	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr)
+	info, err := l.fileManager.UploadFileNoDBUpdate(ctx, rootIdentifier, nil, pr, rootParentID, registryID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}

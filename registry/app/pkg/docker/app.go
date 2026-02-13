@@ -24,11 +24,11 @@ import (
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg"
 	registrystorage "github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
+	registryTypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
 
 	"github.com/opencontainers/go-digest"
@@ -52,9 +52,12 @@ type App struct {
 
 // NewApp takes a configuration and returns a configured app.
 func NewApp(
-	ctx context.Context, storageDeleter storagedriver.StorageDeleter,
-	blobRepo store.BlobRepository, spaceStore corestore.SpaceStore,
-	cfg *types.Config, storageService *registrystorage.Service,
+	ctx context.Context,
+	blobRepo store.BlobRepository,
+	spaceStore corestore.SpaceStore,
+	cfg *types.Config,
+	storageService *registrystorage.Service,
+	storageResolver registrystorage.StorageResolver,
 	gcService gc.Service,
 	bucketService BucketService,
 ) *App {
@@ -65,7 +68,7 @@ func NewApp(
 		bucketService:  bucketService,
 	}
 	app.configureSecret(cfg) //nolint:contextcheck
-	gcService.Start(ctx, spaceStore, blobRepo, storageDeleter, cfg)
+	gcService.Start(ctx, spaceStore, blobRepo, storageResolver, cfg)
 	return app
 }
 
@@ -74,7 +77,10 @@ func (app *App) StorageService() *registrystorage.Service {
 	return app.storageService
 }
 
-func GetStorageService(cfg *types.Config, driver storagedriver.StorageDriver) *registrystorage.Service {
+func GetStorageService(
+	cfg *types.Config,
+	resolver registrystorage.StorageResolver,
+) *registrystorage.Service {
 	options := registrystorage.GetRegistryOptions()
 	if cfg.Registry.Storage.S3Storage.Delete {
 		options = append(options, registrystorage.EnableDelete)
@@ -86,7 +92,7 @@ func GetStorageService(cfg *types.Config, driver storagedriver.StorageDriver) *r
 		log.Info().Msg("backend redirection disabled")
 	}
 
-	storageService, err := registrystorage.NewStorageService(driver, options...)
+	storageService, err := registrystorage.NewStorageService(resolver, options...)
 	if err != nil {
 		panic("could not create storage service: " + err.Error())
 	}
@@ -119,7 +125,11 @@ func (app *App) configureSecret(configuration *types.Config) {
 
 // context constructs the context object for the application. This only be
 // called once per request.
-func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID any) *Context {
+func (app *App) GetBlobsContext(
+	c context.Context,
+	info pkg.RegistryInfo,
+	blobLocator registryTypes.BlobLocator,
+) *Context {
 	ctx := &Context{
 		App:          app,
 		Context:      c,
@@ -129,12 +139,15 @@ func (app *App) GetBlobsContext(c context.Context, info pkg.RegistryInfo, blobID
 		OciBlobStore: nil,
 	}
 
-	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobID,
+	// For reads and lazy replication
+	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator.BlobID,
 		digest.Digest(info.Digest).String()); result != nil {
 		ctx.OciBlobStore = result.OciStore
 	}
+
+	// Default read/write
 	if ctx.OciBlobStore == nil {
-		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier)
+		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator)
 	}
 	return ctx
 }

@@ -40,13 +40,14 @@ import (
 	mavenRouter "github.com/harness/gitness/registry/app/api/router/maven"
 	"github.com/harness/gitness/registry/app/api/router/oci"
 	packagerrouter "github.com/harness/gitness/registry/app/api/router/packages"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	cargoutils "github.com/harness/gitness/registry/app/utils/cargo"
 	registrywebhook "github.com/harness/gitness/registry/services/webhook"
@@ -74,7 +75,6 @@ func APIHandlerProvider(
 	manifestDao store.ManifestRepository,
 	cleanupPolicyDao store.CleanupPolicyRepository,
 	imageDao store.ImageRepository,
-	driver storagedriver.StorageDriver,
 	spaceFinder refcache.SpaceFinder,
 	tx dbtx.Transactor,
 	db dbtx.Accessor,
@@ -100,6 +100,8 @@ func APIHandlerProvider(
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.CacheService,
 	quarantineFinder quarantine.Finder,
+	storageService *storage.Service,
+	app *docker.App,
 ) harness.APIHandler {
 	return harness.NewAPIHandler(
 		repoDao,
@@ -109,11 +111,9 @@ func APIHandlerProvider(
 		manifestDao,
 		cleanupPolicyDao,
 		imageDao,
-		driver,
 		config.APIURL,
 		spaceFinder,
 		tx,
-		db,
 		authenticator,
 		urlProvider,
 		authorizer,
@@ -123,7 +123,7 @@ func APIHandlerProvider(
 		webhooksExecutionRepository,
 		*webhookService,
 		spacePathStore,
-		*artifactEventReporter,
+		artifactEventReporter,
 		downloadStatRepository,
 		gitnessConfig,
 		registryBlobsDao,
@@ -136,6 +136,8 @@ func APIHandlerProvider(
 		packageWrapper,
 		publicAccess,
 		quarantineFinder,
+		storageService,
+		app,
 	)
 }
 

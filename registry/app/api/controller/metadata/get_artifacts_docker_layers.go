@@ -97,7 +97,7 @@ func (c *APIController) GetDockerArtifactLayers(
 		return getLayersErrorResponse(ctx, err)
 	}
 
-	mConfig, err := getManifestConfig(ctx, m.Configuration.Digest, regInfo.RootIdentifier, c.StorageDriver)
+	mConfig, err := c.getManifestConfig(ctx, m.Configuration.Digest, regInfo)
 	if err != nil {
 		return getLayersErrorResponse(ctx, err)
 	}

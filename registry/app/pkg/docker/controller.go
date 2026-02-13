@@ -333,7 +333,10 @@ func (c *Controller) GetUploadBlobStatus(
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
 	}
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, nil)
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+		RegistryID:   info.RegistryID,
+		RootParentID: info.RootParentID,
+	})
 	//nolint:contextcheck
 	return c.local.GetBlobUploadStatus(blobCtx, info, token)
 }
@@ -348,7 +351,10 @@ func (c *Controller) PatchBlobUpload(
 	token string,
 	body io.ReadCloser,
 ) (responseHeaders *commons.ResponseHeaders, errors []error) {
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, nil)
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+		RegistryID:   info.RegistryID,
+		RootParentID: info.RootParentID,
+	})
 	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsDownload, enum.PermissionArtifactsUpload)
 	if err != nil {
@@ -398,7 +404,10 @@ func (c *Controller) CancelBlobUpload(
 		return nil, []error{errcode.ErrCodeDenied}
 	}
 
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, nil)
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+		RegistryID:   info.RegistryID,
+		RootParentID: info.RootParentID,
+	})
 
 	errors = make([]error, 0)
 
@@ -438,7 +447,10 @@ func (c *Controller) DeleteBlob(
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
 	}
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, nil)
+	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+		RegistryID:   info.RegistryID,
+		RootParentID: info.RootParentID,
+	})
 	//nolint:contextcheck
 	return c.local.DeleteBlob(blobCtx, info)
 }

@@ -36,6 +36,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
@@ -46,6 +47,7 @@ import (
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
+	"github.com/harness/gitness/registry/app/services/hook"
 	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -121,7 +123,7 @@ func NewLocalRegistry(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
-	bucketService BucketService, replicationReporter replication.Reporter,
+	replicationReporter replication.Reporter, blobActionHook hook.BlobActionHook,
 ) Registry {
 	return &LocalRegistry{
 		App:                   app,
@@ -140,8 +142,8 @@ func NewLocalRegistry(
 		gcService:             gcService,
 		tx:                    tx,
 		quarantineArtifactDao: quarantineArtifactDao,
-		bucketService:         bucketService,
 		replicationReporter:   replicationReporter,
+		blobActionHook:        blobActionHook,
 	}
 }
 
@@ -162,8 +164,8 @@ type LocalRegistry struct {
 	gcService             gc.Service
 	tx                    dbtx.Transactor
 	quarantineArtifactDao store.QuarantineArtifactRepository
-	bucketService         BucketService
 	replicationReporter   replication.Reporter
+	blobActionHook        hook.BlobActionHook
 }
 
 func (r *LocalRegistry) Base() error {
@@ -388,7 +390,12 @@ func (r *LocalRegistry) fetchBlobInternal(
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
-	ctx := r.App.GetBlobsContext(ctx2, info, blobID)
+	ctx := r.App.GetBlobsContext(ctx2, info, types.BlobLocator{
+		Digest:       digest.Digest(info.Digest),
+		BlobID:       blobID,
+		RegistryID:   info.RegistryID,
+		RootParentID: info.RootParentID,
+	})
 	blobs := ctx.OciBlobStore
 
 	dgst = ctx.Digest
@@ -418,7 +425,20 @@ func (r *LocalRegistry) fetchBlobInternal(
 		}
 		return responseHeaders, nil, -1, nil, "", errs
 	}
+
 	if redirectURL != "" {
+		hook.EmitReadEvent(ctx2, r.blobActionHook, hook.BlobReadEvent{
+			BlobEventBase: hook.BlobEventBase{
+				BlobLocator: types.BlobLocator{
+					Digest:       dgst,
+					BlobID:       blobID,
+					RegistryID:   info.RegistryID,
+					RootParentID: info.RootParentID,
+				},
+				BucketKey: blobs.BucketKey(),
+				ClientIP:  audit.GetRealIP(ctx2),
+			},
+		})
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
 
@@ -910,7 +930,10 @@ func (r *LocalRegistry) InitBlobUpload(
 	artInfo pkg.RegistryInfo,
 	fromRepo, mountDigest string,
 ) (*commons.ResponseHeaders, []error) {
-	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, nil)
+	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
+		RegistryID:   artInfo.RegistryID,
+		RootParentID: artInfo.RootParentID,
+	})
 	var errList []error
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
@@ -1056,7 +1079,10 @@ func (r *LocalRegistry) PushBlob(
 		Code:    0,
 		Headers: make(map[string]string),
 	}
-	ctx := r.App.GetBlobsContext(ctx2, artInfo, nil)
+	ctx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
+		RegistryID:   artInfo.RegistryID,
+		RootParentID: artInfo.RootParentID,
+	})
 	if ctx.UUID != "" {
 		resumeErrs := ResumeBlobUpload(ctx, stateToken) //nolint:contextcheck
 		errs = append(errs, resumeErrs...)
@@ -1141,16 +1167,32 @@ func (r *LocalRegistry) PushBlob(
 		// Clean up the backend blob data if there was an error.
 		if err := ctx.Upload.Cancel(ctx); err != nil {
 			// If the cleanup fails, all we can do is observe and report.
-			log.Ctx(ctx).Error().Stack().Err(err).Msgf("error canceling upload after error: %v", err)
+			log.Ctx(ctx).Error().Msgf("error canceling upload after error: %v", err)
 		}
 		return responseHeaders, errs
 	}
 
-	//nolint:contextcheck
-	err = r.dbPutBlobUploadComplete(ctx, "application/octet-stream", artInfo.Digest, int(desc.Size), artInfo)
+	commitCallback := hook.EmitCommitEventCallback(ctx2, r.blobActionHook, hook.BlobCommitEvent{
+		BlobEventBase: hook.BlobEventBase{
+			BlobLocator: types.BlobLocator{
+				Digest:       desc.Digest,
+				RegistryID:   artInfo.RegistryID,
+				RootParentID: artInfo.RootParentID,
+			},
+			ClientIP:  audit.GetRealIP(ctx2),
+			BucketKey: ctx.OciBlobStore.BucketKey(),
+		},
+		Digests: types.BlobDigests{
+			SHA256: desc.Digest,
+		},
+		Size: desc.Size,
+	})
+
+	err = r.dbPutBlobUploadComplete(ctx2, "application/octet-stream", artInfo.Digest, int(desc.Size),
+		ctx.OciBlobStore.Path(), artInfo, commitCallback)
 	if err != nil {
 		errs = append(errs, err)
-		log.Ctx(ctx).Error().Msgf("failed to put blob in database: %v", err) //nolint:contextcheck
+		log.Ctx(ctx2).Error().Msgf("failed to put blob in database: %v", err)
 		return responseHeaders, errs
 	}
 
@@ -1603,11 +1645,13 @@ func (r *LocalRegistry) dbBlobLinkExists(
 }
 
 func (r *LocalRegistry) dbPutBlobUploadComplete(
-	ctx *Context,
+	ctx context.Context,
 	mediaType string,
 	digestVal string,
 	size int,
+	path string,
 	info pkg.RegistryInfo,
+	commitCallback func(context.Context) error,
 ) error {
 	blob := &types.Blob{
 		RootParentID: info.RootParentID,
@@ -1619,7 +1663,7 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 	var storedBlob *types.Blob
 	created := false
 	err := r.tx.WithTx(
-		ctx.Context, func(ctx context.Context) error {
+		ctx, func(ctx context.Context) error {
 			registry := info.Registry
 			var err error
 			storedBlob, created, err = r.blobRepo.CreateOrFind(ctx, blob)
@@ -1637,18 +1681,25 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 				return err
 			}
 
+			if commitCallback != nil {
+				if err = commitCallback(ctx); err != nil {
+					return fmt.Errorf("failed to execute commit callback: %w", err)
+				}
+			}
+
 			return nil
 		}, dbtx.TxDefault,
 	)
 	if err != nil {
-		log.Ctx(ctx.Context).Error().Msgf("failed to put blob in database: %v", err)
+		log.Ctx(ctx).Error().Msgf("failed to put blob in database: %v", err)
 		return fmt.Errorf("committing database transaction: %w", err)
 	}
 
 	// Emit blob create event
 	if created {
 		destinations := []replication.CloudLocation{}
-		r.replicationReporter.ReportEventAsync(ctx.Context, ctx.OciBlobStore.Path(), replication.BlobCreate, storedBlob.ID,
+		r.replicationReporter.ReportEventAsync(ctx, path, replication.BlobCreate,
+			storedBlob.ID,
 			"", digestVal, r.App.Config, destinations)
 	}
 	return nil

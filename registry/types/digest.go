@@ -25,6 +25,8 @@ import (
 	"hash"
 	"strings"
 
+	"github.com/harness/gitness/registry/app/crypto"
+
 	"github.com/opencontainers/go-digest"
 )
 
@@ -246,11 +248,6 @@ func GetHexDecodedBytes(s string) ([]byte, error) {
 // ====================================================================================
 
 // OCI algorithm constants for compatibility with opencontainers/go-digest.
-const (
-	SHA1OCI digest.Algorithm = "sha1"
-	MD5OCI  digest.Algorithm = "md5"
-)
-
 // NewDigest builds a Digest from an opencontainers/go-digest digest.Digest.
 // This is provided for backward compatibility with existing code.
 func NewDigest(d digest.Digest) (Digest, error) {
@@ -262,10 +259,8 @@ func NewDigest(d digest.Digest) (Digest, error) {
 	// For SHA1 and MD5, we don't call Validate() as opencontainers/go-digest
 	// doesn't natively support these algorithms.
 	alg := d.Algorithm()
-	if alg != SHA1OCI && alg != MD5OCI {
-		if err := d.Validate(); err != nil {
-			return "", err
-		}
+	if err := d.Validate(); err != nil {
+		return "", err
 	}
 
 	var algPrefix string
@@ -274,12 +269,14 @@ func NewDigest(d digest.Digest) (Digest, error) {
 		algPrefix = sha256DigestAlgorithmPrefix
 	case digest.SHA512:
 		algPrefix = sha512DigestAlgorithmPrefix
-	case SHA1OCI:
+	case crypto.SHA1:
 		algPrefix = sha1DigestAlgorithmPrefix
-	case MD5OCI:
+	case crypto.MD5:
 		algPrefix = md5DigestAlgorithmPrefix
 	case digest.SHA384:
-		return "", fmt.Errorf("unimplemented algorithm %q", digest.SHA384)
+		return "", errors.New("sha384 algorithm not supported")
+	case digest.BLAKE3:
+		return "", errors.New("blake3 algorithm not supported")
 	default:
 		return "", fmt.Errorf("unknown algorithm %q", alg)
 	}
@@ -311,9 +308,9 @@ func (d Digest) Parse() (digest.Digest, error) {
 	case sha512DigestAlgorithmPrefix:
 		alg = digest.SHA512
 	case sha1DigestAlgorithmPrefix:
-		alg = SHA1OCI
+		alg = crypto.SHA1
 	case md5DigestAlgorithmPrefix:
-		alg = MD5OCI
+		alg = crypto.MD5
 	default:
 		return "", fmt.Errorf("unknown algorithm prefix %q", algPrefix)
 	}
@@ -322,10 +319,8 @@ func (d Digest) Parse() (digest.Digest, error) {
 
 	// For SHA1 and MD5, we don't call Validate() as opencontainers/go-digest
 	// doesn't natively support these algorithms.
-	if alg != SHA1OCI && alg != MD5OCI {
-		if err := dgst.Validate(); err != nil {
-			return "", err
-		}
+	if err := dgst.Validate(); err != nil {
+		return "", err
 	}
 
 	return dgst, nil

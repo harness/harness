@@ -45,11 +45,14 @@ func GetAppRouter(
 	packageHandler packages.Handler,
 ) AppRouter {
 	r := chi.NewRouter()
+
+	// Logging specific
 	r.Use(hlog.URLHandler("http.url"))
 	r.Use(hlog.MethodHandler("http.method"))
 	r.Use(logging.HLogRequestIDHandler())
 	r.Use(logging.HLogAccessLogHandler())
 	r.Use(address.Handler("", ""))
+
 	r.Use(audit.Middleware())
 
 	r.Group(func(r chi.Router) {

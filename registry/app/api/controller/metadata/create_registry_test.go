@@ -212,10 +212,11 @@ func TestCreateRegistry(t *testing.T) {
 					mockGenericBlobRepo,
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
-					nil, // reporter - not needed for this test.
 					nil, // config - not needed for this test.
 					nil, // storageService - not needed for this test.
 					nil, // bucketService - not needed for this test.
+					nil, // replicationReporter - not needed for this test.
+					nil, // blobActionHook - not needed for this test.
 				)
 
 				// Setup audit service mock.
@@ -243,17 +244,13 @@ func TestCreateRegistry(t *testing.T) {
 				return metadata.NewAPIController(
 					mockRegistryRepo,
 					fileManager,
-					nil, // blobStore.
-					nil, // genericBlobStore.
 					nil, // upstreamProxyStore.
 					nil, // tagStore.
 					nil, // manifestStore.
 					mockCleanupPolicyRepo,
 					nil, // imageStore.
-					nil, // driver.
 					mockSpaceFinder,
 					mockTransactor,
-					nil, // db.
 					mockURLProvider,
 					mockAuthorizer,
 					mockAuditService,
@@ -262,7 +259,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // webhooksExecutionRepository.
 					mockRegistryMetadataHelper,
 					nil, // webhookService.
-					eventReporter,
+					&eventReporter,
 					nil, // downloadStatRepository.
 					"",  // setupDetailsAuthHeaderPrefix.
 					nil, // registryBlobStore.
@@ -278,6 +275,8 @@ func TestCreateRegistry(t *testing.T) {
 					},
 					mockPackageWrapper,
 					mockPublicAccessService,
+					nil, // storageService.
+					nil, // app.
 				)
 			},
 		},
@@ -325,26 +324,23 @@ func TestCreateRegistry(t *testing.T) {
 					mockGenericBlobRepo,
 					nil, // nodesRepo - not needed for this test.
 					mockTransactor,
-					nil, // reporter - not needed for this test.
 					nil, // config - not needed for this test.
 					nil, // storageService - not needed for this test.
 					nil, // bucketService - not needed for this test.
+					nil, // replicationReporter - not needed for this test.
+					nil, // blobActionHook - not needed for this test.
 				)
 
 				return metadata.NewAPIController(
 					mockRegistryRepo,
 					fileManager,
-					nil, // blobStore.
-					nil, // genericBlobStore.
 					nil, // upstreamProxyStore.
 					nil, // tagStore.
 					nil, // manifestStore.
 					nil, // cleanupPolicyStore.
 					nil, // imageStore.
-					nil, // driver.
 					mockSpaceFinder,
 					mockTransactor,
-					nil, // db.
 					mockURLProvider,
 					mockAuthorizer,
 					mockAuditService,
@@ -353,7 +349,7 @@ func TestCreateRegistry(t *testing.T) {
 					nil, // webhooksExecutionRepository.
 					mockRegistryMetadataHelper,
 					nil, // webhookService.
-					eventReporter,
+					&eventReporter,
 					nil, // downloadStatRepository.
 					"",  // setupDetailsAuthHeaderPrefix.
 					nil, // registryBlobStore.
@@ -369,6 +365,8 @@ func TestCreateRegistry(t *testing.T) {
 					},
 					mockPackageWrapper,
 					mockPublicAccessService,
+					nil, // storageService.
+					nil, // app.
 				)
 			},
 		},

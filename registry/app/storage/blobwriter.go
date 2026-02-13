@@ -32,13 +32,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var errResumableDigestNotAvailable = errors.New("resumable digest not available")
-
-const (
-	// digestSha256Empty is the canonical sha256 digest of empty data.
-	digestSha256Empty = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-)
-
 // blobWriter is used to control the various aspects of resumable
 // blob upload.
 type blobWriter struct {
@@ -56,9 +49,10 @@ type blobWriter struct {
 
 	resumableDigestEnabled bool
 	committed              bool
+	rootIdentifier         string
 
-	// Used for generic flows - to be deprecated
-	rootIdentifier string
+	// For Global Blob Store
+	isMultiPart bool
 }
 
 var _ BlobWriter = &blobWriter{}
@@ -119,6 +113,7 @@ func (bw *blobWriter) PlainCommit(ctx context.Context, sha256 string) error {
 		log.Ctx(ctx).Error().Msgf("failed to Move the file on permanent location for sha256: %s %v", sha256, err)
 		return fmt.Errorf("failed to Move the file on permanent location for sha256: %s %w", sha256, err)
 	}
+
 	return nil
 }
 
@@ -143,7 +138,7 @@ func (bw *blobWriter) Size() int64 {
 
 func (bw *blobWriter) Write(p []byte) (int, error) {
 	// We don't support multipart uploads in generic.
-	if bw.genericBlobStore != nil {
+	if !bw.isMultiPart {
 		return bw.fileWriter.Write(p)
 	}
 	// Ensure that the current write offset matches how many bytes have been
@@ -166,7 +161,7 @@ func (bw *blobWriter) Write(p []byte) (int, error) {
 
 func (bw *blobWriter) Close() error {
 	// We don't support multipart uploads in Generic
-	if bw.genericBlobStore != nil {
+	if !bw.isMultiPart {
 		return bw.fileWriter.Close()
 	}
 	if bw.committed {
@@ -260,7 +255,7 @@ func (bw *blobWriter) validateBlob(ctx context.Context, desc manifest.Descriptor
 		digester := digest.Canonical.Digester()
 		verifier := desc.Digest.Verifier()
 
-		// Read the file from the backend driver and validate it.
+		// Read the file from the backend Driver and validate it.
 		fr, err := NewFileReader(ctx, bw.driver, bw.path, desc.Size)
 		if err != nil {
 			return manifest.Descriptor{}, err

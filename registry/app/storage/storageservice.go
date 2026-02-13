@@ -19,16 +19,17 @@ package storage
 import (
 	"context"
 
-	"github.com/harness/gitness/registry/app/driver"
+	"github.com/harness/gitness/registry/types"
 
 	"github.com/opencontainers/go-digest"
+	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
 	deleteEnabled          bool
 	resumableDigestEnabled bool
 	redirect               bool
-	driver                 driver.StorageDriver
+	storageResolver        StorageResolver
 }
 
 // Option is the type used for functional options for NewRegistry.
@@ -48,39 +49,87 @@ func EnableDelete(registry *Service) error {
 	return nil
 }
 
-func NewStorageService(driver driver.StorageDriver, options ...Option) (*Service, error) {
-	registry := &Service{
+func NewStorageService(resolver StorageResolver, options ...Option) (*Service, error) {
+	svc := &Service{
 		resumableDigestEnabled: true,
-		driver:                 driver,
+		storageResolver:        resolver,
 	}
 
 	for _, option := range options {
-		if err := option(registry); err != nil {
+		if err := option(svc); err != nil {
 			return nil, err
 		}
 	}
 
-	return registry, nil
+	return svc, nil
 }
 
-func (storage *Service) OciBlobsStore(ctx context.Context, repoKey string, rootParentRef string) OciBlobStore {
+func (s *Service) OciBlobsStore(
+	ctx context.Context,
+	repoKey string,
+	rootParentRef string,
+	locator types.BlobLocator,
+) OciBlobStore {
+	target, err := s.storageResolver.Resolve(ctx, types.StorageLookup{
+		BlobLocator: locator,
+	})
+	if err != nil {
+		// TODO(Arvind): Return this error
+		log.Ctx(ctx).Fatal().Err(err).Msgf("Failed to resolve storage target for %s", locator.String())
+		return nil
+	}
+
+	if !target.IsDefault() {
+		return s.GlobalBlobsStore(ctx, target, true)
+	}
+
 	return &ociBlobStore{
 		repoKey:                repoKey,
 		ctx:                    ctx,
-		driver:                 storage.driver,
+		driver:                 target.Driver,
 		pathFn:                 PathFn,
-		redirect:               storage.redirect,
-		deleteEnabled:          storage.deleteEnabled,
-		resumableDigestEnabled: storage.resumableDigestEnabled,
+		redirect:               s.redirect,
+		deleteEnabled:          s.deleteEnabled,
+		resumableDigestEnabled: s.resumableDigestEnabled,
 		rootParentRef:          rootParentRef,
 	}
 }
 
-func (storage *Service) GenericBlobsStore(rootParentRef string) GenericBlobStore {
+func (s *Service) GenericBlobsStore(
+	ctx context.Context,
+	rootParentRef string,
+	locator types.BlobLocator,
+) GenericBlobStore {
+	target, err := s.storageResolver.Resolve(ctx, types.StorageLookup{
+		BlobLocator: locator,
+	})
+
+	if err != nil {
+		// TODO(Arvind): Return this error
+		log.Ctx(ctx).Fatal().Err(err).Msgf("Failed to resolve storage target for %s", locator.String())
+		return nil
+	}
+
+	if !target.IsDefault() {
+		return s.GlobalBlobsStore(ctx, target, false)
+	}
+
 	return &genericBlobStore{
-		driver:        storage.driver,
-		redirect:      storage.redirect,
+		driver:        target.Driver,
+		redirect:      s.redirect,
 		rootParentRef: rootParentRef,
+	}
+}
+
+func (s *Service) GlobalBlobsStore(ctx context.Context, target StorageTarget, oci bool) GlobalBlobStore {
+	return &globalBlobStore{
+		bucketKey:              target.BucketKey,
+		driver:                 target.Driver,
+		ctx:                    ctx,
+		resumableDigestEnabled: s.resumableDigestEnabled,
+		redirect:               s.redirect,
+		deleteEnabled:          s.deleteEnabled,
+		multipartEnabled:       oci,
 	}
 }
 

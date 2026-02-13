@@ -22,7 +22,6 @@ import (
 	gitnessstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/events/replication"
@@ -30,10 +29,12 @@ import (
 	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
 	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
+	"github.com/harness/gitness/registry/app/services/hook"
 	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
+	types2 "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -51,13 +52,12 @@ func LocalRegistryProvider(
 	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor, quarantineArtifactDao store.QuarantineArtifactRepository,
-	replicationReporter replication.Reporter,
-	bucketService BucketService,
+	replicationReporter replication.Reporter, blobActionHook hook.BlobActionHook,
 ) *LocalRegistry {
 	registry, ok := NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryFinder, registryBlobDao, blobRepo,
 		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao,
-		gcService, tx, quarantineArtifactDao, bucketService, replicationReporter,
+		gcService, tx, quarantineArtifactDao, replicationReporter, blobActionHook,
 	).(*LocalRegistry)
 	if !ok {
 		return nil
@@ -120,8 +120,11 @@ func DBStoreProvider(
 	return NewDBStore(blobRepo, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, manifestDao, quarantineDao)
 }
 
-func StorageServiceProvider(cfg *types.Config, driver storagedriver.StorageDriver) *storage.Service {
-	return GetStorageService(cfg, driver)
+func StorageServiceProvider(
+	cfg *types.Config,
+	storageResolver storage.StorageResolver,
+) *storage.Service {
+	return GetStorageService(cfg, storageResolver)
 }
 
 func ProvideReporter() event.Reporter {
@@ -158,7 +161,12 @@ var StorageServiceSet = wire.NewSet(StorageServiceProvider)
 var AppSet = wire.NewSet(NewApp)
 
 // OciBlobStoreFactory is a function that creates an OciBlobStore with the provided context and identifiers.
-type OciBlobStoreFactory func(ctx context.Context, repoKey string, rootParentRef string) storage.OciBlobStore
+type OciBlobStoreFactory func(
+	ctx context.Context,
+	repoKey string,
+	rootParentRef string,
+	blobLocator types2.BlobLocator,
+) storage.OciBlobStore
 
 // ProvideOciBlobStore returns a factory function that creates an OciBlobStore with the provided context.
 func ProvideOciBlobStore(storageService *storage.Service) OciBlobStoreFactory {
@@ -197,4 +205,6 @@ var OpenSourceWireSet = wire.NewSet(
 	WireSet,
 	OciBlobStoreSet,
 	BucketServiceSet,
+	hook.ProvideBlobCommitHook,
+	storage.NewStaticStorageResolver,
 )

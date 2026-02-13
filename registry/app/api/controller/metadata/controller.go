@@ -25,12 +25,13 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/interfaces"
-	storagedriver "github.com/harness/gitness/registry/app/driver"
 	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	registrypostprocessingevents "github.com/harness/gitness/registry/app/events/asyncprocessing"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/services/refcache"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/utils/cargo"
 	webhook "github.com/harness/gitness/registry/services/webhook"
@@ -55,8 +56,6 @@ type APIController struct {
 	CleanupPolicyStore           store.CleanupPolicyRepository
 	SpaceFinder                  interfaces.SpaceFinder
 	tx                           dbtx.Transactor
-	db                           dbtx.Accessor
-	StorageDriver                storagedriver.StorageDriver
 	URLProvider                  urlprovider.Provider
 	Authorizer                   authz.Authorizer
 	AuditService                 audit.Service
@@ -65,7 +64,7 @@ type APIController struct {
 	WebhooksExecutionRepository  store.WebhooksExecutionRepository
 	RegistryMetadataHelper       interfaces.RegistryMetadataHelper
 	WebhookService               webhook.ServiceInterface
-	ArtifactEventReporter        registryevents.Reporter
+	ArtifactEventReporter        *registryevents.Reporter
 	DownloadStatRepository       store.DownloadStatRepository
 	SetupDetailsAuthHeaderPrefix string
 	RegistryBlobStore            store.RegistryBlobRepository
@@ -79,22 +78,20 @@ type APIController struct {
 	UntaggedImagesEnabled        func(ctx context.Context) bool
 	PackageWrapper               interfaces.PackageWrapper
 	PublicAccess                 publicaccess.Service
+	StorageService               *storage.Service
+	app                          *docker.App
 }
 
 func NewAPIController(
 	repositoryStore store.RegistryRepository,
 	fileManager filemanager.FileManager,
-	blobStore store.BlobRepository,
-	genericBlobStore store.GenericBlobRepository,
 	upstreamProxyStore store.UpstreamProxyConfigRepository,
 	tagStore store.TagRepository,
 	manifestStore store.ManifestRepository,
 	cleanupPolicyStore store.CleanupPolicyRepository,
 	imageStore store.ImageRepository,
-	driver storagedriver.StorageDriver,
 	spaceFinder interfaces.SpaceFinder,
 	tx dbtx.Transactor,
-	db dbtx.Accessor,
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
 	auditService audit.Service,
@@ -103,7 +100,7 @@ func NewAPIController(
 	webhooksExecutionRepository store.WebhooksExecutionRepository,
 	registryMetadataHelper interfaces.RegistryMetadataHelper,
 	webhookService webhook.ServiceInterface,
-	artifactEventReporter registryevents.Reporter,
+	artifactEventReporter *registryevents.Reporter,
 	downloadStatRepository store.DownloadStatRepository,
 	setupDetailsAuthHeaderPrefix string,
 	registryBlobStore store.RegistryBlobRepository,
@@ -117,11 +114,11 @@ func NewAPIController(
 	untaggedImagesEnabled func(ctx context.Context) bool,
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.Service,
+	storageService *storage.Service,
+	app *docker.App,
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
-		GenericBlobStore:             genericBlobStore,
-		BlobStore:                    blobStore,
 		RegistryRepository:           repositoryStore,
 		UpstreamProxyStore:           upstreamProxyStore,
 		TagStore:                     tagStore,
@@ -129,9 +126,7 @@ func NewAPIController(
 		CleanupPolicyStore:           cleanupPolicyStore,
 		ImageStore:                   imageStore,
 		SpaceFinder:                  spaceFinder,
-		StorageDriver:                driver,
 		tx:                           tx,
-		db:                           db,
 		URLProvider:                  urlProvider,
 		Authorizer:                   authorizer,
 		AuditService:                 auditService,
@@ -154,5 +149,7 @@ func NewAPIController(
 		UntaggedImagesEnabled:        untaggedImagesEnabled,
 		PackageWrapper:               packageWrapper,
 		PublicAccess:                 publicAccess,
+		StorageService:               storageService,
+		app:                          app,
 	}
 }

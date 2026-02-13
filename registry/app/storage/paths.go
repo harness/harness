@@ -96,6 +96,17 @@ func pathFor(spec pathSpec) (string, error) {
 		return path.Join(append(blobsPrefix, components...)...), nil
 	case globalUploadDataPathSpec:
 		return path.Join(append(rootPrefix, "_uploads", v.id, "data")...), nil
+	case globalUploadHashStatePathSpec:
+		offset := fmt.Sprintf("%d", v.offset)
+		if v.list {
+			offset = "" // Limit to the prefix for listing offsets.
+		}
+		return path.Join(
+			append(
+				rootPrefix, "_uploads", v.id, "hashstates",
+				string(v.alg), offset,
+			)...,
+		), nil
 	default:
 		return "", fmt.Errorf("unknown path spec: %#v", v)
 	}
@@ -194,6 +205,15 @@ type uploadHashStatePathSpec struct {
 	alg      digest.Algorithm
 	offset   int64
 	list     bool
+}
+
+func (globalUploadHashStatePathSpec) pathSpec() {}
+
+type globalUploadHashStatePathSpec struct {
+	id     string
+	alg    digest.Algorithm
+	offset int64
+	list   bool
 }
 
 func (uploadHashStatePathSpec) pathSpec() {}

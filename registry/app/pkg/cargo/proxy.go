@@ -218,12 +218,14 @@ func (r *proxy) putFileToLocal(
 		return fmt.Errorf("failed to get registry config: %w", err)
 	}
 	defer file.Close()
-	fileInfo, err := r.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, file)
+	fileInfo, err := r.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, file, info.RootParentID,
+		info.RegistryID)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to upload with registry: %d with error: %w", info.RegistryID, err)
 	}
-	tempFile, err := r.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo)
+	tempFile, err := r.fileManager.DownloadFileByDigest(ctx, info.RootIdentifier, fileInfo, info.RootParentID,
+		info.RegistryID)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to download with registry: %d with error: %w",

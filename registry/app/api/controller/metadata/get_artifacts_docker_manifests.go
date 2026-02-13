@@ -102,7 +102,8 @@ func (c *APIController) getManifestList(
 	ctx context.Context, reqManifest *ml.DeserializedManifestList,
 	registry *types.Registry, image string, regInfo *types.RegistryRequestBaseInfo,
 ) (
-	[]artifact.DockerManifestDetails, error) {
+	[]artifact.DockerManifestDetails, error,
+) {
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	for _, manifestEntry := range reqManifest.Manifests {
 		dgst, err := types.NewDigest(manifestEntry.Digest)
@@ -119,10 +120,7 @@ func (c *APIController) getManifestList(
 			}
 			return nil, err
 		}
-		mConfig, err := getManifestConfig(
-			ctx, referencedManifest.Configuration.Digest,
-			regInfo.RootIdentifier, c.StorageDriver,
-		)
+		mConfig, err := c.getManifestConfig(ctx, referencedManifest.Configuration.Digest, regInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +157,8 @@ func (c *APIController) getManifestDetails(
 		CreatedAt: &createdAt,
 		Size:      &size,
 	}
-	downloadCountMap, err := c.DownloadStatRepository.GetTotalDownloadsForManifests(ctx, []string{string(dgst)}, image.ID)
+	downloadCountMap, err := c.DownloadStatRepository.GetTotalDownloadsForManifests(ctx, []string{string(dgst)},
+		image.ID)
 	if err == nil && len(downloadCountMap) > 0 {
 		downloadCount := downloadCountMap[string(dgst)]
 		manifestDetails.DownloadsCount = &downloadCount
@@ -226,7 +225,7 @@ func (c *APIController) ProcessManifest(
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	switch reqManifest := manifest.(type) {
 	case *schema2.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
+		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, regInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -236,7 +235,7 @@ func (c *APIController) ProcessManifest(
 		}
 		manifestDetailsList = append(manifestDetailsList, md)
 	case *ocischema.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
+		mConfig, err := c.getManifestConfig(ctx, reqManifest.Config().Digest, regInfo)
 		if err != nil {
 			return nil, err
 		}

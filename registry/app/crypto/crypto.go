@@ -12,34 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package crypto
 
 import (
-	"time"
+	"crypto"
 
 	"github.com/opencontainers/go-digest"
 )
 
-// Blob DTO object.
-type Blob struct {
-	ID           int64
-	RootParentID int64
-	// This media type is for S3. The caller should look this up
-	// and override the value for the specific repository.
-	MediaType   string
-	MediaTypeID int64
-	Digest      digest.Digest
-	Size        int64
-	CreatedAt   time.Time
-	CreatedBy   int64
-}
+const (
+	SHA1 digest.Algorithm = "sha1"
+	MD5  digest.Algorithm = "md5"
+)
 
-// Blobs is a slice of Blob pointers.
-type Blobs []*Blob
-
-type BlobDigests struct {
-	SHA1   digest.Digest
-	SHA256 digest.Digest
-	SHA512 digest.Digest
-	MD5    digest.Digest
+func init() {
+	digest.RegisterAlgorithm(SHA1, crypto.SHA1)
+	digest.RegisterAlgorithm(MD5, crypto.MD5)
 }
