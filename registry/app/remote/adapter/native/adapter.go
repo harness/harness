@@ -18,6 +18,7 @@ package native
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -49,7 +50,7 @@ type Adapter struct {
 // NewAdapter returns an instance of the Adapter.
 func NewAdapter(
 	ctx context.Context, spaceFinder refcache.SpaceFinder, service secret.Service, reg types.UpstreamProxy,
-) *Adapter {
+) (*Adapter, error) {
 	adapter := &Adapter{
 		proxy: reg,
 	}
@@ -57,13 +58,14 @@ func NewAdapter(
 	url := reg.RepoURL
 	accessKey, secretKey, _, err := commons.GetCredentials(ctx, spaceFinder, service, reg)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("error getting credentials for registry: %s", reg.RepoKey)
-		return nil
+		err := fmt.Errorf("error getting credentials for registry [%s], err: %w", reg.RepoKey, err)
+		log.Ctx(ctx).Error().Err(err)
+		return nil, err
 	}
 
 	adapter.Client = registry.NewClient(url, accessKey, secretKey, false,
 		reg.PackageType == artifact.PackageTypeDOCKER || reg.PackageType == artifact.PackageTypeHELM)
-	return adapter
+	return adapter, nil
 }
 
 // NewAdapterWithAuthorizer returns an instance of the Adapter with provided authorizer.

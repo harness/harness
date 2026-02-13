@@ -50,10 +50,13 @@ func newAdapter(
 	if err != nil {
 		return nil, err
 	}
-
+	a, err := native.NewAdapter(ctx, spaceFinder, service, registry)
+	if err != nil {
+		return nil, err
+	}
 	return &adapter{
 		client:  client,
-		Adapter: native.NewAdapter(ctx, spaceFinder, service, registry),
+		Adapter: a,
 	}, nil
 }
 

@@ -53,7 +53,10 @@ func newAdapter(
 	registry types.UpstreamProxy,
 	service secret.Service,
 ) (adp.Adapter, error) {
-	nativeAdapter := native.NewAdapter(ctx, spaceFinder, service, registry)
+	nativeAdapter, err := native.NewAdapter(ctx, spaceFinder, service, registry)
+	if err != nil {
+		return nil, err
+	}
 	c, err := newClient(ctx, registry, spaceFinder, service)
 	if err != nil {
 		return nil, err
