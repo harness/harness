@@ -452,9 +452,13 @@ export interface StringsMap {
   'violationsList.violationDetailsModal.violatedPoliciesSection.licenseViolation.allowedLicenses': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.licenseViolation.blockedLicense': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.licenseViolation.packageLicense': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.ossRiskLevelViolation.ossRiskLevel': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.packageAgeViolation.packageAgeThreshold': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.packageAgeViolation.publishedOn': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.policiesViolated': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.policyName': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.policySetViolated': string
+  'violationsList.violationDetailsModal.violatedPoliciesSection.policyViolated': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cveId': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssScore': string
   'violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssThreshold': string
@@ -628,6 +632,11 @@ export interface StringsMap {
   restore: string
   retriableError: string
   save: string
+  'scanCategory.license': string
+  'scanCategory.ossRiskLevel': string
+  'scanCategory.packageAge': string
+  'scanCategory.security': string
+  'scanCategory.unknown': string
   search: string
   'sideNav.artifacts': string
   'sideNav.repositories': string

@@ -1,4 +1,4 @@
-moduleName: '{{ $.repositoryList.artifactRegistry.label }}'
+moduleName: "{{ $.repositoryList.artifactRegistry.label }}"
 add: Add
 clearFilters: Clear Filters
 save: Save
@@ -8,9 +8,9 @@ delete: Delete
 restore: Restore
 prod: Prod
 nonProd: Non-Prod
-id: 'ID: {{ id }}'
-prodCount: '{{count}} Prod'
-nonProdCount: '{{count}} Non-Prod'
+id: "ID: {{ id }}"
+prodCount: "{{count}} Prod"
+nonProdCount: "{{count}} Non-Prod"
 copy: Copy
 view: View
 metadata: Metadata
@@ -28,21 +28,27 @@ download: Download
 loading: Loading...
 addProperty: Add Property
 addMetadata: Add Metadata
-available: 'Available({{count}})'
-deleted: 'Deleted({{count}})'
-archived: 'Archived({{count}})'
+available: "Available({{count}})"
+deleted: "Deleted({{count}})"
+archived: "Archived({{count}})"
 status:
   available: Available
   archived: Archived
   blocked: Blocked
   warning: Warning
   passed: Passed
+scanCategory:
+  license: License
+  packageAge: Package Age
+  security: Security
+  ossRiskLevel: OSS Risk Level
+  unknown: Unknown
 dateLabel: Date
 timeLabel: Time
 harnessAI: Harness AI
 new: NEW
 beta: BETA
-harLabel: '{{ $.repositoryList.artifactRegistry.label }}'
+harLabel: "{{ $.repositoryList.artifactRegistry.label }}"
 na: N/A
 success: Success
 failed: Failed
@@ -54,9 +60,9 @@ soon: SOON
 failedToLoadData: Failed to load data. Please try again!
 all: All
 noResultsFound: No results found
-optionalField: '{{name}} (Optional)'
-description: '{{ $.versionDetails.overview.generalInformation.description }}'
-tagsLabel: '{{ $.artifactList.table.columns.tags }}'
+optionalField: "{{name}} (Optional)"
+description: "{{ $.versionDetails.overview.generalInformation.description }}"
+tagsLabel: "{{ $.artifactList.table.columns.tags }}"
 plusNewName: + New {{name}}
 enterPlaceholder: Enter {{name}}
 descriptionPlaceholder: Enter Description
@@ -72,12 +78,12 @@ tags:
   latest: LATEST
   latestVersion: LATEST VERSION
 breadcrumbs:
-  repositories: '{{ $.repositoryList.pageHeading }}'
-  artifacts: '{{ $.artifactList.pageHeading }}'
-  upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+  repositories: "{{ $.repositoryList.pageHeading }}"
+  artifacts: "{{ $.artifactList.pageHeading }}"
+  upstreamProxies: "{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}"
 actions:
   edit: Edit
-  delete: '{{ $.delete }}'
+  delete: "{{ $.delete }}"
   softDelete: Archive
   quarantine: Quarantine
   restore: Restore
@@ -88,12 +94,12 @@ actions:
 cleanupPolicy:
   name: Cleanup Policy Name
   addBtn: Add Cleanup Policy
-  cleanUpByTagPrefixes: 'Cleanup by <b>Tag Prefixes</b>'
-  cleanUpByVersionPrefixes: 'Cleanup by <b>Version Prefixes</b>'
-  cleanUpByPackagePrefixes: 'Cleanup by <b>Package Prefixes</b>'
-  cleanUpByArtifactsOlderThan: 'Cleanup by <b>Artifacts older than</b>'
+  cleanUpByTagPrefixes: "Cleanup by <b>Tag Prefixes</b>"
+  cleanUpByVersionPrefixes: "Cleanup by <b>Version Prefixes</b>"
+  cleanUpByPackagePrefixes: "Cleanup by <b>Package Prefixes</b>"
+  cleanUpByArtifactsOlderThan: "Cleanup by <b>Artifacts older than</b>"
   cleanUpByArtifactsOlderThanPlaceholder: Specify days
-  placeholder: 'specify $type prefix and press enter'
+  placeholder: "specify $type prefix and press enter"
   addPattern: Add Pattern
   infoMessage: Define the cleanup policy using the options below. Cleanup will occur when all the enabled options are met.
 packageTypes:
@@ -110,7 +116,7 @@ packageTypes:
   huggingfacePackage: Huggingface Package
   condaPackage: Conda Package
   dartPackage: Dart Package
-  package: '{{ name }} Package'
+  package: "{{ name }} Package"
 repositoryTypes:
   docker: Docker
   helm: Helm
@@ -130,12 +136,12 @@ repositoryTypes:
   dart: Dart
   composer: Composer
 sideNav:
-  repositories: '{{ $.repositoryList.pageHeading }}'
-  artifacts: '{{ $.artifactList.pageHeading }}'
-  upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+  repositories: "{{ $.repositoryList.pageHeading }}"
+  artifacts: "{{ $.artifactList.pageHeading }}"
+  upstreamProxies: "{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}"
 badges:
-  artifactRegistry: '{{ $.repositoryList.artifactRegistry.label }}'
-  upstreamProxy: '{{ $.repositoryList.upstreamProxy.label }}'
+  artifactRegistry: "{{ $.repositoryList.artifactRegistry.label }}"
+  upstreamProxy: "{{ $.repositoryList.upstreamProxy.label }}"
   projectScope: Project
   orgScope: Organization
   accountScope: Account
@@ -157,21 +163,21 @@ validationMessages:
   accessKeyRequired: Access key is required
   secretKeyRequired: Secret key is required
   headerAlreadyExists: Header already exists
-  entityRequired: '{{entity}} is required'
-  stringMax: '{{entity}} must be 50 characters or less'
-  noNewLine: '{{entity}} cannot contain new lines'
-  uniqueValues: '{{entity}} must be unique'
-  equals: '{{{entity}}} must be equal to {{{value}}}'
+  entityRequired: "{{entity}} is required"
+  stringMax: "{{entity}} must be 50 characters or less"
+  noNewLine: "{{entity}} cannot contain new lines"
+  uniqueValues: "{{entity}} must be unique"
+  equals: "{{{entity}}} must be equal to {{{value}}}"
 vulnerabilityStatus:
-  critical: 'C {{count}}'
-  high: 'H {{count}}'
-  medium: 'M {{count}}'
-  low: 'L {{count}}'
+  critical: "C {{count}}"
+  high: "H {{count}}"
+  medium: "M {{count}}"
+  low: "L {{count}}"
 labels:
   title: Labels
   addLabel: Add Label
   addNewValue: Add New Value
-  addNewValueDynamic: 'Add New Value {{value}}'
+  addNewValueDynamic: "Add New Value {{value}}"
   findALabel: Find a Label
   findAValue: Find a Value
   findOrAddValue: Find or Add Value

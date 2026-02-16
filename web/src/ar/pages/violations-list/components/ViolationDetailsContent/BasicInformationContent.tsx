@@ -15,9 +15,9 @@
  */
 
 import React from 'react'
-import { Container, DropDown, Layout, Text } from '@harnessio/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { ArtifactScan } from '@harnessio/react-har-service-client'
+import type { ArtifactScanDetails } from '@harnessio/react-har-service-client'
 
 import { useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -28,12 +28,10 @@ import InformationMetrics from './InformationMetrics'
 import css from './ViolationDetailsContent.module.scss'
 
 interface BasicInformationContentProps {
-  data: ArtifactScan
-  selectedPolicySet?: string
-  onChangePolicySet: (policySetRef: string) => void
+  data: ArtifactScanDetails
 }
 
-function BasicInformationContent({ data, selectedPolicySet, onChangePolicySet }: BasicInformationContentProps) {
+function BasicInformationContent({ data }: BasicInformationContentProps) {
   const { getString } = useStrings()
   const routes = useRoutes()
   return (
@@ -60,26 +58,6 @@ function BasicInformationContent({ data, selectedPolicySet, onChangePolicySet }:
             repositoryIdentifier: data.registryName
           })}
         />
-        <Layout.Vertical spacing="xsmall">
-          <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }} color={Color.GREY_700}>
-            {getString('violationsList.violationDetailsModal.basicInformationSection.policySetViolated')}
-          </Text>
-          <DropDown
-            width={180}
-            usePortal
-            buttonTestId="policy-set-select"
-            items={data.policySets?.map(each => ({
-              ...each,
-              label: each.policySetName,
-              value: each.policySetRef
-            }))}
-            value={selectedPolicySet}
-            onChange={option => {
-              onChangePolicySet(option.value as string)
-            }}
-            addClearBtn={false}
-          />
-        </Layout.Vertical>
         <InformationMetrics.ScanStatus
           label={getString('violationsList.violationDetailsModal.basicInformationSection.status')}
           status={data.scanStatus}

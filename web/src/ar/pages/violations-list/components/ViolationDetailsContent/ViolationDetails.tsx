@@ -15,49 +15,67 @@
  */
 
 import React from 'react'
-import { Layout } from '@harnessio/uicore'
-import { Error, useGetArtifactScanDetailsQuery } from '@harnessio/react-har-service-client'
+import { Collapse, Layout, Text } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
+import type { ArtifactScanDetails, PolicySetFailureDetail } from '@harnessio/react-har-service-client'
 
-import { useAppStore } from '@ar/hooks'
-import PageContent from '@ar/components/PageContent/PageContent'
+import { useStrings } from '@ar/frameworks/strings'
+import { Separator } from '@ar/components/Separator/Separator'
 
-import EvaluationInformationContent from './EvaluationInformationContent'
-import FixInformationContent from './FixInformationContent'
+import InformationMetrics from './InformationMetrics'
 import ViolationFailureDetails from './ViolationFailureDetails'
+import useGetPolicySetDetailsPageUrl from '../../hooks/useGetPolicyDetailsPageUrl'
+
+import css from './ViolationDetailsContent.module.scss'
+
+interface PolicySetCollapseTitleProps {
+  data: PolicySetFailureDetail
+}
+function PolicySetCollapseTitle({ data }: PolicySetCollapseTitleProps) {
+  const { getString } = useStrings()
+  const policySetURL = useGetPolicySetDetailsPageUrl(data.policySetRef)
+  return (
+    <Layout.Horizontal className={css.collapseHeaderContainer}>
+      <InformationMetrics.Link
+        label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.policySetViolated')}
+        value={data.policySetName || data.policySetRef}
+        linkTo={policySetURL}
+      />
+      <InformationMetrics.Text
+        label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.policiesViolated')}
+        value={data.policyFailureDetails.length.toString()}
+      />
+    </Layout.Horizontal>
+  )
+}
 
 interface ViolationDetailsProps {
-  scanId: string
-  policySetRef: string
-  onClose?: () => void
+  data: ArtifactScanDetails
 }
 
 function ViolationDetails(props: ViolationDetailsProps) {
-  const { scope } = useAppStore()
-  const {
-    data,
-    isFetching: loading,
-    error,
-    refetch
-  } = useGetArtifactScanDetailsQuery({
-    queryParams: {
-      account_identifier: scope.accountId || '',
-      policy_set_ref: props.policySetRef
-    },
-    scan_id: props.scanId
-  })
-
-  const responseData = data?.content?.data
+  const { getString } = useStrings()
 
   return (
-    <PageContent loading={loading} error={error?.error as Error} refetch={refetch}>
-      {!!responseData && (
-        <Layout.Vertical data-testid="violation-details-content" padding={{ top: 'medium' }}>
-          <FixInformationContent data={responseData} />
-          <ViolationFailureDetails data={responseData} />
-          <EvaluationInformationContent data={responseData} />
-        </Layout.Vertical>
-      )}
-    </PageContent>
+    <Layout.Vertical data-testid="violation-details-content" padding={{ top: 'medium' }}>
+      <Text font={{ variation: FontVariation.H5, weight: 'bold' }} color={Color.GREY_700}>
+        {getString('violationsList.violationDetailsModal.violatedPoliciesSection.title')}
+      </Text>
+      {props.data.policySetFailureDetails.map(policySet => (
+        <>
+          <Collapse
+            key={policySet.policySetRef}
+            expandedIcon="chevron-down"
+            collapsedIcon="chevron-right"
+            collapseClassName={css.collapseMain}
+            isOpen
+            heading={<PolicySetCollapseTitle data={policySet} />}>
+            <ViolationFailureDetails data={policySet} fixVersionDetails={props.data.fixVersionDetails} />
+          </Collapse>
+          <Separator />
+        </>
+      ))}
+    </Layout.Vertical>
   )
 }
 

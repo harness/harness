@@ -16,10 +16,15 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const collapseHeaderContainer: string
+export declare const collapseMain: string
 export declare const container: string
 export declare const contentContainer: string
 export declare const footerContainer: string
 export declare const gridContainer: string
 export declare const pageBody: string
+export declare const policyContainer: string
+export declare const policyContentContainer: string
+export declare const policyHeaderContainer: string
 export declare const securityViolationGridContainer: string
 export declare const titleContainer: string

@@ -15,13 +15,16 @@
  */
 
 import React, { Fragment } from 'react'
-import { Container, Layout, Text } from '@harnessio/uicore'
-import { Color, FontVariation, type KVO } from '@harnessio/design-system'
+import classNames from 'classnames'
+import { Collapse, Container, Layout } from '@harnessio/uicore'
+import type { KVO } from '@harnessio/design-system'
 import type {
-  ArtifactScanDetails,
+  FixVersionDetails,
   LicensePolicyFailureDetailConfig,
+  OssRiskLevelPolicyFailureDetailConfig,
   PackageAgeViolationPolicyFailureDetailConfig,
   PolicyFailureDetail,
+  PolicySetFailureDetail,
   SecurityPolicyFailureDetailConfig
 } from '@harnessio/react-har-service-client'
 
@@ -30,41 +33,60 @@ import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 
 import InformationMetrics from './InformationMetrics'
+import useGetPolicyDetailsPageUrl from '../../hooks/useGetPolicyDetailsPageUrl'
 
 import css from './ViolationDetailsContent.module.scss'
 
 interface ViolationFailureDetailsItemProps {
   data: any
+  policyName: string
+  policyRef: string
+  category: PolicyFailureDetail['category']
+  fixVersionDetails?: FixVersionDetails
 }
 
-function SecurityPolicyFailureDetailsItem({ data }: { data: SecurityPolicyFailureDetailConfig }) {
+function SecurityPolicyFailureDetailsItem({
+  data,
+  fixVersionDetails
+}: {
+  data: SecurityPolicyFailureDetailConfig
+  fixVersionDetails?: FixVersionDetails
+}) {
   const { vulnerabilities } = data
   const { getString } = useStrings()
   return (
-    <Container className={css.securityViolationGridContainer}>
-      <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }} color={Color.GREY_700}>
-        {getString('violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cveId')}
-      </Text>
-      <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }} color={Color.GREY_700}>
-        {getString('violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssScore')}
-      </Text>
-      <Text font={{ variation: FontVariation.BODY, weight: 'semi-bold' }} color={Color.GREY_700}>
-        {getString('violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssThreshold')}
-      </Text>
-      {vulnerabilities.map(each => (
-        <Fragment key={each.cveId}>
-          <Text lineClamp={1} font={{ variation: FontVariation.BODY }} color={Color.GREY_700}>
-            {each.cveId}
-          </Text>
-          <Text lineClamp={1} font={{ variation: FontVariation.BODY }} color={Color.GREY_700}>
-            {each.cvssScore}
-          </Text>
-          <Text lineClamp={1} font={{ variation: FontVariation.BODY }} color={Color.GREY_700}>
-            {each.cvssThreshold}
-          </Text>
-        </Fragment>
-      ))}
-    </Container>
+    <Layout.Vertical spacing="medium">
+      <Container className={css.gridContainer}>
+        <InformationMetrics.Text
+          label={getString('violationsList.violationDetailsModal.fixInformationSection.currentVersion')}
+          value={fixVersionDetails?.currentVersion?.toString() || getString('na')}
+        />
+        <InformationMetrics.Text
+          label={getString('violationsList.violationDetailsModal.fixInformationSection.fixedVersion')}
+          value={fixVersionDetails?.fixVersion?.toString() || getString('na')}
+        />
+      </Container>
+      <Container className={css.securityViolationGridContainer}>
+        <InformationMetrics.Label
+          label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cveId')}
+        />
+        <InformationMetrics.Label
+          label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssScore')}
+        />
+        <InformationMetrics.Label
+          label={getString(
+            'violationsList.violationDetailsModal.violatedPoliciesSection.securityViolation.cvssThreshold'
+          )}
+        />
+        {vulnerabilities.map(each => (
+          <Fragment key={each.cveId}>
+            <InformationMetrics.Value value={each.cveId} />
+            <InformationMetrics.Value value={each.cvssScore.toLocaleString()} />
+            <InformationMetrics.Value value={each.cvssThreshold.toLocaleString()} />
+          </Fragment>
+        ))}
+      </Container>
+    </Layout.Vertical>
   )
 }
 
@@ -110,6 +132,21 @@ function PackageAgeViolationPolicyFailureDetailItem({ data }: { data: PackageAge
   )
 }
 
+function OssRiskLevelViolationPolicyFailureDetailItem({ data }: { data: OssRiskLevelPolicyFailureDetailConfig }) {
+  const { ossRiskLevel } = data
+  const { getString } = useStrings()
+  return (
+    <Container className={css.gridContainer}>
+      <InformationMetrics.Text
+        label={getString(
+          'violationsList.violationDetailsModal.violatedPoliciesSection.ossRiskLevelViolation.ossRiskLevel'
+        )}
+        value={ossRiskLevel}
+      />
+    </Container>
+  )
+}
+
 function GenericPolicyFailureDetailItem({ data }: { data: KVO }) {
   const { name, category, ...rest } = data
   return (
@@ -124,54 +161,68 @@ function GenericPolicyFailureDetailItem({ data }: { data: KVO }) {
   )
 }
 
-function ViolationFailureDetailsItem({ data }: ViolationFailureDetailsItemProps) {
-  const { policyName, category } = data
+function ViolationFailureDetailsItem(props: ViolationFailureDetailsItemProps) {
+  const { data, policyName, policyRef, category, fixVersionDetails } = props
+  const policyDetailsURL = useGetPolicyDetailsPageUrl(policyRef)
   const { getString } = useStrings()
   const renderContent = () => {
-    switch (data.category as PolicyFailureDetail['category']) {
+    switch (category) {
       case 'Security':
-        return <SecurityPolicyFailureDetailsItem data={data} />
+        return <SecurityPolicyFailureDetailsItem data={data} fixVersionDetails={fixVersionDetails} />
       case 'License':
         return <LicensePolicyFailureDetailItem data={data} />
       case 'PackageAge':
         return <PackageAgeViolationPolicyFailureDetailItem data={data} />
+      case 'OssRiskLevel':
+        return <OssRiskLevelViolationPolicyFailureDetailItem data={data} />
       default:
         return <GenericPolicyFailureDetailItem data={data} />
     }
   }
-  if (!policyName) return <></>
   return (
-    <Layout.Vertical spacing="large">
-      <Text
-        margin={{ bottom: 'medium' }}
-        font={{ variation: FontVariation.BODY, weight: 'bold' }}
-        color={Color.PRIMARY_7}>
-        {getString('violationsList.violationDetailsModal.violatedPoliciesSection.policyName', { policyName })}
-      </Text>
-      <InformationMetrics.Text
-        label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.category')}
-        value={category}
-      />
-      {renderContent()}
-    </Layout.Vertical>
+    <Collapse
+      expandedIcon="chevron-down"
+      collapsedIcon="chevron-right"
+      collapseClassName={classNames(css.collapseMain, css.policyContainer)}
+      heading={
+        <Layout.Horizontal className={css.policyHeaderContainer}>
+          <InformationMetrics.Link
+            label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.policyViolated')}
+            value={policyName || policyRef}
+            linkTo={policyDetailsURL}
+          />
+          <InformationMetrics.ScanCategory
+            label={getString('violationsList.violationDetailsModal.violatedPoliciesSection.category')}
+            category={category}
+          />
+        </Layout.Horizontal>
+      }>
+      <Container className={css.policyContentContainer} padding="small">
+        {renderContent()}
+      </Container>
+    </Collapse>
   )
 }
 
 interface ViolationFailureDetailsProps {
-  data: ArtifactScanDetails
+  data: PolicySetFailureDetail
+  fixVersionDetails?: FixVersionDetails
 }
 
 function ViolationFailureDetails(props: ViolationFailureDetailsProps) {
   const { data } = props
   const { policyFailureDetails } = data
-  const { getString } = useStrings()
   return (
-    <Layout.Vertical spacing="large">
-      <Text font={{ variation: FontVariation.H5, weight: 'bold' }} color={Color.GREY_700}>
-        {getString('violationsList.violationDetailsModal.violatedPoliciesSection.title')}
-      </Text>
+    <Layout.Vertical spacing="large" padding="small">
       {policyFailureDetails?.map(item => (
-        <ViolationFailureDetailsItem key={item.policyName} data={item} />
+        <ViolationFailureDetailsItem
+          key={item.policyRef}
+          policyName={item.policyName}
+          policyRef={item.policyRef}
+          category={item.category}
+          data={item}
+          fixVersionDetails={props.fixVersionDetails}
+        />
       ))}
     </Layout.Vertical>
   )

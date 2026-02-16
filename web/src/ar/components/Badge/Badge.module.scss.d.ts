@@ -25,3 +25,4 @@ export declare const passedStatus: string
 export declare const quarantineBadge: string
 export declare const visibilityBadge: string
 export declare const warningStatus: string
+export declare const yellowStatus: string

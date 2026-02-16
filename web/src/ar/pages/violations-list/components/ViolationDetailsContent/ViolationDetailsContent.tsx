@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { ButtonVariation, Container, Layout, Text, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import { Error, evaluateArtifactScan, useGetArtifactScansQuery, V3Error } from '@harnessio/react-har-service-client'
+import {
+  Error,
+  evaluateArtifactScan,
+  useGetArtifactScanDetailsQuery,
+  V3Error
+} from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -27,6 +32,7 @@ import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import ViolationDetails from './ViolationDetails'
 import BasicInformationContent from './BasicInformationContent'
+import EvaluationInformationContent from './EvaluationInformationContent'
 
 import css from './ViolationDetailsContent.module.scss'
 
@@ -36,7 +42,6 @@ interface ViolationDetailsContentProps {
 }
 
 function ViolationDetailsContent(props: ViolationDetailsContentProps) {
-  const [selectedPolicySet, setPolicySet] = useState<string | undefined>()
   const { scope } = useAppStore()
   const { RbacButton } = useParentComponents()
   const { clear, showSuccess, showError } = useToaster()
@@ -47,27 +52,14 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
     isFetching: loading,
     error,
     refetch
-  } = useGetArtifactScansQuery({
+  } = useGetArtifactScanDetailsQuery({
+    scan_id: props.scanId,
     queryParams: {
-      account_identifier: scope.accountId || '',
-      project_identifier: scope.projectIdentifier,
-      org_identifier: scope.orgIdentifier,
-      scan_id: props.scanId,
-      scope: 'descendants'
+      account_identifier: scope.accountId || ''
     }
   })
 
   const responseData = data?.content.data
-  const scanInfo = responseData?.[0]
-
-  useEffect(() => {
-    if (!scanInfo) return
-    if (selectedPolicySet) return
-    const policySets = scanInfo.policySets
-    if (policySets && policySets.length > 0) {
-      setPolicySet(policySets[0].policySetRef)
-    }
-  }, [scanInfo, selectedPolicySet])
 
   const handleRescan = (scanId: string) => {
     return evaluateArtifactScan({
@@ -99,14 +91,11 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
           </Layout.Horizontal>
         </Layout.Vertical>
         <PageContent loading={loading} error={error?.error as Error} refetch={refetch}>
-          {!!scanInfo && (
+          {responseData && (
             <Layout.Vertical data-testid="policy-evaluation-body" className={css.contentContainer} spacing="medium">
-              <BasicInformationContent
-                data={scanInfo}
-                selectedPolicySet={selectedPolicySet}
-                onChangePolicySet={setPolicySet}
-              />
-              {selectedPolicySet && <ViolationDetails scanId={props.scanId} policySetRef={selectedPolicySet} />}
+              <BasicInformationContent data={responseData} />
+              <ViolationDetails data={responseData} />
+              <EvaluationInformationContent data={responseData} />
             </Layout.Vertical>
           )}
         </PageContent>
@@ -121,7 +110,7 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
               permission: PermissionIdentifier.UPLOAD_ARTIFACT,
               resource: {
                 resourceType: ResourceType.ARTIFACT_REGISTRY,
-                resourceIdentifier: scanInfo?.registryName
+                resourceIdentifier: responseData.registryName
               }
             }}
           />

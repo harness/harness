@@ -28,14 +28,15 @@
 
 .gridContainer {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: 1fr 1fr;
   gap: var(--spacing-medium);
 }
 
 .securityViolationGridContainer {
   display: grid;
   grid-template-columns: auto auto auto;
-  gap: var(--spacing-medium);
+  column-gap: var(--spacing-small);
+  row-gap: var(--spacing-xsmall);
 }
 
 .titleContainer {
@@ -66,4 +67,43 @@
   padding-bottom: var(--spacing-xlarge) !important;
   padding-top: var(--spacing-medium) !important;
   border-top: 1px solid var(--grey-200) !important;
+}
+
+.collapseMain {
+  border-top: none !important;
+  padding-left: 0px !important;
+
+  & :global([class*='CollapseHeader--leftSection--']) {
+    flex: 1;
+    gap: var(--spacing-medium);
+  }
+
+  & .collapseHeaderContainer {
+    flex: 1;
+    justify-content: space-between;
+    align-items: center;
+  }
+  & svg {
+    height: 16px;
+    width: 16px;
+    color: var(--grey-800);
+  }
+
+  & .policyContainer {
+    background-color: var(--grey-50);
+    padding: var(--spacing-small) var(--spacing-medium) !important;
+  }
+
+  & .policyHeaderContainer {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-medium);
+    padding-right: var(--spacing-small) !important;
+  }
+
+  & .policyContentContainer {
+    padding: var(--spacing-small) !important;
+    padding-left: 0.6rem !important;
+  }
 }

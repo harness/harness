@@ -19,9 +19,46 @@ import { Link } from 'react-router-dom'
 import type { IconProps } from '@harnessio/icons'
 import { Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { ArtifactScan } from '@harnessio/react-har-service-client'
+import type { ArtifactScan, PolicyFailureDetailCategory } from '@harnessio/react-har-service-client'
 
 import ScanBadge from '@ar/components/Badge/ScanBadge'
+import ScanCategoryBadge from '@ar/components/Badge/ScanCategoryBadge'
+
+interface LabelMetricProps {
+  label: string
+  labelIconProps?: IconProps
+}
+
+function LabelMetric(props: LabelMetricProps) {
+  return (
+    <Text
+      font={{ variation: FontVariation.BODY }}
+      color={Color.GREY_500}
+      icon={props.labelIconProps?.name}
+      iconProps={props.labelIconProps}
+      lineClamp={1}>
+      {props.label}
+    </Text>
+  )
+}
+
+interface ValueMetricProps {
+  value: string
+  valueIconProps?: IconProps
+}
+
+function ValueMetric(props: ValueMetricProps) {
+  return (
+    <Text
+      font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
+      color={Color.GREY_800}
+      icon={props.valueIconProps?.name}
+      iconProps={props.valueIconProps}
+      lineClamp={1}>
+      {props.value}
+    </Text>
+  )
+}
 
 interface TextMetricProps {
   label: string
@@ -33,15 +70,15 @@ function TextMetric(props: TextMetricProps) {
   return (
     <Layout.Vertical spacing="xsmall">
       <Text
-        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
-        color={Color.GREY_700}
+        font={{ variation: FontVariation.BODY }}
+        color={Color.GREY_500}
         icon={props.labelIconProps?.name}
         iconProps={props.labelIconProps}
         lineClamp={1}>
         {props.label}
       </Text>
       <Text
-        font={{ variation: FontVariation.BODY }}
+        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
         color={Color.GREY_800}
         icon={props.valueIconProps?.name}
         iconProps={props.valueIconProps}
@@ -58,10 +95,10 @@ interface LinkMetricProps extends TextMetricProps {
 
 function LinkMetric(props: LinkMetricProps) {
   return (
-    <Layout.Vertical spacing="xsmall">
+    <Layout.Vertical flex={{ alignItems: 'flex-start' }} spacing="xsmall">
       <Text
-        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
-        color={Color.GREY_700}
+        font={{ variation: FontVariation.BODY }}
+        color={Color.GREY_500}
         icon={props.labelIconProps?.name}
         iconProps={props.labelIconProps}
         lineClamp={1}>
@@ -69,7 +106,7 @@ function LinkMetric(props: LinkMetricProps) {
       </Text>
       <Link to={props.linkTo}>
         <Text
-          font={{ variation: FontVariation.BODY }}
+          font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
           color={Color.PRIMARY_7}
           icon={props.valueIconProps?.name}
           iconProps={props.valueIconProps}
@@ -92,8 +129,8 @@ function ScanStatusMetric(props: StatusMetricProps) {
   return (
     <Layout.Vertical spacing="xsmall">
       <Text
-        font={{ variation: FontVariation.BODY, weight: 'semi-bold' }}
-        color={Color.GREY_700}
+        font={{ variation: FontVariation.BODY }}
+        color={Color.GREY_500}
         icon={props.labelIconProps?.name}
         iconProps={props.labelIconProps}>
         {props.label}
@@ -103,10 +140,34 @@ function ScanStatusMetric(props: StatusMetricProps) {
   )
 }
 
+interface CategoryMetricProps {
+  label: string
+  labelIconProps?: IconProps
+  category: PolicyFailureDetailCategory
+}
+
+function ScanCategoryMetric(props: CategoryMetricProps) {
+  return (
+    <Layout.Vertical spacing="xsmall">
+      <Text
+        font={{ variation: FontVariation.BODY }}
+        color={Color.GREY_500}
+        icon={props.labelIconProps?.name}
+        iconProps={props.labelIconProps}>
+        {props.label}
+      </Text>
+      <ScanCategoryBadge category={props.category} />
+    </Layout.Vertical>
+  )
+}
+
 const InformationMetrics = {
+  Value: ValueMetric,
+  Label: LabelMetric,
   Text: TextMetric,
   Link: LinkMetric,
-  ScanStatus: ScanStatusMetric
+  ScanStatus: ScanStatusMetric,
+  ScanCategory: ScanCategoryMetric
 }
 
 export default InformationMetrics

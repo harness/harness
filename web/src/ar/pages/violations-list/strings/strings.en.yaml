@@ -1,6 +1,6 @@
 page: Violations List Page
 noViolationsFound: No Violations Found
-evaluatedAt: 'Evaluated At {{value}}'
+evaluatedAt: "Evaluated At {{value}}"
 cards:
   totalViolations: Total Violations
   blockedViolations: Blocked Violations
@@ -24,9 +24,14 @@ violationDetailsModal:
     status: Status
     policySetViolated: Policy Set Violated
   violatedPoliciesSection:
-    policyName: 'Policy Name: {{{policyName}}}'
+    policySetViolated: Policy Set Violated
+    policiesViolated: Policies Violated
+    policyViolated: Policy Violated
+    policyName: "Policy Name: {{{policyName}}}"
     category: Category
     title: Violated Policies
+    ossRiskLevelViolation:
+      ossRiskLevel: OSS Risk Level
     packageAgeViolation:
       packageAgeThreshold: Package Age Threshold
       publishedOn: Published On

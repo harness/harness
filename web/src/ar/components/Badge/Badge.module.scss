@@ -82,3 +82,10 @@
   border-color: var(--green-200) !important;
   --intent-color: var(--green-900) !important;
 }
+
+.yellowStatus {
+  cursor: pointer;
+  background-color: var(--yellow-200) !important;
+  border-color: var(--yellow-200) !important;
+  --intent-color: var(--red-900) !important;
+}
