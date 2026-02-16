@@ -20,7 +20,7 @@ import { FormikContextType, connect } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Text } from '@harnessio/uicore'
 
-import { useAppStore, useFeatureFlags } from '@ar/hooks'
+import { useAppStore } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { Separator } from '@ar/components/Separator/Separator'
 import { Parent, RepositoryPackageType } from '@ar/common/types'
@@ -49,7 +49,6 @@ function RepositoryConfigurationFormContent(
   const { getString } = useStrings()
   const { setIsDirty } = useContext(RepositoryProviderContext)
   const { parent } = useAppStore()
-  const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
   const { dirty, values } = formik
   const { packageType } = values
   const [isCollapsedAdvancedConfig] = useState(getInitialStateOfCollapse())
@@ -107,7 +106,7 @@ function RepositoryConfigurationFormContent(
               packageType={packageType as RepositoryPackageType}
               readonly={readonly}
             />
-            {HAR_ARTIFACT_QUARANTINE_ENABLED && values.scanners && values.scanners.length > 0 && (
+            {values.scanners && values.scanners.length > 0 && (
               <>
                 <Separator />
                 <Container className={css.upstreamProxiesContainer}>

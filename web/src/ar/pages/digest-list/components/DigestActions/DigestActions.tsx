@@ -16,7 +16,6 @@
 
 import React, { useState } from 'react'
 
-import { useFeatureFlags } from '@ar/hooks'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
 import QuarantineMenuItem from './QuarantineMenuItem'
@@ -33,9 +32,6 @@ export default function DigestActions({
   onClose
 }: DigestActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
-  const { HAR_ARTIFACT_QUARANTINE_ENABLED } = useFeatureFlags()
-
-  if (!HAR_ARTIFACT_QUARANTINE_ENABLED) return <></>
 
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>

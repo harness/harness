@@ -52,7 +52,7 @@ export default function VersionActions({
   const routes = useRoutes()
   const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
-  const { HAR_ARTIFACT_QUARANTINE_ENABLED, HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
+  const { HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
   const isBulkDownloadFileEnabled = useBulkDownloadFile()
   const allowSoftDelete = useAllowSoftDelete()
   const isFirewallEnabled = data.firewallMode ? data.firewallMode !== 'ALLOW' : false
@@ -123,42 +123,34 @@ export default function VersionActions({
           {getString('view')}
         </LinkMenuItem>
       )}
-      {!isCurrentSessionPublic &&
-        isAllowed(VersionAction.Quarantine) &&
-        HAR_ARTIFACT_QUARANTINE_ENABLED &&
-        !data.isQuarantined &&
-        digestCount < 2 && (
-          <QuarantineMenuItem
-            artifactKey={artifactKey}
-            repoKey={repoKey}
-            versionKey={digest ?? versionKey}
-            data={data}
-            pageType={pageType}
-            readonly={readonly}
-            onClose={() => {
-              setOpen(false)
-              onClose?.()
-            }}
-          />
-        )}
-      {!isCurrentSessionPublic &&
-        isAllowed(VersionAction.Quarantine) &&
-        HAR_ARTIFACT_QUARANTINE_ENABLED &&
-        data.isQuarantined &&
-        digestCount < 2 && (
-          <RemoveQurantineMenuItem
-            artifactKey={artifactKey}
-            repoKey={repoKey}
-            versionKey={digest ?? versionKey}
-            data={data}
-            pageType={pageType}
-            readonly={readonly}
-            onClose={() => {
-              setOpen(false)
-              onClose?.()
-            }}
-          />
-        )}
+      {!isCurrentSessionPublic && isAllowed(VersionAction.Quarantine) && !data.isQuarantined && digestCount < 2 && (
+        <QuarantineMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={digest ?? versionKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
+      {!isCurrentSessionPublic && isAllowed(VersionAction.Quarantine) && data.isQuarantined && digestCount < 2 && (
+        <RemoveQurantineMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={digest ?? versionKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
       {isBulkDownloadFileEnabled && isAllowed(VersionAction.Download) && (
         <DownloadVersionMenuItem
           artifactKey={artifactKey}

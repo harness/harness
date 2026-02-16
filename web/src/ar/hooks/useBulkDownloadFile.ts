@@ -16,10 +16,8 @@
 
 import { Parent } from '@ar/common/types'
 import { useAppStore } from './useAppStore'
-import { useFeatureFlags } from './useFeatureFlag'
 
 export function useBulkDownloadFile() {
   const { parent } = useAppStore()
-  const { HAR_BULK_DOWNLOAD_FILE } = useFeatureFlags()
-  return HAR_BULK_DOWNLOAD_FILE && parent === Parent.Enterprise
+  return parent === Parent.Enterprise
 }

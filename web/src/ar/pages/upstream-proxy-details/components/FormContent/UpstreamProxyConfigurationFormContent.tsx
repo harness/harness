@@ -53,7 +53,7 @@ export default function UpstreamProxyConfigurationFormContent(
   const { setIsDirty } = useContext(RepositoryProviderContext)
   const { dirty, values } = formikProps
   const [isCollapsedAdvancedConfig] = useState(getInitialStateOfCollapse())
-  const { HAR_ARTIFACT_QUARANTINE_ENABLED, HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
+  const { HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
 
   const repositoryType = repositoryFactory.getRepositoryType(values.packageType)
   const isDependencyFirewallSupported = repositoryType?.getIsDependencyFirewallSupported() && HAR_DEPENDENCY_FIREWALL
@@ -106,7 +106,7 @@ export default function UpstreamProxyConfigurationFormContent(
                 packageType={values.packageType as RepositoryPackageType}
                 readonly={readonly}
               />
-              {HAR_ARTIFACT_QUARANTINE_ENABLED && values.scanners && values.scanners.length > 0 && (
+              {values.scanners && values.scanners.length > 0 && (
                 <>
                   <Separator />
                   <Container className={css.cleanupPoliciesContainer}>
