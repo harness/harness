@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/controller/pkg/generic"
 	"github.com/harness/gitness/registry/app/api/handler/packages"
@@ -65,7 +66,7 @@ func NewGenericArtifactHandler(
 	spaceStore corestore.SpaceStore, controller *generic.Controller, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer, packageHandler packages.Handler, spaceFinder refcache.SpaceFinder,
-	registryFinder refcache2.RegistryFinder,
+	registryFinder refcache2.RegistryFinder, auditService audit.Service,
 ) *Handler {
 	return &Handler{
 		Handler:        packageHandler,
@@ -78,6 +79,7 @@ func NewGenericArtifactHandler(
 		Authorizer:     authorizer,
 		SpaceFinder:    spaceFinder,
 		RegistryFinder: registryFinder,
+		AuditService:   auditService,
 	}
 }
 
@@ -92,6 +94,7 @@ type Handler struct {
 	Authorizer     authz.Authorizer
 	SpaceFinder    refcache.SpaceFinder
 	RegistryFinder refcache2.RegistryFinder
+	AuditService   audit.Service
 }
 
 //nolint:staticcheck

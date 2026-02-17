@@ -763,12 +763,11 @@ func (l *localBase) DeleteVersion(ctx context.Context, info pkg.PackageArtifactI
 	return nil
 }
 
-// AuditPush is a convenience wrapper for calling the centralized audit function from localBase.
 func (l *localBase) AuditPush(
 	ctx context.Context, info pkg.ArtifactInfo, version string,
 	imageUUID string, artifactUUID string,
 ) {
-	registryaudit.LogArtifactPush(
+	registryaudit.LogArtifactUpload(
 		ctx, l.auditService, l.spaceFinder, info, version, imageUUID, artifactUUID,
 	)
 }

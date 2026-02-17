@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
@@ -56,6 +57,7 @@ func NewHandler(
 	registryFinder refcache2.RegistryFinder,
 	publicAccessService publicaccess.Service,
 	anonymousUserSecret string,
+	auditService audit.Service,
 ) *Handler {
 	return &Handler{
 		Controller:          controller,
@@ -70,6 +72,7 @@ func NewHandler(
 		OCIRelativeURL:      ociRelativeURL,
 		PublicAccessService: publicAccessService,
 		AnonymousUserSecret: anonymousUserSecret,
+		AuditService:        auditService,
 	}
 }
 
@@ -86,6 +89,7 @@ type Handler struct {
 	OCIRelativeURL      bool
 	PublicAccessService publicaccess.Service
 	AnonymousUserSecret string
+	AuditService        audit.Service
 }
 
 type routeType string

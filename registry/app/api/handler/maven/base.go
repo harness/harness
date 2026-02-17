@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/controller/metadata"
 	"github.com/harness/gitness/registry/app/api/handler/utils"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -56,13 +57,14 @@ type Handler struct {
 	SpaceFinder         refcache.SpaceFinder
 	RegistryFinder      refcache2.RegistryFinder
 	PublicAccessService publicaccess.Service
+	AuditService        audit.Service
 }
 
 func NewHandler(
 	controller *maven.Controller, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, authorizer authz.Authorizer,
 	spaceFinder refcache.SpaceFinder, registryFinder refcache2.RegistryFinder,
-	publicAccessService publicaccess.Service,
+	publicAccessService publicaccess.Service, auditService audit.Service,
 ) *Handler {
 	return &Handler{
 		Controller:          controller,
@@ -74,6 +76,7 @@ func NewHandler(
 		SpaceFinder:         spaceFinder,
 		RegistryFinder:      registryFinder,
 		PublicAccessService: publicAccessService,
+		AuditService:        auditService,
 	}
 }
 

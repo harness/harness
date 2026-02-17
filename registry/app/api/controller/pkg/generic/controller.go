@@ -30,10 +30,12 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
+	registryaudit "github.com/harness/gitness/registry/app/pkg/audit"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
@@ -56,6 +58,7 @@ type Controller struct {
 	proxy                     generic.Proxy
 	quarantineFinder          quarantine.Finder
 	dependencyFirewallChecker interfaces.DependencyFirewallChecker
+	auditService              audit.Service
 }
 
 type DBStore struct {
@@ -78,6 +81,7 @@ func NewController(
 	proxy generic.Proxy,
 	quarantineFinder quarantine.Finder,
 	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
+	auditService audit.Service,
 ) *Controller {
 	return &Controller{
 		SpaceStore:                spaceStore,
@@ -90,6 +94,7 @@ func NewController(
 		proxy:                     proxy,
 		quarantineFinder:          quarantineFinder,
 		dependencyFirewallChecker: dependencyFirewallChecker,
+		auditService:              auditService,
 	}
 }
 
@@ -137,6 +142,8 @@ func (c Controller) UploadArtifact(
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
+	var imageUUID string
+	var artifactUUID string
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			image := &types.Image{
@@ -149,6 +156,7 @@ func (c Controller) UploadArtifact(
 				return fmt.Errorf("failed to create image for artifact : [%s] with "+
 					regNameFormat, info.Image, info.RegIdentifier)
 			}
+			imageUUID = image.UUID
 
 			dbArtifact, err := c.DBStore.ArtifactDao.GetByName(ctx, image.ID, info.Version)
 
@@ -173,21 +181,30 @@ func (c Controller) UploadArtifact(
 					regNameFormat, info.Image, info.RegIdentifier)
 			}
 
-			_, err = c.DBStore.ArtifactDao.CreateOrUpdate(ctx, &types.Artifact{
+			newArtifact := &types.Artifact{
 				ImageID:  image.ID,
 				Version:  info.Version,
 				Metadata: metadataJSON,
-			})
+			}
+			_, err = c.DBStore.ArtifactDao.CreateOrUpdate(ctx, newArtifact)
 			if err != nil {
 				return fmt.Errorf("failed to create artifact : [%s] with "+
 					regNameFormat, info.Image, info.RegIdentifier)
 			}
+			artifactUUID = newArtifact.UUID
 			return nil
 		})
 
 	if err != nil {
 		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
 	}
+
+	// Audit log for artifact push
+	registryaudit.LogArtifactUpload(
+		ctx, c.auditService, c.spaceFinder, *info.ArtifactInfo,
+		info.Version, imageUUID, artifactUUID,
+	)
+
 	responseHeaders.Code = http.StatusCreated
 	return responseHeaders, fileInfo.Sha256, errcode.Error{}
 }

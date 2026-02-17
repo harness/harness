@@ -31,10 +31,12 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
+	pkgaudit "github.com/harness/gitness/registry/app/pkg/audit"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -58,6 +60,8 @@ func NewHandler(
 	regFinder refcache2.RegistryFinder,
 	fileManager filemanager.FileManager, quarantineFinder quarantine.Finder,
 	packageWrapper interfaces.PackageWrapper,
+	auditService audit.Service,
+	artifactDao store.ArtifactRepository,
 ) Handler {
 	return &handler{
 		RegistryDao:      registryDao,
@@ -74,6 +78,8 @@ func NewHandler(
 		fileManager:      fileManager,
 		quarantineFinder: quarantineFinder,
 		PackageWrapper:   packageWrapper,
+		AuditService:     auditService,
+		ArtifactDao:      artifactDao,
 	}
 }
 
@@ -92,6 +98,8 @@ type handler struct {
 	fileManager      filemanager.FileManager
 	quarantineFinder quarantine.Finder
 	PackageWrapper   interfaces.PackageWrapper
+	AuditService     audit.Service
+	ArtifactDao      store.ArtifactRepository
 }
 
 type Handler interface {
@@ -151,6 +159,10 @@ func (h *handler) TrackDownloadStats(
 	r *http.Request,
 ) error {
 	info := request.ArtifactInfoFrom(r.Context()) //nolint:contextcheck
+
+	// Audit log for download operation
+	h.logArtifactDownloadAudit(ctx, info.BaseArtifactInfo(), info.GetVersion())
+
 	if err := h.DownloadStatDao.CreateByRegistryIDImageAndArtifactName(
 		ctx,
 		info.BaseArtifactInfo().RegistryID,
@@ -161,7 +173,22 @@ func (h *handler) TrackDownloadStats(
 		log.Ctx(ctx).Error().Msgf("failed to create download stat: %v", err.Error())
 		return usererror.ErrInternal
 	}
+
 	return nil
+}
+
+func (h *handler) logArtifactDownloadAudit(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	version string,
+) {
+	pkgaudit.LogArtifactDownload(
+		ctx,
+		h.AuditService,
+		h.SpaceFinder,
+		info,
+		version,
+	)
 }
 
 func (h *handler) CheckQuarantineStatus(

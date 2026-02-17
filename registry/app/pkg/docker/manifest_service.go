@@ -519,7 +519,7 @@ func (l *manifestService) upsertImageAndArtifact(ctx context.Context, d digest.D
 	}
 
 	// Audit log for OCI/Docker/Helm artifact push
-	registryaudit.LogArtifactPush(
+	registryaudit.LogArtifactUpload(
 		ctx, l.auditService, l.spaceFinder, *info.ArtifactInfo,
 		dgst.String(), dbImage.UUID, dbArtifact.UUID,
 	)

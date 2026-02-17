@@ -19,6 +19,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/audit"
 	generic2 "github.com/harness/gitness/registry/app/api/controller/pkg/generic"
 	"github.com/harness/gitness/registry/app/api/handler/generic"
 	"github.com/harness/gitness/registry/app/api/handler/maven"
@@ -27,6 +29,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/router/utils"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/pkg"
+	pkgaudit "github.com/harness/gitness/registry/app/pkg/audit"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	gopackageutils "github.com/harness/gitness/registry/app/pkg/gopackage/utils"
@@ -72,7 +75,7 @@ func TrackDownloadStat(h *oci.Handler) func(http.Handler) http.Handler {
 					return
 				}
 
-				err = dbDownloadStat(ctx, h.Controller, info)
+				err = dbDownloadStat(ctx, h.Controller, info, h.AuditService, h.SpaceFinder)
 				if err != nil {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
@@ -88,18 +91,38 @@ func dbDownloadStat(
 	ctx context.Context,
 	c *docker.Controller,
 	info pkg.RegistryInfo,
+	auditService audit.Service,
+	spaceFinder refcache.SpaceFinder,
 ) error {
 	registry := info.Registry
+
+	dgst, err := types.NewDigest(digest.Digest(info.Digest))
+	if err != nil {
+		return err
+	}
+
+	// Log audit
+	artifactInfo := pkg.ArtifactInfo{
+		BaseInfo: &pkg.BaseInfo{
+			ParentID: info.ParentID,
+		},
+		RegistryID:    registry.ID,
+		RegIdentifier: registry.Name,
+		Image:         info.Image,
+		ArtifactType:  info.ArtifactType,
+	}
+	pkgaudit.LogArtifactDownload(
+		ctx,
+		auditService,
+		spaceFinder,
+		artifactInfo,
+		dgst.String(),
+	)
 
 	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, info.Image)
 	if errors.Is(err, store.ErrResourceNotFound) {
 		image, err = getImageFromUpstreamProxy(ctx, c, info)
 	}
-	if err != nil {
-		return err
-	}
-
-	dgst, err := types.NewDigest(digest.Digest(info.Digest))
 	if err != nil {
 		return err
 	}
@@ -146,7 +169,7 @@ func TrackDownloadStatForGenericArtifact(h *generic.Handler) func(http.Handler) 
 					return
 				}
 
-				err = dbDownloadStatForGenericArtifact(ctx, h.Controller, info)
+				err = dbDownloadStatForGenericArtifact(ctx, h.Controller, info, h.AuditService, h.SpaceFinder)
 				if !commons.IsEmptyError(err) {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
@@ -189,7 +212,7 @@ func TrackDownloadStatForMavenArtifact(h *maven.Handler) func(http.Handler) http
 					return
 				}
 
-				err2 := dbDownloadStatForMavenArtifact(ctx, h.Controller, info)
+				err2 := dbDownloadStatForMavenArtifact(ctx, h.Controller, info, h.AuditService, h.SpaceFinder)
 				if !commons.IsEmptyError(err2) {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
 						"TrackDownloadStat").Err(err).Msgf("error while putting download stat of artifact, %v",
@@ -205,11 +228,31 @@ func dbDownloadStatForGenericArtifact(
 	ctx context.Context,
 	c *generic2.Controller,
 	info pkg.GenericArtifactInfo,
+	auditService audit.Service,
+	spaceFinder refcache.SpaceFinder,
 ) errcode.Error {
 	registry, err := c.DBStore.RegistryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
+
+	// Log audit
+	artifactInfo := pkg.ArtifactInfo{
+		BaseInfo: &pkg.BaseInfo{
+			ParentID: info.ParentID,
+		},
+		RegistryID:    registry.ID,
+		RegIdentifier: registry.Name,
+		Image:         info.Image,
+		ArtifactType:  info.ArtifactType,
+	}
+	pkgaudit.LogArtifactDownload(
+		ctx,
+		auditService,
+		spaceFinder,
+		artifactInfo,
+		info.Version,
+	)
 
 	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, info.Image)
 	if err != nil {
@@ -235,12 +278,32 @@ func dbDownloadStatForMavenArtifact(
 	ctx context.Context,
 	c *maven2.Controller,
 	info pkg.MavenArtifactInfo,
+	auditService audit.Service,
+	spaceFinder refcache.SpaceFinder,
 ) errcode.Error {
 	imageName := info.GroupID + ":" + info.ArtifactID
 	registry, err := c.DBStore.RegistryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
 		return errcode.ErrCodeInvalidRequest.WithDetail(err)
 	}
+
+	// Log audit
+	artifactInfo := pkg.ArtifactInfo{
+		BaseInfo: &pkg.BaseInfo{
+			ParentID: info.ParentID,
+		},
+		RegistryID:    registry.ID,
+		RegIdentifier: registry.Name,
+		Image:         imageName,
+		ArtifactType:  info.ArtifactType,
+	}
+	pkgaudit.LogArtifactDownload(
+		ctx,
+		auditService,
+		spaceFinder,
+		artifactInfo,
+		info.Version,
+	)
 
 	image, err := c.DBStore.ImageDao.GetByName(ctx, registry.ID, imageName)
 	if errors.Is(err, store.ErrResourceNotFound) {

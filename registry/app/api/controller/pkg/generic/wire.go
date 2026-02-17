@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/refcache"
 	gitnessstore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/generic"
@@ -49,6 +50,7 @@ func ControllerProvider(
 	proxy generic.Proxy,
 	quarantineFinder quarantine.Finder,
 	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
+	auditService audit.Service,
 ) *Controller {
 	return NewController(
 		spaceStore,
@@ -61,6 +63,7 @@ func ControllerProvider(
 		proxy,
 		quarantineFinder,
 		dependencyFirewallChecker,
+		auditService,
 	)
 }
 

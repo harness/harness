@@ -31,11 +31,15 @@ const (
 	AuditKeyResourceName = "resourceName"
 	AuditKeyArtifactUUID = "artifactId"
 	AuditKeyImageUUID    = "imageUuid"
+	AuditKeyRegistryName = "registryName"
+	AuditKeyPackageName  = "packageName"
+	AuditKeyPackageKind  = "packageKind"
+	AuditKeyVersionName  = "versionName"
 )
 
-// LogArtifactPush logs audit trail for artifact push/upload operations.
+// LogArtifactUpload logs audit trail for artifact push/upload operations.
 // This is a centralized audit utility that can be called from any package type handler.
-func LogArtifactPush(
+func LogArtifactUpload(
 	ctx context.Context,
 	auditService audit.Service,
 	spaceFinder refcache.SpaceFinder,
@@ -62,6 +66,12 @@ func LogArtifactPush(
 		artifactIdentifier = packageName
 	}
 
+	// Get package kind -
+	packageKind := ""
+	if info.ArtifactType != nil {
+		packageKind = string(*info.ArtifactType)
+	}
+
 	// Operational metadata
 	auditData := []audit.Option{
 		audit.WithData(
@@ -77,6 +87,10 @@ func LogArtifactPush(
 			artifactIdentifier,
 			AuditKeyResourceName, artifactIdentifier,
 			AuditKeyArtifactUUID, artifactUUID,
+			AuditKeyRegistryName, info.RegIdentifier,
+			AuditKeyPackageName, packageName,
+			AuditKeyPackageKind, packageKind,
+			AuditKeyVersionName, version,
 		),
 		audit.ActionUploaded,
 		parentSpace.Path,
@@ -85,6 +99,61 @@ func LogArtifactPush(
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msgf(
 			"failed to insert audit log for upload artifact operation: %s",
+			artifactIdentifier,
+		)
+	}
+}
+
+// LogArtifactDownload logs audit trail for artifact download/pull operations.
+func LogArtifactDownload(
+	ctx context.Context,
+	auditService audit.Service,
+	spaceFinder refcache.SpaceFinder,
+	info pkg.ArtifactInfo,
+	version string,
+) {
+	session, ok := request.AuthSessionFrom(ctx)
+	if !ok {
+		log.Ctx(ctx).Debug().Msg("no auth session for audit log")
+		return
+	}
+
+	parentSpace, err := spaceFinder.FindByID(ctx, info.ParentID)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to get parent space for audit log")
+		return
+	}
+
+	packageName := info.Image
+	artifactIdentifier := fmt.Sprintf("%s:%s", packageName, version)
+	if version == "" {
+		artifactIdentifier = packageName
+	}
+
+	// Get package kind
+	packageKind := ""
+	if info.ArtifactType != nil {
+		packageKind = string(*info.ArtifactType)
+	}
+
+	err = auditService.Log(
+		ctx,
+		session.Principal,
+		audit.NewResource(
+			audit.ResourceTypeRegistryArtifact,
+			artifactIdentifier,
+			AuditKeyResourceName, artifactIdentifier,
+			AuditKeyRegistryName, info.RegIdentifier,
+			AuditKeyPackageName, packageName,
+			AuditKeyPackageKind, packageKind,
+			AuditKeyVersionName, version,
+		),
+		audit.ActionDownloaded,
+		parentSpace.Path,
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf(
+			"failed to insert audit log for download artifact operation: %s",
 			artifactIdentifier,
 		)
 	}
