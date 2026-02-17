@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/types"
@@ -86,7 +87,7 @@ func (d DownloadStatDao) Create(ctx context.Context, downloadStat *types.Downloa
 
 func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 	ctx context.Context,
-	regID int64, image string, version string,
+	regID int64, image string, version string, artifactType *artifact.ArtifactType,
 ) error {
 	selectQuery := databaseg.Builder.
 		Select(
@@ -99,9 +100,13 @@ func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 		).
 		From("artifacts a").
 		Join("images i ON a.artifact_image_id = i.image_id").
-		Where("a.artifact_version = ? AND i.image_registry_id = ? AND i.image_name = ? AND i.image_type IS NULL").
-		Limit(1)
-
+		Where("a.artifact_version = ? AND i.image_registry_id = ? AND i.image_name = ? ")
+	if artifactType != nil && *artifactType != "" {
+		selectQuery = selectQuery.Where("i.image_type = ?")
+	} else {
+		selectQuery = selectQuery.Where("i.image_type IS NULL")
+	}
+	selectQuery = selectQuery.Limit(1)
 	insertQuery := databaseg.Builder.
 		Insert("download_stats").
 		Columns(
@@ -127,7 +132,7 @@ func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 	// Execute the query with parameters
 	_, err = db.ExecContext(ctx, sqlStr,
 		time.Now().UnixMilli(), time.Now().UnixMilli(), time.Now().UnixMilli(),
-		user, user, version, regID, image)
+		user, user, version, regID, image, artifactType)
 	if err != nil {
 		return fmt.Errorf("failed to insert download stat: %w", err)
 	}

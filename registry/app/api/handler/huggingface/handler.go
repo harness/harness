@@ -109,6 +109,7 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		rev = "main"
 	}
 	info.Image = repo
+	info.ArtifactType = artifactType
 
 	return &hftype.ArtifactInfo{
 		ArtifactInfo: info,

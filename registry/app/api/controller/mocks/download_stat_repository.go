@@ -7,6 +7,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -96,16 +97,16 @@ func (_c *MockDownloadStatRepository_Create_Call) RunAndReturn(run func(ctx cont
 }
 
 // CreateByRegistryIDImageAndArtifactName provides a mock function for the type MockDownloadStatRepository
-func (_mock *MockDownloadStatRepository) CreateByRegistryIDImageAndArtifactName(ctx context.Context, regID int64, image string, artifactName string) error {
-	ret := _mock.Called(ctx, regID, image, artifactName)
+func (_mock *MockDownloadStatRepository) CreateByRegistryIDImageAndArtifactName(ctx context.Context, regID int64, image string, artifactName string, artifactType *artifact.ArtifactType) error {
+	ret := _mock.Called(ctx, regID, image, artifactName, artifactType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateByRegistryIDImageAndArtifactName")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string) error); ok {
-		r0 = returnFunc(ctx, regID, image, artifactName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, *artifact.ArtifactType) error); ok {
+		r0 = returnFunc(ctx, regID, image, artifactName, artifactType)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -122,11 +123,12 @@ type MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call stru
 //   - regID int64
 //   - image string
 //   - artifactName string
-func (_e *MockDownloadStatRepository_Expecter) CreateByRegistryIDImageAndArtifactName(ctx interface{}, regID interface{}, image interface{}, artifactName interface{}) *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call {
-	return &MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call{Call: _e.mock.On("CreateByRegistryIDImageAndArtifactName", ctx, regID, image, artifactName)}
+//   - artifactType *artifact.ArtifactType
+func (_e *MockDownloadStatRepository_Expecter) CreateByRegistryIDImageAndArtifactName(ctx interface{}, regID interface{}, image interface{}, artifactName interface{}, artifactType interface{}) *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call {
+	return &MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call{Call: _e.mock.On("CreateByRegistryIDImageAndArtifactName", ctx, regID, image, artifactName, artifactType)}
 }
 
-func (_c *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call) Run(run func(ctx context.Context, regID int64, image string, artifactName string)) *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call {
+func (_c *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call) Run(run func(ctx context.Context, regID int64, image string, artifactName string, artifactType *artifact.ArtifactType)) *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -144,11 +146,16 @@ func (_c *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call
 		if args[3] != nil {
 			arg3 = args[3].(string)
 		}
+		var arg4 *artifact.ArtifactType
+		if args[4] != nil {
+			arg4 = args[4].(*artifact.ArtifactType)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
 			arg3,
+			arg4,
 		)
 	})
 	return _c
@@ -159,7 +166,7 @@ func (_c *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call
 	return _c
 }
 
-func (_c *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call) RunAndReturn(run func(ctx context.Context, regID int64, image string, artifactName string) error) *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call {
+func (_c *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call) RunAndReturn(run func(ctx context.Context, regID int64, image string, artifactName string, artifactType *artifact.ArtifactType) error) *MockDownloadStatRepository_CreateByRegistryIDImageAndArtifactName_Call {
 	_c.Call.Return(run)
 	return _c
 }
