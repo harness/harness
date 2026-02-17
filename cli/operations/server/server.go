@@ -111,6 +111,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// start server
 	gHTTP, shutdownHTTP := system.server.ListenAndServe()
 	g.Go(gHTTP.Wait)
+
+	gMetric, shutdownMetricServerFn := system.metricServer.ListenAndServe()
+	g.Go(gMetric.Wait)
+
 	if c.enableCI {
 		// start populating plugins
 		g.Go(func() error {
@@ -164,6 +168,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 		if err := system.sshServer.Shutdown(shutdownCtx); err != nil {
 			log.Err(err).Msg("failed to shutdown ssh server gracefully")
 		}
+	}
+
+	if sErr := shutdownMetricServerFn(shutdownCtx); sErr != nil {
+		log.Err(sErr).Msg("failed to shutdown metric server gracefully")
 	}
 
 	// shutdown instrumentation

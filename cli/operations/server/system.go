@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/http"
 	"github.com/harness/gitness/ssh"
 
 	"github.com/drone/runner-go/poller"
@@ -32,9 +33,13 @@ type System struct {
 	resolverManager *resolver.Manager
 	poller          *poller.Poller
 	services        services.Services
+	metricServer    http.ListenAndServeServer
 }
 
-// NewSystem returns a new system structure.
+func ProvideNoOpMetricServer() http.ListenAndServeServer {
+	return http.NoOpListenAndServeServer{}
+}
+
 func NewSystem(
 	bootstrap bootstrap.Bootstrap,
 	server *server.Server,
@@ -42,6 +47,7 @@ func NewSystem(
 	poller *poller.Poller,
 	resolverManager *resolver.Manager,
 	services services.Services,
+	metricServer http.ListenAndServeServer,
 ) *System {
 	return &System{
 		bootstrap:       bootstrap,
@@ -50,5 +56,6 @@ func NewSystem(
 		poller:          poller,
 		resolverManager: resolverManager,
 		services:        services,
+		metricServer:    metricServer,
 	}
 }

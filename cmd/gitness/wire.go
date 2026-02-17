@@ -65,7 +65,7 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	ruleevents "github.com/harness/gitness/app/events/rule"
 	userevents "github.com/harness/gitness/app/events/user"
-	infrastructure "github.com/harness/gitness/app/gitspace/infrastructure"
+	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	containerorchestrator "github.com/harness/gitness/app/gitspace/orchestrator/container"
@@ -104,7 +104,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	svclabel "github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/languageanalyzer"
-	locker "github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/metric"
 	migrateservice "github.com/harness/gitness/app/services/migrate"
@@ -183,6 +183,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		services.WireSet,
 		services.ProvideGitspaceServices,
 		server.WireSet,
+		cliserver.ProvideNoOpMetricServer,
 		url.WireSet,
 		spaceSvc.ProvideNoopResourceMover,
 		spaceSvc.WireSet,
