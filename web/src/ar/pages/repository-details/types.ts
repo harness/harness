@@ -32,7 +32,6 @@ export type VirtualRegistryRequest = Omit<RegistryRequest, 'config' | 'parentRef
 
 export type VirtualRegistry = Omit<Registry, 'config'> & {
   config: TypeConfig & VirtualConfig
-  isDeleted?: boolean
 }
 
 export type RepositoryRequest = Omit<RegistryRequest, 'config' | 'parentRef'> & {

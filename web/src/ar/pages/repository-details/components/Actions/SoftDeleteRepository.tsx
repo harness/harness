@@ -28,7 +28,6 @@ import useSoftDeleteRepositoryModal from '../../hooks/useSoftDeleteRepositoryMod
 import useRestoreDeleteRepositoryModal from '../../hooks/useSoftDeleteRepositoryModal/useRestoreDeleteRepositoryModal'
 
 export default function SoftDeleteRepositoryMenuItem({ data, onClose, pageType }: RepositoryActionsProps): JSX.Element {
-  const { isDeleted } = data
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
   const history = useHistory()
@@ -54,6 +53,7 @@ export default function SoftDeleteRepositoryMenuItem({ data, onClose, pageType }
     uuid: data.uuid
   })
 
+  const isDeleted = !!data?.deletedAt
   return (
     <>
       {isDeleted && (
