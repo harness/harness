@@ -245,6 +245,34 @@ func (dao manifestDao) References(
 	return *result, err
 }
 
+// ReferencedBy finds all manifests that reference the provided manifest (parent manifests).
+func (dao manifestDao) ReferencedBy(
+	ctx context.Context,
+	m *types.Manifest,
+) (types.Manifests, error) {
+	stmt := ReadQuery.Join("manifest_references ON manifest_ref_parent_id = manifest_id").
+		Where("manifest_ref_registry_id = ?", m.RegistryID).Where("manifest_ref_child_id = ?", m.ID)
+
+	db := dbtx.GetAccessor(ctx, dao.sqlDB)
+	dst := []*manifestMetadataDB{}
+
+	toSQL, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors2.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.SelectContext(ctx, &dst, toSQL, args...); err != nil {
+		err := database.ProcessSQLErrorf(ctx, err, "Failed to find parent manifests")
+		return nil, err
+	}
+
+	result, err := dao.mapToManifests(dst)
+	if err != nil {
+		return nil, fmt.Errorf("finding parent manifests: %w", err)
+	}
+	return *result, err
+}
+
 func (dao manifestDao) Create(ctx context.Context, m *types.Manifest) error {
 	mediaTypeID, err := dao.mtRepository.MapMediaType(ctx, m.MediaType)
 	if err != nil {

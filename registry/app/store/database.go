@@ -85,6 +85,8 @@ type ManifestRepository interface {
 	// References finds all manifests directly
 	// referenced by a manifest (if any).
 	References(ctx context.Context, m *types.Manifest) (types.Manifests, error)
+	// ReferencedBy finds all manifests that reference the provided manifest (parent manifests).
+	ReferencedBy(ctx context.Context, m *types.Manifest) (types.Manifests, error)
 	// Create saves a new Manifest. ID value is updated in given request object
 	Create(ctx context.Context, m *types.Manifest) error
 	// CreateOrFind attempts to create a manifest. If the manifest already exists
