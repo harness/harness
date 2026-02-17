@@ -144,6 +144,8 @@ func (c *APIController) GetArtifactFiles(
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "npm")
 	case artifact.PackageTypeRPM:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "rpm")
+	case artifact.PackageTypeNUGET:
+		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "nuget")
 	case artifact.PackageTypeGO:
 		registryURL = c.URLProvider.PackageURL(ctx, reqInfo.RootIdentifier+"/"+reqInfo.RegistryIdentifier, "go")
 	case artifact.PackageTypeHUGGINGFACE:
