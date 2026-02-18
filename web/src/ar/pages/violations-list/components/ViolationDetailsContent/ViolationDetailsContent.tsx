@@ -19,9 +19,9 @@ import { ButtonVariation, Container, Layout, Text, useToaster } from '@harnessio
 import { FontVariation } from '@harnessio/design-system'
 import {
   Error,
-  evaluateArtifactScan,
-  useGetArtifactScanDetailsQuery,
-  V3Error
+  evaluateArtifactScanV3,
+  useGetArtifactScanDetailsV3Query,
+  ErrorV3
 } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentComponents } from '@ar/hooks'
@@ -52,8 +52,8 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
     isFetching: loading,
     error,
     refetch
-  } = useGetArtifactScanDetailsQuery({
-    scan_id: props.scanId,
+  } = useGetArtifactScanDetailsV3Query({
+    id: props.scanId,
     queryParams: {
       account_identifier: scope.accountId || ''
     }
@@ -62,7 +62,7 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
   const responseData = data?.content.data
 
   const handleRescan = (scanId: string) => {
-    return evaluateArtifactScan({
+    return evaluateArtifactScanV3({
       queryParams: { account_identifier: scope.accountId || '' },
       body: { scanId }
     })
@@ -70,7 +70,7 @@ function ViolationDetailsContent(props: ViolationDetailsContentProps) {
         clear()
         showSuccess(getString('versionList.messages.reEvaluateSuccess'))
       })
-      .catch((err: V3Error) => {
+      .catch((err: ErrorV3) => {
         clear()
         showError(err?.error?.message ?? getString('versionList.messages.reEvaluateFailed'))
       })

@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { Color } from '@harnessio/design-system'
-import type { ArtifactScan } from '@harnessio/react-har-service-client'
+import type { ArtifactScanV3 } from '@harnessio/react-har-service-client'
 import { Button, ButtonSize, ButtonVariation, Layout, Text } from '@harnessio/uicore'
 import type { TableInstance, ColumnInstance, Row, Cell, CellValue, Renderer } from 'react-table'
 
@@ -43,7 +43,7 @@ export interface PolicySetSpec {
   scanId: string
 }
 
-type CellType = Renderer<CellTypeWithActions<ArtifactScan>>
+type CellType = Renderer<CellTypeWithActions<ArtifactScanV3>>
 
 export const DependencyAndVersionCell: CellType = ({ row }) => {
   const { original } = row

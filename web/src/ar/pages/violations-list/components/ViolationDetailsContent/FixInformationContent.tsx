@@ -17,7 +17,7 @@
 import React from 'react'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { ArtifactScanDetails } from '@harnessio/react-har-service-client'
+import type { ArtifactScanDetailsV3 } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 
@@ -26,7 +26,7 @@ import InformationMetrics from './InformationMetrics'
 import css from './ViolationDetailsContent.module.scss'
 
 interface FixInformationContentProps {
-  data: ArtifactScanDetails
+  data: ArtifactScanDetailsV3
 }
 
 function FixInformationContent({ data }: FixInformationContentProps) {

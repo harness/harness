@@ -19,13 +19,13 @@ import classNames from 'classnames'
 import { Collapse, Container, Layout } from '@harnessio/uicore'
 import type { KVO } from '@harnessio/design-system'
 import type {
-  FixVersionDetails,
-  LicensePolicyFailureDetailConfig,
-  OssRiskLevelPolicyFailureDetailConfig,
-  PackageAgeViolationPolicyFailureDetailConfig,
-  PolicyFailureDetail,
-  PolicySetFailureDetail,
-  SecurityPolicyFailureDetailConfig
+  FixVersionDetailsV3,
+  LicensePolicyFailureDetailConfigV3,
+  OssRiskLevelPolicyFailureDetailConfigV3,
+  PackageAgeViolationPolicyFailureDetailConfigV3,
+  PolicyFailureDetailV3,
+  PolicySetFailureDetailV3,
+  SecurityPolicyFailureDetailConfigV3
 } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -41,16 +41,16 @@ interface ViolationFailureDetailsItemProps {
   data: any
   policyName: string
   policyRef: string
-  category: PolicyFailureDetail['category']
-  fixVersionDetails?: FixVersionDetails
+  category: PolicyFailureDetailV3['category']
+  fixVersionDetails?: FixVersionDetailsV3
 }
 
 function SecurityPolicyFailureDetailsItem({
   data,
   fixVersionDetails
 }: {
-  data: SecurityPolicyFailureDetailConfig
-  fixVersionDetails?: FixVersionDetails
+  data: SecurityPolicyFailureDetailConfigV3
+  fixVersionDetails?: FixVersionDetailsV3
 }) {
   const { vulnerabilities } = data
   const { getString } = useStrings()
@@ -90,7 +90,7 @@ function SecurityPolicyFailureDetailsItem({
   )
 }
 
-function LicensePolicyFailureDetailItem({ data }: { data: LicensePolicyFailureDetailConfig }) {
+function LicensePolicyFailureDetailItem({ data }: { data: LicensePolicyFailureDetailConfigV3 }) {
   const { allowedLicenses, blockedLicense } = data
   const { getString } = useStrings()
   return (
@@ -111,7 +111,11 @@ function LicensePolicyFailureDetailItem({ data }: { data: LicensePolicyFailureDe
   )
 }
 
-function PackageAgeViolationPolicyFailureDetailItem({ data }: { data: PackageAgeViolationPolicyFailureDetailConfig }) {
+function PackageAgeViolationPolicyFailureDetailItem({
+  data
+}: {
+  data: PackageAgeViolationPolicyFailureDetailConfigV3
+}) {
   const { packageAgeThreshold, publishedOn } = data
   const { getString } = useStrings()
   return (
@@ -132,7 +136,7 @@ function PackageAgeViolationPolicyFailureDetailItem({ data }: { data: PackageAge
   )
 }
 
-function OssRiskLevelViolationPolicyFailureDetailItem({ data }: { data: OssRiskLevelPolicyFailureDetailConfig }) {
+function OssRiskLevelViolationPolicyFailureDetailItem({ data }: { data: OssRiskLevelPolicyFailureDetailConfigV3 }) {
   const { ossRiskLevel } = data
   const { getString } = useStrings()
   return (
@@ -205,8 +209,8 @@ function ViolationFailureDetailsItem(props: ViolationFailureDetailsItemProps) {
 }
 
 interface ViolationFailureDetailsProps {
-  data: PolicySetFailureDetail
-  fixVersionDetails?: FixVersionDetails
+  data: PolicySetFailureDetailV3
+  fixVersionDetails?: FixVersionDetailsV3
 }
 
 function ViolationFailureDetails(props: ViolationFailureDetailsProps) {

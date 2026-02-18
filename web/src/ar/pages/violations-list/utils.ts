@@ -15,7 +15,7 @@
  */
 
 import { useMemo } from 'react'
-import type { ArtifactScan } from '@harnessio/react-har-service-client'
+import type { ArtifactScanV3 } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_VIOLATIONS_LIST_TABLE_SORT } from '@ar/constants'
@@ -28,7 +28,7 @@ export type ViolationsListPageQueryParams = {
   sort: string[]
   repositoryIds: string[]
   packageTypes: RepositoryPackageType[]
-  status?: ArtifactScan['scanStatus']
+  status?: ArtifactScanV3['scanStatus']
   searchTerm?: string
   scope: RepositoryScopeType
 }

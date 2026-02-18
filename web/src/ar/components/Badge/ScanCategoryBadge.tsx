@@ -15,7 +15,7 @@
  */
 
 import React from 'react'
-import type { PolicyFailureDetailCategory } from '@harnessio/react-har-service-client'
+import type { PolicyFailureDetailCategoryV3 } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 
@@ -23,7 +23,7 @@ import Badge from './Badge'
 import css from './Badge.module.scss'
 
 interface ScanBadgeProps {
-  category: PolicyFailureDetailCategory
+  category: PolicyFailureDetailCategoryV3
 }
 
 export default function ScanCategoryBadge(props: ScanBadgeProps): JSX.Element {

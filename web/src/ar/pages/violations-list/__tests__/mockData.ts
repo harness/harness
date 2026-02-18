@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { ArtifactScanDetails, ListArtifactScanResponseResponse } from '@harnessio/react-har-service-client'
+import type { ArtifactScanDetailsV3, ListArtifactScanResponseV3Response } from '@harnessio/react-har-service-client'
 
-export const mockData: ListArtifactScanResponseResponse = {
+export const mockData: ListArtifactScanResponseV3Response = {
   data: [
     {
       id: '1',
@@ -58,7 +58,7 @@ export const mockData: ListArtifactScanResponseResponse = {
   pageSize: 10
 }
 
-export const mockArtifactScanDetails: ArtifactScanDetails = {
+export const mockArtifactScanDetails: ArtifactScanDetailsV3 = {
   id: '1',
   packageType: 'NPM',
   packageName: 'package1',

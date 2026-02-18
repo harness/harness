@@ -18,7 +18,7 @@ import React from 'react'
 import classNames from 'classnames'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ArtifactScan, ListArtifactScanResponseResponse } from '@harnessio/react-har-service-client'
+import type { ArtifactScanV3, ListArtifactScanResponseV3Response } from '@harnessio/react-har-service-client'
 
 import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -33,7 +33,7 @@ import {
 import css from './ViolationsListPage.module.scss'
 
 export interface ViolationsListTableProps {
-  data: ListArtifactScanResponseResponse
+  data: ListArtifactScanResponseV3Response
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: string[]) => void
@@ -57,7 +57,7 @@ export default function ViolationsListTable(props: ViolationsListTableProps): JS
     onPageSizeChange
   })
 
-  const columns: Column<ArtifactScan>[] = React.useMemo(() => {
+  const columns: Column<ArtifactScanV3>[] = React.useMemo(() => {
     return [
       {
         Header: getString('violationsList.table.columns.package'),
@@ -94,11 +94,11 @@ export default function ViolationsListTable(props: ViolationsListTableProps): JS
         disableSortBy: true,
         width: '100%'
       }
-    ].filter(Boolean) as unknown as Column<ArtifactScan>[]
+    ].filter(Boolean) as unknown as Column<ArtifactScanV3>[]
   }, [getString])
 
   return (
-    <TableV2<ArtifactScan>
+    <TableV2<ArtifactScanV3>
       className={classNames(css.table)}
       columns={columns}
       data={scans}

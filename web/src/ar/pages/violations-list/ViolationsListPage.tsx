@@ -19,7 +19,7 @@ import classNames from 'classnames'
 import { flushSync } from 'react-dom'
 import { Expander } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
-import { useGetArtifactScansQuery } from '@harnessio/react-har-service-client'
+import { useGetArtifactScansV3Query } from '@harnessio/react-har-service-client'
 import {
   Button,
   ButtonVariation,
@@ -61,13 +61,13 @@ export default function ViolationsListPage() {
     isFetching: loading,
     error,
     refetch
-  } = useGetArtifactScansQuery({
+  } = useGetArtifactScansV3Query({
     queryParams: {
       account_identifier: accountId || '',
       org_identifier: orgIdentifier,
       project_identifier: projectIdentifier,
-      registry_id: repositoryIds,
-      package_type: packageTypes,
+      registry_ids: repositoryIds,
+      package_types: packageTypes,
       page,
       size,
       search_term: searchTerm,

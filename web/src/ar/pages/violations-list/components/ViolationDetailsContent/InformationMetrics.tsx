@@ -19,7 +19,7 @@ import { Link } from 'react-router-dom'
 import type { IconProps } from '@harnessio/icons'
 import { Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { ArtifactScan, PolicyFailureDetailCategory } from '@harnessio/react-har-service-client'
+import type { ArtifactScanV3, PolicyFailureDetailCategoryV3 } from '@harnessio/react-har-service-client'
 
 import ScanBadge from '@ar/components/Badge/ScanBadge'
 import ScanCategoryBadge from '@ar/components/Badge/ScanCategoryBadge'
@@ -121,7 +121,7 @@ function LinkMetric(props: LinkMetricProps) {
 interface StatusMetricProps {
   label: string
   labelIconProps?: IconProps
-  status: ArtifactScan['scanStatus']
+  status: ArtifactScanV3['scanStatus']
   scanId: string
 }
 
@@ -143,7 +143,7 @@ function ScanStatusMetric(props: StatusMetricProps) {
 interface CategoryMetricProps {
   label: string
   labelIconProps?: IconProps
-  category: PolicyFailureDetailCategory
+  category: PolicyFailureDetailCategoryV3
 }
 
 function ScanCategoryMetric(props: CategoryMetricProps) {
