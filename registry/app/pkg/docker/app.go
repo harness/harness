@@ -31,6 +31,7 @@ import (
 	registryTypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
 
+	"github.com/google/uuid"
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
@@ -139,10 +140,12 @@ func (app *App) GetBlobsContext(
 		OciBlobStore: nil,
 	}
 
-	// For reads and lazy replication
-	if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator.BlobID,
-		digest.Digest(info.Digest).String()); result != nil {
-		ctx.OciBlobStore = result.OciStore
+	if blobLocator.BlobID != 0 || blobLocator.GenericBlobID != uuid.Nil {
+		// For reads and lazy replication
+		if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator.BlobID,
+			digest.Digest(info.Digest).String()); result != nil {
+			ctx.OciBlobStore = result.OciStore
+		}
 	}
 
 	// Default read/write
