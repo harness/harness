@@ -28,13 +28,26 @@ export function useQueryParams<T = unknown>(options?: UseQueryParamsOptions<T>):
   const { search } = useLocation()
 
   const queryParams = React.useMemo(() => {
+    // Parse without decoder to preserve raw string values (e.g. leading zeros in searchTerm)
+    const rawParams = qs.parse(search, { ignoreQueryPrefix: true })
     const params = qs.parse(search, { ignoreQueryPrefix: true, ...options })
 
+    let result: Record<string, unknown>
     if (typeof options?.processQueryParams === 'function') {
-      return options.processQueryParams(params)
+      result = options.processQueryParams(params) as Record<string, unknown>
+    } else {
+      result = params as Record<string, unknown>
     }
 
-    return params
+    // Override ignoreList keys with raw values so they stay exact URL strings
+    ignoreList.forEach(key => {
+      const rawValue = get(rawParams, key)
+      if (!isNil(rawValue)) {
+        set(result, key, typeof rawValue === 'string' ? rawValue : String(rawValue))
+      }
+    })
+
+    return result
   }, [search, options])
 
   return queryParams as unknown as T

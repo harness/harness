@@ -32,6 +32,11 @@ import PageNotPublic from '@ar/__mocks__/components/PageNotPublic'
 import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
 import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
+import {
+  useQueryParams as useQueryParamsAR,
+  useQueryParamsOptions as useQueryParamsOptionsAR
+} from '@ar/__mocks__/hooks/useQueryParams'
+import { useUpdateQueryParams as useUpdateQueryParamsAR } from '@ar/__mocks__/hooks/useUpdateQueryParams'
 import AsyncDownloadRequestsProvider from '@ar/contexts/AsyncDownloadRequestsProvider/AsyncDownloadRequestsProvider'
 import { ModalProvider, useConfirmationDialog, useModalHook } from '@ar/__mocks__/hooks'
 
@@ -104,6 +109,9 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
                 {
                   ...hooks,
                   ...customHooks,
+                  useQueryParams: useQueryParamsAR,
+                  useQueryParamsOptions: useQueryParamsOptionsAR,
+                  useUpdateQueryParams: useUpdateQueryParamsAR,
                   useGovernanceMetaDataModal: customHooks.useGovernanceMetaDataModal ?? useGovernanceMetaDataModal, // backward compatibility
                   useConfirmationDialog,
                   useModalHook
