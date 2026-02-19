@@ -130,9 +130,15 @@ func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 	db := dbtx.GetAccessor(ctx, d.db)
 
 	// Execute the query with parameters
-	_, err = db.ExecContext(ctx, sqlStr,
-		time.Now().UnixMilli(), time.Now().UnixMilli(), time.Now().UnixMilli(),
-		user, user, version, regID, image, artifactType)
+	now := time.Now().UnixMilli()
+	args := []interface{}{now, now, now, user, user, version, regID, image}
+
+	// Only add artifactType parameter if the WHERE clause includes it
+	if artifactType != nil && *artifactType != "" {
+		args = append(args, artifactType)
+	}
+
+	_, err = db.ExecContext(ctx, sqlStr, args...)
 	if err != nil {
 		return fmt.Errorf("failed to insert download stat: %w", err)
 	}
