@@ -44,6 +44,8 @@ import { getApiBaseUrl } from '@ar/__mocks__/utils/getApiBaseUrl'
 import getCustomHeaders from '@ar/__mocks__/utils/getCustomHeaders'
 import { useGovernanceMetaDataModal } from '@ar/__mocks__/hooks/useGovernanceMetaDataModal'
 import { routeToRegistryDetails } from '@ar/__mocks__/utils/routeToRegistryDetails'
+import OssOverviewView from '@ar/__mocks__/components/OssOverviewView'
+import OssVulnerabilitiesView from '@ar/__mocks__/components/OssVulnerabilitiesView'
 
 export const MockTestUtils: {
   hooks?: ParentProviderProps['hooks']
@@ -74,7 +76,9 @@ MockTestUtils.components = {
   DependencyView,
   ModalProvider,
   PolicySetFixedTypeSelector,
-  PageNotPublic
+  PageNotPublic,
+  OssOverviewView,
+  OssVulnerabilitiesView
 }
 
 MockTestUtils.utils = {

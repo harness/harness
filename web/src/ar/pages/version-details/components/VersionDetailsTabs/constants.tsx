@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-import { Parent } from '@ar/common/types'
+import { Parent, RepositoryConfigType } from '@ar/common/types'
 import type { StringsMap } from '@ar/frameworks/strings'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 
 export enum VersionDetailsTab {
   OVERVIEW = 'overview',
   ARTIFACT_DETAILS = 'artifact_details',
   SUPPLY_CHAIN = 'supply_chain',
   SECURITY_TESTS = 'security_tests',
+  EVALUATION_DETAILS = 'evaluation_details',
   DEPLOYMENTS = 'deployments',
   CODE = 'code',
   OSS = 'OSS' // added for open source system view
@@ -33,6 +35,8 @@ interface VersionDetailsTabListItem {
   disabled?: boolean
   parent?: Parent
   isSupportedInPublicView?: boolean
+  featureFlag?: FeatureFlags
+  registryType?: RepositoryConfigType
   supportActions?: boolean
 }
 
@@ -62,6 +66,15 @@ export const VersionDetailsTabList: VersionDetailsTabListItem[] = [
     parent: Parent.Enterprise,
     isSupportedInPublicView: false,
     supportActions: false
+  },
+  {
+    label: 'versionDetails.tabs.evaluationDetails',
+    value: VersionDetailsTab.EVALUATION_DETAILS,
+    parent: Parent.Enterprise,
+    isSupportedInPublicView: true,
+    supportActions: false,
+    featureFlag: FeatureFlags.HAR_DEPENDENCY_FIREWALL,
+    registryType: RepositoryConfigType.UPSTREAM
   },
   {
     label: 'versionDetails.tabs.deployments',

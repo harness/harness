@@ -10,6 +10,7 @@ tabs:
   supplyChain: SBOM
   securityTests: Vulnerabilities
   deployments: Deployments
+  evaluationDetails: Evaluation Details
   code: Code
 cards:
   deploymentsCard:
@@ -40,19 +41,19 @@ cards:
     denyListViolation: Deny List Violation
   container:
     title: Container
-    versionDigest: '{{ version}} ({{ digest }} digests)'
+    versionDigest: "{{ version}} ({{ digest }} digests)"
 overview:
   generalInformation:
     title: General Information
-    name: '{{ $.artifactList.table.columns.name }}'
+    name: "{{ $.artifactList.table.columns.name }}"
     version: Version
     packageType: Package type
     repositoryPath: Registry path
     digest: Digest
     url: URL to file
     projectUrl: Project URL
-    size: '{{ $.digestList.table.columns.size }}'
-    downloads: '{{ $.repositoryList.table.columns.downloads }}'
+    size: "{{ $.digestList.table.columns.size }}"
+    downloads: "{{ $.repositoryList.table.columns.downloads }}"
     uploadedBy: Uploaded At
     createdAndLastModifiedAt: Created | Last modified
     createdAt: Created At
@@ -84,12 +85,16 @@ artifactDetails:
     files: Files
     dependencies: Dependencies
   layers:
-    digest: '{{ $.digestList.table.columns.digest }}'
+    digest: "{{ $.digestList.table.columns.digest }}"
     imageLayers: Image Layers
     lastPush: Last Push
-    size: '{{ $.digestList.table.columns.size }}'
+    size: "{{ $.digestList.table.columns.size }}"
     archSelectLabel: OS/ARCH
     archSelectPlaceholder: Select OS/ARCH
+securityTests:
+  tabs:
+    overview: Overview
+    vulnerabilities: Vulnerabilities
 deploymentsTable:
   noDeploymentsTitle: There are no deployments available.
   columns:
@@ -109,7 +114,7 @@ artifactFiles:
       downloadCommand: Download Command
       created: Created
 dependencyList:
-  dependencyNameWithRelease: '{{ name }} (release: {{ release }})'
+  dependencyNameWithRelease: "{{ name }} (release: {{ release }})"
   table:
     columns:
       name: Dependency Name

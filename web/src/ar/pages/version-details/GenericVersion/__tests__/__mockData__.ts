@@ -49,7 +49,8 @@ export const mockGenericVersionSummary: ArtifactVersionSummaryResponseResponse =
     packageType: 'GENERIC',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid'
+    registryUUID: 'uuid',
+    purl: 'test'
   },
   status: 'SUCCESS'
 }

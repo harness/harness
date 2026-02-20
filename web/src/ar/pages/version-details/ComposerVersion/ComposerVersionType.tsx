@@ -50,6 +50,7 @@ import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderConte
 import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
 import DartVersionOverviewPage from './pages/overview/ComposerVersionOverviewPage'
+import ScanDetailsPage from '../components/ScanDetailsPage/ScanDetailsPage'
 
 export class ComposerVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.COMPOSER
@@ -57,6 +58,7 @@ export class ComposerVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
+    VersionDetailsTab.EVALUATION_DETAILS,
     VersionDetailsTab.CODE
   ]
 
@@ -109,6 +111,8 @@ export class ComposerVersionType extends VersionStep<ArtifactVersionSummary> {
             <DartVersionArtifactDetailsPage />
           </VersionOverviewProvider>
         )
+      case VersionDetailsTab.EVALUATION_DETAILS:
+        return <ScanDetailsPage />
       case VersionDetailsTab.OSS:
         return (
           <VersionOverviewProvider>

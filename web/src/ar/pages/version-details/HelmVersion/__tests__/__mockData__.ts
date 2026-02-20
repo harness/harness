@@ -50,7 +50,8 @@ export const mockHelmVersionSummary: ArtifactVersionSummaryResponseResponse = {
     packageType: 'HELM',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid'
+    registryUUID: 'uuid',
+    purl: 'test'
   },
   status: 'SUCCESS'
 }

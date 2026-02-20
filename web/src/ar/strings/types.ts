@@ -382,6 +382,8 @@ export interface StringsMap {
   'versionDetails.restoreModal.inputLabel': string
   'versionDetails.restoreModal.inputPlaceholder': string
   'versionDetails.restoreModal.title': string
+  'versionDetails.securityTests.tabs.overview': string
+  'versionDetails.securityTests.tabs.vulnerabilities': string
   'versionDetails.selectDigestPlaceholder': string
   'versionDetails.softDeleteModal.contentText': string
   'versionDetails.softDeleteModal.inputLabel': string
@@ -390,6 +392,7 @@ export interface StringsMap {
   'versionDetails.tabs.artifactDetails': string
   'versionDetails.tabs.code': string
   'versionDetails.tabs.deployments': string
+  'versionDetails.tabs.evaluationDetails': string
   'versionDetails.tabs.overview': string
   'versionDetails.tabs.securityTests': string
   'versionDetails.tabs.supplyChain': string

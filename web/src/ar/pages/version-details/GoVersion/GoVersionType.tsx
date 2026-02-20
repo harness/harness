@@ -50,6 +50,7 @@ import GoVersionArtifactDetailsPage from './pages/artifact-dertails/GoVersionArt
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
+import ScanDetailsPage from '../components/ScanDetailsPage/ScanDetailsPage'
 
 export class GoVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GO
@@ -57,6 +58,7 @@ export class GoVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
+    VersionDetailsTab.EVALUATION_DETAILS,
     VersionDetailsTab.CODE
   ]
 
@@ -109,6 +111,8 @@ export class GoVersionType extends VersionStep<ArtifactVersionSummary> {
             <GoVersionArtifactDetailsPage />
           </VersionOverviewProvider>
         )
+      case VersionDetailsTab.EVALUATION_DETAILS:
+        return <ScanDetailsPage />
       case VersionDetailsTab.OSS:
         return (
           <VersionOverviewProvider>

@@ -51,6 +51,7 @@ import RPMVersionArtifactDetailsPage from './pages/artifact-dertails/RPMVersionA
 import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderContent/VersionDetailsHeaderContent'
 import VersionTreeNode from '../components/VersionTreeNode/VersionTreeNode'
 import VersionDetailsTabs from '../components/VersionDetailsTabs/VersionDetailsTabs'
+import ScanDetailsPage from '../components/ScanDetailsPage/ScanDetailsPage'
 
 export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.RPM
@@ -58,6 +59,7 @@ export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
+    VersionDetailsTab.EVALUATION_DETAILS,
     VersionDetailsTab.CODE
   ]
 
@@ -109,6 +111,8 @@ export class RPMVersionType extends VersionStep<ArtifactVersionSummary> {
             <RPMVersionArtifactDetailsPage />
           </VersionOverviewProvider>
         )
+      case VersionDetailsTab.EVALUATION_DETAILS:
+        return <ScanDetailsPage />
       case VersionDetailsTab.OSS:
         return (
           <VersionOverviewProvider>

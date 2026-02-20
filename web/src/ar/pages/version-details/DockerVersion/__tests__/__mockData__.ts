@@ -87,7 +87,8 @@ export const mockDockerVersionSummary: ArtifactVersionSummaryResponseResponse = 
     stoPipelineId: 'HARNESS_ARTIFACT_SCAN_PIPELINE',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid'
+    registryUUID: 'uuid',
+    purl: 'test'
   },
   status: 'SUCCESS'
 }
@@ -98,7 +99,8 @@ export const mockDockerVersionSummaryWithoutSscaAndStoData: ArtifactVersionSumma
     packageType: 'DOCKER',
     version: '1.0.0',
     uuid: 'uuid',
-    registryUUID: 'uuid'
+    registryUUID: 'uuid',
+    purl: 'test'
   },
   status: 'SUCCESS'
 }

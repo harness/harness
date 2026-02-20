@@ -49,6 +49,7 @@ import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderConte
 import VersionFilesProvider from '../context/VersionFilesProvider'
 import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
 import { VersionAction } from '../components/VersionActions/types'
+import ScanDetailsPage from '../components/ScanDetailsPage/ScanDetailsPage'
 
 export class PythonVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.PYTHON
@@ -56,6 +57,7 @@ export class PythonVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
+    VersionDetailsTab.EVALUATION_DETAILS,
     VersionDetailsTab.CODE
   ]
 
@@ -101,6 +103,8 @@ export class PythonVersionType extends VersionStep<ArtifactVersionSummary> {
         return <PythonVersionOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
         return <PythonVersionArtifactDetailsPage />
+      case VersionDetailsTab.EVALUATION_DETAILS:
+        return <ScanDetailsPage />
       case VersionDetailsTab.OSS:
         return (
           <Layout.Vertical spacing="xlarge">

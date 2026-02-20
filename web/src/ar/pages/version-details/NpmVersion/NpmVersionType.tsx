@@ -49,6 +49,7 @@ import VersionDetailsHeaderContent from '../components/VersionDetailsHeaderConte
 import VersionFilesProvider from '../context/VersionFilesProvider'
 import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
 import { VersionAction } from '../components/VersionActions/types'
+import ScanDetailsPage from '../components/ScanDetailsPage/ScanDetailsPage'
 
 export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.NPM
@@ -56,6 +57,7 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
+    VersionDetailsTab.EVALUATION_DETAILS,
     VersionDetailsTab.CODE
   ]
 
@@ -100,6 +102,8 @@ export class NpmVersionType extends VersionStep<ArtifactVersionSummary> {
         return <NpmVersionOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
         return <NpmVersionArtifactDetailsPage />
+      case VersionDetailsTab.EVALUATION_DETAILS:
+        return <ScanDetailsPage />
       case VersionDetailsTab.OSS:
         return (
           <Layout.Vertical spacing="xlarge">

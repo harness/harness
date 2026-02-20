@@ -50,6 +50,7 @@ import VersionFilesProvider from '../context/VersionFilesProvider'
 import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFilesContent'
 import { VersionAction } from '../components/VersionActions/types'
 import VersionOverviewProvider from '../context/VersionOverviewProvider'
+import ScanDetailsPage from '../components/ScanDetailsPage/ScanDetailsPage'
 
 export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.NUGET
@@ -57,6 +58,7 @@ export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
+    VersionDetailsTab.EVALUATION_DETAILS,
     VersionDetailsTab.CODE
   ]
 
@@ -109,6 +111,8 @@ export class NuGetVersionType extends VersionStep<ArtifactVersionSummary> {
             <NuGetVersionArtifactDetailsPage />
           </VersionOverviewProvider>
         )
+      case VersionDetailsTab.EVALUATION_DETAILS:
+        return <ScanDetailsPage />
       case VersionDetailsTab.OSS:
         return (
           <VersionOverviewProvider>

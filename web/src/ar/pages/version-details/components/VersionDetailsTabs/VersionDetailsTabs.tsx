@@ -70,7 +70,9 @@ export default function VersionDetailsTabs(): JSX.Element {
     return VersionDetailsTabList.filter(each => !each.parent || each.parent === parent)
       .filter(each => (isCurrentSessionPublic ? each.isSupportedInPublicView : true))
       .filter(each => versionType.getAllowedVersionDetailsTab().includes(each.value))
-  }, [data, isCurrentSessionPublic, parent])
+      .filter(each => (each.featureFlag ? featureFlags[each.featureFlag] : true))
+      .filter(each => (each.registryType ? data?.registryType === each.registryType : true))
+  }, [data, isCurrentSessionPublic, parent, featureFlags])
 
   const handleTabChange = useCallback(
     (nextTab: VersionDetailsTab): void => {
