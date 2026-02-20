@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -272,5 +273,6 @@ func (c *npmPackageType) GetPurlForArtifact(
 	if version == "" {
 		return "", fmt.Errorf("version cannot be empty")
 	}
-	return fmt.Sprintf("pkg:npm/%s@%s", packageName, version), nil
+	encodedPackageName := strings.ReplaceAll(packageName, "@", "%40")
+	return fmt.Sprintf("pkg:npm/%s@%s", encodedPackageName, version), nil
 }
