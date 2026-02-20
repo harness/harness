@@ -19,9 +19,12 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
+
+	"github.com/gotidy/ptr"
 )
 
 func (c *Controller) processObjects(
@@ -30,9 +33,9 @@ func (c *Controller) processObjects(
 	repo *types.RepositoryCore,
 	principal *types.Principal,
 	refUpdates changedRefs,
-	checks *protectionChecks,
+	sizeLimit int64,
+	principalCommitterMatch bool,
 	violationsInput *protection.PushViolationsInput,
-	settingsViolations *settingsViolations,
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
@@ -40,16 +43,48 @@ func (c *Controller) processObjects(
 		return nil
 	}
 
-	sizeLimit := checks.SettingsFileSizeLimit
-	if checks.RulesFileSizeLimit != 0 {
-		if sizeLimit == 0 || checks.RulesFileSizeLimit < sizeLimit {
-			sizeLimit = checks.RulesFileSizeLimit
+	// TODO: Remove this once push rules implementation and migration are complete.
+	settingsSizeLimit, err := settings.RepoGet(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.KeyFileSizeLimit,
+		settings.DefaultFileSizeLimit,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to check settings for file size limit: %w", err)
+	}
+
+	if sizeLimit == 0 || (settingsSizeLimit > 0 && sizeLimit > settingsSizeLimit) {
+		sizeLimit = settingsSizeLimit
+	}
+
+	// TODO: Remove this once push rules implementation and migration are complete.
+	if !principalCommitterMatch {
+		principalCommitterMatch, err = settings.RepoGet(
+			ctx,
+			c.settings,
+			repo.ID,
+			settings.KeyPrincipalCommitterMatch,
+			settings.DefaultPrincipalCommitterMatch,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to check settings for principal committer match: %w", err)
 		}
 	}
 
-	principalCommitterMatch := checks.SettingsPrincipalCommitterMatch || checks.RulesPrincipalCommitterMatch
+	gitLFSEnabled, err := settings.RepoGet(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.KeyGitLFSEnabled,
+		settings.DefaultGitLFSEnabled,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to check settings for Git LFS enabled: %w", err)
+	}
 
-	if sizeLimit == 0 && !principalCommitterMatch && !checks.SettingsGitLFSEnabled {
+	if sizeLimit == 0 && !principalCommitterMatch && !gitLFSEnabled {
 		return nil
 	}
 
@@ -72,7 +107,7 @@ func (c *Controller) processObjects(
 		}
 	}
 
-	if checks.SettingsGitLFSEnabled {
+	if gitLFSEnabled {
 		preReceiveObjsIn.FindLFSPointersParams = &git.FindLFSPointersParams{}
 	}
 
@@ -92,9 +127,6 @@ func (c *Controller) processObjects(
 			preReceiveObjsOut.FindOversizeFilesOutput.Total,
 			sizeLimit,
 		)
-		if checks.SettingsFileSizeLimit > 0 {
-			settingsViolations.FileSizeLimitExceeded = true
-		}
 	}
 
 	if preReceiveObjsOut.FindCommitterMismatchOutput != nil &&
@@ -105,9 +137,6 @@ func (c *Controller) processObjects(
 			preReceiveObjsIn.FindCommitterMismatchParams.PrincipalEmail,
 			preReceiveObjsOut.FindCommitterMismatchOutput.Total,
 		)
-		if checks.SettingsPrincipalCommitterMatch {
-			settingsViolations.CommitterMismatchFound = true
-		}
 	}
 
 	if preReceiveObjsOut.FindLFSPointersOutput != nil &&
@@ -124,19 +153,19 @@ func (c *Controller) processObjects(
 
 		//nolint:lll
 		if len(existingObjs) != len(objIDs) {
+			output.Error = ptr.String(
+				"Changes blocked by unknown Git LFS objects. Please try `git lfs push --all` or check if LFS is setup properly.")
 			printLFSPointers(
 				output,
 				preReceiveObjsOut.FindLFSPointersOutput.LFSInfos,
 				preReceiveObjsOut.FindLFSPointersOutput.Total,
 			)
-
-			if checks.SettingsGitLFSEnabled {
-				settingsViolations.UnknownLFSObjectsFound = true
-			}
 		}
 	}
 
+	violationsInput.FileSizeLimit = sizeLimit
 	violationsInput.FindOversizeFilesOutput = preReceiveObjsOut.FindOversizeFilesOutput
+	violationsInput.PrincipalCommitterMatch = principalCommitterMatch
 	if preReceiveObjsOut.FindCommitterMismatchOutput != nil {
 		violationsInput.CommitterMismatchCount = preReceiveObjsOut.FindCommitterMismatchOutput.Total
 	}

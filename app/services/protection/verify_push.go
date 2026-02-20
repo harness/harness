@@ -76,6 +76,12 @@ type (
 	}
 )
 
+func (in *PushViolationsInput) HasViolations() bool {
+	return in.FindOversizeFilesOutput != nil && (in.FindOversizeFilesOutput.Total > 0) ||
+		in.CommitterMismatchCount > 0 ||
+		in.FoundSecretCount > 0
+}
+
 func (v *DefPush) PushVerify(
 	_ context.Context,
 	_ PushVerifyInput,
