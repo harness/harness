@@ -24,7 +24,7 @@ import { Separator } from '@ar/components/Separator/Separator'
 
 import InformationMetrics from './InformationMetrics'
 import ViolationFailureDetails from './ViolationFailureDetails'
-import useGetPolicySetDetailsPageUrl from '../../hooks/useGetPolicyDetailsPageUrl'
+import useGetPolicySetDetailsPageUrl from '../../hooks/useGetPolicySetDetailsPageUrl'
 
 import css from './ViolationDetailsContent.module.scss'
 
