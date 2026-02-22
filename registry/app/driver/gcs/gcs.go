@@ -49,8 +49,7 @@ import (
 )
 
 const (
-	driverName     = "gcs"
-	dummyProjectID = "<unknown>"
+	driverName = "gcs"
 
 	minChunkSize          = 256 * 1024
 	defaultChunkSize      = 16 * 1024 * 1024
@@ -88,6 +87,11 @@ func init() {
 	factory.Register(driverName, &gcsDriverFactory{})
 }
 
+// TODO: figure-out why init is not called automatically
+func Register(ctx context.Context) {
+	log.Ctx(ctx).Info().Msgf("registering gcs driver")
+}
+
 // gcsDriverFactory implements the factory.StorageDriverFactory interface.
 type gcsDriverFactory struct{}
 
@@ -105,6 +109,7 @@ var _ storagedriver.StorageDriver = &driver{}
 // Objects are stored at absolute keys in the provided bucket.
 type driver struct {
 	client        *http.Client
+	gcs           *storage.Client
 	bucket        *storage.BucketHandle
 	email         string
 	privateKey    []byte
@@ -256,6 +261,7 @@ func New(_ context.Context, params driverParameters) (storagedriver.StorageDrive
 		return nil, fmt.Errorf("invalid chunksize: %d is not a positive multiple of %d", params.chunkSize, minChunkSize)
 	}
 	d := &driver{
+		gcs:           params.gcs,
 		bucket:        params.gcs.Bucket(params.bucket),
 		rootDirectory: rootDirectory,
 		email:         params.email,
@@ -932,6 +938,22 @@ func (d *driver) keyToPath(key string) string {
 	return "/" + strings.Trim(strings.TrimPrefix(key, d.rootDirectory), "/")
 }
 
-func (d *driver) CopyObject(_ context.Context, _, _, _ string) error {
-	return fmt.Errorf("not yet implemented")
+func (d *driver) CopyObject(ctx context.Context, srcKey, destBucket, destKey string) error {
+	src := d.bucket.Object(d.pathToKey(srcKey))
+
+	dst := d.gcs.Bucket(destBucket).Object(destKey)
+
+	copier := dst.CopierFrom(src)
+	copier.ContentType = blobContentType
+
+	_, err := copier.Run(ctx)
+	if err != nil {
+		var status *googleapi.Error
+		if errors.As(err, &status) && status.Code == http.StatusNotFound {
+			return storagedriver.PathNotFoundError{Path: srcKey}
+		}
+		return fmt.Errorf("copy %q to %q/%q: %w", srcKey, destBucket, destKey, err)
+	}
+
+	return nil
 }

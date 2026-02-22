@@ -48,6 +48,7 @@ import (
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/driver/factory"
 	"github.com/harness/gitness/registry/app/driver/filesystem"
+	"github.com/harness/gitness/registry/app/driver/gcs"
 	"github.com/harness/gitness/registry/app/driver/s3-aws"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -86,18 +87,26 @@ func DefaultStorageProvider(ctx context.Context, c *types.Config) (storagedriver
 	var d storagedriver.StorageDriver
 	var err error
 
-	if c.Registry.Storage.StorageType == "filesystem" {
+	switch c.Registry.Storage.StorageType {
+	case "filesystem":
 		filesystem.Register(ctx)
 		d, err = factory.Create(ctx, "filesystem", config.GetFilesystemParams(c))
 		if err != nil {
 			log.Fatal().Stack().Err(err).Msgf("")
 			panic(err)
 		}
-	} else {
+	case "gcs":
+		gcs.Register(ctx)
+		d, err = factory.Create(ctx, "gcs", config.GetGCSStorageParameters(c))
+		if err != nil {
+			log.Error().Stack().Err(err).Msg("failed to init gcs Blob storage")
+			panic(err)
+		}
+	default:
 		s3.Register(ctx)
 		d, err = factory.Create(ctx, "s3aws", config.GetS3StorageParameters(c))
 		if err != nil {
-			log.Error().Stack().Err(err).Msg("failed to init s3 Blob storage ")
+			log.Error().Stack().Err(err).Msg("failed to init s3 Blob storage")
 			panic(err)
 		}
 	}

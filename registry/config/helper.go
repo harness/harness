@@ -45,3 +45,9 @@ func GetFilesystemParams(c *types.Config) map[string]any {
 	props["rootdirectory"] = c.Registry.Storage.FileSystemStorage.RootDirectory
 	return props
 }
+
+func GetGCSStorageParameters(c *types.Config) map[string]any {
+	gcsProperties := make(map[string]any)
+	gcsProperties["bucket"] = c.Registry.Storage.GCSStorage.Bucket
+	return gcsProperties
+}

@@ -511,7 +511,7 @@ type Config struct {
 	Registry struct {
 		Enable  bool `envconfig:"GITNESS_REGISTRY_ENABLED" default:"true"`
 		Storage struct {
-			// StorageType defines the type of storage to use for the registry. Options are: `filesystem`, `s3aws`
+			// StorageType defines the type of storage to use for the registry. Options are: `filesystem`, `s3aws`, `gcs`
 			StorageType string `envconfig:"GITNESS_REGISTRY_STORAGE_TYPE" default:"filesystem"`
 
 			// FileSystemStorage defines the configuration for the filesystem storage if StorageType is `filesystem`.
@@ -543,6 +543,12 @@ type Config struct {
 				Delete                      bool   `envconfig:"GITNESS_REGISTRY_S3_DELETE_ENABLED" default:"true"`
 				Redirect                    bool   `envconfig:"GITNESS_REGISTRY_S3_STORAGE_REDIRECT" default:"false"`
 				Provider                    string `envconfig:"GITNESS_REGISTRY_S3_PROVIDER" default:"cloudflare"`
+			}
+
+			// GCSStorage defines the configuration for the GCS storage if StorageType is `gcs`.
+			// Authentication is handled via workload identity (google.DefaultTokenSource).
+			GCSStorage struct {
+				Bucket string `envconfig:"GITNESS_REGISTRY_GCS_BUCKET"`
 			}
 		}
 
