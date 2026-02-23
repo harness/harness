@@ -406,7 +406,7 @@ func (c *localRegistry) parseAndUploadNPMPackage(
 			if errors.Is(err, io.EOF) || strings.Contains(err.Error(), "EOF") {
 				break
 			}
-			return types.FileInfo{}, fmt.Errorf("failed to parse JSON: %w", err)
+			return types.FileInfo{}, usererror.BadRequestf("failed to parse JSON: %s", err.Error())
 		}
 
 		//nolint:nestif
@@ -414,66 +414,66 @@ func (c *localRegistry) parseAndUploadNPMPackage(
 			switch token {
 			case "_id":
 				if err := decoder.Decode(&packageMetadata.ID); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse _id: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse _id: %s", err.Error())
 				}
 			case "name":
 				if err := decoder.Decode(&packageMetadata.Name); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse name: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse name: %s", err.Error())
 				}
 			case "description":
 				if err := decoder.Decode(&packageMetadata.Description); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse description: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse description: %s", err.Error())
 				}
 			case "dist-tags":
 				packageMetadata.DistTags = make(map[string]string)
 				if err := decoder.Decode(&packageMetadata.DistTags); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse dist-tags: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse dist-tags: %s", err.Error())
 				}
 			case "versions":
 				packageMetadata.Versions = make(map[string]*npm2.PackageMetadataVersion)
 				if err := decoder.Decode(&packageMetadata.Versions); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse versions: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse versions: %s", err.Error())
 				}
 			case "readme":
 				if err := decoder.Decode(&packageMetadata.Readme); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse readme: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse readme: %s", err.Error())
 				}
 			case "maintainers":
 				if err := decoder.Decode(&packageMetadata.Maintainers); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse maintainers: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse maintainers: %s", err.Error())
 				}
 			case "time":
 				packageMetadata.Time = make(map[string]time.Time)
 				if err := decoder.Decode(&packageMetadata.Time); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse time: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse time: %s", err.Error())
 				}
 			case "homepage":
 				if err := decoder.Decode(&packageMetadata.Homepage); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse homepage: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse homepage: %s", err.Error())
 				}
 			case "keywords":
 				if err := decoder.Decode(&packageMetadata.Keywords); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse keywords: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse keywords: %s", err.Error())
 				}
 			case "repository":
 				if err := decoder.Decode(&packageMetadata.Repository); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse repository: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse repository: %s", err.Error())
 				}
 			case "author":
 				if err := decoder.Decode(&packageMetadata.Author); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse author: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse author: %s", err.Error())
 				}
 			case "readmeFilename":
 				if err := decoder.Decode(&packageMetadata.ReadmeFilename); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse readmeFilename: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse readmeFilename: %s", err.Error())
 				}
 			case "users":
 				if err := decoder.Decode(&packageMetadata.Users); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse users: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse users: %s", err.Error())
 				}
 			case "license":
 				if err := decoder.Decode(&packageMetadata.License); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse license: %w", err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse license: %s", err.Error())
 				}
 			case "_attachments":
 
@@ -490,7 +490,7 @@ func (c *localRegistry) parseAndUploadNPMPackage(
 			default:
 				var dummy any
 				if err := decoder.Decode(&dummy); err != nil {
-					return types.FileInfo{}, fmt.Errorf("failed to parse field %s: %w", token, err)
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse field %s: %s", token, err.Error())
 				}
 			}
 		}
@@ -595,22 +595,22 @@ func (c *localRegistry) processBase64DataOptimized(
 	// Expecting `:` character first
 	startByte, err := streamReader.ReadByte()
 	if err != nil {
-		return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: Error while reading : character: %w",
-			attachmentKey, err)
+		return types.FileInfo{}, usererror.BadRequestf("failed to upload attachment %s: Error while reading : character: %s",
+			attachmentKey, err.Error())
 	}
 	if startByte != ':' {
-		return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: Expected : character, got %c",
+		return types.FileInfo{}, usererror.BadRequestf("failed to upload attachment %s: Expected : character, got %c",
 			attachmentKey, startByte)
 	}
 
 	// Now expecting `"`, marking start of JSON string
 	startByte, err = streamReader.ReadByte()
 	if err != nil {
-		return types.FileInfo{}, fmt.Errorf("failed to upload"+
-			" attachment %s: Error while reading \" character: %w", attachmentKey, err)
+		return types.FileInfo{}, usererror.BadRequestf("failed to upload"+
+			" attachment %s: Error while reading \" character: %s", attachmentKey, err.Error())
 	}
 	if startByte != '"' {
-		return types.FileInfo{}, fmt.Errorf("failed to upload"+
+		return types.FileInfo{}, usererror.BadRequestf("failed to upload"+
 			" attachment %s: Expected \" character, got %c", attachmentKey, startByte)
 	}
 
@@ -625,8 +625,8 @@ func (c *localRegistry) processBase64DataOptimized(
 		info.RegistryID)
 	if err != nil {
 		if strings.Contains(err.Error(), "unexpected EOF") {
-			return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: "+
-				"base64 data may be corrupted or missing closing quote: %w", attachmentKey, err)
+			return types.FileInfo{}, usererror.BadRequestf("failed to upload attachment %s: "+
+				"base64 data may be corrupted or missing closing quote: %s", attachmentKey, err.Error())
 		}
 		return types.FileInfo{}, fmt.Errorf("failed to upload attachment %s: %w", attachmentKey, err)
 	}
