@@ -106,6 +106,7 @@ deploymentsTable:
     infra: Infrastructure
     instanceCount: Instance Count
 artifactFiles:
+  noFilesTitle: No files found
   table:
     columns:
       name: Name

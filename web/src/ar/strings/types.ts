@@ -288,6 +288,7 @@ export interface StringsMap {
   'versionDetails.artifactDetails.tabs.layers': string
   'versionDetails.artifactDetails.tabs.manifest': string
   'versionDetails.artifactDetails.tabs.readme': string
+  'versionDetails.artifactFiles.noFilesTitle': string
   'versionDetails.artifactFiles.table.columns.checksum': string
   'versionDetails.artifactFiles.table.columns.created': string
   'versionDetails.artifactFiles.table.columns.downloadCommand': string

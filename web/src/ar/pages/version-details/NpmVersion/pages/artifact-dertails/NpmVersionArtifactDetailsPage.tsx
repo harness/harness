@@ -22,8 +22,8 @@ import { useStrings } from '@ar/frameworks/strings'
 import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
 import VersionFilesProvider from '@ar/pages/version-details/context/VersionFilesProvider'
 import VersionOverviewProvider from '@ar/pages/version-details/context/VersionOverviewProvider'
+import ArtifactFilesContent from '@ar/pages/version-details/components/ArtifactFileListTable/ArtifactFilesContent'
 
-import NpmVersionFilesContent from './NpmVersionFilesContent'
 import NpmVersionReadmeContent from './NpmVersionReadmeContent'
 import NpmVersionDependencyContent from './NpmVersionDependencyContent'
 import { NpmArtifactDetailsTabEnum, type NpmVersionDetailsQueryParams } from '../../types'
@@ -58,7 +58,7 @@ export default function NpmVersionArtifactDetailsPage() {
             iconProps={{ size: 12 }}
             panel={
               <VersionFilesProvider>
-                <NpmVersionFilesContent />
+                <ArtifactFilesContent />
               </VersionFilesProvider>
             }
             title={getString('versionDetails.artifactDetails.tabs.files')}

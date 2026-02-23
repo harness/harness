@@ -15,7 +15,6 @@
  */
 
 import React, { createContext, useState, type PropsWithChildren } from 'react'
-import { PageError, PageSpinner } from '@harnessio/uicore'
 import { type ListFileDetail, useGetArtifactFilesQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
@@ -31,10 +30,12 @@ import {
 } from '../components/ArtifactFileListTable/utils'
 
 interface VersionFilesProviderProps {
-  data: ListFileDetail
+  data: ListFileDetail | undefined
+  loading: boolean
+  error: { message?: string } | null
+  refetch: () => void
   updateQueryParams: UseUpdateQueryParamsReturn<Partial<ArtifactFileListPageQueryParams>>['updateQueryParams']
   queryParams: Partial<ArtifactFileListPageQueryParams>
-  refetch: () => void
   sort: string[]
   repositoryIdentifier: string
   artifactIdentifier: string
@@ -57,7 +58,8 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
   const [localParams, setLocalParams] = useState<Partial<ArtifactFileListPageQueryParams>>({
     page: DEFAULT_PAGE_INDEX,
     size: DEFAULT_PAGE_SIZE,
-    sort: DEFAULT_ARTIFACT_LIST_TABLE_SORT
+    sort: DEFAULT_ARTIFACT_LIST_TABLE_SORT,
+    searchTerm: ''
   })
   const pathParams = useDecodedParams<VersionDetailsPathParams>()
   const spaceRef = useGetSpaceRef(repositoryIdentifier)
@@ -67,7 +69,7 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
 
   const queryParamOptions = useArtifactFileListQueryParamOptions()
   const queryParams = useQueryParams<ArtifactFileListPageQueryParams>(queryParamOptions)
-  const { page, size, sort } = shouldUseLocalParams ? localParams : queryParams
+  const { page, size, sort, searchTerm } = shouldUseLocalParams ? localParams : queryParams
 
   const [sortField, sortOrder] = sort || []
 
@@ -87,32 +89,29 @@ const VersionFilesProvider = (props: PropsWithChildren<IVersionFilesProviderProp
       size,
       sort_field: sortField,
       sort_order: sortOrder,
-      artifact_type: transformedArtifactType === LocalArtifactType.ARTIFACTS ? undefined : transformedArtifactType
+      artifact_type: transformedArtifactType === LocalArtifactType.ARTIFACTS ? undefined : transformedArtifactType,
+      search_term: searchTerm || undefined
     }
   })
   const responseData = data?.content?.data
 
   return (
-    <>
-      {loading ? <PageSpinner /> : null}
-      {error && !loading ? <PageError message={error.message} onClick={() => refetch()} /> : null}
-      {!error && !loading && responseData ? (
-        <VersionFilesContext.Provider
-          value={{
-            data: responseData,
-            refetch,
-            updateQueryParams: shouldUseLocalParams ? setLocalParams : updateQueryParams,
-            queryParams: shouldUseLocalParams ? localParams : queryParams,
-            sort: sort || [],
-            repositoryIdentifier: repositoryIdentifier ?? pathParams.repositoryIdentifier,
-            artifactIdentifier: artifactIdentifier ?? pathParams.artifactIdentifier,
-            versionIdentifier: versionIdentifier ?? pathParams.versionIdentifier,
-            artifactType: artifactType ?? pathParams.artifactType
-          }}>
-          {props.children}
-        </VersionFilesContext.Provider>
-      ) : null}
-    </>
+    <VersionFilesContext.Provider
+      value={{
+        data: responseData,
+        loading,
+        error: error ?? null,
+        refetch,
+        updateQueryParams: shouldUseLocalParams ? setLocalParams : updateQueryParams,
+        queryParams: shouldUseLocalParams ? localParams : queryParams,
+        sort: sort || [],
+        repositoryIdentifier: repositoryIdentifier ?? pathParams.repositoryIdentifier,
+        artifactIdentifier: artifactIdentifier ?? pathParams.artifactIdentifier,
+        versionIdentifier: versionIdentifier ?? pathParams.versionIdentifier,
+        artifactType: artifactType ?? pathParams.artifactType
+      }}>
+      {props.children}
+    </VersionFilesContext.Provider>
   )
 }
 

@@ -33,7 +33,8 @@ export const useArtifactFileListQueryParamOptions = (): UseQueryParamsOptions<Ar
     {
       page: DEFAULT_PAGE_INDEX,
       size: DEFAULT_PAGE_SIZE,
-      sort: DEFAULT_FILE_LIST_TABLE_SORT
+      sort: DEFAULT_FILE_LIST_TABLE_SORT,
+      searchTerm: ''
     },
     { ignoreEmptyString: false }
   )

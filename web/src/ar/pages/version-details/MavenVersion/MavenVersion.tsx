@@ -50,6 +50,8 @@ import VersionActions from '../components/VersionActions/VersionActions'
 import { VersionAction } from '../components/VersionActions/types'
 import ScanDetailsPage from '../components/ScanDetailsPage/ScanDetailsPage'
 
+import mavenCss from './MavenVersion.module.scss'
+
 export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.MAVEN
   protected hasArtifactRowSubComponent = true
@@ -98,9 +100,11 @@ export class MavenVersionType extends VersionStep<ArtifactVersionSummary> {
         return <MavenArtifactOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
         return (
-          <VersionFilesProvider>
-            <ArtifactFilesContent />
-          </VersionFilesProvider>
+          <div className={mavenCss.artifactDetailsContent}>
+            <VersionFilesProvider>
+              <ArtifactFilesContent />
+            </VersionFilesProvider>
+          </div>
         )
       case VersionDetailsTab.EVALUATION_DETAILS:
         return <ScanDetailsPage />

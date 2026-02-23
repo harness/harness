@@ -23,8 +23,8 @@ import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
 import VersionFilesProvider from '@ar/pages/version-details/context/VersionFilesProvider'
 import { useVersionOverview } from '@ar/pages/version-details/context/VersionOverviewProvider'
 import ReadmeFileContent from '@ar/pages/version-details/components/ReadmeFileContent/ReadmeFileContent'
+import ArtifactFilesContent from '@ar/pages/version-details/components/ArtifactFileListTable/ArtifactFilesContent'
 
-import NuGetVersionFilesContent from './NuGetVersionFilesContent'
 import NuGetVersionDependencyContent from './NuGetVersionDependencyContent'
 import { NugetArtifactDetails, NuGetArtifactDetailsTabEnum, type NuGetVersionDetailsQueryParams } from '../../types'
 
@@ -59,7 +59,7 @@ export default function NuGetVersionArtifactDetailsPage() {
           iconProps={{ size: 12 }}
           panel={
             <VersionFilesProvider>
-              <NuGetVersionFilesContent />
+              <ArtifactFilesContent />
             </VersionFilesProvider>
           }
           title={getString('versionDetails.artifactDetails.tabs.files')}

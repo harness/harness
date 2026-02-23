@@ -2,6 +2,11 @@
   --page-header-height: 137px;
 }
 
+.artifactDetailsContent {
+  margin-top: var(--spacing-8);
+  margin-left: var(--spacing-large);
+}
+
 .cardContainer {
   width: 60% !important;
   min-width: 1040px;

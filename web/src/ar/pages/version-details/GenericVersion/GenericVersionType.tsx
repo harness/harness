@@ -47,6 +47,8 @@ import ArtifactFilesContent from '../components/ArtifactFileListTable/ArtifactFi
 import VersionActions from '../components/VersionActions/VersionActions'
 import { VersionAction } from '../components/VersionActions/types'
 
+import genericStyles from './styles.module.scss'
+
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GENERIC
   protected hasArtifactRowSubComponent = true
@@ -94,9 +96,11 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
         return <GenericOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
         return (
-          <VersionFilesProvider>
-            <ArtifactFilesContent />
-          </VersionFilesProvider>
+          <div className={genericStyles.artifactDetailsContent}>
+            <VersionFilesProvider>
+              <ArtifactFilesContent />
+            </VersionFilesProvider>
+          </div>
         )
       case VersionDetailsTab.OSS:
         return <OSSContentPage />

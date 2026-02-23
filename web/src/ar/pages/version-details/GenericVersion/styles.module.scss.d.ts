@@ -16,5 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const artifactDetailsContent: string
 export declare const cardContainer: string
 export declare const pageBody: string

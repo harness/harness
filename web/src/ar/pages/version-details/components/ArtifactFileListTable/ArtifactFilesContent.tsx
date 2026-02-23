@@ -14,9 +14,20 @@
  * limitations under the License.
  */
 
-import React, { useContext } from 'react'
+import React, { useContext, useRef } from 'react'
+import { flushSync } from 'react-dom'
+import {
+  ExpandingSearchInput,
+  ExpandingSearchInputHandle,
+  Layout,
+  Page,
+  PageSpinner,
+  Button,
+  ButtonVariation
+} from '@harnessio/uicore'
 
 import { DEFAULT_PAGE_INDEX } from '@ar/constants'
+import { useStrings } from '@ar/frameworks/strings'
 import { VersionFilesContext } from '@ar/pages/version-details/context/VersionFilesProvider'
 import ArtifactFileListTable from '@ar/pages/version-details/components/ArtifactFileListTable/ArtifactFileListTable'
 
@@ -25,8 +36,18 @@ interface ArtifactFilesContentProps {
 }
 export default function ArtifactFilesContent(props: ArtifactFilesContentProps): JSX.Element {
   const { minimal } = props
-  const { data, updateQueryParams, sort } = useContext(VersionFilesContext)
-  return (
+  const { getString } = useStrings()
+  const searchRef = useRef({} as ExpandingSearchInputHandle)
+  const { data, loading, error, refetch, updateQueryParams, sort, queryParams } = useContext(VersionFilesContext)
+
+  const hasFilter = !!queryParams?.searchTerm
+
+  const handleClearFilters = (): void => {
+    flushSync(() => searchRef.current.clear?.())
+    updateQueryParams({ searchTerm: undefined, page: DEFAULT_PAGE_INDEX })
+  }
+
+  const table = data ? (
     <ArtifactFileListTable
       data={data}
       gotoPage={pageNumber => updateQueryParams({ page: pageNumber })}
@@ -36,5 +57,43 @@ export default function ArtifactFilesContent(props: ArtifactFilesContentProps): 
       sortBy={sort}
       minimal={minimal}
     />
+  ) : null
+
+  if (minimal) {
+    if (loading) {
+      return <PageSpinner />
+    }
+    return table ?? <></>
+  }
+
+  return (
+    <Layout.Vertical spacing="medium">
+      <ExpandingSearchInput
+        ref={searchRef}
+        alwaysExpanded
+        width={400}
+        placeholder={getString('search')}
+        onChange={text => {
+          updateQueryParams({ searchTerm: text || undefined, page: DEFAULT_PAGE_INDEX })
+        }}
+        defaultValue={queryParams?.searchTerm ?? ''}
+      />
+      <Page.Body
+        loading={loading}
+        error={error?.message}
+        retryOnError={() => refetch()}
+        noData={{
+          when: () => !loading && !data?.files?.length,
+          icon: 'document',
+          messageTitle: hasFilter
+            ? getString('noResultsFound')
+            : getString('versionDetails.artifactFiles.noFilesTitle'),
+          button: hasFilter ? (
+            <Button text={getString('clearFilters')} variation={ButtonVariation.LINK} onClick={handleClearFilters} />
+          ) : undefined
+        }}>
+        {data && table}
+      </Page.Body>
+    </Layout.Vertical>
   )
 }

@@ -22,6 +22,7 @@ import ArtifactFileListTable from '@ar/pages/version-details/components/Artifact
 
 export default function NpmVersionFilesContent() {
   const { data, updateQueryParams, sort } = useContext(VersionFilesContext)
+  if (!data) return null
   return (
     <ArtifactFileListTable
       data={data}
