@@ -161,7 +161,7 @@ func lsTree(
 		if strings.Contains(err.Error(), "fatal: not a tree object") {
 			return nil, errors.InvalidArgumentf("revision %q does not point to a commit", rev)
 		}
-		if strings.Contains(err.Error(), "fatal: Not a valid object name") {
+		if strings.Contains(strings.ToLower(err.Error()), "fatal: not a valid object name") {
 			return nil, errors.NotFoundf("revision %q not found", rev)
 		}
 		return nil, fmt.Errorf("failed to run git ls-tree: %w", err)
@@ -460,7 +460,7 @@ func (g *Git) ListPaths(
 		if strings.Contains(err.Error(), "expected commit type") {
 			return nil, nil, errors.InvalidArgumentf("revision %q does not point to a commit", rev)
 		}
-		if strings.Contains(err.Error(), "fatal: Not a valid object name") {
+		if strings.Contains(strings.ToLower(err.Error()), "fatal: not a valid object name") {
 			return nil, nil, errors.NotFoundf("revision %q not found", rev)
 		}
 		return nil, nil, fmt.Errorf("failed to run git ls-tree: %w", err)
