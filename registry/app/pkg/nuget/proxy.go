@@ -74,29 +74,51 @@ func (r *proxy) UploadPackage(
 
 func (r *proxy) DownloadPackage(ctx context.Context, info nugettype.ArtifactInfo) (*commons.ResponseHeaders,
 	*storage.FileReader, string, io.ReadCloser, error) {
+	log.Ctx(ctx).Debug().
+		Msgf("downloading package from proxy for registry: %s, image: %s, version: %s",
+			info.RegIdentifier, info.Image, info.Version)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return nil, nil, "", nil, err
 	}
 
 	exists := r.localRegistryHelper.FileExists(ctx, info)
 	if exists {
+		log.Ctx(ctx).Debug().
+			Msgf("file exists in local cache for registry: %s, image: %s, version: %s",
+				info.RegIdentifier, info.Image, info.Version)
 		headers, fileReader, redirectURL, err := r.localRegistryHelper.DownloadFile(ctx, info)
 		if err == nil {
+			log.Ctx(ctx).Info().
+				Msgf("successfully downloaded package from local cache for registry: %s, image: %s, version: %s",
+					info.RegIdentifier, info.Image, info.Version)
 			return headers, fileReader, redirectURL, nil, nil
 		}
-		log.Warn().Ctx(ctx).Msgf("failed to pull from local, attempting streaming from remote, %v", err)
+		log.Ctx(ctx).Warn().Err(err).
+			Msgf("failed to pull from local, attempting streaming from remote for registry: %s, image: %s, version: %s",
+				info.RegIdentifier, info.Image, info.Version)
 	}
 
+	log.Ctx(ctx).Debug().
+		Msgf("attempting to download from remote for registry: %s, image: %s, version: %s",
+			info.RegIdentifier, info.Image, info.Version)
 	remote, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return nil, nil, "", nil, err
 	}
 
 	file, err := remote.GetFile(ctx, info.Image, info.Version, info.ProxyEndpoint, info.Filename)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to get file from remote for registry: %s, image: %s, version: %s",
+				info.RegIdentifier, info.Image, info.Version)
 		return nil, nil, "", nil, err
 	}
+	log.Ctx(ctx).Info().
+		Msgf("successfully downloaded package from remote for registry: %s, image: %s, version: %s",
+			info.RegIdentifier, info.Image, info.Version)
 	go func(info nugettype.ArtifactInfo) {
 		ctx2 := context.WithoutCancel(ctx)
 		ctx2 = context.WithValue(ctx2, cfg.GoRoutineKey, "goRoutine")
@@ -123,22 +145,32 @@ func (r *proxy) CountPackageVersionV2(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
 ) (count int64, err error) {
+	log.Ctx(ctx).Debug().
+		Msgf("counting package versions v2 from proxy for registry: %s, image: %s",
+			info.RegIdentifier, info.Image)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return 0, err
 	}
 
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return 0, err
 	}
 
-	// Use the adapter's CountPackageVersionV2 method directly
 	count, err = helper.CountPackageVersionV2(ctx, info.Image)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to count package versions v2 from remote for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return 0, err
 	}
 
+	log.Ctx(ctx).Info().
+		Msgf("package versions v2 count: %d from proxy for registry: %s, image: %s",
+			count, info.RegIdentifier, info.Image)
 	return count, nil
 }
 
@@ -146,22 +178,32 @@ func (r *proxy) CountPackageV2(
 	ctx context.Context, info nugettype.ArtifactInfo,
 	searchTerm string,
 ) (count int64, err error) {
+	log.Ctx(ctx).Debug().
+		Msgf("counting packages v2 from proxy for registry: %s, searchTerm: %s",
+			info.RegIdentifier, searchTerm)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return 0, err
 	}
 
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return 0, err
 	}
 
-	// Use the adapter's CountPackageV2 method directly
 	count, err = helper.CountPackageV2(ctx, searchTerm)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to count packages v2 from remote for registry: %s, searchTerm: %s",
+				info.RegIdentifier, searchTerm)
 		return 0, err
 	}
 
+	log.Ctx(ctx).Info().
+		Msgf("packages v2 count: %d from proxy for registry: %s, searchTerm: %s",
+			count, info.RegIdentifier, searchTerm)
 	return count, nil
 }
 
@@ -169,24 +211,35 @@ func (r *proxy) SearchPackageV2(
 	ctx context.Context, info nugettype.ArtifactInfo,
 	searchTerm string, limit int, offset int,
 ) (*nugettype.FeedResponse, error) {
+	log.Ctx(ctx).Debug().
+		Msgf("searching packages v2 from proxy for registry: %s, searchTerm: %s, limit: %d, offset: %d",
+			info.RegIdentifier, searchTerm, limit, offset)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return &nugettype.FeedResponse{}, err
 	}
 
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return &nugettype.FeedResponse{}, err
 	}
 
 	fileReader, err := helper.SearchPackageV2(ctx, searchTerm, limit, offset)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to search packages v2 from remote for registry: %s, searchTerm: %s",
+				info.RegIdentifier, searchTerm)
 		return &nugettype.FeedResponse{}, err
 	}
 	defer fileReader.Close()
 
 	var result nugettype.FeedResponse
 	if err = xml.NewDecoder(fileReader).Decode(&result); err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to decode search v2 response for registry: %s, searchTerm: %s",
+				info.RegIdentifier, searchTerm)
 		return &nugettype.FeedResponse{}, err
 	}
 
@@ -204,7 +257,6 @@ func (r *proxy) SearchPackageV2(
 	}
 	result.Links = links
 
-	// Update each entry's content URLs to point to our proxy
 	for _, entry := range result.Entries {
 		re := regexp.MustCompile(`Version='([^']+)'`)
 		matches := re.FindStringSubmatch(entry.ID)
@@ -212,11 +264,17 @@ func (r *proxy) SearchPackageV2(
 			version := matches[1]
 			err = modifyContent(entry, packageURL, info.Image, version)
 			if err != nil {
+				log.Ctx(ctx).Error().Err(err).
+					Msgf("failed to modify content for registry: %s, image: %s, version: %s",
+						info.RegIdentifier, info.Image, version)
 				return &nugettype.FeedResponse{}, fmt.Errorf("failed to modify content: %w", err)
 			}
 		}
 	}
 
+	log.Ctx(ctx).Info().
+		Msgf("successfully searched packages v2 from proxy for registry: %s, searchTerm: %s",
+			info.RegIdentifier, searchTerm)
 	return &result, nil
 }
 
@@ -224,41 +282,47 @@ func (r *proxy) SearchPackage(
 	ctx context.Context, info nugettype.ArtifactInfo,
 	searchTerm string, limit int, offset int,
 ) (*nugettype.SearchResultResponse, error) {
+	log.Ctx(ctx).Debug().
+		Msgf("searching packages from proxy for registry: %s, searchTerm: %s, limit: %d, offset: %d",
+			info.RegIdentifier, searchTerm, limit, offset)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return nil, err
 	}
 
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return nil, err
 	}
 
-	// Use the v3 search API directly
 	fileReader, err := helper.SearchPackage(ctx, searchTerm, limit, offset)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to search packages from remote for registry: %s, searchTerm: %s",
+				info.RegIdentifier, searchTerm)
 		return nil, err
 	}
 	defer fileReader.Close()
 
-	// Parse the v3 search response directly
 	var result nugettype.SearchResultResponse
 	if err = json.NewDecoder(fileReader).Decode(&result); err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to decode search response for registry: %s, searchTerm: %s",
+				info.RegIdentifier, searchTerm)
 		return nil, err
 	}
 
-	// Update URLs in search results to point to our proxy
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 
 	for _, searchResult := range result.Data {
 		if searchResult != nil {
-			// Update RegistrationIndexURL to point to our proxy
 			if searchResult.RegistrationIndexURL != "" {
 				registrationURL := getRegistrationIndexURL(packageURL, searchResult.ID)
 				searchResult.RegistrationIndexURL = registrationURL
 			}
 
-			// Update RegistrationLeafURL in versions to point to our proxy
 			for _, version := range searchResult.Versions {
 				if version != nil && version.RegistrationLeafURL != "" {
 					registrationURL := getRegistrationIndexURL(packageURL, searchResult.ID)
@@ -268,6 +332,9 @@ func (r *proxy) SearchPackage(
 		}
 	}
 
+	log.Ctx(ctx).Info().
+		Msgf("successfully searched packages from proxy for registry: %s, searchTerm: %s",
+			info.RegIdentifier, searchTerm)
 	return &result, nil
 }
 
@@ -275,23 +342,37 @@ func (r *proxy) ListPackageVersion(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
 ) (*nugettype.PackageVersion, error) {
+	log.Ctx(ctx).Debug().
+		Msgf("listing package versions from proxy for registry: %s, image: %s",
+			info.RegIdentifier, info.Image)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return &nugettype.PackageVersion{}, err
 	}
 
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return &nugettype.PackageVersion{}, err
 	}
 	fileReader, err := helper.ListPackageVersion(ctx, info.Image)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to list package versions from remote for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return &nugettype.PackageVersion{}, err
 	}
 	var result nugettype.PackageVersion
 	if err = json.NewDecoder(fileReader).Decode(&result); err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to decode package versions for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return &nugettype.PackageVersion{}, err
 	}
+	log.Ctx(ctx).Info().
+		Msgf("successfully listed %d package versions from proxy for registry: %s, image: %s",
+			len(result.Versions), info.RegIdentifier, info.Image)
 	return &result, nil
 }
 
@@ -299,17 +380,25 @@ func (r *proxy) GetPackageMetadata(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
 ) (nugettype.RegistrationResponse, error) {
+	log.Ctx(ctx).Debug().
+		Msgf("getting package metadata from proxy for registry: %s, image: %s",
+			info.RegIdentifier, info.Image)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return &nugettype.RegistrationIndexResponse{}, err
 	}
 
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return &nugettype.RegistrationIndexResponse{}, err
 	}
 	fileReader, err := helper.GetPackageMetadata(ctx, info.Image, info.ProxyEndpoint)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to get package metadata from remote for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return &nugettype.RegistrationIndexResponse{}, err
 	}
 
@@ -318,17 +407,28 @@ func (r *proxy) GetPackageMetadata(
 	if info.ProxyEndpoint != "" {
 		metadata, err2 := parseRegistrationIndexPageResponse(fileReader)
 		if err2 != nil {
-			//todo: add handling for registration leaf
+			log.Ctx(ctx).Error().Err(err2).
+				Msgf("failed to parse registration index page response for registry: %s, image: %s",
+					info.RegIdentifier, info.Image)
 			return &nugettype.RegistrationIndexPageResponse{}, err
 		}
 		updateRegistrationIndexPageResponse(metadata, packageURL, info.Image)
+		log.Ctx(ctx).Info().
+			Msgf("successfully retrieved package metadata page from proxy for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return metadata, nil
 	}
 	metadata, err2 := parseRegistrationIndexResponse(fileReader)
 	if err2 != nil {
+		log.Ctx(ctx).Error().Err(err2).
+			Msgf("failed to parse registration index response for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return &nugettype.RegistrationIndexResponse{}, err
 	}
 	updateRegistrationIndexResponse(metadata, packageURL, info.Image)
+	log.Ctx(ctx).Info().
+		Msgf("successfully retrieved package metadata from proxy for registry: %s, image: %s",
+			info.RegIdentifier, info.Image)
 	return metadata, nil
 }
 
@@ -336,20 +436,31 @@ func (r *proxy) ListPackageVersionV2(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
 ) (*nugettype.FeedResponse, error) {
+	log.Ctx(ctx).Debug().
+		Msgf("listing package versions v2 from proxy for registry: %s, image: %s",
+			info.RegIdentifier, info.Image)
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return &nugettype.FeedResponse{}, err
 	}
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return &nugettype.FeedResponse{}, err
 	}
 	fileReader, err := helper.ListPackageVersionV2(ctx, info.Image)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to list package versions v2 from remote for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return &nugettype.FeedResponse{}, err
 	}
 	var result nugettype.FeedResponse
 	if err = xml.NewDecoder(fileReader).Decode(&result); err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to decode package versions v2 for registry: %s, image: %s",
+				info.RegIdentifier, info.Image)
 		return &nugettype.FeedResponse{}, err
 	}
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
@@ -371,11 +482,17 @@ func (r *proxy) ListPackageVersionV2(
 			version := matches[1]
 			err = modifyContent(entry, packageURL, info.Image, version)
 			if err != nil {
+				log.Ctx(ctx).Error().Err(err).
+					Msgf("failed to modify content for registry: %s, image: %s, version: %s",
+						info.RegIdentifier, info.Image, version)
 				return &nugettype.FeedResponse{}, fmt.Errorf("failed to modify content: %w", err)
 			}
 		}
 	}
 
+	log.Ctx(ctx).Info().
+		Msgf("successfully listed package versions v2 from proxy for registry: %s, image: %s",
+			info.RegIdentifier, info.Image)
 	return &result, nil
 }
 
@@ -383,29 +500,46 @@ func (r *proxy) GetPackageVersionMetadataV2(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
 ) (*nugettype.FeedEntryResponse, error) {
+	log.Ctx(ctx).Debug().
+		Msgf("getting package version metadata v2 from proxy for registry: %s, image: %s, version: %s",
+			info.RegIdentifier, info.Image, info.Version)
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	upstreamProxy, err := r.proxyStore.GetByRegistryIdentifier(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to get upstream proxy for registry: %s", info.RegIdentifier)
 		return &nugettype.FeedEntryResponse{}, err
 	}
 	helper, err := NewRemoteRegistryHelper(ctx, r.spaceFinder, *upstreamProxy, r.service)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create remote registry helper for registry: %s", info.RegIdentifier)
 		return &nugettype.FeedEntryResponse{}, err
 	}
 	fileReader, err := helper.GetPackageVersionMetadataV2(ctx, info.Image, info.Version)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to get package version metadata v2 from remote for registry: %s, image: %s, version: %s",
+				info.RegIdentifier, info.Image, info.Version)
 		return &nugettype.FeedEntryResponse{}, err
 	}
 	var result nugettype.FeedEntryResponse
 	if err = xml.NewDecoder(fileReader).Decode(&result); err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to decode package version metadata v2 for registry: %s, image: %s, version: %s",
+				info.RegIdentifier, info.Image, info.Version)
 		return &nugettype.FeedEntryResponse{}, err
 	}
 	result.XmlnsD = xmlnsDataServices
 	result.XmlnsM = xmlnsDataServicesMetadata
 	err = modifyContent(&result, packageURL, info.Image, info.Version)
 	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Msgf("failed to modify content for registry: %s, image: %s, version: %s",
+				info.RegIdentifier, info.Image, info.Version)
 		return &nugettype.FeedEntryResponse{}, fmt.Errorf("failed to modify content: %w", err)
 	}
+	log.Ctx(ctx).Info().
+		Msgf("successfully retrieved package version metadata v2 from proxy for registry: %s, image: %s, version: %s",
+			info.RegIdentifier, info.Image, info.Version)
 	return &result, nil
 }
 
@@ -461,8 +595,10 @@ func (r *proxy) GetPackageVersionMetadata(
 }
 
 func (r *proxy) GetServiceEndpoint(ctx context.Context, info nugettype.ArtifactInfo) *nugettype.ServiceEndpoint {
+	log.Ctx(ctx).Debug().Msgf("getting service endpoint for proxy registry: %s", info.RegIdentifier)
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	serviceEndpoints := buildServiceEndpoint(packageURL)
+	log.Ctx(ctx).Debug().Msgf("service endpoint built successfully for proxy registry: %s", info.RegIdentifier)
 	return serviceEndpoints
 }
 
@@ -470,12 +606,15 @@ func (r *proxy) GetServiceEndpointV2(
 	ctx context.Context,
 	info nugettype.ArtifactInfo,
 ) *nugettype.ServiceEndpointV2 {
+	log.Ctx(ctx).Debug().Msgf("getting service endpoint v2 for proxy registry: %s", info.RegIdentifier)
 	packageURL := r.urlProvider.PackageURL(ctx, info.RootIdentifier+"/"+info.RegIdentifier, "nuget")
 	serviceEndpoints := buildServiceV2Endpoint(packageURL)
+	log.Ctx(ctx).Debug().Msgf("service endpoint v2 built successfully for proxy registry: %s", info.RegIdentifier)
 	return serviceEndpoints
 }
 
-func (r *proxy) GetServiceMetadataV2(_ context.Context, _ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
+func (r *proxy) GetServiceMetadataV2(ctx context.Context, _ nugettype.ArtifactInfo) *nugettype.ServiceMetadataV2 {
+	log.Ctx(ctx).Debug().Msg("getting service metadata v2 for proxy")
 	return getServiceMetadataV2()
 }
 
