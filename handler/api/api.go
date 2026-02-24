@@ -236,6 +236,10 @@ func (s Server) Handler() http.Handler {
 				).Post("/{number}/rollback", builds.HandleRollback(s.Repos, s.Builds, s.Triggerer))
 
 				r.With(
+					acl.CheckWriteAccess(),
+				).Post("/{number}/stages/{stage}/restart", stages.HandleRestart(s.Repos, s.Builds, s.Stages, s.Steps, s.Scheduler, s.Logs))
+
+				r.With(
 					acl.CheckAdminAccess(),
 				).Post("/{number}/decline/{stage}", stages.HandleDecline(s.Repos, s.Builds, s.Stages))
 
