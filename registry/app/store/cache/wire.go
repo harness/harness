@@ -61,6 +61,14 @@ func ProvideRegRootRefCache(
 	return NewRegistryRootRefCache(appCtx, regSource, evictorRepo, registryCacheDuration)
 }
 
+func ProvideRegistryUUIDCache(
+	appCtx context.Context,
+	regSource store.RegistryRepository,
+	evictorRepo cache.Evictor[*types.Registry],
+) store.RegistryUUIDCache {
+	return NewRegistryUUIDCache(appCtx, regSource, evictorRepo, registryCacheDuration)
+}
+
 func ProvideUpstreamProxyRegistryIDCache(
 	appCtx context.Context,
 	upstreamProxySource store.UpstreamProxyConfigRepository,
@@ -74,5 +82,6 @@ var WireSet = wire.NewSet(
 	ProvideEvictorUpstreamProxy,
 	ProvideRegRootRefCache,
 	ProvideRegistryIDCache,
+	ProvideRegistryUUIDCache,
 	ProvideUpstreamProxyRegistryIDCache,
 )

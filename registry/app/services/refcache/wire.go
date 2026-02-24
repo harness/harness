@@ -26,12 +26,21 @@ import (
 func ProvideRegistryFinder(
 	registryRepository store.RegistryRepository,
 	regIDCache store.RegistryIDCache,
+	regUUIDCache store.RegistryUUIDCache,
 	regRootRefCache store.RegistryRootRefCache,
 	evictor cache.Evictor[*types.Registry],
 	spaceFinder refcache.SpaceFinder,
 	upstreamProxyFinder UpstreamProxyFinder,
 ) RegistryFinder {
-	return NewRegistryFinder(registryRepository, regIDCache, regRootRefCache, evictor, spaceFinder, upstreamProxyFinder)
+	return NewRegistryFinder(
+		registryRepository,
+		regIDCache,
+		regUUIDCache,
+		regRootRefCache,
+		evictor,
+		spaceFinder,
+		upstreamProxyFinder,
+	)
 }
 
 func ProvideUpstreamProxyFinder(

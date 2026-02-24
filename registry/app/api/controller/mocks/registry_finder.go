@@ -5,6 +5,7 @@ package mocks
 import (
 	context "context"
 
+	uuid "github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/harness/gitness/registry/types"
@@ -126,6 +127,65 @@ func (_c *RegistryFinder_FindByID_Call) Return(_a0 *types.Registry, _a1 error) *
 }
 
 func (_c *RegistryFinder_FindByID_Call) RunAndReturn(run func(context.Context, int64) (*types.Registry, error)) *RegistryFinder_FindByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindByUUID provides a mock function with given fields: ctx, repoUUID
+func (_m *RegistryFinder) FindByUUID(ctx context.Context, repoUUID uuid.UUID) (*types.Registry, error) {
+	ret := _m.Called(ctx, repoUUID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindByUUID")
+	}
+
+	var r0 *types.Registry
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*types.Registry, error)); ok {
+		return rf(ctx, repoUUID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) *types.Registry); ok {
+		r0 = rf(ctx, repoUUID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.Registry)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, repoUUID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RegistryFinder_FindByUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindByUUID'
+type RegistryFinder_FindByUUID_Call struct {
+	*mock.Call
+}
+
+// FindByUUID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - repoUUID uuid.UUID
+func (_e *RegistryFinder_Expecter) FindByUUID(ctx interface{}, repoUUID interface{}) *RegistryFinder_FindByUUID_Call {
+	return &RegistryFinder_FindByUUID_Call{Call: _e.mock.On("FindByUUID", ctx, repoUUID)}
+}
+
+func (_c *RegistryFinder_FindByUUID_Call) Run(run func(ctx context.Context, repoUUID uuid.UUID)) *RegistryFinder_FindByUUID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *RegistryFinder_FindByUUID_Call) Return(_a0 *types.Registry, _a1 error) *RegistryFinder_FindByUUID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *RegistryFinder_FindByUUID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (*types.Registry, error)) *RegistryFinder_FindByUUID_Call {
 	_c.Call.Return(run)
 	return _c
 }

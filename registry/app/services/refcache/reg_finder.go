@@ -22,11 +22,14 @@ import (
 	"github.com/harness/gitness/app/store/cache"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
+
+	"github.com/google/uuid"
 )
 
 type RegistryFinder interface {
 	MarkChanged(ctx context.Context, reg *types.Registry)
 	FindByID(ctx context.Context, repoID int64) (*types.Registry, error)
+	FindByUUID(ctx context.Context, repoUUID uuid.UUID) (*types.Registry, error)
 	FindByRootRef(ctx context.Context, rootParentRef string, regIdentifier string) (
 		*types.Registry,
 		error,
@@ -42,6 +45,7 @@ type RegistryFinder interface {
 type registryFinder struct {
 	inner               store.RegistryRepository
 	regIDCache          store.RegistryIDCache
+	regUUIDCache        store.RegistryUUIDCache
 	regRootRefCache     store.RegistryRootRefCache
 	spaceFinder         refcache.SpaceFinder
 	evictor             cache.Evictor[*types.Registry]
@@ -51,6 +55,7 @@ type registryFinder struct {
 func NewRegistryFinder(
 	registryRepository store.RegistryRepository,
 	regIDCache store.RegistryIDCache,
+	regUUIDCache store.RegistryUUIDCache,
 	regRootRefCache store.RegistryRootRefCache,
 	evictor cache.Evictor[*types.Registry],
 	spaceFinder refcache.SpaceFinder,
@@ -59,6 +64,7 @@ func NewRegistryFinder(
 	return registryFinder{
 		inner:               registryRepository,
 		regIDCache:          regIDCache,
+		regUUIDCache:        regUUIDCache,
 		regRootRefCache:     regRootRefCache,
 		evictor:             evictor,
 		spaceFinder:         spaceFinder,
@@ -80,6 +86,10 @@ func (r registryFinder) evictUpstreamProxyCache(ctx context.Context, registryID 
 
 func (r registryFinder) FindByID(ctx context.Context, repoID int64) (*types.Registry, error) {
 	return r.regIDCache.Get(ctx, repoID)
+}
+
+func (r registryFinder) FindByUUID(ctx context.Context, repoUUID uuid.UUID) (*types.Registry, error) {
+	return r.regUUIDCache.Get(ctx, repoUUID.String())
 }
 
 func (r registryFinder) FindByRootRef(ctx context.Context, rootParentRef string, regIdentifier string) (
