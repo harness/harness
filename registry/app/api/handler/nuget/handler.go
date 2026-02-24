@@ -15,6 +15,7 @@
 package nuget
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -33,6 +34,7 @@ type Handler interface {
 	UploadSymbolPackage(writer http.ResponseWriter, request *http.Request)
 	DownloadPackage(http.ResponseWriter, *http.Request)
 	DeletePackage(writer http.ResponseWriter, request *http.Request)
+	GetReadme(writer http.ResponseWriter, request *http.Request)
 	GetServiceEndpoint(http.ResponseWriter, *http.Request)
 	GetServiceEndpointV2(http.ResponseWriter, *http.Request)
 	ListPackageVersion(http.ResponseWriter, *http.Request)
@@ -91,4 +93,37 @@ func (h *handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		ProxyEndpoint: proxyEndpoint,
 		NestedPath:    strings.TrimSuffix(r.PathValue("*"), "/"),
 	}, nil
+}
+
+func (h *handler) GetReadme(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+
+	// Get artifact info from request
+	info, err := h.GetPackageArtifactInfo(request)
+	if err != nil {
+		h.HandleErrors(ctx, []error{err}, writer)
+		return
+	}
+
+	nugetInfo, ok := info.(*nugettype.ArtifactInfo)
+	if !ok {
+		h.HandleErrors(ctx, []error{fmt.Errorf("failed to fetch info from context")}, writer)
+		return
+	}
+
+	// Call controller to get readme
+	response := h.controller.GetReadme(ctx, *nugetInfo)
+	if response.Error != nil {
+		h.HandleError(ctx, writer, response.Error)
+		return
+	}
+
+	// Write response headers
+	if response.ResponseHeaders != nil {
+		response.ResponseHeaders.WriteHeadersToResponse(writer)
+	}
+
+	// Write readme content
+	writer.WriteHeader(http.StatusOK)
+	_, _ = writer.Write([]byte(response.ReadmeContent))
 }

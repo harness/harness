@@ -214,6 +214,9 @@ func NewRouter(
 				Get("/Packages(Id='{id:[^']+}',Version='{version:[^']+}')", nugetHandler.GetPackageVersionMetadataV2)
 			r.With(middleware.StoreArtifactInfo(nugetHandler)).
 				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/{id}/{version}/readme", nugetHandler.GetReadme)
+			r.With(middleware.StoreArtifactInfo(nugetHandler)).
+				With(middleware.RequestNugetPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/registration/{id}/{version}", nugetHandler.GetPackageVersionMetadata)
 		})
 

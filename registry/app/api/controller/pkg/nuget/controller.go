@@ -73,6 +73,8 @@ type Controller interface {
 	CountPackageV2(ctx context.Context, info nugettype.ArtifactInfo, searchTerm string) *EntityCountResponse
 
 	GetServiceMetadataV2(ctx context.Context, info nugettype.ArtifactInfo) *GetServiceMetadataV2Response
+
+	GetReadme(ctx context.Context, info nugettype.ArtifactInfo) *GetReadmeResponse
 }
 
 // Controller handles Python package operations.

@@ -65,6 +65,10 @@ func buildServiceEndpoint(baseURL string) *nuget.ServiceEndpoint {
 				Type: "PackageBaseAddress/3.0.0",
 			},
 			{
+				ID:   baseURL + "/{lower_id}/{lower_version}/readme",
+				Type: "ReadmeUriTemplate/6.13.0",
+			},
+			{
 				ID:   baseURL,
 				Type: "PackagePublish/2.0.0",
 			},
@@ -126,6 +130,11 @@ func getRegistrationLeafURL(baseURL, id, version string) string {
 // getPackageDownloadURL builds the download url.
 func getPackageDownloadURL(baseURL, id, version string) string {
 	return fmt.Sprintf("%s/package/%s/%s/%s.%s.nupkg", baseURL, id, version, id, version)
+}
+
+// getReadmeURL builds the readme url.
+func getReadmeURL(baseURL, id, version string) string {
+	return fmt.Sprintf("%s/%s/%s/readme", baseURL, id, version)
 }
 
 // GetPackageMetadataURL builds the package metadata url.
@@ -672,6 +681,7 @@ func createRegistrationIndexPageItem(baseURL string, info nuget.ArtifactInfo, ar
 			Tags:                     metadata.PackageMetadata.Tags,
 			Title:                    metadata.PackageMetadata.Title,
 			Published:                artifact.CreatedAt.Format(time.RFC3339),
+			ReadmeURL:                getReadmeURL(baseURL, info.Image, artifact.Version),
 		},
 	}
 	return res, nil

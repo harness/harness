@@ -60,4 +60,6 @@ type Registry interface {
 	GetServiceEndpointV2(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceEndpointV2
 
 	GetServiceMetadataV2(ctx context.Context, info nuget.ArtifactInfo) *nuget.ServiceMetadataV2
+
+	GetReadme(ctx context.Context, info nuget.ArtifactInfo) (string, error)
 }

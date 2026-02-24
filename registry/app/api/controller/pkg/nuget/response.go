@@ -107,3 +107,8 @@ type GetPackageVersionMetadataResponse struct {
 	BaseResponse
 	RegistrationLeafResponse *nuget.RegistrationLeafResponse
 }
+
+type GetReadmeResponse struct {
+	BaseResponse
+	ReadmeContent string
+}

@@ -517,6 +517,14 @@ func (r *proxy) GetPackageTypes() []artifact.PackageType {
 	return []artifact.PackageType{artifact.PackageTypeNUGET}
 }
 
+func (r *proxy) GetReadme(
+	ctx context.Context,
+	_ nugettype.ArtifactInfo,
+) (string, error) {
+	log.Error().Ctx(ctx).Msg("Not implemented")
+	return "", errcode.ErrCodeInvalidRequest.WithDetail(fmt.Errorf("not implemented"))
+}
+
 func (r *proxy) putFileToLocal(
 	ctx context.Context, info *nugettype.ArtifactInfo,
 	remote RemoteRegistryHelper,

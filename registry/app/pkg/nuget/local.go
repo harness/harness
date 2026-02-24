@@ -16,6 +16,7 @@ package nuget
 
 import (
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -331,7 +332,7 @@ func (c *localRegistry) buildMetadata(fileReader io.Reader) (metadata nugetmetad
 			if err != nil {
 				return metadata, fmt.Errorf("failed to parse metadata from .nuspec file: %w", err2)
 			}
-		} else if strings.HasSuffix(header.Name, "README.md") {
+		} else if strings.HasSuffix(strings.ToLower(header.Name), "readme.md") {
 			readme, err2 = c.parseReadme(zr)
 			if err2 != nil {
 				return metadata, fmt.Errorf("failed to parse metadata from README.md file: %w", err2)
@@ -446,4 +447,31 @@ func (c *localRegistry) GetArtifactType() apicontract.RegistryType {
 
 func (c *localRegistry) GetPackageTypes() []apicontract.PackageType {
 	return []apicontract.PackageType{apicontract.PackageTypeNUGET}
+}
+
+func (c *localRegistry) GetReadme(
+	ctx context.Context,
+	info nugettype.ArtifactInfo,
+) (string, error) {
+	image, err := c.imageDao.GetByName(ctx, info.RegistryID, info.Image)
+	if err != nil {
+		return "", fmt.Errorf("failed to get image: %w", err)
+	}
+
+	artifact, err := c.artifactDao.GetByName(ctx, image.ID, info.Version)
+	if err != nil {
+		return "", fmt.Errorf("failed to get artifact: %w", err)
+	}
+
+	var metadata nugetmetadata.NugetMetadata
+	if err := json.Unmarshal(artifact.Metadata, &metadata); err != nil {
+		return "", fmt.Errorf("failed to unmarshal metadata: %w", err)
+	}
+
+	readmeContent := metadata.Metadata.PackageMetadata.Readme
+	if readmeContent == "" {
+		return "", fmt.Errorf("readme not found for package %s version %s", info.Image, info.Version)
+	}
+
+	return readmeContent, nil
 }

@@ -373,6 +373,8 @@ type CatalogEntry struct {
 	Tags       string `json:"tags,omitempty"`
 	Title      string `json:"title,omitempty"`
 	Published  string `json:"published,omitempty"`
+	//nolint: tagliatelle
+	ReadmeURL string `json:"readmeUrl,omitempty"`
 }
 
 // https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#package-dependency-group
