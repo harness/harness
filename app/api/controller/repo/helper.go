@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
+	gitnessstore "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -127,16 +128,20 @@ func GetRepoOutput(
 		return nil, fmt.Errorf("failed to check if repo is public: %w", err)
 	}
 
+	repoClone := *repo
+
 	var upstreamRepo *types.RepositoryCore
 	if repo.ForkID != 0 {
 		upstreamRepo, err = repoFinder.FindByID(ctx, repo.ForkID)
-		if err != nil {
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) {
+			repoClone.ForkID = 0
+		} else if err != nil {
 			return nil, fmt.Errorf("failed to find repo fork %d: %w", repo.ForkID, err)
 		}
 	}
 
 	return &RepositoryOutput{
-		Repository: *repo,
+		Repository: repoClone,
 		IsPublic:   isPublic,
 		Importing:  slices.Contains(importingStates, repo.State),
 		Archived:   repo.State == enum.RepoStateArchived,
