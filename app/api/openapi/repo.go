@@ -1515,7 +1515,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		repoRequest
 		repo.CreateForkInput
 	}{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&opForkCreate, new(repo.RepositoryOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opForkCreate, new(repo.RepositoryOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opForkCreate, new(usererror.Error), http.StatusUnauthorized)
