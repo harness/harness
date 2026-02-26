@@ -41,12 +41,17 @@ func HandleForkSync(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		result, err := repoCtrl.ForkSync(ctx, session, repoRef, in)
+		resultMerge, resultConflict, err := repoCtrl.ForkSync(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, result)
+		if resultConflict != nil {
+			render.JSON(w, http.StatusConflict, resultConflict)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, resultMerge)
 	}
 }
