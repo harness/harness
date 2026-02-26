@@ -217,7 +217,7 @@ func (p *provider) GenerateGITCloneSSHURL(_ context.Context, repoPath string) st
 
 func (p *provider) GenerateUIBuildURL(_ context.Context, repoPath, pipelineIdentifier string, seqNumber int64) string {
 	return p.uiURL.JoinPath(
-		repoPath, "pipelines",
+		repoPath, "-", "pipelines",
 		pipelineIdentifier, "execution", strconv.Itoa(int(seqNumber)),
 	).String()
 }
@@ -227,15 +227,15 @@ func (p *provider) GenerateUIRepoURL(_ context.Context, repoPath string) string 
 }
 
 func (p *provider) GenerateUIPRURL(_ context.Context, repoPath string, prID int64) string {
-	return p.uiURL.JoinPath(repoPath, "pulls", fmt.Sprint(prID)).String()
+	return p.uiURL.JoinPath(repoPath, "-", "pulls", fmt.Sprint(prID)).String()
 }
 
 func (p *provider) GenerateUICompareURL(_ context.Context, repoPath string, ref1 string, ref2 string) string {
-	return p.uiURL.JoinPath(repoPath, "pulls/compare", ref1+"..."+ref2).String()
+	return p.uiURL.JoinPath(repoPath, "-", "pulls/compare", ref1+"..."+ref2).String()
 }
 
 func (p *provider) GenerateUIRefURL(_ context.Context, repoPath string, ref string) string {
-	return p.uiURL.JoinPath(repoPath, "commit", ref).String()
+	return p.uiURL.JoinPath(repoPath, "-", "commit", ref).String()
 }
 
 func (p *provider) GetAPIHostname(context.Context) string {
