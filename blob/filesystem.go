@@ -102,3 +102,33 @@ func (c *FileSystemStore) Download(_ context.Context, filePath string) (io.ReadC
 	}
 	return io.ReadCloser(file), nil
 }
+
+func (c *FileSystemStore) Move(_ context.Context, srcPath, dstPath string) error {
+	srcDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, srcPath)
+	dstDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, dstPath)
+
+	// Ensure destination directory exists
+	dstDir, _ := path.Split(dstDiskPath)
+	if _, err := os.Stat(dstDir); errors.Is(err, fs.ErrNotExist) {
+		if err = os.MkdirAll(dstDir, os.ModeDir|os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create destination directory: %w", err)
+		}
+	}
+
+	if err := os.Rename(srcDiskPath, dstDiskPath); err != nil {
+		return fmt.Errorf("failed to move file: %w", err)
+	}
+	return nil
+}
+
+func (c *FileSystemStore) Delete(_ context.Context, filePath string) error {
+	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
+
+	if err := os.Remove(fileDiskPath); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("failed to delete file: %w", err)
+	}
+	return nil
+}

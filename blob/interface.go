@@ -35,4 +35,10 @@ type Store interface {
 
 	// Download returns a reader for a file in the blob store.
 	Download(ctx context.Context, filePath string) (io.ReadCloser, error)
+
+	// Move moves a file from srcPath to dstPath within the blob store.
+	Move(ctx context.Context, srcPath, dstPath string) error
+
+	// Delete removes a file from the blob store.
+	Delete(ctx context.Context, filePath string) error
 }

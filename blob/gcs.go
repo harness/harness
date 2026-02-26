@@ -163,6 +163,47 @@ func (c *GCSStore) Download(ctx context.Context, filePath string) (io.ReadCloser
 	return rc, nil
 }
 
+func (c *GCSStore) Move(ctx context.Context, srcPath, dstPath string) error {
+	gcsClient, err := c.getClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve latest client: %w", err)
+	}
+
+	bkt := gcsClient.Bucket(c.config.Bucket)
+	srcObj := bkt.Object(srcPath)
+	dstObj := bkt.Object(dstPath)
+
+	if _, err := dstObj.CopierFrom(srcObj).Run(ctx); err != nil {
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("failed to copy file from %q to %q: %w", srcPath, dstPath, err)
+	}
+
+	if err := srcObj.Delete(ctx); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf(
+			"failed to delete source file %q after successful copy to %q", srcPath, dstPath)
+	}
+
+	return nil
+}
+
+func (c *GCSStore) Delete(ctx context.Context, filePath string) error {
+	gcsClient, err := c.getClient(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve latest client: %w", err)
+	}
+
+	bkt := gcsClient.Bucket(c.config.Bucket)
+	if err := bkt.Object(filePath).Delete(ctx); err != nil {
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("failed to delete file %q: %w", filePath, err)
+	}
+	return nil
+}
+
 func createNewImpersonatedClient(ctx context.Context, cfg Config) (*storage.Client, error) {
 	// Use workload identity impersonation default credentials (GKE environment)
 	ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{

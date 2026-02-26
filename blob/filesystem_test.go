@@ -371,3 +371,164 @@ func TestFileSystemStore_Interface(t *testing.T) {
 
 	_ = store
 }
+
+func TestFileSystemStore_Move(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "blob-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	store := &FileSystemStore{basePath: tempDir}
+	ctx := context.Background()
+
+	tests := []struct {
+		name        string
+		srcPath     string
+		dstPath     string
+		content     string
+		expectError bool
+		errorType   error
+	}{
+		{
+			name:        "move file same directory",
+			srcPath:     "src.txt",
+			dstPath:     "dst.txt",
+			content:     "test content",
+			expectError: false,
+		},
+		{
+			name:        "move file to nested directory",
+			srcPath:     "src2.txt",
+			dstPath:     "nested/dir/dst2.txt",
+			content:     "nested content",
+			expectError: false,
+		},
+		{
+			name:        "move non-existent file",
+			srcPath:     "nonexistent.txt",
+			dstPath:     "dst.txt",
+			content:     "",
+			expectError: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Setup: create source file if content is provided
+			if test.content != "" {
+				srcFullPath := filepath.Join(tempDir, test.srcPath)
+				if err := os.WriteFile(srcFullPath, []byte(test.content), 0600); err != nil {
+					t.Fatalf("failed to create source file: %v", err)
+				}
+			}
+
+			err := store.Move(ctx, test.srcPath, test.dstPath)
+
+			if test.expectError {
+				if err == nil {
+					t.Error("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			// Verify source file no longer exists
+			srcFullPath := filepath.Join(tempDir, test.srcPath)
+			if _, err := os.Stat(srcFullPath); !os.IsNotExist(err) {
+				t.Error("source file should not exist after move")
+			}
+
+			// Verify destination file exists with correct content
+			dstFullPath := filepath.Join(tempDir, test.dstPath)
+			data, err := os.ReadFile(dstFullPath)
+			if err != nil {
+				t.Fatalf("failed to read destination file: %v", err)
+			}
+
+			if string(data) != test.content {
+				t.Errorf("expected content %q, got %q", test.content, string(data))
+			}
+		})
+	}
+}
+
+func TestFileSystemStore_Delete(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "blob-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	store := &FileSystemStore{basePath: tempDir}
+	ctx := context.Background()
+
+	tests := []struct {
+		name        string
+		filePath    string
+		content     string
+		expectError bool
+		errorType   error
+	}{
+		{
+			name:        "delete existing file",
+			filePath:    "to-delete.txt",
+			content:     "delete me",
+			expectError: false,
+		},
+		{
+			name:        "delete nested file",
+			filePath:    "nested/to-delete.txt",
+			content:     "delete nested",
+			expectError: false,
+		},
+		{
+			name:        "delete non-existent file",
+			filePath:    "nonexistent.txt",
+			content:     "",
+			expectError: true,
+			errorType:   ErrNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// Setup: create file if content is provided
+			if test.content != "" {
+				fullPath := filepath.Join(tempDir, test.filePath)
+				dir := filepath.Dir(fullPath)
+				if err := os.MkdirAll(dir, 0755); err != nil {
+					t.Fatalf("failed to create directory: %v", err)
+				}
+				if err := os.WriteFile(fullPath, []byte(test.content), 0600); err != nil {
+					t.Fatalf("failed to create test file: %v", err)
+				}
+			}
+
+			err := store.Delete(ctx, test.filePath)
+
+			if test.expectError {
+				if err == nil {
+					t.Error("expected error but got none")
+				}
+				if test.errorType != nil && !errors.Is(err, test.errorType) {
+					t.Errorf("expected error type %v, got %v", test.errorType, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			// Verify file no longer exists
+			fullPath := filepath.Join(tempDir, test.filePath)
+			if _, err := os.Stat(fullPath); !os.IsNotExist(err) {
+				t.Error("file should not exist after delete")
+			}
+		})
+	}
+}

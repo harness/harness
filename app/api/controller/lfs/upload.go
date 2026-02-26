@@ -15,25 +15,58 @@
 package lfs
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+)
+
+const (
+	lfsTempPathFormat = "lfs/tmp/%s"
 )
 
 type UploadOut struct {
-	ObjectPath string `json:"object_path"`
+	ObjectPath string `json:"object_path"` //nolint:tagliatelle
+}
+
+// hashingReader wraps an io.Reader and calculates a hash while reading.
+type hashingReader struct {
+	reader io.Reader
+	hasher hash.Hash
+}
+
+func newHashingReader(r io.Reader) *hashingReader {
+	return &hashingReader{
+		reader: r,
+		hasher: sha256.New(),
+	}
+}
+
+func (h *hashingReader) Read(p []byte) (int, error) {
+	n, err := h.reader.Read(p)
+	if n > 0 {
+		h.hasher.Write(p[:n])
+	}
+	return n, err
+}
+
+func (h *hashingReader) Sum() string {
+	return hex.EncodeToString(h.hasher.Sum(nil))
 }
 
 func (c *Controller) Upload(ctx context.Context,
@@ -61,28 +94,43 @@ func (c *Controller) Upload(ctx context.Context,
 		return nil, usererror.Conflict("LFS object already exists and cannot be modified")
 	}
 
-	limitedReader := io.LimitReader(file, pointer.Size)
-	content, err := io.ReadAll(limitedReader)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read uploaded content: %w", err)
-	}
-
-	hasher := sha256.New()
-	hasher.Write(content)
-	calculatedHash := hex.EncodeToString(hasher.Sum(nil))
-
 	expectedHash := strings.TrimPrefix(pointer.OId, "sha256:")
 
+	// Generate a unique temp path for staging the upload
+	tempPath := fmt.Sprintf(lfsTempPathFormat, uuid.NewString())
+	finalPath := getLFSObjectPath(pointer.OId)
+
+	// Stream the content to temp path while calculating hash
+	limitedReader := io.LimitReader(file, pointer.Size)
+	hashReader := newHashingReader(limitedReader)
+
+	err = c.blobStore.Upload(ctx, hashReader, tempPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to upload file to temp path: %w", err)
+	}
+
+	calculatedHash := hashReader.Sum()
 	if calculatedHash != expectedHash {
+		if deleteErr := c.blobStore.Delete(ctx, tempPath); deleteErr != nil {
+			if !errors.Is(deleteErr, blob.ErrNotFound) {
+				log.Ctx(ctx).Warn().Err(deleteErr).
+					Str("temp_path", tempPath).
+					Msg("failed to delete temp file after hash mismatch")
+			}
+		}
 		return nil, usererror.BadRequest("content hash doesn't match provided OID")
 	}
 
-	contentReader := bytes.NewReader(content)
-	objPath := getLFSObjectPath(pointer.OId)
-
-	err = c.blobStore.Upload(ctx, contentReader, objPath)
+	err = c.blobStore.Move(ctx, tempPath, finalPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to upload file: %w", err)
+		if deleteErr := c.blobStore.Delete(ctx, tempPath); deleteErr != nil {
+			if !errors.Is(deleteErr, blob.ErrNotFound) {
+				log.Ctx(ctx).Warn().Err(deleteErr).
+					Str("temp_path", tempPath).
+					Msg("failed to delete temp file after move failure")
+			}
+		}
+		return nil, fmt.Errorf("failed to move file to final path: %w", err)
 	}
 
 	now := time.Now()
@@ -101,6 +149,6 @@ func (c *Controller) Upload(ctx context.Context,
 	}
 
 	return &UploadOut{
-		ObjectPath: objPath,
+		ObjectPath: finalPath,
 	}, nil
 }
