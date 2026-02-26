@@ -773,6 +773,7 @@ CREATE TABLE IF NOT EXISTS cards
     FOREIGN KEY (card_id) REFERENCES steps (step_id) ON DELETE CASCADE
 );
 `
+
 var alterTableBuildsAlterColumnDeployId = `
 ALTER TABLE builds
 ALTER COLUMN build_deploy_id SET DATA TYPE BIGINT,
