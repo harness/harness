@@ -1922,9 +1922,9 @@
   integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
 "@harnessio/icons@^2.1.18":
-  version "2.1.18"
-  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.18.tgz#0e66b4ef5d92fd2dcd3c319707d78c6bbc2a087d"
-  integrity sha512-mR0XV8jAleijEUy/7+jbcA42RMOgDToE8PpsAZZbOzkGfH2c06RBW5UHPiF+TS/BRv9VgJ0RKiLJkLfos82l3w==
+  version "2.1.20"
+  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.20.tgz#e3d95107ff70f635009e87f28d61adaa64d9ebc0"
+  integrity sha512-3wtngGnVltw/Y89cmBRMQVwFO/p+lixHG/ROU/pVtTqCooBr/fiSk6uqkQLzhqde7g7W1FWbdFFdyBeKBG8k2w==
 
 "@harnessio/oats-cli@^3.0.0":
   version "3.0.0"

@@ -16,7 +16,7 @@
 
 import type { IconName } from '@harnessio/icons'
 
-import type { FeatureFlags } from '@ar/MFEAppTypes'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 import type { StringsMap } from '@ar/frameworks/strings'
 import { Parent, RepositoryPackageType } from '@ar/common/types'
 import { ThumbnailTagEnum } from '@ar/components/Tag/ThumbnailTags'
@@ -98,6 +98,7 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     value: RepositoryPackageType.CARGO,
     icon: 'rust-logo'
   },
+
   {
     label: 'repositoryTypes.go',
     value: RepositoryPackageType.GO,
@@ -125,6 +126,16 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     value: RepositoryPackageType.COMPOSER,
     icon: 'php-composer-logo',
     parent: Parent.Enterprise
+  },
+  {
+    label: 'repositoryTypes.swift',
+    value: RepositoryPackageType.SWIFT,
+    icon: 'swift-logo',
+    disabled: true,
+    featureFlag: FeatureFlags.HAR_SWIFT_PACKAGE,
+    parent: Parent.Enterprise,
+    tooltip: 'Coming Soon!',
+    tag: ThumbnailTagEnum.ComingSoon
   },
   {
     label: 'repositoryTypes.debian',

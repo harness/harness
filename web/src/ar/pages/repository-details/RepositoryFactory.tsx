@@ -29,6 +29,7 @@ import { HuggingfaceRepositoryType } from './HuggingfaceRepositoryType/Huggingfa
 import { CondaRepositoryType } from './CondaRepository/CondaRepositoryType'
 import { DartRepositoryType } from './DartRepository/DartRepositoryType'
 import { ComposerRepositoryType } from './ComposerRepository/ComposerRepositoryType'
+import { SwiftRepositoryType } from './SwiftRepository/SwiftRepositoryType'
 
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
@@ -44,3 +45,4 @@ repositoryFactory.registerStep(new HuggingfaceRepositoryType())
 repositoryFactory.registerStep(new CondaRepositoryType())
 repositoryFactory.registerStep(new DartRepositoryType())
 repositoryFactory.registerStep(new ComposerRepositoryType())
+repositoryFactory.registerStep(new SwiftRepositoryType())

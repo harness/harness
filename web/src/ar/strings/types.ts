@@ -609,6 +609,7 @@ export interface StringsMap {
   'packageTypes.package': string
   'packageTypes.pythonPackage': string
   'packageTypes.rpmPackage': string
+  'packageTypes.swiftPackage': string
   plaintext: string
   plusNewName: string
   prod: string
@@ -633,6 +634,7 @@ export interface StringsMap {
   'repositoryTypes.nuget': string
   'repositoryTypes.pypi': string
   'repositoryTypes.rpm': string
+  'repositoryTypes.swift': string
   restore: string
   retriableError: string
   save: string

@@ -67,7 +67,8 @@ export enum RepositoryPackageType {
   HUGGINGFACE = 'HUGGINGFACE',
   CONDA = 'CONDA',
   DART = 'DART',
-  COMPOSER = 'COMPOSER'
+  COMPOSER = 'COMPOSER',
+  SWIFT = 'SWIFT'
 }
 
 export enum RepositoryConfigType {

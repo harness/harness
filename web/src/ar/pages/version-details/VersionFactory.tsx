@@ -29,6 +29,7 @@ import { HuggingfaceVersionType } from './HuggingfaceVersion/HuggingfaceVersionT
 import { CondaVersionType } from './CondaVersion/CondaVersionType'
 import { DartVersionType } from './DartVersion/DartVersionType'
 import { ComposerVersionType } from './ComposerVersion/ComposerVersionType'
+import { SwiftVersionType } from './SwiftVersion/SwiftVersionType'
 
 versionFactory.registerStep(new DockerVersionType())
 versionFactory.registerStep(new HelmVersionType())
@@ -44,3 +45,4 @@ versionFactory.registerStep(new HuggingfaceVersionType())
 versionFactory.registerStep(new CondaVersionType())
 versionFactory.registerStep(new DartVersionType())
 versionFactory.registerStep(new ComposerVersionType())
+versionFactory.registerStep(new SwiftVersionType())

@@ -112,6 +112,7 @@ packageTypes:
   nugetPackage: NuGet Package
   rpmPackage: RPM Package
   cargoPackage: Cargo Package
+  swiftPackage: Swift Package
   goPackage: Go Package
   huggingfacePackage: Huggingface Package
   condaPackage: Conda Package
@@ -130,6 +131,7 @@ repositoryTypes:
   go: Go
   debian: Debian
   cargo: Cargo
+  swift: Swift
   alpine: Alpine
   huggingface: Huggingface
   conda: Conda
