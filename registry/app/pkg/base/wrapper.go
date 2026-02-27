@@ -210,6 +210,11 @@ func GetArtifactRegistry(registry registrytypes.Registry) pkg.Artifact {
 	return factory(key)
 }
 
+func GetRegistry(packageType artifact.PackageType, registryType artifact.RegistryType) pkg.Artifact {
+	key := getFactoryKey(packageType, registryType)
+	return factory(key)
+}
+
 func filterRegs(
 	ctx context.Context,
 	registryDao store.RegistryRepository,

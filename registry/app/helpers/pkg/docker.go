@@ -72,6 +72,10 @@ func (c *dockerPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *dockerPackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *dockerPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

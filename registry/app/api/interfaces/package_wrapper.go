@@ -22,6 +22,7 @@ import (
 )
 
 type PackageWrapper interface {
+	IsFileOperationSupported(packageType string) bool
 	IsValidPackageType(packageType string) bool
 	IsValidPackageTypes(packageTypes []string) bool
 	IsValidRepoType(repoType string) bool

@@ -64,6 +64,10 @@ func (c *rpmPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *rpmPackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *rpmPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

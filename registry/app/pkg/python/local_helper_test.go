@@ -98,6 +98,11 @@ func (m *MockLocalBase) ExistsE(
 	return args.Get(0).(*commons.ResponseHeaders), args.Error(1)
 }
 
+func (m *MockLocalBase) ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error) {
+	args := m.Called(ctx, registryID, filePath)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockLocalBase) DeleteFile(
 	ctx context.Context,
 	info pkg.PackageArtifactInfo,
@@ -140,11 +145,6 @@ func (m *MockLocalBase) Exists(ctx context.Context, info pkg.ArtifactInfo, path 
 	return args.Bool(0)
 }
 
-func (m *MockLocalBase) ExistsByFilePath(ctx context.Context, registryID int64, filePath string) (bool, error) {
-	args := m.Called(ctx, registryID, filePath)
-	return args.Bool(0), args.Error(1)
-}
-
 func (m *MockLocalBase) Download(ctx context.Context, info pkg.ArtifactInfo, version, filename string) (
 	*commons.ResponseHeaders, *storage.FileReader, string, error,
 ) {
@@ -169,6 +169,29 @@ func (m *MockLocalBase) UploadFile(
 ) (*commons.ResponseHeaders, string, error) {
 	args := m.Called(ctx, info, filename, version, path, file, metadata)
 	return args.Get(0).(*commons.ResponseHeaders), args.String(1), args.Error(2) //nolint:errcheck
+}
+
+func (m *MockLocalBase) UploadRawFile(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	filePath string,
+	file io.ReadCloser,
+	failOnConflict bool,
+) (*commons.ResponseHeaders, string, error) {
+	args := m.Called(ctx, info, filePath, file, failOnConflict)
+	//nolint:errcheck
+	return args.Get(0).(*commons.ResponseHeaders), args.String(1), args.Error(2)
+}
+
+func (m *MockLocalBase) DownloadRawFile(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	filePath string,
+) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+	args := m.Called(ctx, info, filePath)
+	//nolint:errcheck
+	return args.Get(0).(*commons.ResponseHeaders), args.Get(1).(*storage.FileReader),
+		args.String(2), args.Error(3)
 }
 
 func (m *MockLocalBase) MoveMultipleTempFilesAndCreateArtifact(

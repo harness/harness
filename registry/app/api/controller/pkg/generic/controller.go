@@ -59,6 +59,7 @@ type Controller struct {
 	quarantineFinder          quarantine.Finder
 	dependencyFirewallChecker interfaces.DependencyFirewallChecker
 	auditService              audit.Service
+	packageWrapper            interfaces.PackageWrapper
 }
 
 type DBStore struct {
@@ -82,6 +83,7 @@ func NewController(
 	quarantineFinder quarantine.Finder,
 	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 	auditService audit.Service,
+	packageWrapper interfaces.PackageWrapper,
 ) *Controller {
 	return &Controller{
 		SpaceStore:                spaceStore,
@@ -95,6 +97,7 @@ func NewController(
 		quarantineFinder:          quarantineFinder,
 		dependencyFirewallChecker: dependencyFirewallChecker,
 		auditService:              auditService,
+		packageWrapper:            packageWrapper,
 	}
 }
 

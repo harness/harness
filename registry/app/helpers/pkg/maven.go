@@ -68,6 +68,10 @@ func (c *mavenPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *mavenPackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *mavenPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

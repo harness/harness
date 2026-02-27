@@ -68,6 +68,10 @@ func (c *npmPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *npmPackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *npmPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

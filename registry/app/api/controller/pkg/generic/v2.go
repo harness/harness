@@ -19,9 +19,10 @@ import (
 	"fmt"
 	"io"
 
+	artifact2 "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
-	generic2 "github.com/harness/gitness/registry/app/pkg/generic"
+	genericpkg "github.com/harness/gitness/registry/app/pkg/generic"
 	"github.com/harness/gitness/registry/app/pkg/response"
 	"github.com/harness/gitness/registry/app/pkg/types/generic"
 	registrytypes "github.com/harness/gitness/registry/types"
@@ -34,14 +35,18 @@ func (c Controller) DownloadFile(
 ) *GetArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.UpdateRegistryInfo(registry)
-		genericRegistry, ok := a.(generic2.Registry)
-		if !ok {
+
+		// Check if file operations are supported for this package type
+		if !c.packageWrapper.IsFileOperationSupported(string(registry.PackageType)) {
 			return &GetArtifactResponse{
 				BaseResponse: BaseResponse{
-					Error: fmt.Errorf("invalid registry type: expected generic.Registry, got %T", a),
+					Error: fmt.Errorf("file operations not supported for package type: %s", registry.PackageType),
 				},
 			}
 		}
+
+		//nolint:errcheck
+		genericRegistry := base.GetRegistry(artifact2.PackageTypeGENERIC, registry.Type).(genericpkg.Registry)
 		headers, fileReader, readCloser, redirectURL, err := genericRegistry.DownloadFile(ctx, info, filePath)
 		return &GetArtifactResponse{
 			BaseResponse: BaseResponse{
@@ -89,14 +94,18 @@ func (c Controller) HeadFile(
 ) *HeadArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.UpdateRegistryInfo(registry)
-		genericRegistry, ok := a.(generic2.Registry)
-		if !ok {
+
+		// Check if file operations are supported for this package type
+		if !c.packageWrapper.IsFileOperationSupported(string(registry.PackageType)) {
 			return &HeadArtifactResponse{
 				BaseResponse: BaseResponse{
-					Error: fmt.Errorf("invalid registry type: expected generic.Registry, got %T", a),
+					Error: fmt.Errorf("file operations not supported for package type: %s", registry.PackageType),
 				},
 			}
 		}
+
+		//nolint:errcheck
+		genericRegistry := base.GetRegistry(artifact2.PackageTypeGENERIC, registry.Type).(genericpkg.Registry)
 		headers, err := genericRegistry.HeadFile(ctx, info, filePath)
 		return &HeadArtifactResponse{
 			BaseResponse: BaseResponse{
@@ -128,14 +137,18 @@ func (c Controller) HeadFile(
 func (c Controller) DeleteFile(ctx context.Context, info generic.ArtifactInfo) *DeleteArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.UpdateRegistryInfo(registry)
-		genericRegistry, ok := a.(generic2.Registry)
-		if !ok {
+
+		// Check if file operations are supported for this package type
+		if !c.packageWrapper.IsFileOperationSupported(string(registry.PackageType)) {
 			return &DeleteArtifactResponse{
 				BaseResponse: BaseResponse{
-					Error: fmt.Errorf("invalid registry type: expected generic.Registry, got %T", a),
+					Error: fmt.Errorf("file operations not supported for package type: %s", registry.PackageType),
 				},
 			}
 		}
+
+		//nolint:errcheck
+		genericRegistry := base.GetRegistry(artifact2.PackageTypeGENERIC, registry.Type).(genericpkg.Registry)
 		headers, err := genericRegistry.DeleteFile(ctx, info)
 		return &DeleteArtifactResponse{
 			BaseResponse: BaseResponse{
@@ -172,14 +185,18 @@ func (c Controller) PutFile(
 ) *PutArtifactResponse {
 	f := func(registry registrytypes.Registry, a pkg.Artifact) response.Response {
 		info.UpdateRegistryInfo(registry)
-		genericRegistry, ok := a.(generic2.Registry)
-		if !ok {
+
+		// Check if file operations are supported for this package type
+		if !c.packageWrapper.IsFileOperationSupported(string(registry.PackageType)) {
 			return &PutArtifactResponse{
 				BaseResponse: BaseResponse{
-					Error: fmt.Errorf("invalid registry type: expected generic.Registry, got %T", a),
+					Error: fmt.Errorf("file operations not supported for package type: %s", registry.PackageType),
 				},
 			}
 		}
+
+		//nolint:errcheck
+		genericRegistry := base.GetRegistry(artifact2.PackageTypeGENERIC, registry.Type).(genericpkg.Registry)
 		headers, sha256, err := genericRegistry.PutFile(ctx, info, reader, contentType)
 		return &PutArtifactResponse{
 			BaseResponse: BaseResponse{

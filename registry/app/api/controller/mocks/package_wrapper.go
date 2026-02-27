@@ -1070,6 +1070,57 @@ func (_c *MockPackageWrapper_IsValidUpstreamSources_Call) RunAndReturn(run func(
 	return _c
 }
 
+// IsFileOperationSupported provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) IsFileOperationSupported(packageType string) bool {
+	ret := _mock.Called(packageType)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsFileOperationSupported")
+	}
+
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = returnFunc(packageType)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	return r0
+}
+
+// MockPackageWrapper_IsFileOperationSupported_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsFileOperationSupported'
+type MockPackageWrapper_IsFileOperationSupported_Call struct {
+	*mock.Call
+}
+
+// IsFileOperationSupported is a helper method to define mock.On call
+//   - packageType string
+func (_e *MockPackageWrapper_Expecter) IsFileOperationSupported(packageType interface{}) *MockPackageWrapper_IsFileOperationSupported_Call {
+	return &MockPackageWrapper_IsFileOperationSupported_Call{Call: _e.mock.On("IsFileOperationSupported", packageType)}
+}
+
+func (_c *MockPackageWrapper_IsFileOperationSupported_Call) Run(run func(packageType string)) *MockPackageWrapper_IsFileOperationSupported_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_IsFileOperationSupported_Call) Return(b bool) *MockPackageWrapper_IsFileOperationSupported_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockPackageWrapper_IsFileOperationSupported_Call) RunAndReturn(run func(packageType string) bool) *MockPackageWrapper_IsFileOperationSupported_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ValidateRepoType provides a mock function for the type MockPackageWrapper
 func (_mock *MockPackageWrapper) ValidateRepoType(packageType string, repoType string) bool {
 	ret := _mock.Called(packageType, repoType)

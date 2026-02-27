@@ -63,6 +63,10 @@ func (c *genericPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *genericPackageType) IsFileOperationSupported() bool {
+	return true
+}
+
 func (c *genericPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

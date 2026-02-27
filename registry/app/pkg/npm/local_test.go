@@ -199,6 +199,24 @@ func (m *mockLocalBase) AuditPush(
 	}
 }
 
+func (m *mockLocalBase) UploadRawFile(
+	context.Context,
+	pkg.ArtifactInfo,
+	string,
+	io.ReadCloser,
+	bool,
+) (*commons.ResponseHeaders, string, error) {
+	panic("not implemented in tests")
+}
+
+func (m *mockLocalBase) DownloadRawFile(
+	context.Context,
+	pkg.ArtifactInfo,
+	string,
+) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+	panic("not implemented in tests")
+}
+
 type mockTagsDAO struct {
 	findByImageNameAndRegID func(
 		ctx context.Context,

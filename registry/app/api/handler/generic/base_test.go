@@ -399,3 +399,107 @@ func TestValidateFilePathRegexPattern(t *testing.T) {
 		})
 	}
 }
+
+// Test helpers for URL path parsing
+
+type urlPathTest struct {
+	name         string
+	urlPath      string
+	wantSegments []string
+	wantPackage  string
+	wantVersion  string
+	wantFileName string
+	wantFilePath string
+	isGeneric    bool
+}
+
+func validateGenericPackageSegments(t *testing.T, segments []string, tt urlPathTest) {
+	t.Helper()
+	if len(segments) < 3 {
+		t.Errorf("GENERIC package needs at least 3 segments")
+		return
+	}
+
+	packageName := segments[0]
+	version := segments[1]
+	fileName := segments[len(segments)-1]
+	filePath := strings.Join(segments[2:], "/")
+
+	if packageName != tt.wantPackage {
+		t.Errorf("Expected package=%s, got %s", tt.wantPackage, packageName)
+	}
+	if version != tt.wantVersion {
+		t.Errorf("Expected version=%s, got %s", tt.wantVersion, version)
+	}
+	if fileName != tt.wantFileName {
+		t.Errorf("Expected fileName=%s, got %s", tt.wantFileName, fileName)
+	}
+	if filePath != tt.wantFilePath {
+		t.Errorf("Expected filePath=%s, got %s", tt.wantFilePath, filePath)
+	}
+}
+
+func validateNonGenericPackageSegments(t *testing.T, segments []string, tt urlPathTest) {
+	t.Helper()
+	fileName := segments[len(segments)-1]
+	filePath := strings.Join(segments, "/")
+
+	if fileName != tt.wantFileName {
+		t.Errorf("Expected fileName=%s, got %s", tt.wantFileName, fileName)
+	}
+	if filePath != tt.wantFilePath {
+		t.Errorf("Expected filePath=%s, got %s", tt.wantFilePath, filePath)
+	}
+}
+
+func TestURLPathParsing(t *testing.T) {
+	tests := []urlPathTest{
+		{
+			name:         "GENERIC package - simple",
+			urlPath:      "/pkg/root/registry/files/mypackage/1.0.0/file.jar",
+			wantSegments: []string{"mypackage", "1.0.0", "file.jar"},
+			wantPackage:  "mypackage",
+			wantVersion:  "1.0.0",
+			wantFileName: "file.jar",
+			wantFilePath: "file.jar",
+			isGeneric:    true,
+		},
+		{
+			name:         "GENERIC package - nested path",
+			urlPath:      "/pkg/root/registry/files/org.example/2.0.0/sub/dir/file.jar",
+			wantSegments: []string{"org.example", "2.0.0", "sub", "dir", "file.jar"},
+			wantPackage:  "org.example",
+			wantVersion:  "2.0.0",
+			wantFileName: "file.jar",
+			wantFilePath: "sub/dir/file.jar",
+			isGeneric:    true,
+		},
+		{
+			name:         "non-GENERIC package - MAVEN",
+			urlPath:      "/pkg/root/registry/files/org/example/lib/1.0/file.jar",
+			wantSegments: []string{"org", "example", "lib", "1.0", "file.jar"},
+			wantFileName: "file.jar",
+			wantFilePath: "org/example/lib/1.0/file.jar",
+			isGeneric:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := strings.TrimPrefix(tt.urlPath, "/")
+			splits := strings.Split(path, "/")
+			// splits[0] = "pkg", splits[1] = root, splits[2] = registry, splits[3] = "files"
+			remainingSegments := splits[4:]
+
+			if len(remainingSegments) != len(tt.wantSegments) {
+				t.Errorf("Expected %d segments, got %d", len(tt.wantSegments), len(remainingSegments))
+			}
+
+			if tt.isGeneric {
+				validateGenericPackageSegments(t, remainingSegments, tt)
+			} else {
+				validateNonGenericPackageSegments(t, remainingSegments, tt)
+			}
+		})
+	}
+}

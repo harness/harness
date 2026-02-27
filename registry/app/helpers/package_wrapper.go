@@ -45,6 +45,17 @@ func (p *packageWrapper) GetPackage(packageType string) interfaces.PackageHelper
 	return p.packageFactory.Get(packageType)
 }
 
+func (p *packageWrapper) IsFileOperationSupported(packageType string) bool {
+	if packageType == "" {
+		return false
+	}
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return false
+	}
+	return pkg.IsFileOperationSupported()
+}
+
 func (p *packageWrapper) IsValidPackageType(packageType string) bool {
 	if packageType == "" {
 		return true

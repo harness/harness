@@ -62,6 +62,10 @@ func (c *huggingFacePackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *huggingFacePackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *huggingFacePackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

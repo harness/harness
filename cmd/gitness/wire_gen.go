@@ -657,7 +657,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericLocalRegistry := generic2.LocalRegistryProvider(localBase, fileManager, upstreamProxyConfigRepository, transactor, registryRepository, imageRepository, artifactRepository, provider)
 	localRegistryHelper := generic2.LocalRegistryHelperProvider(genericLocalRegistry, localBase)
 	proxy := generic2.ProxyProvider(upstreamProxyConfigRepository, registryRepository, imageRepository, artifactRepository, fileManager, transactor, provider, spaceFinder, secretService, localRegistryHelper)
-	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor, spaceFinder, genericLocalRegistry, proxy, finder, dependencyFirewallChecker, auditService)
+	genericController := generic.ControllerProvider(spaceStore, authorizer, fileManager, genericDBStore, transactor, spaceFinder, genericLocalRegistry, proxy, finder, dependencyFirewallChecker, auditService, packageWrapper)
 	packagesHandler := api2.NewPackageHandlerProvider(registryRepository, downloadStatRepository, bandwidthStatRepository, spaceStore, tokenStore, controller, authenticator, provider, authorizer, spaceFinder, registryFinder, fileManager, finder, packageWrapper, auditService, artifactRepository)
 	genericHandler := api2.NewGenericHandlerProvider(spaceStore, genericController, tokenStore, controller, authenticator, provider, authorizer, packagesHandler, spaceFinder, registryFinder, auditService)
 	handler3 := router.GenericHandlerProvider(genericHandler)

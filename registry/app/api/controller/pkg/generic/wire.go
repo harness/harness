@@ -51,6 +51,7 @@ func ControllerProvider(
 	quarantineFinder quarantine.Finder,
 	dependencyFirewallChecker interfaces.DependencyFirewallChecker,
 	auditService audit.Service,
+	packageWrapper interfaces.PackageWrapper,
 ) *Controller {
 	return NewController(
 		spaceStore,
@@ -64,6 +65,7 @@ func ControllerProvider(
 		quarantineFinder,
 		dependencyFirewallChecker,
 		auditService,
+		packageWrapper,
 	)
 }
 

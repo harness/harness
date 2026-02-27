@@ -72,6 +72,20 @@ type LocalBase interface {
 		file io.ReadCloser,
 		metadata metadata.Metadata,
 	) (*commons.ResponseHeaders, string, error)
+	// UploadRawFile uploads a raw file to storage without creating Image/Artifact records.
+	UploadRawFile(
+		ctx context.Context,
+		info pkg.ArtifactInfo,
+		filePath string,
+		file io.ReadCloser,
+		failOnConflict bool,
+	) (*commons.ResponseHeaders, string, error)
+	// DownloadRawFile downloads a raw file from storage using the file path directly.
+	DownloadRawFile(
+		ctx context.Context,
+		info pkg.ArtifactInfo,
+		filePath string,
+	) (*commons.ResponseHeaders, *storage.FileReader, string, error)
 	UpdateFileManagerAndCreateArtifact(
 		ctx context.Context,
 		info pkg.ArtifactInfo,
@@ -185,6 +199,94 @@ func (l *localBase) Upload(
 	metadata metadata.Metadata,
 ) (*commons.ResponseHeaders, string, error) {
 	return l.uploadInternal(ctx, info, fileName, version, path, nil, file, metadata)
+}
+
+func (l *localBase) UploadRawFile(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	filePath string,
+	file io.ReadCloser,
+	failOnConflict bool,
+) (*commons.ResponseHeaders, string, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	exists, err := l.ExistsByFilePath(ctx, info.RegistryID, filePath)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Int64("registryID", info.RegistryID).
+			Str("filePath", filePath).
+			Msg("Failed to check if file exists")
+		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
+	}
+	if exists && failOnConflict {
+		log.Ctx(ctx).Warn().
+			Str("filePath", filePath).
+			Int64("registryID", info.RegistryID).
+			Msg("File already exists and failOnConflict is true")
+		return responseHeaders, "", usererror.Conflict(
+			fmt.Sprintf("File already exists at path: %s", filePath))
+	}
+	session, ok := request.AuthSessionFrom(ctx)
+	if !ok {
+		log.Ctx(ctx).Error().
+			Str("filePath", filePath).
+			Msg("Authentication required for raw file upload")
+		return responseHeaders, "", usererror.ErrUnauthorized
+	}
+	fileInfo, err := l.fileManager.UploadFile(
+		ctx,
+		filePath,
+		info.RegistryID,
+		info.RootParentID,
+		info.RootIdentifier,
+		nil, // multipart.File not available
+		file,
+		session.Principal.ID,
+	)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Str("filePath", filePath).
+			Int64("registryID", info.RegistryID).
+			Int64("principalID", session.Principal.ID).
+			Msg("Failed to upload raw file")
+		return responseHeaders, "", errcode.ErrCodeUnknown.WithDetail(err)
+	}
+
+	log.Ctx(ctx).Info().
+		Str("filePath", filePath).
+		Str("sha256", fileInfo.Sha256).
+		Int64("registryID", info.RegistryID).
+		Msg("Successfully uploaded raw file")
+	responseHeaders.Code = http.StatusCreated
+	return responseHeaders, fileInfo.Sha256, nil
+}
+
+func (l *localBase) DownloadRawFile(
+	ctx context.Context,
+	info pkg.ArtifactInfo,
+	filePath string,
+) (*commons.ResponseHeaders, *storage.FileReader, string, error) {
+	responseHeaders := &commons.ResponseHeaders{
+		Headers: make(map[string]string),
+		Code:    0,
+	}
+	fileReader, _, redirectURL, err := l.fileManager.DownloadFileByPath(ctx, filePath, info.RegistryID,
+		info.RegIdentifier, info.RootIdentifier, true)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).
+			Str("filePath", filePath).
+			Int64("registryID", info.RegistryID).
+			Msg("Failed to download raw file")
+		return responseHeaders, nil, "", err
+	}
+	log.Ctx(ctx).Info().
+		Str("filePath", filePath).
+		Int64("registryID", info.RegistryID).
+		Msg("Successfully downloaded raw file")
+	responseHeaders.Code = http.StatusOK
+	return responseHeaders, fileReader, redirectURL, nil
 }
 
 func (l *localBase) UpdateFileManagerAndCreateArtifact(

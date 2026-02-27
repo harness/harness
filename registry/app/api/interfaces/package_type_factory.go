@@ -24,6 +24,7 @@ import (
 type PackageHelper interface {
 	GetPackageType() string
 	GetPathPackageType() string
+	IsFileOperationSupported() bool
 	GetPackageURL(ctx context.Context,
 		rootIdentifier string,
 		registryIdentifier string,

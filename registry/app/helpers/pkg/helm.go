@@ -64,6 +64,10 @@ func (c *helmPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *helmPackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *helmPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

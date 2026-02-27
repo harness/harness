@@ -67,6 +67,10 @@ func (c *pythonPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *pythonPackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *pythonPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

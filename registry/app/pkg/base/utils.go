@@ -17,5 +17,8 @@ package base
 import "github.com/harness/gitness/registry/app/pkg"
 
 func GetCompletePath(info pkg.PackageArtifactInfo, filePath string) string {
+	if info.GetImage() == "" && info.GetVersion() == "" {
+		return filePath
+	}
 	return info.GetImage() + "/" + info.GetVersion() + "/" + filePath
 }

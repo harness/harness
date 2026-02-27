@@ -67,6 +67,10 @@ func (c *nugetPackageType) GetPackageType() string {
 	return c.packageType
 }
 
+func (c *nugetPackageType) IsFileOperationSupported() bool {
+	return false
+}
+
 func (c *nugetPackageType) GetPathPackageType() string {
 	return c.pathPackageType
 }

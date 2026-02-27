@@ -35,6 +35,8 @@ func (a ArtifactInfo) BaseArtifactInfo() pkg.ArtifactInfo {
 func (a ArtifactInfo) GetImageVersion() (exists bool, imageVersion string) {
 	if a.Image != "" && a.Version != "" {
 		return true, pkg.JoinWithSeparator(":", a.Image, a.Version)
+	} else if a.Image == "" && a.Version == "" {
+		return true, a.FilePath
 	}
 	return false, ""
 }
