@@ -938,10 +938,11 @@ func (d *driver) keyToPath(key string) string {
 	return "/" + strings.Trim(strings.TrimPrefix(key, d.rootDirectory), "/")
 }
 
-func (d *driver) CopyObject(ctx context.Context, srcKey, destBucket, destKey string) error {
-	src := d.bucket.Object(d.pathToKey(srcKey))
+func (d *driver) CopyObject(ctx context.Context, sourcePath, destBucket, destPath string) error {
+	srcKey, dstKey := d.pathToKey(sourcePath), d.pathToKey(destPath)
+	src := d.bucket.Object(srcKey)
 
-	dst := d.gcs.Bucket(destBucket).Object(destKey)
+	dst := d.gcs.Bucket(destBucket).Object(dstKey)
 
 	copier := dst.CopierFrom(src)
 	copier.ContentType = blobContentType
@@ -952,7 +953,7 @@ func (d *driver) CopyObject(ctx context.Context, srcKey, destBucket, destKey str
 		if errors.As(err, &status) && status.Code == http.StatusNotFound {
 			return storagedriver.PathNotFoundError{Path: srcKey}
 		}
-		return fmt.Errorf("copy %q to %q/%q: %w", srcKey, destBucket, destKey, err)
+		return fmt.Errorf("copy %q to %q/%q: %w", srcKey, destBucket, dstKey, err)
 	}
 
 	return nil
