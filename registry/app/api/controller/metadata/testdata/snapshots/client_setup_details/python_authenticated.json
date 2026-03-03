@@ -3,56 +3,170 @@
   "secHeader": "Follow these instructions to install/use Python packages from this registry.",
   "sections": [
     {
-      "header": "Configure Authentication",
+      "header": "1. Generate Identity Token",
+      "secHeader": "An identity token will serve as the password for uploading and downloading artifacts.",
       "steps": [
         {
-          "commands": [
-            {
-              "value": "[distutils]\nindex-servers = harness\n\n[harness]\nrepository = http://example.com/registry/test-registry/PYTHON\nusername = test@example.com\npassword = *see step 2*"
-            }
-          ],
-          "header": "Create or update your ~/.pypirc file with the following content:",
-          "type": "Static"
-        },
-        {
-          "header": "Generate an identity token for authentication",
+          "header": "Generate an identity token",
           "type": "GenerateToken"
         }
       ],
       "type": "INLINE"
     },
     {
-      "header": "Publish Package",
-      "steps": [
+      "tabs": [
         {
-          "commands": [
+          "header": "pip",
+          "sections": [
             {
-              "value": "python -m build"
+              "header": "2. Configure Authentication",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "[distutils]\nindex-servers = harness\n\n[harness]\nrepository = http://example.com/registry/test-registry/PYTHON\nusername = test@example.com\npassword = *see step 1*"
+                    }
+                  ],
+                  "header": "Create or update your ~/.pypirc file with the following content:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
             },
             {
-              "value": "python -m twine upload --repository harness /path/to/files/*"
-            }
-          ],
-          "header": "Build and publish your package:",
-          "type": "Static"
-        }
-      ],
-      "type": "INLINE"
-    },
-    {
-      "header": "Install Package",
-      "steps": [
-        {
-          "commands": [
+              "header": "3. Publish Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "python -m build"
+                    },
+                    {
+                      "value": "python -m twine upload --repository harness /path/to/files/*"
+                    }
+                  ],
+                  "header": "Build and publish your package:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
             {
-              "value": "pip install --index-url http://test@example.com:\u003cTOKEN\u003e@example.com/registry/test-registry/PYTHON/simple --no-deps test-artifact==v1.0.0"
+              "header": "4. Install Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "pip install --index-url http://test@example.com:\u003cTOKEN\u003e@example.com/registry/test-registry/PYTHON/simple --no-deps test-artifact==v1.0.0"
+                    }
+                  ],
+                  "header": "Install a package using pip:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
             }
-          ],
-          "header": "Install a package using pip:",
-          "type": "Static"
+          ]
+        },
+        {
+          "header": "poetry",
+          "sections": [
+            {
+              "header": "2. Configure Repository",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "poetry source add --priority=explicit harness http://test@example.com:\u003cTOKEN\u003e@example.com/registry/test-registry/PYTHON/simple/"
+                    },
+                    {
+                      "value": "poetry config http-basic.harness test@example.com \u003cidentity-token\u003e"
+                    }
+                  ],
+                  "header": "Add the registry as a source and configure authentication:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "3. Publish Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "poetry config repositories.harness http://example.com/registry/test-registry/PYTHON"
+                    },
+                    {
+                      "value": "poetry build"
+                    },
+                    {
+                      "value": "poetry publish --repository harness"
+                    }
+                  ],
+                  "header": "Configure publish repository and publish your package:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "4. Install Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "poetry add --source harness test-artifact==v1.0.0"
+                    }
+                  ],
+                  "header": "Install a package using poetry:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
+        },
+        {
+          "header": "uv",
+          "sections": [
+            {
+              "header": "2. Publish Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "uv build"
+                    },
+                    {
+                      "value": "uv publish --publish-url http://example.com/registry/test-registry/PYTHON --username test@example.com --password \u003cidentity-token\u003e"
+                    }
+                  ],
+                  "header": "Build and publish your package:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            },
+            {
+              "header": "3. Install Package",
+              "steps": [
+                {
+                  "commands": [
+                    {
+                      "value": "uv pip install --index-url http://test@example.com:\u003cTOKEN\u003e@example.com/registry/test-registry/PYTHON/simple --no-deps test-artifact==v1.0.0"
+                    }
+                  ],
+                  "header": "Install a package using uv:",
+                  "type": "Static"
+                }
+              ],
+              "type": "INLINE"
+            }
+          ]
         }
       ],
-      "type": "INLINE"
+      "type": "TABS"
     }
   ]
 }

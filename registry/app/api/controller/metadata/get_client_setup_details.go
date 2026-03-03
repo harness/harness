@@ -1671,7 +1671,7 @@ func (c *APIController) generatePythonClientSetupDetail(
 	username := session.Principal.Email
 	var clientSetupDetails artifact.ClientSetupDetails
 	if auth.IsAnonymousSession(session) {
-		clientSetupDetails = c.getAnonymousPythonClientSetupDetails(staticStepType, registryType)
+		clientSetupDetails = c.getAnonymousPythonClientSetupDetails(staticStepType)
 	} else {
 		clientSetupDetails = c.getPythonClientSetupDetails(staticStepType, generateTokenType, registryType)
 	}
@@ -1688,13 +1688,12 @@ func (c *APIController) generatePythonClientSetupDetail(
 
 func (c *APIController) getAnonymousPythonClientSetupDetails(
 	staticStepType artifact.ClientSetupStepType,
-	registryType artifact.RegistryType,
 ) artifact.ClientSetupDetails {
-	// Authentication section
-	section1 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Configure Authentication"),
+	// pip tab sections
+	pipSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Registry"),
 	}
-	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+	_ = pipSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Create or update your ~/.pypirc file with the following content:"),
@@ -1711,11 +1710,10 @@ func (c *APIController) getAnonymousPythonClientSetupDetails(
 		},
 	})
 
-	// Install section
-	section3 := artifact.ClientSetupSection{
+	pipSection2 := artifact.ClientSetupSection{
 		Header: utils.StringPtr("Install Package"),
 	}
-	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+	_ = pipSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Install a package using pip:"),
@@ -1729,22 +1727,92 @@ func (c *APIController) getAnonymousPythonClientSetupDetails(
 		},
 	})
 
-	sections := []artifact.ClientSetupSection{
-		section1,
-		section3,
+	// poetry tab sections
+	poetrySection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Configure Source"),
 	}
+	_ = poetrySection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add the registry as a source:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("poetry source add --priority=explicit harness <UPLOAD_URL>/simple/"),
+					},
+				},
+			},
+		},
+	})
 
-	if registryType == artifact.RegistryTypeUPSTREAM {
-		sections = []artifact.ClientSetupSection{
-			section1,
-			section3,
-		}
+	poetrySection2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
 	}
+	_ = poetrySection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using poetry:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("poetry add --source harness <ARTIFACT_NAME>==<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	// uv tab sections
+	uvSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("Install Package"),
+	}
+	_ = uvSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using uv:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("uv pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	tabSection := artifact.ClientSetupSection{}
+	config := artifact.TabSetupStepConfig{
+		Tabs: &[]artifact.TabSetupStep{
+			{
+				Header: utils.StringPtr("pip"),
+				Sections: &[]artifact.ClientSetupSection{
+					pipSection1,
+					pipSection2,
+				},
+			},
+			{
+				Header: utils.StringPtr("poetry"),
+				Sections: &[]artifact.ClientSetupSection{
+					poetrySection1,
+					poetrySection2,
+				},
+			},
+			{
+				Header: utils.StringPtr("uv"),
+				Sections: &[]artifact.ClientSetupSection{
+					uvSection1,
+				},
+			},
+		},
+	}
+	_ = tabSection.FromTabSetupStepConfig(config)
 
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Python Client Setup",
 		SecHeader:  "Follow these instructions to install/use Python packages from this registry.",
-		Sections:   sections,
+		Sections: []artifact.ClientSetupSection{
+			tabSection,
+		},
 	}
 	return clientSetupDetails
 }
@@ -1754,11 +1822,26 @@ func (c *APIController) getPythonClientSetupDetails(
 	generateTokenType artifact.ClientSetupStepType,
 	registryType artifact.RegistryType,
 ) artifact.ClientSetupDetails {
-	// Authentication section
+	// Section 1: Generate Identity Token (shared, INLINE)
 	section1 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Configure Authentication"),
+		Header: utils.StringPtr("1. Generate Identity Token"),
+		//nolint:lll
+		SecHeader: utils.StringPtr("An identity token will serve as the password for uploading and downloading artifacts."),
 	}
 	_ = section1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Generate an identity token"),
+				Type:   &generateTokenType,
+			},
+		},
+	})
+
+	// pip tab sections
+	pipSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("2. Configure Authentication"),
+	}
+	_ = pipSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Create or update your ~/.pypirc file with the following content:"),
@@ -1770,22 +1853,17 @@ func (c *APIController) getPythonClientSetupDetails(
 							"[harness]\n" +
 							"repository = <REGISTRY_URL>\n" +
 							"username = <USERNAME>\n" +
-							"password = *see step 2*"),
+							"password = *see step 1*"),
 					},
 				},
-			},
-			{
-				Header: utils.StringPtr("Generate an identity token for authentication"),
-				Type:   &generateTokenType,
 			},
 		},
 	})
 
-	// Publish section
-	section2 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Publish Package"),
+	pipSection2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("3. Publish Package"),
 	}
-	_ = section2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+	_ = pipSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Build and publish your package:"),
@@ -1802,11 +1880,10 @@ func (c *APIController) getPythonClientSetupDetails(
 		},
 	})
 
-	// Install section
-	section3 := artifact.ClientSetupSection{
-		Header: utils.StringPtr("Install Package"),
+	pipSection3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("4. Install Package"),
 	}
-	_ = section3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+	_ = pipSection3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
 		Steps: &[]artifact.ClientSetupStep{
 			{
 				Header: utils.StringPtr("Install a package using pip:"),
@@ -1820,23 +1897,226 @@ func (c *APIController) getPythonClientSetupDetails(
 		},
 	})
 
-	sections := []artifact.ClientSetupSection{
-		section1,
-		section2,
-		section3,
+	// poetry tab sections
+	poetrySection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("2. Configure Repository"),
+	}
+	_ = poetrySection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Add the registry as a source and configure authentication:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("poetry source add --priority=explicit harness <UPLOAD_URL>/simple/"),
+					},
+					{
+						//nolint:lll
+						Value: utils.StringPtr("poetry config http-basic.harness <USERNAME> <identity-token>"),
+					},
+				},
+			},
+		},
+	})
+
+	poetrySection2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("3. Publish Package"),
+	}
+	_ = poetrySection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Configure publish repository and publish your package:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("poetry config repositories.harness <REGISTRY_URL>"),
+					},
+					{
+						Value: utils.StringPtr("poetry build"),
+					},
+					{
+						Value: utils.StringPtr("poetry publish --repository harness"),
+					},
+				},
+			},
+		},
+	})
+
+	poetrySection3 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("4. Install Package"),
+	}
+	_ = poetrySection3.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using poetry:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("poetry add --source harness <ARTIFACT_NAME>==<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	// uv tab sections
+	uvSection1 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("2. Publish Package"),
+	}
+	_ = uvSection1.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Build and publish your package:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("uv build"),
+					},
+					{
+						//nolint:lll
+						Value: utils.StringPtr("uv publish --publish-url <REGISTRY_URL> --username <USERNAME> --password <identity-token>"),
+					},
+				},
+			},
+		},
+	})
+
+	uvSection2 := artifact.ClientSetupSection{
+		Header: utils.StringPtr("3. Install Package"),
+	}
+	_ = uvSection2.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+		Steps: &[]artifact.ClientSetupStep{
+			{
+				Header: utils.StringPtr("Install a package using uv:"),
+				Type:   &staticStepType,
+				Commands: &[]artifact.ClientSetupStepCommand{
+					{
+						Value: utils.StringPtr("uv pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
+					},
+				},
+			},
+		},
+	})
+
+	tabSection := artifact.ClientSetupSection{}
+	config := artifact.TabSetupStepConfig{
+		Tabs: &[]artifact.TabSetupStep{
+			{
+				Header: utils.StringPtr("pip"),
+				Sections: &[]artifact.ClientSetupSection{
+					pipSection1,
+					pipSection2,
+					pipSection3,
+				},
+			},
+			{
+				Header: utils.StringPtr("poetry"),
+				Sections: &[]artifact.ClientSetupSection{
+					poetrySection1,
+					poetrySection2,
+					poetrySection3,
+				},
+			},
+			{
+				Header: utils.StringPtr("uv"),
+				Sections: &[]artifact.ClientSetupSection{
+					uvSection1,
+					uvSection2,
+				},
+			},
+		},
 	}
 
 	if registryType == artifact.RegistryTypeUPSTREAM {
-		sections = []artifact.ClientSetupSection{
-			section1,
-			section3,
+		// For upstream registries, create install sections with corrected numbering
+		pipInstall := artifact.ClientSetupSection{
+			Header: utils.StringPtr("3. Install Package"),
+		}
+		_ = pipInstall.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+			Steps: &[]artifact.ClientSetupStep{
+				{
+					Header: utils.StringPtr("Install a package using pip:"),
+					Type:   &staticStepType,
+					Commands: &[]artifact.ClientSetupStepCommand{
+						{
+							Value: utils.StringPtr(
+								"pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
+						},
+					},
+				},
+			},
+		})
+
+		poetryInstall := artifact.ClientSetupSection{
+			Header: utils.StringPtr("3. Install Package"),
+		}
+		_ = poetryInstall.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+			Steps: &[]artifact.ClientSetupStep{
+				{
+					Header: utils.StringPtr("Install a package using poetry:"),
+					Type:   &staticStepType,
+					Commands: &[]artifact.ClientSetupStepCommand{
+						{
+							Value: utils.StringPtr("poetry add --source harness <ARTIFACT_NAME>==<VERSION>"),
+						},
+					},
+				},
+			},
+		})
+
+		uvInstall := artifact.ClientSetupSection{
+			Header: utils.StringPtr("2. Install Package"),
+		}
+		_ = uvInstall.FromClientSetupStepConfig(artifact.ClientSetupStepConfig{
+			Steps: &[]artifact.ClientSetupStep{
+				{
+					Header: utils.StringPtr("Install a package using uv:"),
+					Type:   &staticStepType,
+					Commands: &[]artifact.ClientSetupStepCommand{
+						{
+							Value: utils.StringPtr(
+								"uv pip install --index-url <UPLOAD_URL>/simple --no-deps <ARTIFACT_NAME>==<VERSION>"),
+						},
+					},
+				},
+			},
+		})
+
+		config = artifact.TabSetupStepConfig{
+			Tabs: &[]artifact.TabSetupStep{
+				{
+					Header: utils.StringPtr("pip"),
+					Sections: &[]artifact.ClientSetupSection{
+						pipSection1,
+						pipInstall,
+					},
+				},
+				{
+					Header: utils.StringPtr("poetry"),
+					Sections: &[]artifact.ClientSetupSection{
+						poetrySection1,
+						poetryInstall,
+					},
+				},
+				{
+					Header: utils.StringPtr("uv"),
+					Sections: &[]artifact.ClientSetupSection{
+						uvInstall,
+					},
+				},
+			},
 		}
 	}
+
+	_ = tabSection.FromTabSetupStepConfig(config)
 
 	clientSetupDetails := artifact.ClientSetupDetails{
 		MainHeader: "Python Client Setup",
 		SecHeader:  "Follow these instructions to install/use Python packages from this registry.",
-		Sections:   sections,
+		Sections: []artifact.ClientSetupSection{
+			section1,
+			tabSection,
+		},
 	}
 	return clientSetupDetails
 }
