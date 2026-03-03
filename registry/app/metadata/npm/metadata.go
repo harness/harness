@@ -37,17 +37,20 @@ type PackageUpload struct {
 // nolint:tagliatelle
 type PackageMetadata struct {
 	ID             string                             `json:"_id"`
+	Rev            string                             `json:"_rev,omitempty"`
 	Name           string                             `json:"name"`
 	Description    string                             `json:"description"`
 	DistTags       map[string]string                  `json:"dist-tags,omitempty"`
 	Versions       map[string]*PackageMetadataVersion `json:"versions"`
 	Readme         string                             `json:"readme,omitempty"`
 	Maintainers    []User                             `json:"maintainers,omitempty"`
+	Contributors   any                                `json:"contributors,omitempty"`
 	Time           map[string]time.Time               `json:"time,omitempty"`
 	Homepage       string                             `json:"homepage,omitempty"`
 	Keywords       []string                           `json:"keywords,omitempty"`
 	Repository     any                                `json:"repository,omitempty"`
 	Author         any                                `json:"author"`
+	Bugs           any                                `json:"bugs,omitempty"`
 	ReadmeFilename string                             `json:"readmeFilename,omitempty"`
 	Users          map[string]bool                    `json:"users,omitempty"`
 	License        any                                `json:"license,omitempty"`
@@ -72,11 +75,38 @@ type PackageMetadataVersion struct {
 	BundleDependencies   any                 `json:"bundleDependencies,omitempty"`
 	DevDependencies      any                 `json:"devDependencies,omitempty"`
 	PeerDependencies     any                 `json:"peerDependencies,omitempty"`
+	PeerDependenciesMeta any                 `json:"peerDependenciesMeta,omitempty"`
 	Bin                  any                 `json:"bin,omitempty"`
 	OptionalDependencies any                 `json:"optionalDependencies,omitempty"`
+	AcceptDependencies   any                 `json:"acceptDependencies,omitempty"`
 	Readme               string              `json:"readme,omitempty"`
 	Dist                 PackageDistribution `json:"dist"`
 	Maintainers          any                 `json:"maintainers,omitempty"`
+	Contributors         any                 `json:"contributors,omitempty"`
+	Bugs                 any                 `json:"bugs,omitempty"`
+	Engines              any                 `json:"engines,omitempty"`
+	Deprecated           any                 `json:"deprecated,omitempty"`
+	Directories          any                 `json:"directories,omitempty"`
+	Funding              any                 `json:"funding,omitempty"`
+	CPU                  any                 `json:"cpu,omitempty"`
+	OS                   any                 `json:"os,omitempty"`
+	Main                 any                 `json:"main,omitempty"`
+	Module               any                 `json:"module,omitempty"`
+	Types                any                 `json:"types,omitempty"`
+	Typings              any                 `json:"typings,omitempty"`
+	Exports              any                 `json:"exports,omitempty"`
+	Imports              any                 `json:"imports,omitempty"`
+	Files                any                 `json:"files,omitempty"`
+	Workspaces           any                 `json:"workspaces,omitempty"`
+	Scripts              any                 `json:"scripts,omitempty"`
+	Config               any                 `json:"config,omitempty"`
+	PublishConfig        any                 `json:"publishConfig,omitempty"`
+	SideEffects          any                 `json:"sideEffects,omitempty"`
+	HasShrinkwrap        any                 `json:"_hasShrinkwrap,omitempty"`
+	HasInstallScript     any                 `json:"hasInstallScript,omitempty"`
+	NodeVersion          any                 `json:"_nodeVersion,omitempty"`
+	NpmUser              any                 `json:"_npmUser,omitempty"`
+	NpmVersion           any                 `json:"_npmVersion,omitempty"`
 }
 
 // Repository https://github.com/npm/registry/blob/master/docs/REGISTRY-API.md#version

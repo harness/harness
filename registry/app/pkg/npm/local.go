@@ -126,7 +126,7 @@ func (c *localRegistry) UploadPackageFile(
 		log.Ctx(ctx).Error().Msgf("failed to parse npm package: %v", err)
 		return nil, "", err
 	}
-	log.Info().Str("packageName", info.Image).Msg("Successfully parsed and uploaded NPM package to tmp location")
+	log.Ctx(ctx).Info().Str("packageName", info.Image).Msg("Successfully parsed and uploaded NPM package to tmp location")
 	info.Metadata = packageMetadata
 	info.Image = packageMetadata.Name
 	for tag := range packageMetadata.DistTags {
@@ -154,6 +154,8 @@ func (c *localRegistry) UploadPackageFile(
 		log.Ctx(ctx).Error().Msgf("failed to add tag for npm package:%s, %v", info.Image, err)
 		return nil, "", err
 	}
+	log.Ctx(ctx).Info().
+		Msgf("Successfully uploaded npm package: %s, version: %s", info.Image, info.Version)
 
 	return nil, sha256, nil
 }
@@ -303,13 +305,43 @@ func CreatePackageMetadataVersion(
 		Author:               metadata.Author,
 		Homepage:             registryURL,
 		License:              metadata.License,
+		Repository:           metadata.Repository,
+		Keywords:             metadata.Keywords,
 		Dependencies:         metadata.Dependencies,
 		BundleDependencies:   metadata.BundleDependencies,
 		DevDependencies:      metadata.DevDependencies,
 		PeerDependencies:     metadata.PeerDependencies,
+		PeerDependenciesMeta: metadata.PeerDependenciesMeta,
 		OptionalDependencies: metadata.OptionalDependencies,
+		AcceptDependencies:   metadata.AcceptDependencies,
 		Readme:               metadata.Readme,
 		Bin:                  metadata.Bin,
+		Maintainers:          metadata.Maintainers,
+		Contributors:         metadata.Contributors,
+		Bugs:                 metadata.Bugs,
+		Engines:              metadata.Engines,
+		Deprecated:           metadata.Deprecated,
+		Directories:          metadata.Directories,
+		Funding:              metadata.Funding,
+		CPU:                  metadata.CPU,
+		OS:                   metadata.OS,
+		Main:                 metadata.Main,
+		Module:               metadata.Module,
+		Types:                metadata.Types,
+		Typings:              metadata.Typings,
+		Exports:              metadata.Exports,
+		Imports:              metadata.Imports,
+		Files:                metadata.Files,
+		Workspaces:           metadata.Workspaces,
+		Scripts:              metadata.Scripts,
+		Config:               metadata.Config,
+		PublishConfig:        metadata.PublishConfig,
+		SideEffects:          metadata.SideEffects,
+		HasShrinkwrap:        metadata.HasShrinkwrap,
+		HasInstallScript:     metadata.HasInstallScript,
+		NodeVersion:          metadata.NodeVersion,
+		NpmUser:              metadata.NpmUser,
+		NpmVersion:           metadata.NpmVersion,
 		Dist: npm2.PackageDistribution{
 			Shasum:    metadata.Dist.Shasum,
 			Integrity: metadata.Dist.Integrity,
@@ -416,6 +448,10 @@ func (c *localRegistry) parseAndUploadNPMPackage(
 				if err := decoder.Decode(&packageMetadata.ID); err != nil {
 					return types.FileInfo{}, usererror.BadRequestf("failed to parse _id: %s", err.Error())
 				}
+			case "_rev":
+				if err := decoder.Decode(&packageMetadata.Rev); err != nil {
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse _rev: %s", err.Error())
+				}
 			case "name":
 				if err := decoder.Decode(&packageMetadata.Name); err != nil {
 					return types.FileInfo{}, usererror.BadRequestf("failed to parse name: %s", err.Error())
@@ -442,6 +478,10 @@ func (c *localRegistry) parseAndUploadNPMPackage(
 				if err := decoder.Decode(&packageMetadata.Maintainers); err != nil {
 					return types.FileInfo{}, usererror.BadRequestf("failed to parse maintainers: %s", err.Error())
 				}
+			case "contributors":
+				if err := decoder.Decode(&packageMetadata.Contributors); err != nil {
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse contributors: %s", err.Error())
+				}
 			case "time":
 				packageMetadata.Time = make(map[string]time.Time)
 				if err := decoder.Decode(&packageMetadata.Time); err != nil {
@@ -463,6 +503,10 @@ func (c *localRegistry) parseAndUploadNPMPackage(
 				if err := decoder.Decode(&packageMetadata.Author); err != nil {
 					return types.FileInfo{}, usererror.BadRequestf("failed to parse author: %s", err.Error())
 				}
+			case "bugs":
+				if err := decoder.Decode(&packageMetadata.Bugs); err != nil {
+					return types.FileInfo{}, usererror.BadRequestf("failed to parse bugs: %s", err.Error())
+				}
 			case "readmeFilename":
 				if err := decoder.Decode(&packageMetadata.ReadmeFilename); err != nil {
 					return types.FileInfo{}, usererror.BadRequestf("failed to parse readmeFilename: %s", err.Error())
@@ -482,8 +526,6 @@ func (c *localRegistry) parseAndUploadNPMPackage(
 				if err != nil {
 					return types.FileInfo{}, fmt.Errorf("failed to process attachments: %w", err)
 				}
-				log.Info().Str("packageName",
-					info.Image).Msg("Successfully uploaded NPM package using optimized processing")
 
 				// We're done processing attachments, break out of the main parsing loop
 				return fileInfo, nil
