@@ -192,6 +192,18 @@ func (c *controller) UseLocalManifest(
 	}
 	log.Ctx(ctx).Info().Msgf("Manifest exist: %t %s %d %s", exist, desc.Digest.String(), desc.Size, desc.MediaType)
 
+	// Compare local digest with remote digest to detect upstream changes
+	// This ensures the registry behaves as a true mirror
+	if d.Digest.String() != desc.Digest.String() {
+		log.Ctx(ctx).Info().Msgf(
+			"Remote manifest digest changed for tag %s: local=%s, remote=%s. Forcing re-pull from upstream.",
+			art.Tag, d.Digest.String(), desc.Digest.String(),
+		)
+		// Return false to force re-pull from remote with the new digest
+		// The ProxyManifest flow will handle caching the new manifest
+		return false, nil, nil
+	}
+
 	log.Ctx(ctx).Info().Msgf("Manifest: %s", getReference(art))
 	mediaType, payload, _ := man.Payload()
 
