@@ -161,14 +161,19 @@ func (r *proxy) GetPackageMetadata(
 
 	var files []pythontype.File
 	for _, file := range result.Packages {
+		fileURL, err2 := r.urlProvider.PackagePathFor(ctx, urlprovider.PythonFilePathSpec{
+			RootIdentifier: info.RootIdentifier,
+			RegIdentifier:  info.RegIdentifier,
+			Image:          info.Image,
+			Version:        file.Version(),
+			Filename:       file.Name,
+		})
+		if err2 != nil {
+			return pythontype.PackageMetadata{}, err2
+		}
 		files = append(files, pythontype.File{
-			Name: file.Name,
-			FileURL: fmt.Sprintf(
-				"../../../../%s/python/files/%s/%s/%s",
-				info.RegIdentifier,
-				info.Image,
-				file.Version(),
-				file.Name),
+			Name:           file.Name,
+			FileURL:        fileURL,
 			RequiresPython: file.RequiresPython(),
 		})
 	}

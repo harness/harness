@@ -489,6 +489,9 @@ func (m *mockURLProvider) GetUIBaseURL(_ context.Context, _ ...string) string { 
 func (m *mockURLProvider) GenerateUIRegistryURL(_ context.Context, _ string, _ string) string {
 	return ""
 }
+func (m *mockURLProvider) PackagePathFor(_ context.Context, _ urlprovider.PackagePathSpec) (string, error) {
+	return "", nil
+}
 
 // -----------------------
 // Helpers

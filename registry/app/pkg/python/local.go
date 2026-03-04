@@ -17,7 +17,6 @@ package python
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"sort"
@@ -136,15 +135,19 @@ func (c *localRegistry) GetPackageMetadata(
 		}
 
 		for _, file := range metadata.Files {
+			fileURL, err2 := c.urlProvider.PackagePathFor(ctx, urlprovider.PythonFilePathSpec{
+				RootIdentifier: info.RootIdentifier,
+				RegIdentifier:  info.RegIdentifier,
+				Image:          info.Image,
+				Version:        artifact.Version,
+				Filename:       file.Filename,
+			})
+			if err2 != nil {
+				return packageMetadata, err2
+			}
 			fileInfo := pythontype.File{
-				Name: file.Filename,
-				FileURL: fmt.Sprintf(
-					"../../../../%s/python/files/%s/%s/%s",
-					info.RegIdentifier,
-					info.Image,
-					artifact.Version,
-					file.Filename,
-				),
+				Name:           file.Filename,
+				FileURL:        fileURL,
 				RequiresPython: metadata.RequiresPython,
 			}
 			packageMetadata.Files = append(packageMetadata.Files, fileInfo)

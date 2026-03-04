@@ -47,6 +47,7 @@ import (
 	"github.com/harness/gitness/registry/request"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -379,6 +380,13 @@ func extractPathVars(r *http.Request) (
 	rootIdentifier = parts[2]
 	registry = parts[3]
 	pathPackageType = PathPackageType(parts[4])
+
+	// TODO(Arvind) This will be refactored as part of complete review of RBAC
+	targetRegistryIdentifier := chi.URLParam(r, "targetRegistryIdentifier")
+	if targetRegistryIdentifier != "" {
+		registry = targetRegistryIdentifier
+	}
+
 	return rootIdentifier, registry, pathPackageType, nil
 }
 

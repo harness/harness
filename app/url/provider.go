@@ -86,6 +86,9 @@ type Provider interface {
 	PackageURL(ctx context.Context, regRef string, pkgType string, params ...string) string
 	GetUIBaseURL(ctx context.Context, params ...string) string
 
+	// PackagePathFor returns the URL path for a given package path spec.
+	PackagePathFor(ctx context.Context, spec PackagePathSpec) (string, error)
+
 	// GenerateUIRegistryURL returns the url for the UI screen of a registry.
 	GenerateUIRegistryURL(ctx context.Context, parentSpacePath string, registryName string) string
 }

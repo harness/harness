@@ -122,6 +122,10 @@ func NewRouter(
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/files/{image}/{version}/{filename}", pythonHandler.DownloadPackageFile)
 			r.With(middleware.StoreArtifactInfo(pythonHandler)).
+				With(middleware.TrackDownloadStatsForPythonPackage(packageHandler)).
+				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
+				Get("/_/{targetRegistryIdentifier}/{image}/{version}/{filename}", pythonHandler.DownloadPackageFile)
+			r.With(middleware.StoreArtifactInfo(pythonHandler)).
 				With(middleware.RequestPackageAccess(packageHandler, enum.PermissionArtifactsDownload)).
 				Get("/simple/{image}/", pythonHandler.PackageMetadata)
 			r.Get("/simple/{image}", func(w http.ResponseWriter, r *http.Request) {
