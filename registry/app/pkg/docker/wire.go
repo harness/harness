@@ -166,7 +166,7 @@ type OciBlobStoreFactory func(
 	repoKey string,
 	rootParentRef string,
 	blobLocator types2.BlobLocator,
-) storage.OciBlobStore
+) (storage.OciBlobStore, error)
 
 // ProvideOciBlobStore returns a factory function that creates an OciBlobStore with the provided context.
 func ProvideOciBlobStore(storageService *storage.Service) OciBlobStoreFactory {

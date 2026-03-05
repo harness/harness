@@ -18,11 +18,11 @@ package storage
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/registry/types"
 
 	"github.com/opencontainers/go-digest"
-	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
@@ -69,18 +69,16 @@ func (s *Service) OciBlobsStore(
 	repoKey string,
 	rootParentRef string,
 	locator types.BlobLocator,
-) OciBlobStore {
+) (OciBlobStore, error) {
 	target, err := s.storageResolver.Resolve(ctx, types.StorageLookup{
 		BlobLocator: locator,
 	})
 	if err != nil {
-		// TODO(Arvind): Return this error
-		log.Ctx(ctx).Fatal().Err(err).Msgf("Failed to resolve storage target for %s", locator.String())
-		return nil
+		return nil, fmt.Errorf("failed to resolve storage target for %s: %w", locator.String(), err)
 	}
 
 	if !target.IsDefault() {
-		return s.GlobalBlobsStore(ctx, target, true)
+		return s.GlobalBlobsStore(ctx, target, true), nil
 	}
 
 	return &ociBlobStore{
@@ -92,33 +90,30 @@ func (s *Service) OciBlobsStore(
 		deleteEnabled:          s.deleteEnabled,
 		resumableDigestEnabled: s.resumableDigestEnabled,
 		rootParentRef:          rootParentRef,
-	}
+	}, nil
 }
 
 func (s *Service) GenericBlobsStore(
 	ctx context.Context,
 	rootParentRef string,
 	locator types.BlobLocator,
-) GenericBlobStore {
+) (GenericBlobStore, error) {
 	target, err := s.storageResolver.Resolve(ctx, types.StorageLookup{
 		BlobLocator: locator,
 	})
-
 	if err != nil {
-		// TODO(Arvind): Return this error
-		log.Ctx(ctx).Fatal().Err(err).Msgf("Failed to resolve storage target for %s", locator.String())
-		return nil
+		return nil, fmt.Errorf("failed to resolve storage target for %s: %w", locator.String(), err)
 	}
 
 	if !target.IsDefault() {
-		return s.GlobalBlobsStore(ctx, target, false)
+		return s.GlobalBlobsStore(ctx, target, false), nil
 	}
 
 	return &genericBlobStore{
 		driver:        target.Driver,
 		redirect:      s.redirect,
 		rootParentRef: rootParentRef,
-	}
+	}, nil
 }
 
 func (s *Service) GlobalBlobsStore(ctx context.Context, target StorageTarget, oci bool) GlobalBlobStore {

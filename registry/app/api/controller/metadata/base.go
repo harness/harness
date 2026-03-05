@@ -153,7 +153,7 @@ func (c *APIController) getManifestConfig(
 	digest digest.Digest,
 	info *types.RegistryRequestBaseInfo,
 ) (*manifestConfig, error) {
-	blobsContext := c.app.GetBlobsContext(ctx, pkg.RegistryInfo{
+	blobsContext, err := c.app.GetBlobsContext(ctx, pkg.RegistryInfo{
 		ArtifactInfo: &pkg.ArtifactInfo{
 			RegIdentifier: info.RegistryIdentifier,
 			BaseInfo: &pkg.BaseInfo{
@@ -166,6 +166,9 @@ func (c *APIController) getManifestConfig(
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootIdentifierID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get blobs context: %w", err)
+	}
 	var config manifestConfig
 
 	content, err := blobsContext.OciBlobStore.Get(ctx, strings.ToLower(info.RootIdentifier), digest)

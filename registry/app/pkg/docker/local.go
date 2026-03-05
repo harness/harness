@@ -390,12 +390,16 @@ func (r *LocalRegistry) fetchBlobInternal(
 		errs = append(errs, errcode.FromUnknownError(err))
 		return responseHeaders, nil, -1, nil, "", errs
 	}
-	ctx := r.App.GetBlobsContext(ctx2, info, types.BlobLocator{
+	ctx, err := r.App.GetBlobsContext(ctx2, info, types.BlobLocator{
 		Digest:       digest.Digest(info.Digest),
 		BlobID:       blobID,
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
+	if err != nil {
+		errs = append(errs, errcode.FromUnknownError(err))
+		return responseHeaders, nil, -1, nil, "", errs
+	}
 	blobs := ctx.OciBlobStore
 
 	dgst = ctx.Digest
@@ -930,10 +934,13 @@ func (r *LocalRegistry) InitBlobUpload(
 	artInfo pkg.RegistryInfo,
 	fromRepo, mountDigest string,
 ) (*commons.ResponseHeaders, []error) {
-	blobCtx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
+	blobCtx, err := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
 		RegistryID:   artInfo.RegistryID,
 		RootParentID: artInfo.RootParentID,
 	})
+	if err != nil {
+		return nil, []error{errcode.FromUnknownError(err)}
+	}
 	var errList []error
 	responseHeaders := &commons.ResponseHeaders{
 		Headers: make(map[string]string),
@@ -1079,10 +1086,14 @@ func (r *LocalRegistry) PushBlob(
 		Code:    0,
 		Headers: make(map[string]string),
 	}
-	ctx := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
+	ctx, err := r.App.GetBlobsContext(ctx2, artInfo, types.BlobLocator{
 		RegistryID:   artInfo.RegistryID,
 		RootParentID: artInfo.RootParentID,
 	})
+	if err != nil {
+		errs = append(errs, errcode.FromUnknownError(err))
+		return responseHeaders, errs
+	}
 	if ctx.UUID != "" {
 		resumeErrs := ResumeBlobUpload(ctx, stateToken) //nolint:contextcheck
 		errs = append(errs, resumeErrs...)

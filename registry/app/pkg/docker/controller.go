@@ -333,10 +333,13 @@ func (c *Controller) GetUploadBlobStatus(
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
 	}
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+	blobCtx, err := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
+	if err != nil {
+		return nil, []error{errcode.FromUnknownError(err)}
+	}
 	//nolint:contextcheck
 	return c.local.GetBlobUploadStatus(blobCtx, info, token)
 }
@@ -351,11 +354,14 @@ func (c *Controller) PatchBlobUpload(
 	token string,
 	body io.ReadCloser,
 ) (responseHeaders *commons.ResponseHeaders, errors []error) {
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+	blobCtx, err := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
-	err := pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
+	if err != nil {
+		return nil, []error{errcode.FromUnknownError(err)}
+	}
+	err = pkg.GetRegistryCheckAccess(ctx, c.authorizer, c.SpaceFinder, info.ParentID, *info.ArtifactInfo,
 		enum.PermissionArtifactsDownload, enum.PermissionArtifactsUpload)
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
@@ -404,10 +410,13 @@ func (c *Controller) CancelBlobUpload(
 		return nil, []error{errcode.ErrCodeDenied}
 	}
 
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+	blobCtx, blobErr := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
+	if blobErr != nil {
+		return nil, []error{errcode.FromUnknownError(blobErr)}
+	}
 
 	errors = make([]error, 0)
 
@@ -447,10 +456,13 @@ func (c *Controller) DeleteBlob(
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
 	}
-	blobCtx := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
+	blobCtx, blobErr := c.local.App.GetBlobsContext(ctx, info, registrytypes.BlobLocator{
 		RegistryID:   info.RegistryID,
 		RootParentID: info.RootParentID,
 	})
+	if blobErr != nil {
+		return nil, []error{errcode.FromUnknownError(blobErr)}
+	}
 	//nolint:contextcheck
 	return c.local.DeleteBlob(blobCtx, info)
 }

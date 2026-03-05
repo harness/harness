@@ -134,13 +134,12 @@ func (f *fileManager) getBlobsContext(
 	}
 
 	// For default flows
-	blobsStore := f.storageService.GenericBlobsStore(c, rootIdentifier, info)
-	if blobsStore != nil {
-		ctx.genericBlobStore = blobsStore
-		return ctx, nil
+	blobsStore, err := f.storageService.GenericBlobsStore(c, rootIdentifier, info)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get blob store for root identifier %s: %w", rootIdentifier, err)
 	}
-
-	return nil, fmt.Errorf("failed to get blob store for root identifier: %s", rootIdentifier)
+	ctx.genericBlobStore = blobsStore
+	return ctx, nil
 }
 
 func (f *fileManager) dbSaveFile(

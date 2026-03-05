@@ -130,7 +130,7 @@ func (app *App) GetBlobsContext(
 	c context.Context,
 	info pkg.RegistryInfo,
 	blobLocator registryTypes.BlobLocator,
-) *Context {
+) (*Context, error) {
 	ctx := &Context{
 		App:          app,
 		Context:      c,
@@ -150,7 +150,11 @@ func (app *App) GetBlobsContext(
 
 	// Default read/write
 	if ctx.OciBlobStore == nil {
-		ctx.OciBlobStore = app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator)
+		store, err := app.storageService.OciBlobsStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get blob store: %w", err)
+		}
+		ctx.OciBlobStore = store
 	}
-	return ctx
+	return ctx, nil
 }
