@@ -69,6 +69,6 @@ export const getVersionListTableCellConfigs = (
     .map(columnConfig => ({
       ...columnConfig,
       Header: columnConfig.Header ? getString(columnConfig.Header) : '',
-      serverSortProps: getServerSortProps(columnConfig.accessor)
+      serverSortProps: columnConfig.disableSortBy ? undefined : getServerSortProps(columnConfig.accessor)
     }))
 }
