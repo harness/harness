@@ -207,6 +207,74 @@ func (s GitSignatureResultStore) UpdateAll(
 	return nil
 }
 
+func (s GitSignatureResultStore) DeleteByKeyIDs(
+	ctx context.Context,
+	principalID int64,
+	keyIDs []string,
+) (int64, error) {
+	if len(keyIDs) == 0 {
+		return 0, nil
+	}
+
+	query := database.Builder.
+		Delete("git_signature_results").
+		Where("git_signature_result_principal_id = ?", principalID).
+		Where(squirrel.Eq{"git_signature_result_key_id": keyIDs})
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to delete git signatures by key IDs")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	return count, nil
+}
+
+func (s GitSignatureResultStore) DeleteByKeyFingerprints(
+	ctx context.Context,
+	principalID int64,
+	keyFingerprints []string,
+) (int64, error) {
+	if len(keyFingerprints) == 0 {
+		return 0, nil
+	}
+
+	query := database.Builder.
+		Delete("git_signature_results").
+		Where("git_signature_result_principal_id = ?", principalID).
+		Where(squirrel.Eq{"git_signature_result_key_fingerprint": keyFingerprints})
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to delete git signatures by key fingerprints")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	return count, nil
+}
+
 func mapToInternalGitSignatureResult(sigVer types.GitSignatureResult) gitSignatureResult {
 	return gitSignatureResult{
 		RepoID:         sigVer.RepoID,

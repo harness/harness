@@ -1266,6 +1266,18 @@ type (
 			principalID int64,
 			keyIDs, keyFingerprints []string,
 		) error
+
+		DeleteByKeyIDs(
+			ctx context.Context,
+			principalID int64,
+			keyIDs []string,
+		) (int64, error)
+
+		DeleteByKeyFingerprints(
+			ctx context.Context,
+			principalID int64,
+			keyFingerprints []string,
+		) (int64, error)
 	}
 
 	GitspaceEventStore interface {
