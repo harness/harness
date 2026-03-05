@@ -38,7 +38,10 @@ type FindOversizeFilesParams struct {
 	RepoUID       string
 	GitObjectDirs []string
 
+	// depracated: use SizeLimits instead
 	SizeLimit int64
+
+	SizeLimits []int64
 }
 
 type FileInfo struct {
@@ -47,8 +50,25 @@ type FileInfo struct {
 }
 
 type FindOversizeFilesOutput struct {
+	// Deprecated: use FileInfosPerLimit and TotalsPerLimit instead
 	FileInfos []FileInfo
 	Total     int64
+
+	// Each file info is stored only at the highest limit it exceeds, avoiding repetition.
+	FileInfosPerLimit map[int64][]FileInfo
+	// TotalsPerLimit maps each limit to the count of files in that specific limit band.
+	TotalsPerLimit map[int64]int64
+}
+
+// AccumulatedTotal returns the total count of files exceeding the given limit.
+func (o *FindOversizeFilesOutput) AccumulatedTotal(limit int64) int64 {
+	var total int64
+	for l, t := range o.TotalsPerLimit {
+		if l >= limit {
+			total += t
+		}
+	}
+	return total
 }
 
 type FindCommitterMismatchParams struct {
@@ -114,14 +134,7 @@ func (s *Service) ProcessPreReceiveObjects(
 
 	// sort objects in descending order by Size (largest to smallest)
 	slices.SortFunc(objects, func(a, b parser.BatchCheckObject) int {
-		switch {
-		case a.Size > b.Size:
-			return -1
-		case a.Size < b.Size:
-			return 1
-		default:
-			return 0
-		}
+		return int(b.Size - a.Size)
 	})
 
 	var output ProcessPreReceiveObjectsOutput
@@ -165,27 +178,66 @@ func (s *Service) ProcessPreReceiveObjects(
 
 func findOversizeFiles(
 	objects []parser.BatchCheckObject,
-	findOversizeFilesParams *FindOversizeFilesParams,
+	params *FindOversizeFilesParams,
 ) *FindOversizeFilesOutput {
-	var fileInfos []FileInfo
+	out := &FindOversizeFilesOutput{
+		FileInfosPerLimit: make(map[int64][]FileInfo),
+		TotalsPerLimit:    make(map[int64]int64),
+	}
 
-	var total int64 // limit the total num of objects returned
+	if params == nil {
+		return out
+	}
+
+	// Backward compatibility: if only SizeLimit is set, use it as a single-element SizeLimits.
+	sizeLimits := params.SizeLimits
+	if len(sizeLimits) == 0 && params.SizeLimit > 0 {
+		sizeLimits = []int64{params.SizeLimit}
+	}
+
+	if len(sizeLimits) == 0 {
+		return out
+	}
+
 	for _, obj := range objects {
-		if obj.Type == string(TreeNodeTypeBlob) && obj.Size > findOversizeFilesParams.SizeLimit {
-			if total < maxOversizeFiles {
-				fileInfos = append(fileInfos, FileInfo{
-					SHA:  obj.SHA,
-					Size: obj.Size,
-				})
+		if obj.Type != string(TreeNodeTypeBlob) {
+			continue
+		}
+
+		// Limits are sorted ascending. Find the highest limit exceeded by this object.
+		// Since a file exceeding a higher limit also exceeds all lower limits,
+		// we store each file only at its highest exceeded limit to avoid repetition.
+		var highestExceeded int64 = -1
+		for _, limit := range sizeLimits {
+			if obj.Size <= limit {
+				break
 			}
-			total++
+			highestExceeded = limit
+		}
+
+		if highestExceeded < 0 {
+			continue
+		}
+
+		out.TotalsPerLimit[highestExceeded]++
+
+		if int64(len(out.FileInfosPerLimit[highestExceeded])) < maxOversizeFiles {
+			out.FileInfosPerLimit[highestExceeded] = append(out.FileInfosPerLimit[highestExceeded], FileInfo{
+				SHA:  obj.SHA,
+				Size: obj.Size,
+			})
 		}
 	}
 
-	return &FindOversizeFilesOutput{
-		FileInfos: fileInfos,
-		Total:     total,
+	// Backward compatibility: populate deprecated FileInfos and Total
+	// with the accumulated results for the smallest limit (all oversize files).
+	minLimit := sizeLimits[0]
+	out.Total = out.AccumulatedTotal(minLimit)
+	for _, limit := range sizeLimits {
+		out.FileInfos = append(out.FileInfos, out.FileInfosPerLimit[limit]...)
 	}
+
+	return out
 }
 
 func findCommitterMismatch(

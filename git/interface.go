@@ -74,12 +74,6 @@ type Interface interface {
 	MergeBase(ctx context.Context, params MergeBaseParams) (MergeBaseOutput, error)
 	IsAncestor(ctx context.Context, params IsAncestorParams) (IsAncestorOutput, error)
 
-	// TODO: remove. Kept for backwards compatibility.
-	FindOversizeFiles(
-		ctx context.Context,
-		params *FindOversizeFilesParams,
-	) (*FindOversizeFilesOutput, error)
-
 	/*
 	 * Pre-receive processor
 	 */

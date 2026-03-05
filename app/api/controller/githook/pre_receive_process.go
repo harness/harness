@@ -17,9 +17,9 @@ package githook
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
@@ -33,9 +33,9 @@ func (c *Controller) processObjects(
 	repo *types.RepositoryCore,
 	principal *types.Principal,
 	refUpdates changedRefs,
-	sizeLimit int64,
-	principalCommitterMatch bool,
 	violationsInput *protection.PushViolationsInput,
+	settingsChecks repoSettings,
+	settingsViolations *repoSettingsViolations,
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
@@ -43,49 +43,21 @@ func (c *Controller) processObjects(
 		return nil
 	}
 
-	// TODO: Remove this once push rules implementation and migration are complete.
-	settingsSizeLimit, err := settings.RepoGet(
-		ctx,
-		c.settings,
-		repo.ID,
-		settings.KeyFileSizeLimit,
-		settings.DefaultFileSizeLimit,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to check settings for file size limit: %w", err)
-	}
+	var sizeLimits []int64
 
-	if sizeLimit == 0 || (settingsSizeLimit > 0 && sizeLimit > settingsSizeLimit) {
-		sizeLimit = settingsSizeLimit
-	}
-
-	// TODO: Remove this once push rules implementation and migration are complete.
-	if !principalCommitterMatch {
-		principalCommitterMatch, err = settings.RepoGet(
-			ctx,
-			c.settings,
-			repo.ID,
-			settings.KeyPrincipalCommitterMatch,
-			settings.DefaultPrincipalCommitterMatch,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to check settings for principal committer match: %w", err)
+	for _, limit := range violationsInput.FileSizeLimits {
+		if limit > 0 {
+			sizeLimits = append(sizeLimits, limit)
 		}
 	}
 
-	gitLFSEnabled, err := settings.RepoGet(
-		ctx,
-		c.settings,
-		repo.ID,
-		settings.KeyGitLFSEnabled,
-		settings.DefaultGitLFSEnabled,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to check settings for Git LFS enabled: %w", err)
+	if limit := settingsChecks.fileSizeLimit(len(sizeLimits) > 0); limit > 0 {
+		sizeLimits = append(sizeLimits, limit)
 	}
 
-	if sizeLimit == 0 && !principalCommitterMatch && !gitLFSEnabled {
-		return nil
+	if len(sizeLimits) > 0 {
+		slices.Sort(sizeLimits)
+		sizeLimits = slices.Compact(sizeLimits)
 	}
 
 	preReceiveObjsIn := git.ProcessPreReceiveObjectsParams{
@@ -95,19 +67,21 @@ func (c *Controller) processObjects(
 		},
 	}
 
-	if sizeLimit > 0 {
+	if len(sizeLimits) > 0 {
 		preReceiveObjsIn.FindOversizeFilesParams = &git.FindOversizeFilesParams{
-			SizeLimit: sizeLimit,
+			SizeLimit:  sizeLimits[0], // deprecated: min of all limits for backward compatibility
+			SizeLimits: sizeLimits,
 		}
 	}
 
-	if principalCommitterMatch && principal != nil && !in.Internal {
+	if (settingsChecks.PrincipalCommitterMatch || violationsInput.PrincipalCommitterMatch) &&
+		!in.Internal {
 		preReceiveObjsIn.FindCommitterMismatchParams = &git.FindCommitterMismatchParams{
 			PrincipalEmail: principal.Email,
 		}
 	}
 
-	if gitLFSEnabled {
+	if settingsChecks.GitLFSEnabled {
 		preReceiveObjsIn.FindLFSPointersParams = &git.FindLFSPointersParams{}
 	}
 
@@ -119,14 +93,16 @@ func (c *Controller) processObjects(
 		return fmt.Errorf("failed to process pre-receive objects: %w", err)
 	}
 
-	if preReceiveObjsOut.FindOversizeFilesOutput != nil &&
-		len(preReceiveObjsOut.FindOversizeFilesOutput.FileInfos) > 0 {
-		printOversizeFiles(
-			output,
-			preReceiveObjsOut.FindOversizeFilesOutput.FileInfos,
-			preReceiveObjsOut.FindOversizeFilesOutput.Total,
-			sizeLimit,
-		)
+	if out := preReceiveObjsOut.FindOversizeFilesOutput; out != nil && len(out.TotalsPerLimit) > 0 {
+		printOversizeFiles(output, out)
+
+		violationsInput.FindOversizeFilesOutput = out
+
+		if limit := settingsChecks.fileSizeLimit(len(violationsInput.FileSizeLimits) > 0); limit > 0 {
+			if out.AccumulatedTotal(limit) > 0 {
+				settingsViolations.ExceededFileSizeLimit = limit
+			}
+		}
 	}
 
 	if preReceiveObjsOut.FindCommitterMismatchOutput != nil &&
@@ -137,6 +113,12 @@ func (c *Controller) processObjects(
 			preReceiveObjsIn.FindCommitterMismatchParams.PrincipalEmail,
 			preReceiveObjsOut.FindCommitterMismatchOutput.Total,
 		)
+
+		violationsInput.CommitterMismatchCount = preReceiveObjsOut.FindCommitterMismatchOutput.Total
+
+		if settingsChecks.PrincipalCommitterMatch {
+			settingsViolations.CommitterMismatchFound = true
+		}
 	}
 
 	if preReceiveObjsOut.FindLFSPointersOutput != nil &&
@@ -160,15 +142,14 @@ func (c *Controller) processObjects(
 				preReceiveObjsOut.FindLFSPointersOutput.LFSInfos,
 				preReceiveObjsOut.FindLFSPointersOutput.Total,
 			)
+
+			if settingsChecks.GitLFSEnabled {
+				settingsViolations.UnknownLFSObjectsFound = true
+			}
 		}
 	}
 
-	violationsInput.FileSizeLimit = sizeLimit
 	violationsInput.FindOversizeFilesOutput = preReceiveObjsOut.FindOversizeFilesOutput
-	violationsInput.PrincipalCommitterMatch = principalCommitterMatch
-	if preReceiveObjsOut.FindCommitterMismatchOutput != nil {
-		violationsInput.CommitterMismatchCount = preReceiveObjsOut.FindCommitterMismatchOutput.Total
-	}
 
 	return nil
 }

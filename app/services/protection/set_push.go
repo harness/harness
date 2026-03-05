@@ -73,10 +73,7 @@ func (s pushRuleSet) PushVerify(
 
 		violations = append(violations, rViolations...)
 
-		if out.FileSizeLimit == 0 ||
-			(rOut.FileSizeLimit > 0 && out.FileSizeLimit > rOut.FileSizeLimit) {
-			out.FileSizeLimit = rOut.FileSizeLimit
-		}
+		out.FileSizeLimits = append(out.FileSizeLimits, rOut.FileSizeLimits...)
 
 		out.PrincipalCommitterMatch = out.PrincipalCommitterMatch || rOut.PrincipalCommitterMatch
 

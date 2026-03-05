@@ -280,42 +280,6 @@ func (s *Service) GetCommitDivergences(
 	}, nil
 }
 
-// TODO: remove. Kept for backwards compatibility.
-//
-//nolint:gocognit
-func (s *Service) FindOversizeFiles(
-	ctx context.Context,
-	params *FindOversizeFilesParams,
-) (*FindOversizeFilesOutput, error) {
-	if params.RepoUID == "" {
-		return nil, api.ErrRepositoryPathEmpty
-	}
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-
-	var objects []parser.BatchCheckObject
-	for _, gitObjDir := range params.GitObjectDirs {
-		objs, err := s.listGitObjDir(ctx, repoPath, gitObjDir)
-		if err != nil {
-			return nil, err
-		}
-		objects = append(objects, objs...)
-	}
-
-	var fileInfos []FileInfo
-	for _, obj := range objects {
-		if obj.Type == string(TreeNodeTypeBlob) && obj.Size > params.SizeLimit {
-			fileInfos = append(fileInfos, FileInfo{
-				SHA:  obj.SHA,
-				Size: obj.Size,
-			})
-		}
-	}
-
-	return &FindOversizeFilesOutput{
-		FileInfos: fileInfos,
-	}, nil
-}
-
 func (s *Service) listGitObjDir(
 	ctx context.Context,
 	repoPath string,

@@ -59,15 +59,15 @@ func (p *Push) Violations(
 ) (PushViolationsOutput, error) {
 	var violations types.RuleViolations
 
-	if in.FindOversizeFilesOutput != nil {
-		for _, fileInfos := range in.FindOversizeFilesOutput.FileInfos {
-			if p.Push.FileSizeLimit > 0 && fileInfos.Size > p.Push.FileSizeLimit {
-				violations.Addf(codePushFileSizeLimit,
-					"Found file(s) exceeding the filesize limit of %d.",
-					p.Push.FileSizeLimit,
-				)
-				break
-			}
+	if out := in.FindOversizeFilesOutput; out != nil && p.Push.FileSizeLimit > 0 {
+		limit := p.Push.FileSizeLimit
+
+		if total := out.AccumulatedTotal(limit); total > 0 {
+			violations.Addf(
+				codePushFileSizeLimit,
+				"Found file(s) exceeding the filesize limit of %d.",
+				limit,
+			)
 		}
 	}
 
@@ -80,10 +80,10 @@ func (p *Push) Violations(
 	}
 
 	if p.Push.SecretScanningEnabled && in.SecretScanningEnabled &&
-		in.FoundSecretCount > 0 {
+		in.FoundSecretsCount > 0 {
 		violations.Addf(codeSecretScanningEnabled,
 			"Found total of %d new secret(s)",
-			in.FoundSecretCount,
+			in.FoundSecretsCount,
 		)
 	}
 

@@ -16,6 +16,7 @@ package githook
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/harness/gitness/git"
@@ -106,35 +107,81 @@ func FMTDuration(d time.Duration) string {
 
 func printOversizeFiles(
 	output *hook.Output,
-	oversizeFiles []git.FileInfo,
-	total int64,
-	sizeLimit int64,
+	findOut *git.FindOversizeFilesOutput,
 ) {
-	output.Messages = append(
-		output.Messages,
-		colorScanHeader.Sprintf(
-			"Push contains files exceeding the size limit:",
-		),
-		"", // add empty line for making it visually more consumable
-	)
-
-	for _, file := range oversizeFiles {
-		output.Messages = append(
-			output.Messages,
-			fmt.Sprintf("  %s", file.SHA),
-			fmt.Sprintf("      Size: %dB", file.Size),
-			"", // add empty line for making it visually more consumable
-		)
+	if output == nil || findOut == nil {
+		return
 	}
 
-	output.Messages = append(
-		output.Messages,
-		colorScanSummary.Sprintf(
-			"%d %s found exceeding the size limit of %dB",
-			total, singularOrPlural("file", total > 1), sizeLimit,
-		),
-		"", "", // add two empty lines for making it visually more consumable
-	)
+	if len(findOut.TotalsPerLimit) == 0 {
+		return
+	}
+
+	// Deterministic ordering, largest limit first so that smaller limits
+	// can reference the "aforementioned" files from higher limits.
+	limits := make([]int64, 0, len(findOut.TotalsPerLimit))
+	for limit := range findOut.TotalsPerLimit {
+		limits = append(limits, limit)
+	}
+	slices.SortFunc(limits, func(a, b int64) int {
+		return int(b - a)
+	})
+
+	var cumulativeTotal int64
+	for _, limit := range limits {
+		total := findOut.TotalsPerLimit[limit]
+		if total == 0 {
+			continue
+		}
+
+		files := findOut.FileInfosPerLimit[limit]
+
+		header := fmt.Sprintf(
+			"Push contains %d %s exceeding the size limit of %dB",
+			total,
+			singularOrPlural("file", total > 1),
+			limit,
+		)
+		if cumulativeTotal > 0 {
+			header += fmt.Sprintf(
+				" (in addition to the %d %s above)",
+				cumulativeTotal,
+				singularOrPlural("file", cumulativeTotal > 1),
+			)
+		}
+		output.Messages = append(
+			output.Messages,
+			colorScanHeader.Sprint(header+":"),
+			"",
+		)
+
+		for _, file := range files {
+			output.Messages = append(
+				output.Messages,
+				fmt.Sprintf("  %s", file.SHA),
+				fmt.Sprintf("      Size: %dB", file.Size),
+				"",
+			)
+		}
+
+		// If capped, clarify how many are shown.
+		if int64(len(files)) < total {
+			output.Messages = append(
+				output.Messages,
+				colorScanSummary.Sprintf(
+					"Showing %d of %d %s",
+					len(files),
+					total,
+					singularOrPlural("file", total > 1),
+				),
+				"",
+			)
+		} else {
+			output.Messages = append(output.Messages, "")
+		}
+
+		cumulativeTotal += total
+	}
 }
 
 func printCommitterMismatch(
