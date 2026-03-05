@@ -96,6 +96,15 @@ func GetDBTagsFromStruct(s any) []string {
 
 	for i := 0; i < rt.NumField(); i++ {
 		field := rt.Field(i)
+
+		// If field is anonymous (embedded struct), recursively get its tags
+		if field.Anonymous {
+			// Create zero value of the embedded type
+			embeddedVal := reflect.New(field.Type).Elem().Interface()
+			tags = append(tags, GetDBTagsFromStruct(embeddedVal)...)
+			continue
+		}
+
 		dbTag := field.Tag.Get("db")
 		if dbTag != "" {
 			tags = append(tags, dbTag)

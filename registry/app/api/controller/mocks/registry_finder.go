@@ -190,9 +190,16 @@ func (_c *RegistryFinder_FindByUUID_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
-// FindByRootParentID provides a mock function with given fields: ctx, rootParentID, regIdentifier
-func (_m *RegistryFinder) FindByRootParentID(ctx context.Context, rootParentID int64, regIdentifier string) (*types.Registry, error) {
-	ret := _m.Called(ctx, rootParentID, regIdentifier)
+// FindByRootParentID provides a mock function with given fields: ctx, rootParentID, regIdentifier, opts
+func (_m *RegistryFinder) FindByRootParentID(ctx context.Context, rootParentID int64, regIdentifier string, opts ...types.QueryOption) (*types.Registry, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, rootParentID, regIdentifier)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindByRootParentID")
@@ -200,19 +207,19 @@ func (_m *RegistryFinder) FindByRootParentID(ctx context.Context, rootParentID i
 
 	var r0 *types.Registry
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string) (*types.Registry, error)); ok {
-		return rf(ctx, rootParentID, regIdentifier)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, ...types.QueryOption) (*types.Registry, error)); ok {
+		return rf(ctx, rootParentID, regIdentifier, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string) *types.Registry); ok {
-		r0 = rf(ctx, rootParentID, regIdentifier)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, ...types.QueryOption) *types.Registry); ok {
+		r0 = rf(ctx, rootParentID, regIdentifier, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.Registry)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64, string) error); ok {
-		r1 = rf(ctx, rootParentID, regIdentifier)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, string, ...types.QueryOption) error); ok {
+		r1 = rf(ctx, rootParentID, regIdentifier, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -250,9 +257,16 @@ func (_c *RegistryFinder_FindByRootParentID_Call) RunAndReturn(run func(context.
 	return _c
 }
 
-// FindByRootRef provides a mock function with given fields: ctx, rootParentRef, regIdentifier
-func (_m *RegistryFinder) FindByRootRef(ctx context.Context, rootParentRef string, regIdentifier string) (*types.Registry, error) {
-	ret := _m.Called(ctx, rootParentRef, regIdentifier)
+// FindByRootRef provides a mock function with given fields: ctx, rootParentRef, regIdentifier, opts
+func (_m *RegistryFinder) FindByRootRef(ctx context.Context, rootParentRef string, regIdentifier string, opts ...types.QueryOption) (*types.Registry, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, rootParentRef, regIdentifier)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindByRootRef")
@@ -260,19 +274,19 @@ func (_m *RegistryFinder) FindByRootRef(ctx context.Context, rootParentRef strin
 
 	var r0 *types.Registry
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*types.Registry, error)); ok {
-		return rf(ctx, rootParentRef, regIdentifier)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, ...types.QueryOption) (*types.Registry, error)); ok {
+		return rf(ctx, rootParentRef, regIdentifier, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) *types.Registry); ok {
-		r0 = rf(ctx, rootParentRef, regIdentifier)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, ...types.QueryOption) *types.Registry); ok {
+		r0 = rf(ctx, rootParentRef, regIdentifier, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.Registry)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, rootParentRef, regIdentifier)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, ...types.QueryOption) error); ok {
+		r1 = rf(ctx, rootParentRef, regIdentifier, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}

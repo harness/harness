@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
+	"github.com/harness/gitness/registry/app/services/deletion"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -78,6 +79,7 @@ type APIController struct {
 	UntaggedImagesEnabled        func(ctx context.Context) bool
 	PackageWrapper               interfaces.PackageWrapper
 	PublicAccess                 publicaccess.Service
+	DeletionService              *deletion.Service
 	StorageService               *storage.Service
 	app                          *docker.App
 }
@@ -114,6 +116,7 @@ func NewAPIController(
 	untaggedImagesEnabled func(ctx context.Context) bool,
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.Service,
+	deletionService *deletion.Service,
 	storageService *storage.Service,
 	app *docker.App,
 ) *APIController {
@@ -149,6 +152,7 @@ func NewAPIController(
 		UntaggedImagesEnabled:        untaggedImagesEnabled,
 		PackageWrapper:               packageWrapper,
 		PublicAccess:                 publicAccess,
+		DeletionService:              deletionService,
 		StorageService:               storageService,
 		app:                          app,
 	}

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -31,12 +32,24 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ArtifactSummary holds the summary information for an artifact version.
+type ArtifactSummary struct {
+	Image            string
+	Version          string
+	PackageType      artifact.PackageType
+	IsQuarantined    bool
+	QuarantineReason string
+	ArtifactType     *artifact.ArtifactType
+	DeletedAt        *time.Time
+	ArtifactUUID     string
+	RegistryUUID     string
+}
+
 func (c *APIController) GetArtifactVersionSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
 ) (artifact.GetArtifactVersionSummaryResponseObject, error) {
-	image, version, pkgType, isQuarantined, quarantineReason,
-		artifactType, artifactUUID, registryUUID, err := c.FetchArtifactSummary(ctx, r)
+	summary, err := c.FetchArtifactSummary(ctx, r)
 	if err != nil {
 		if errors.Is(err, apiauth.ErrUnauthorized) {
 			return artifact.GetArtifactVersionSummary401JSONResponse{
@@ -60,8 +73,9 @@ func (c *APIController) GetArtifactVersionSummary(
 	}
 
 	return artifact.GetArtifactVersionSummary200JSONResponse{
-		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(image,
-			pkgType, version, isQuarantined, quarantineReason, artifactType, artifactUUID, registryUUID),
+		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(summary.Image,
+			summary.PackageType, summary.Version, summary.IsQuarantined, summary.QuarantineReason,
+			summary.ArtifactType, summary.DeletedAt, summary.ArtifactUUID, summary.RegistryUUID),
 	}, nil
 }
 
@@ -69,16 +83,16 @@ func (c *APIController) GetArtifactVersionSummary(
 func (c *APIController) FetchArtifactSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
-) (string, string, artifact.PackageType, bool, string, *artifact.ArtifactType, string, string, error) {
+) (*ArtifactSummary, error) {
 	regInfo, err := c.RegistryMetadataHelper.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
 	if err != nil {
-		return "", "", "", false, "", nil, "", "", fmt.Errorf("failed to get registry request base info: %w", err)
+		return nil, fmt.Errorf("failed to get registry request base info: %w", err)
 	}
 
 	space, err := c.SpaceFinder.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
-		return "", "", "", false, "", nil, "", "", err
+		return nil, err
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -90,7 +104,7 @@ func (c *APIController) FetchArtifactSummary(
 		session,
 		permissionChecks...,
 	); err != nil {
-		return "", "", "", false, "", nil, "", "", err
+		return nil, err
 	}
 
 	image := string(r.Artifact)
@@ -105,16 +119,16 @@ func (c *APIController) FetchArtifactSummary(
 		artifactVersion = parsedDigest.String()
 	}
 
-	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
+	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID, types.WithAllDeleted())
 	if err != nil {
-		return "", "", "", false, "", nil, "", "", err
+		return nil, err
 	}
 
 	var artifactType *artifact.ArtifactType
 	if r.Params.ArtifactType != nil {
 		artifactType, err = ValidateAndGetArtifactType(registry.PackageType, string(*r.Params.ArtifactType))
 		if err != nil {
-			return "", "", "", false, "", nil, "", "", err
+			return nil, err
 		}
 	}
 
@@ -144,32 +158,66 @@ func (c *APIController) FetchArtifactSummary(
 			}
 			parsedDigest, err := types.NewDigest(digest.Digest(d))
 			if err != nil {
-				return "", "", "", false, "", nil, "", "", err
+				return nil, err
 			}
 			art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
-				parsedDigest.String(), artifactType)
+				parsedDigest.String(), artifactType, types.WithAllDeleted())
 			if err != nil {
-				return "", "", "", false, "", nil, "", "", err
+				return nil, err
 			}
 
-			return image, version, art.PackageType, isQuarantined, quarantineReason,
-				art.ArtifactType, art.UUID, registry.UUID, nil
-		} else {
-			ociVersion, err = c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
-			if err != nil {
-				return "", "", "", false, "", nil, "", "", err
-			}
-			return image, ociVersion.Name, ociVersion.PackageType, isQuarantined, quarantineReason,
-				nil, ociVersion.ArtifactUUID, registry.UUID, nil
+			return &ArtifactSummary{
+				Image:            image,
+				Version:          version,
+				PackageType:      art.PackageType,
+				IsQuarantined:    isQuarantined,
+				QuarantineReason: quarantineReason,
+				ArtifactType:     art.ArtifactType,
+				DeletedAt:        art.DeletedAt,
+				ArtifactUUID:     art.UUID,
+				RegistryUUID:     registry.UUID,
+			}, nil
 		}
+
+		ociVersion, err = c.TagStore.GetTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version)
+		if err != nil {
+			return nil, err
+		}
+
+		var deletedAt *time.Time
+		if ociVersion.ArtifactDeletedAt != nil {
+			deletedAt = ociVersion.ArtifactDeletedAt
+		}
+
+		// Artifact UUID is fetched directly from the database via join in GetOCIVersionMetadata
+		return &ArtifactSummary{
+			Image:            image,
+			Version:          ociVersion.Name,
+			PackageType:      ociVersion.PackageType,
+			IsQuarantined:    isQuarantined,
+			QuarantineReason: quarantineReason,
+			ArtifactType:     nil,
+			DeletedAt:        deletedAt,
+			ArtifactUUID:     ociVersion.ArtifactUUID,
+			RegistryUUID:     registry.UUID,
+		}, nil
 	}
-	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image,
-		version, artifactType)
+	metadata, err := c.ArtifactStore.GetArtifactMetadata(
+		ctx, regInfo.ParentID, regInfo.RegistryIdentifier, image, version, artifactType, types.WithAllDeleted())
 
 	if err != nil {
-		return "", "", "", false, "", nil, "", "", err
+		return nil, err
 	}
 
-	return image, art.Name, art.PackageType, isQuarantined, quarantineReason,
-		art.ArtifactType, art.UUID, registry.UUID, nil
+	return &ArtifactSummary{
+		Image:            image,
+		Version:          metadata.Name,
+		PackageType:      metadata.PackageType,
+		IsQuarantined:    isQuarantined,
+		QuarantineReason: quarantineReason,
+		ArtifactType:     metadata.ArtifactType,
+		DeletedAt:        metadata.DeletedAt,
+		ArtifactUUID:     metadata.UUID,
+		RegistryUUID:     registry.UUID,
+	}, nil
 }

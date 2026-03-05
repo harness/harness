@@ -250,6 +250,7 @@ func setupArtifactsControllerWithError(_ *testing.T, errorType string) *metadata
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)
@@ -357,16 +358,16 @@ func setupArtifactsSnapshotController(
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(artifacts, nil)
 	// GetAllArtifactsByParentIDUntagged: ctx, parentID, registryIDs, sortByField,
-	// sortByOrder, limit, offset, search, packageTypes (no latestVersion)
+	// sortByOrder, limit, offset, search, packageTypes, deleteFilter
 	mockTagStore.On("GetAllArtifactsByParentIDUntagged",
 		mock.Anything, int64(2), mock.Anything, mock.Anything, mock.Anything,
-		mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(artifacts, nil)
 	// CountAllArtifactsByParentID: ctx, parentID, registryIDs, search,
-	// latestVersion, packageTypes, untaggedImagesEnabled
+	// latestVersion, packageTypes, untaggedImagesEnabled, deleteFilter
 	mockTagStore.On("CountAllArtifactsByParentID",
 		mock.Anything, int64(2), mock.Anything, mock.Anything,
-		mock.Anything, mock.Anything, mock.Anything).
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(int64(len(*artifacts)), nil)
 	mockTagStore.On("GetQuarantineInfoForArtifacts", mock.Anything, mock.Anything, int64(2)).
 		Return(quarantineMap, nil)
@@ -415,6 +416,7 @@ func setupArtifactsSnapshotController(
 		func(_ context.Context) bool { return untaggedImagesEnabled }, // untaggedImagesEnabled
 		mockPackageWrapper, // packageWrapper
 		nil,                // publicAccess
+		nil,                // deletionService
 		nil,                // storageService
 		nil,                // app
 	)

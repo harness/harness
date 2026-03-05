@@ -46,7 +46,7 @@ type registryIDCacheGetter struct {
 }
 
 func (c registryIDCacheGetter) Find(ctx context.Context, repoID int64) (*types.Registry, error) {
-	repo, err := c.regSource.Get(ctx, repoID)
+	repo, err := c.regSource.Get(ctx, repoID, types.WithAllDeleted())
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ID: %w", err)
 	}

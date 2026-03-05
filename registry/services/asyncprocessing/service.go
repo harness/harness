@@ -246,7 +246,7 @@ func (s *Service) handleBuildRegistryIndex(ctx context.Context, task *types.Task
 				payload.RegistryID, err)
 		}
 		registryIDs, err2 := s.registryDao.FetchRegistriesIDByUpstreamProxyID(
-			ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID,
+			ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID, types.WithAllDeleted(),
 		)
 		if err2 != nil {
 			log.Ctx(ctx).Error().Msgf("failed to fetch registries whyle building registry "+

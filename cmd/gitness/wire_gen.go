@@ -167,9 +167,11 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/python"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
 	"github.com/harness/gitness/registry/app/pkg/rpm"
+	"github.com/harness/gitness/registry/app/services/deletion"
 	"github.com/harness/gitness/registry/app/services/hook"
 	publicaccess2 "github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
+	"github.com/harness/gitness/registry/app/services/reindexing"
 	storage2 "github.com/harness/gitness/registry/app/storage"
 	cache2 "github.com/harness/gitness/registry/app/store/cache"
 	database2 "github.com/harness/gitness/registry/app/store/database"
@@ -642,7 +644,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryHelper := cargo.LocalRegistryHelperProvider(fileManager, artifactRepository, spaceFinder)
 	interfacesRegistryHelper := helpers.ProvideRegistryHelper(artifactRepository, fileManager, imageRepository, artifactReporter, asyncprocessingReporter, transactor, provider, config)
 	packageWrapper := helpers.ProvidePackageWrapperProvider(interfacesRegistryHelper, registryFinder, registryHelper)
-	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, spaceFinder, transactor, accessor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder, storageService, app)
+	v3 := router.ProvideUntaggedImagesEnabled()
+	deletionPackageWrapper := deletion.ProvidePackageWrapper(packageWrapper)
+	reporter11 := artifact.ProvideArtifactReporterValue(artifactReporter)
+	reindexingService := reindexing.NewService(asyncprocessingReporter, reporter11)
+	deletionService := deletion.NewService(artifactRepository, imageRepository, manifestRepository, tagRepository, registryBlobRepository, fileManager, transactor, v3, deletionPackageWrapper, reindexingService, artifactReporter, provider)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, spaceFinder, transactor, accessor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder, v3, deletionService, storageService, app)
 	packageTagRepository := database2.ProvidePackageTagDao(db)
 	localBase := base.LocalBaseProvider(registryRepository, registryFinder, fileManager, transactor, imageRepository, artifactRepository, nodesRepository, packageTagRepository, authorizer, spaceFinder, auditService)
 	mavenDBStore := maven.DBStoreProvider(registryRepository, imageRepository, artifactRepository, spaceStore, bandwidthStatRepository, downloadStatRepository, nodesRepository, upstreamProxyConfigRepository)

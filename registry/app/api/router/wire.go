@@ -15,6 +15,8 @@
 package router
 
 import (
+	"context"
+
 	spacecontroller "github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
@@ -45,6 +47,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
+	"github.com/harness/gitness/registry/app/services/deletion"
 	"github.com/harness/gitness/registry/app/services/publicaccess"
 	refcache2 "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
@@ -100,6 +103,8 @@ func APIHandlerProvider(
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.CacheService,
 	quarantineFinder quarantine.Finder,
+	untaggedImagesEnabled func(ctx context.Context) bool,
+	deletionService *deletion.Service,
 	storageService *storage.Service,
 	app *docker.App,
 ) harness.APIHandler {
@@ -136,6 +141,8 @@ func APIHandlerProvider(
 		packageWrapper,
 		publicAccess,
 		quarantineFinder,
+		untaggedImagesEnabled,
+		deletionService,
 		storageService,
 		app,
 	)
@@ -183,5 +190,22 @@ func PackageHandlerProvider(
 	)
 }
 
-var WireSet = wire.NewSet(APIHandlerProvider, OCIHandlerProvider, AppRouterProvider,
-	MavenHandlerProvider, GenericHandlerProvider, PackageHandlerProvider)
+// ProvideUntaggedImagesEnabled provides a function for checking untagged images feature.
+// Gitness (standalone) doesn't have feature flags, so this defaults to false.
+// The harness-code registry-server uses a different provider that checks actual feature flags.
+func ProvideUntaggedImagesEnabled() func(ctx context.Context) bool {
+	return func(_ context.Context) bool {
+		return false // Gitness standalone defaults to tag-based mode
+	}
+}
+
+var WireSet = wire.NewSet(
+	APIHandlerProvider,
+	OCIHandlerProvider,
+	AppRouterProvider,
+	MavenHandlerProvider,
+	GenericHandlerProvider,
+	PackageHandlerProvider,
+	ProvideUntaggedImagesEnabled,
+	deletion.WireSet,
+)

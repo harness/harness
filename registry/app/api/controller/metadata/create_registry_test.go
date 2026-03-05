@@ -231,7 +231,7 @@ func TestCreateRegistry(t *testing.T) {
 				).Return(nil).Once()
 
 				// Setup registry repo mock.
-				mockRegistryRepo.On("FetchUpstreamProxyKeys", mock.Anything, mock.Anything).Return([]string{},
+				mockRegistryRepo.On("FetchUpstreamProxyKeys", mock.Anything, mock.Anything, mock.Anything).Return([]string{},
 					nil).Once()
 				mockCleanupPolicyRepo.On("GetByRegistryID", mock.Anything,
 					baseInfo.RegistryID).Return(&[]types.CleanupPolicy{}, nil).Once()
@@ -275,6 +275,7 @@ func TestCreateRegistry(t *testing.T) {
 					},
 					mockPackageWrapper,
 					mockPublicAccessService,
+					nil, // deletionService.
 					nil, // storageService.
 					nil, // app.
 				)
@@ -365,6 +366,7 @@ func TestCreateRegistry(t *testing.T) {
 					},
 					mockPackageWrapper,
 					mockPublicAccessService,
+					nil, // deletionService.
 					nil, // storageService.
 					nil, // app.
 				)

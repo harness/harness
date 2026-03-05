@@ -102,7 +102,6 @@ func (c *localRegistry) UploadPackage(
 	ctx context.Context, info gopackagetype.ArtifactInfo,
 	modfile io.ReadCloser, zipfile io.ReadCloser,
 ) (*commons.ResponseHeaders, error) {
-	// Check if version exists
 	checkIfVersionExists, err := c.localBase.CheckIfVersionExists(ctx, info)
 	if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
 		return nil, fmt.Errorf("failed to check if version exists: %w", err)

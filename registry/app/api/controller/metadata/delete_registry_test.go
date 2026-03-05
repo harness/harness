@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/registry/app/api/controller/mocks"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/store"
 	coretypes "github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -107,9 +108,10 @@ func TestDeleteRegistry(t *testing.T) {
 					mock.Anything,
 					regInfo.ParentID,
 					regInfo.RegistryIdentifier,
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(registry, nil)
 				mockRegistryRepository.On("FetchRegistriesIDByUpstreamProxyID", mock.Anything,
-					mock.Anything, regInfo.RootIdentifierID).Return([]int64{}, nil)
+					mock.Anything, regInfo.RootIdentifierID, mock.Anything).Return([]int64{}, nil)
 				mockImageStore.On("DeleteDownloadStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteBandwidthStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
 				mockImageStore.On("DeleteByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
@@ -265,7 +267,8 @@ func TestDeleteRegistry(t *testing.T) {
 					mock.Anything,
 					regInfo.ParentID,
 					regInfo.RegistryIdentifier,
-				).Return(nil, fmt.Errorf("registry doesn't exist with this key"))
+					mock.AnythingOfType("types.QueryOption"),
+				).Return(nil, store.ErrResourceNotFound)
 
 				c.SpaceFinder = mockSpaceFinder
 				c.RegistryRepository = mockRegistryRepository
@@ -278,7 +281,7 @@ func TestDeleteRegistry(t *testing.T) {
 			expectedResp: api.DeleteRegistry404JSONResponse{
 				NotFoundJSONResponse: api.NotFoundJSONResponse{
 					Code:    "404",
-					Message: "registry doesn't exist with this key",
+					Message: "registry reg doesn't exist",
 				},
 			},
 		},
@@ -338,6 +341,7 @@ func TestDeleteRegistry(t *testing.T) {
 					mock.Anything,
 					regInfo.ParentID,
 					regInfo.RegistryIdentifier,
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(registry, nil)
 				mockRegistryRepository.On(
 					"FetchUpstreamProxyIDs",
@@ -346,7 +350,7 @@ func TestDeleteRegistry(t *testing.T) {
 					regInfo.ParentID,
 				).Return([]int64{}, nil)
 				mockRegistryRepository.On("FetchRegistriesIDByUpstreamProxyID", mock.Anything,
-					mock.Anything, regInfo.RootIdentifierID).Return([]int64{}, nil)
+					mock.Anything, regInfo.RootIdentifierID, mock.Anything).Return([]int64{}, nil)
 				mockUpstreamProxyStore.On("Delete", mock.Anything, regInfo.ParentID,
 					regInfo.RegistryIdentifier).Return(nil)
 				mockImageStore.On("DeleteDownloadStatByRegistryID", mock.Anything, regInfo.RegistryID).Return(nil)
@@ -454,7 +458,7 @@ func TestDeleteRegistry(t *testing.T) {
 				}
 				// We could use AssertCalled for specific methods if needed.
 				// Only verify GetByParentIDAndName which is called before the transaction.
-				mockRegistryRepo.AssertCalled(t, "GetByParentIDAndName", mock.Anything, mock.Anything, mock.Anything)
+				mockRegistryRepo.AssertCalled(t, "GetByParentIDAndName", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			}
 
 			if controller.Authorizer != nil {

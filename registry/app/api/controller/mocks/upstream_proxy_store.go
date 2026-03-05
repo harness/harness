@@ -13,13 +13,20 @@ type UpstreamProxyStore struct {
 	mock.Mock
 }
 
-// Get provides a mock function with given fields: ctx, id
-func (m *UpstreamProxyStore) Get(ctx context.Context, id int64) (*types.UpstreamProxy, error) {
-	ret := m.Called(ctx, id)
+// Get provides a mock function with given fields: ctx, id, opts
+func (m *UpstreamProxyStore) Get(ctx context.Context, id int64, opts ...types.QueryOption) (*types.UpstreamProxy, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, id)
+	_ca = append(_ca, _va...)
+	ret := m.Called(_ca...)
 
 	var r0 *types.UpstreamProxy
-	if rf, ok := ret.Get(0).(func(context.Context, int64) *types.UpstreamProxy); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, ...types.QueryOption) *types.UpstreamProxy); ok {
+		r0 = rf(ctx, id, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.UpstreamProxy)
@@ -27,8 +34,8 @@ func (m *UpstreamProxyStore) Get(ctx context.Context, id int64) (*types.Upstream
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, ...types.QueryOption) error); ok {
+		r1 = rf(ctx, id, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -36,13 +43,20 @@ func (m *UpstreamProxyStore) Get(ctx context.Context, id int64) (*types.Upstream
 	return r0, r1
 }
 
-// GetByRegistryIdentifier provides a mock function with given fields: ctx, parentID, repoKey
-func (m *UpstreamProxyStore) GetByRegistryIdentifier(ctx context.Context, parentID int64, repoKey string) (*types.UpstreamProxy, error) {
-	ret := m.Called(ctx, parentID, repoKey)
+// GetByRegistryIdentifier provides a mock function with given fields: ctx, parentID, repoKey, opts
+func (m *UpstreamProxyStore) GetByRegistryIdentifier(ctx context.Context, parentID int64, repoKey string, opts ...types.QueryOption) (*types.UpstreamProxy, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, parentID, repoKey)
+	_ca = append(_ca, _va...)
+	ret := m.Called(_ca...)
 
 	var r0 *types.UpstreamProxy
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string) *types.UpstreamProxy); ok {
-		r0 = rf(ctx, parentID, repoKey)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, ...types.QueryOption) *types.UpstreamProxy); ok {
+		r0 = rf(ctx, parentID, repoKey, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.UpstreamProxy)
@@ -50,8 +64,8 @@ func (m *UpstreamProxyStore) GetByRegistryIdentifier(ctx context.Context, parent
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int64, string) error); ok {
-		r1 = rf(ctx, parentID, repoKey)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, string, ...types.QueryOption) error); ok {
+		r1 = rf(ctx, parentID, repoKey, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}

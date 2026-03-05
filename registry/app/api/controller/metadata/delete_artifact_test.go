@@ -17,6 +17,8 @@ package metadata
 import (
 	"context"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"testing"
 
 	"github.com/harness/gitness/app/api/request"
@@ -24,13 +26,96 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/registry/app/api/controller/mocks"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/app/pkg/filemanager"
+	"github.com/harness/gitness/registry/app/services/deletion"
+	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/store"
 	coretypes "github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+// noopFileManager implements filemanager.FileManager with no-op methods.
+// Only DeleteFile is functional for testing purposes.
+type noopFileManager struct{}
+
+var _ filemanager.FileManager = (*noopFileManager)(nil)
+
+func (n *noopFileManager) UploadFile(
+	_ context.Context, _ string, _ int64, _ int64, _ string, _ multipart.File, _ io.Reader, _ int64,
+) (types.FileInfo, error) {
+	return types.FileInfo{}, nil
+}
+func (n *noopFileManager) DownloadFileByPath(
+	_ context.Context, _ string, _ int64, _ string, _ string, _ bool,
+) (*storage.FileReader, int64, string, error) {
+	return nil, 0, "", nil
+}
+func (n *noopFileManager) DownloadFileByDigest(
+	_ context.Context, _ string, _ types.FileInfo, _ int64, _ int64,
+) (*storage.FileReader, error) {
+	return &storage.FileReader{}, nil
+}
+func (n *noopFileManager) DeleteFile(_ context.Context, _ int64, _ string) error { return nil }
+func (n *noopFileManager) HeadFile(_ context.Context, _ string, _ int64) (string, int64, error) {
+	return "", 0, nil
+}
+func (n *noopFileManager) CopyNodes(_ context.Context, _ int64, _ int64, _ int64, _ []string) error {
+	return nil
+}
+func (n *noopFileManager) FindLatestFilePath(_ context.Context, _ int64, _ string, _ string) (string, error) {
+	return "", nil
+}
+func (n *noopFileManager) GetFilesMetadata(
+	_ context.Context, _ string, _ int64, _ string, _ string, _ int, _ int, _ string,
+) (*[]types.FileNodeMetadata, error) {
+	result := []types.FileNodeMetadata{}
+	return &result, nil
+}
+func (n *noopFileManager) CountFilesByPath(_ context.Context, _ string, _ int64) (int64, error) {
+	return 0, nil
+}
+func (n *noopFileManager) PostFileUpload(
+	_ context.Context, _ string, _ int64, _ int64, _ string, _ types.FileInfo, _ int64,
+) error {
+	return nil
+}
+func (n *noopFileManager) HeadByDigest(
+	_ context.Context, _ string, _ types.FileInfo, _ int64, _ int64,
+) (bool, int64, error) {
+	return false, 0, nil
+}
+func (n *noopFileManager) SaveNodes(
+	_ context.Context, _ string, _ int64, _ int64, _ int64, _ string,
+) error {
+	return nil
+}
+func (n *noopFileManager) CreateNodesWithoutFileNode(_ context.Context, _ string, _ int64, _ int64) error {
+	return nil
+}
+func (n *noopFileManager) SaveNode(
+	_ context.Context, _ string, _ string, _ int64, _ string, _ string, _ string, _ bool, _ int64,
+) (string, error) {
+	return "", nil
+}
+func (n *noopFileManager) GetFilePath(_ context.Context, _ string, _ int64, _ int64) (string, error) {
+	return "", nil
+}
+func (n *noopFileManager) DeleteLeafNode(_ context.Context, _ int64, _ string) error { return nil }
+func (n *noopFileManager) GetNode(_ context.Context, _ int64, _ string) (*types.Node, error) {
+	return &types.Node{}, nil
+}
+func (n *noopFileManager) GetFileMetadata(_ context.Context, _ int64, _ string) (types.FileInfo, error) {
+	return types.FileInfo{}, nil
+}
+func (n *noopFileManager) UploadFileNoDBUpdate(
+	_ context.Context, _ string, _ multipart.File, _ io.Reader, _ int64, _ int64,
+) (types.FileInfo, error) {
+	return types.FileInfo{}, nil
+}
 
 func TestDeleteArtifact(t *testing.T) {
 	// Create a mock session for testing
@@ -61,8 +146,35 @@ func TestDeleteArtifact(t *testing.T) {
 				mockAuthorizer := new(mocks.Authorizer)
 				mockRegistryMetadataHelper := new(mocks.RegistryMetadataHelper)
 				mockImageStore := new(mocks.ImageRepository)
-				mockTx := new(mocks.Transaction)
+				mockArtifactStore := new(mocks.ArtifactRepository)
 				mockAuditService := new(mocks.AuditService)
+
+				// Create a transactor that executes the callback
+				mockDeletionTx := new(mocks.Transactor)
+				mockDeletionTx.On("WithTx", mock.Anything,
+					mock.AnythingOfType("func(context.Context) error"),
+					mock.Anything,
+				).Run(func(args mock.Arguments) {
+					fn, _ := args.Get(1).(func(context.Context) error)
+					ctx, _ := args.Get(0).(context.Context)
+					_ = fn(ctx)
+				}).Return(nil)
+
+				// No-op filemanager for deletion service
+				mockFM := &noopFileManager{}
+
+				// Mock artifact store deletion
+				mockArtifactStore.On("DeleteByImageNameAndRegistryID",
+					mock.Anything, int64(1), "test-artifact").Return(nil)
+
+				// Mock image store deletion
+				mockImageStore.On("DeleteByImageNameAndRegID",
+					mock.Anything, int64(1), "test-artifact").Return(nil)
+
+				deletionService := deletion.NewService(
+					mockArtifactStore, mockImageStore, nil, nil, nil,
+					mockFM, mockDeletionTx, nil, nil, nil, nil, nil,
+				)
 
 				space := &coretypes.SpaceCore{ID: 2}
 				regInfo := &types.RegistryRequestBaseInfo{
@@ -104,14 +216,15 @@ func TestDeleteArtifact(t *testing.T) {
 					mock.Anything,
 					int64(2),
 					"reg",
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(registry, nil)
 				mockImageStore.On(
 					"GetByName",
 					mock.Anything,
 					int64(1),
 					"test-artifact",
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(artifact, nil)
-				mockTx.On("WithTx", mock.Anything, mock.AnythingOfType("func(context.Context) error")).Return(nil)
 				mockAuditService.On(
 					"Log",
 					mock.Anything,
@@ -128,7 +241,7 @@ func TestDeleteArtifact(t *testing.T) {
 				c.Authorizer = mockAuthorizer
 				c.RegistryMetadataHelper = mockRegistryMetadataHelper
 				c.ImageStore = mockImageStore
-				c.tx = mockTx
+				c.DeletionService = deletionService
 				c.AuditService = mockAuditService
 			},
 			request: api.DeleteArtifactRequestObject{
@@ -234,7 +347,8 @@ func TestDeleteArtifact(t *testing.T) {
 					mock.Anything,
 					int64(2),
 					"reg",
-				).Return(nil, fmt.Errorf("registry doesn't exist with this key"))
+					mock.AnythingOfType("types.QueryOption"),
+				).Return(nil, store.ErrResourceNotFound)
 
 				c.SpaceFinder = mockSpaceFinder
 				c.RegistryRepository = mockRegistryRepository
@@ -248,7 +362,7 @@ func TestDeleteArtifact(t *testing.T) {
 			expectedResp: api.DeleteArtifact404JSONResponse{
 				NotFoundJSONResponse: api.NotFoundJSONResponse{
 					Code:    "404",
-					Message: "registry doesn't exist with this key",
+					Message: "registry reg doesn't exist",
 				},
 			},
 		},
@@ -295,12 +409,14 @@ func TestDeleteArtifact(t *testing.T) {
 					mock.Anything,
 					int64(2),
 					"reg",
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(registry, nil)
 				mockImageStore.On(
 					"GetByName",
 					mock.Anything,
 					int64(1),
 					"non-existent-artifact",
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(nil, fmt.Errorf("artifact doesn't exist with this key"))
 
 				c.SpaceFinder = mockSpaceFinder
@@ -364,12 +480,14 @@ func TestDeleteArtifact(t *testing.T) {
 					mock.Anything,
 					int64(2),
 					"reg",
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(registry, nil)
 				mockImageStore.On(
 					"GetByName",
 					mock.Anything,
 					int64(1),
 					"deleted-artifact",
+					mock.AnythingOfType("types.QueryOption"),
 				).Return(nil, fmt.Errorf("artifact is already deleted"))
 
 				c.SpaceFinder = mockSpaceFinder

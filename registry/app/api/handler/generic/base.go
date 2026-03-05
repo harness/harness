@@ -130,7 +130,11 @@ func (h *Handler) GetGenericArtifactInfo(r *http.Request) (
 		return pkg.GenericArtifactInfo{}, errcode.ErrCodeRootNotFound.WithDetail(err)
 	}
 
-	registry, err := h.Controller.DBStore.RegistryDao.GetByRootParentIDAndName(ctx, rootSpace.ID, registryIdentifier)
+	registry, err := h.Controller.DBStore.RegistryDao.GetByRootParentIDAndName(
+		ctx,
+		rootSpace.ID,
+		registryIdentifier,
+	)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(
 			"registry %s not found for root: %s. Reason: %s", registryIdentifier, rootSpace.Identifier, err,
@@ -379,6 +383,7 @@ func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 		return nil, err
 	}
 
+	//nolint:staticcheck // TODO: refactor to use generic.ArtifactInfo
 	return pkg.GenericArtifactInfo{
 		ArtifactInfo: &info,
 		Version:      version,

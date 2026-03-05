@@ -3,7 +3,6 @@
     "artifacts": [
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -18,7 +17,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -33,7 +31,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -48,7 +45,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -63,7 +59,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -78,7 +73,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -93,7 +87,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -108,7 +101,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -123,7 +115,6 @@
       },
       {
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",
@@ -139,7 +130,6 @@
       {
         "artifactType": "model",
         "downloadsCount": 0,
-        "isDeleted": false,
         "isQuarantined": false,
         "labels": null,
         "lastModified": "-62135596800000",

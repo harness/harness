@@ -52,7 +52,7 @@ func (c upstreamProxyRegistryIDCacheGetter) Find(
 	ctx context.Context,
 	registryID int64,
 ) (*types.UpstreamProxy, error) {
-	upstreamProxyConfig, err := c.upstreamProxySource.Get(ctx, registryID)
+	upstreamProxyConfig, err := c.upstreamProxySource.Get(ctx, registryID, types.WithAllDeleted())
 	if err != nil {
 		return nil, fmt.Errorf("failed to find upstream proxy config by registry ID: %w", err)
 	}

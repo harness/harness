@@ -73,7 +73,7 @@ func TestListWebhookExecutions(t *testing.T) {
 					enum.PermissionRegistryView,
 				).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
-				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(&types.Registry{ID: 3}, nil)
 				mockWebhooksRepo.On(
 					"GetByRegistryAndIdentifier",
 					mock.Anything,
@@ -294,7 +294,7 @@ func TestListWebhookExecutions(t *testing.T) {
 					enum.PermissionRegistryView,
 				).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
-				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(nil, fmt.Errorf("error"))
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(nil, fmt.Errorf("error"))
 			},
 			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
 				assert.NoError(t, err)
@@ -345,7 +345,7 @@ func TestListWebhookExecutions(t *testing.T) {
 					enum.PermissionRegistryView,
 				).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
-				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(&types.Registry{ID: 3}, nil)
 				mockWebhooksRepo.On("GetByRegistryAndIdentifier", mock.Anything, int64(3), "webhook").Return(nil, fmt.Errorf("error"))
 			},
 			validate: func(t *testing.T, response api.ListWebhookExecutionsResponseObject, err error) {
@@ -397,7 +397,7 @@ func TestListWebhookExecutions(t *testing.T) {
 					enum.PermissionRegistryView,
 				).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
-				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(&types.Registry{ID: 3}, nil)
 				mockWebhooksRepo.On(
 					"GetByRegistryAndIdentifier",
 					mock.Anything,
@@ -454,7 +454,7 @@ func TestListWebhookExecutions(t *testing.T) {
 					enum.PermissionRegistryView,
 				).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
-				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(&types.Registry{ID: 3}, nil)
 				mockWebhooksRepo.On(
 					"GetByRegistryAndIdentifier",
 					mock.Anything,
@@ -536,7 +536,7 @@ func TestListWebhookExecutions(t *testing.T) {
 					enum.PermissionRegistryView,
 				).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
-				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{ID: 3}, nil)
+				mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(&types.Registry{ID: 3}, nil)
 				mockWebhooksRepo.On(
 					"GetByRegistryAndIdentifier",
 					mock.Anything,

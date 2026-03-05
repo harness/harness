@@ -17,13 +17,17 @@ package metadata
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetRegistry(
@@ -78,21 +82,38 @@ func (c *APIController) GetRegistry(
 			),
 		}, nil
 	}
-	repoEntity, _ := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
+	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(
+		ctx,
+		regInfo.ParentID,
+		regInfo.RegistryIdentifier,
+		types.WithAllDeleted(),
+	)
+	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return artifact.GetRegistry404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, "registry not found"),
+				),
+			}, nil
+		}
+		log.Ctx(ctx).Error().Err(err).Msg("Failed to get registry by parent ID and name")
+		return throwGetRegistry500Error(err), nil
+	}
 	if string(repoEntity.Type) == string(artifact.RegistryTypeVIRTUAL) {
 		cleanupPolicies, err := c.CleanupPolicyStore.GetByRegistryID(ctx, repoEntity.ID)
 		if err != nil {
+			log.Ctx(ctx).Error().Err(err).Msg("Failed to get cleanup policies")
 			return throwGetRegistry500Error(err), nil
 		}
 		if len(repoEntity.Name) == 0 {
 			return artifact.GetRegistry404JSONResponse{
 				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-					*GetErrorResponse(http.StatusNotFound, "registry doesn't exist with this key"),
+					*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("registry %s doesn't exist", regInfo.RegistryIdentifier)),
 				),
 			}, nil
 		}
 		ref := space.Path + "/" + repoEntity.Name
-		jsonResponse, err := c.CreateVirtualRepositoryResponse(ctx,
+		jsonResponse, err := c.BuildVirtualRepositoryResponse(ctx,
 			repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies), cleanupPolicies,
 			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier), ref)
 		if err != nil {
@@ -109,11 +130,12 @@ func (c *APIController) GetRegistry(
 	upstreamproxyEntity, err := c.UpstreamProxyStore.GetByRegistryIdentifier(
 		ctx,
 		regInfo.ParentID, regInfo.RegistryIdentifier,
+		types.WithAllDeleted(),
 	)
 	if len(upstreamproxyEntity.RepoKey) == 0 {
 		return artifact.GetRegistry404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-				*GetErrorResponse(http.StatusNotFound, "registry doesn't exist with this key"),
+				*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("registry %s doesn't exist", regInfo.RegistryIdentifier)),
 			),
 		}, nil
 	}
@@ -121,7 +143,7 @@ func (c *APIController) GetRegistry(
 		return throwGetRegistry500Error(err), nil
 	}
 	ref := space.Path + "/" + upstreamproxyEntity.RepoKey
-	jsonResponse, err := c.CreateUpstreamProxyResponseJSONResponse(ctx, upstreamproxyEntity, ref)
+	jsonResponse, err := c.BuildUpstreamProxyResponse(ctx, upstreamproxyEntity, ref)
 	if err != nil {
 		return throwGetRegistry500Error(err), nil
 	}

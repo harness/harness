@@ -259,16 +259,24 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 		Return([]coretypes.PermissionCheck{})
 	mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).
 		Return(true, nil)
-	mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "test-registry").
-		Return(registry, nil)
-	mockImageStore.On("GetByNameAndType", mock.Anything, int64(1), "test-artifact", mock.Anything).
-		Return(image, nil)
-	mockArtifactStore.On("GetByName", mock.Anything, int64(1), "v1.0.0").
-		Return(art, nil)
+	mockRegistryRepo.On(
+		"GetByParentIDAndName", mock.Anything, int64(2), "test-registry",
+		mock.AnythingOfType("types.QueryOption"),
+	).Return(registry, nil)
+	mockImageStore.On(
+		"GetByNameAndType", mock.Anything, int64(1), "test-artifact",
+		mock.Anything, mock.AnythingOfType("types.QueryOption"),
+	).Return(image, nil)
+	mockArtifactStore.On(
+		"GetByName", mock.Anything, int64(1), "v1.0.0",
+		mock.AnythingOfType("types.QueryOption"),
+	).Return(art, nil)
 	mockDownloadStatRepo.On("GetTotalDownloadsForArtifactID", mock.Anything, int64(1)).
 		Return(int64(100), nil)
-	mockQuarantineRepo.On("GetByFilePath", mock.Anything, "", int64(1), "test-artifact", "v1.0.0", mock.Anything).
-		Return([]*types.QuarantineArtifact{}, nil)
+	mockQuarantineRepo.On(
+		"GetByFilePath", mock.Anything, "", int64(1),
+		"test-artifact", "v1.0.0", mock.Anything,
+	).Return([]*types.QuarantineArtifact{}, nil)
 
 	fileManager := createFileManager()
 	eventReporter := createEventReporter()
@@ -305,6 +313,7 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)
@@ -379,6 +388,7 @@ func setupControllerWithError(_ *testing.T, errorType string) *metadata.APIContr
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)
@@ -482,8 +492,10 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 		Return([]coretypes.PermissionCheck{})
 	mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).
 		Return(true, nil)
-	mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "test-registry").
-		Return(registry, nil)
+	mockRegistryRepo.On(
+		"GetByParentIDAndName", mock.Anything, int64(2), "test-registry",
+		mock.AnythingOfType("types.QueryOption"),
+	).Return(registry, nil)
 	// Create metadata based on package type
 	var metadataBytes []byte
 	switch packageType { //nolint:exhaustive // Only testing specific package types
@@ -521,10 +533,14 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 		Metadata:  metadataBytes,
 	}
 
-	mockImageStore.On("GetByNameAndType", mock.Anything, int64(1), "test-artifact", mock.Anything).
-		Return(image, nil)
-	mockArtifactStore.On("GetByName", mock.Anything, int64(1), "v1.0.0").
-		Return(art, nil)
+	mockImageStore.On(
+		"GetByNameAndType", mock.Anything, int64(1), "test-artifact",
+		mock.Anything, mock.AnythingOfType("types.QueryOption"),
+	).Return(image, nil)
+	mockArtifactStore.On(
+		"GetByName", mock.Anything, int64(1), "v1.0.0",
+		mock.AnythingOfType("types.QueryOption"),
+	).Return(art, nil)
 	mockDownloadStatRepo.On("GetTotalDownloadsForArtifactID", mock.Anything, int64(1)).
 		Return(int64(100), nil)
 	mockQuarantineRepo.On("GetByFilePath", mock.Anything, "", int64(1), "test-artifact", "v1.0.0", mock.Anything).
@@ -565,6 +581,7 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)

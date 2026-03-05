@@ -114,18 +114,21 @@ func (m *MockLocalBase) DeleteFile(
 }
 
 func (m *MockLocalBase) UpdateFileManagerAndCreateArtifact(
-	ctx context.Context,
-	info pkg.ArtifactInfo,
-	version, path string,
-	metadata metadata.Metadata,
-	fileInfo types.FileInfo,
-	failOnConflict bool,
+	_ context.Context,
+	_ pkg.ArtifactInfo,
+	_, _ string,
+	_ metadata.Metadata,
+	_ types.FileInfo,
+	_ bool,
 ) (*commons.ResponseHeaders, string, int64, bool, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *MockLocalBase) CheckIfVersionExists(_ context.Context, _ pkg.PackageArtifactInfo) (bool, error) {
+func (m *MockLocalBase) CheckIfVersionExists(
+	_ context.Context,
+	_ pkg.PackageArtifactInfo,
+) (bool, error) {
 	// TODO implement me
 	panic("implement me")
 }

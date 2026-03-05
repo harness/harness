@@ -82,7 +82,11 @@ func (c *APIController) ModifyRegistry(
 		}, nil
 	}
 
-	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
+	repoEntity, err := c.RegistryRepository.GetByParentIDAndName(
+		ctx,
+		regInfo.ParentID,
+		regInfo.RegistryIdentifier,
+	)
 	if err != nil {
 		return throwModifyRegistry500Error(err), err
 	}
@@ -97,7 +101,7 @@ func (c *APIController) ModifyRegistry(
 	if len(upstreamproxyEntity.RepoKey) == 0 {
 		return artifact.ModifyRegistry404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-				*GetErrorResponse(http.StatusNotFound, "registry doesn't exist with this key"),
+				*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("registry %s doesn't exist", regInfo.RegistryIdentifier)),
 			),
 		}, nil
 	}
@@ -151,7 +155,7 @@ func (c *APIController) ModifyRegistry(
 		log.Error().Err(err).Msg("failed to report build registry index event")
 	}
 	ref := space.Path + "/" + upstreamproxyEntity.RepoKey
-	jsonResponse, err := c.CreateUpstreamProxyResponseJSONResponse(ctx, modifiedRepoEntity, ref)
+	jsonResponse, err := c.BuildUpstreamProxyResponse(ctx, modifiedRepoEntity, ref)
 	if err != nil {
 		//nolint:nilerr
 		return artifact.ModifyRegistry500JSONResponse{
@@ -172,7 +176,7 @@ func (c *APIController) updateVirtualRegistry(
 	if len(repoEntity.Name) == 0 {
 		return artifact.ModifyRegistry404JSONResponse{
 			NotFoundJSONResponse: artifact.NotFoundJSONResponse(
-				*GetErrorResponse(http.StatusNotFound, "registry doesn't exist with this key"),
+				*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("registry %s doesn't exist", regInfo.RegistryIdentifier)),
 			),
 		}, nil
 	}
@@ -225,7 +229,7 @@ func (c *APIController) updateVirtualRegistry(
 		return throwModifyRegistry500Error(err), nil
 	}
 	ref := space.Path + "/" + repoEntity.Name
-	jsonResponse, err := c.CreateVirtualRepositoryResponse(ctx,
+	jsonResponse, err := c.BuildVirtualRepositoryResponse(ctx,
 		modifiedRepoEntity, c.getUpstreamProxyKeys(ctx, modifiedRepoEntity.UpstreamProxies), cleanupPolicies,
 		c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier), ref)
 	if err != nil {
@@ -609,14 +613,14 @@ func (c *APIController) checkIfUpstreamIsUsedInPublicRegistries(
 	registryID int64,
 ) error {
 	registryIDs, err := c.RegistryRepository.FetchRegistriesIDByUpstreamProxyID(
-		ctx, strconv.FormatInt(registryID, 10), rootIdentifierID)
+		ctx, strconv.FormatInt(registryID, 10), rootIdentifierID, types.WithAllDeleted())
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to fetch registryIDs: %s", err)
 		return fmt.Errorf("failed to fetch registryIDs IDs: %w", err)
 	}
 	//nolint:nestif
 	if len(registryIDs) > 0 {
-		registries, err := c.RegistryRepository.GetByIDIn(ctx, registryIDs)
+		registries, err := c.RegistryRepository.GetByIDIn(ctx, registryIDs, types.WithAllDeleted())
 		if err != nil {
 			log.Ctx(ctx).Error().Msgf("failed to fetch registries: %s", err)
 			return fmt.Errorf("failed to fetch registries: %w", err)
@@ -658,7 +662,7 @@ func (c *APIController) checkIfVirtualHasPrivateUpstreams(
 ) error {
 	//nolint:nestif
 	if len(registryIDs) > 0 {
-		registries, err := c.RegistryRepository.GetByIDIn(ctx, registryIDs)
+		registries, err := c.RegistryRepository.GetByIDIn(ctx, registryIDs, types.WithAllDeleted())
 		if err != nil {
 			log.Ctx(ctx).Error().Msgf("failed to fetch registries: %s", err)
 			return fmt.Errorf("failed to fetch registries: %w", err)

@@ -70,9 +70,20 @@ func (c *APIController) GetHelmArtifactDetails(
 	image := string(r.Artifact)
 	version := string(r.Version)
 
-	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
-
+	registry, err := c.RegistryRepository.GetByParentIDAndName(
+		ctx,
+		regInfo.ParentID,
+		regInfo.RegistryIdentifier,
+		types.WithAllDeleted(),
+	)
 	if err != nil {
+		if errors.Is(err, store2.ErrResourceNotFound) {
+			return artifact.GetHelmArtifactDetails404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, "registry not found"),
+				),
+			}, nil
+		}
 		return artifact.GetHelmArtifactDetails500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
@@ -136,8 +147,9 @@ func (c *APIController) GetHelmArtifactDetails(
 		return getHelmArtifactDetailsErrResponse(err)
 	}
 
-	art, err := c.ArtifactStore.GetArtifactMetadata(ctx, registry.ParentID, registry.Name, image, parsedDigest.String(),
-		nil)
+	art, err := c.ArtifactStore.GetArtifactMetadata(
+		ctx, registry.ParentID, registry.Name, image, parsedDigest.String(), nil, types.WithAllDeleted(),
+	)
 	if err != nil {
 		return getHelmArtifactDetailsErrResponse(err)
 	}

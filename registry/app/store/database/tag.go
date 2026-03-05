@@ -41,17 +41,22 @@ import (
 
 const (
 	// OrderDesc is the normalized string to be used for sorting results in descending order.
-	OrderDesc           types.SortOrder = "desc"
-	lessThan            string          = "<"
-	greaterThan         string          = ">"
-	labelSeparatorStart string          = "%^_"
-	labelSeparatorEnd   string          = "^_%"
-	downloadCount       string          = "download_count"
-	imageName           string          = "image_name"
-	driverPostgres      string          = "postgres"
-	name                string          = "name"
-	postgresStringAgg   string          = "string_agg"
-	sqliteGroupConcat   string          = "group_concat"
+	OrderDesc   types.SortOrder = "desc"
+	lessThan    string          = "<"
+	greaterThan string          = ">"
+	// whereImageDeletedAtIsNull is the WHERE clause to filter out soft-deleted images.
+	whereImageDeletedAtIsNull        = " AND i.image_deleted_at IS NULL"
+	labelSeparatorStart       string = "%^_"
+	labelSeparatorEnd         string = "^_%"
+	downloadCount             string = "download_count"
+	imageName                 string = "image_name"
+	driverPostgres            string = "postgres"
+	name                      string = "name"
+	postgresStringAgg         string = "string_agg"
+	sqliteGroupConcat         string = "group_concat"
+	// SQL join clause for joining tags with images by registry and image name.
+	joinTagsWithImages string = " JOIN images i ON i.image_registry_id = t.tag_registry_id" +
+		" AND i.image_name = t.tag_image_name"
 )
 
 type tagDao struct {
@@ -78,55 +83,58 @@ type tagDB struct {
 }
 
 type artifactMetadataDB struct {
-	ID               int64                  `db:"artifact_id"`
-	UUID             string                 `db:"uuid"`
-	Name             string                 `db:"name"`
-	RegistryUUID     string                 `db:"registry_uuid"`
-	RepoName         string                 `db:"repo_name"`
-	DownloadCount    int64                  `db:"download_count"`
-	PackageType      artifact.PackageType   `db:"package_type"`
-	Labels           sql.NullString         `db:"labels"`
-	LatestVersion    string                 `db:"latest_version"`
-	CreatedAt        int64                  `db:"created_at"`
-	ModifiedAt       int64                  `db:"modified_at"`
-	Tag              *string                `db:"tag"`
-	Version          string                 `db:"version"`
-	Metadata         *json.RawMessage       `db:"metadata"`
-	IsQuarantined    bool                   `db:"is_quarantined"`
-	QuarantineReason *string                `db:"quarantine_reason"`
-	ArtifactType     *artifact.ArtifactType `db:"artifact_type"`
-	Tags             *string                `db:"tags"`
-	RegistryType     *artifact.RegistryType `db:"registry_type"`
+	ID                int64                  `db:"artifact_id"`
+	UUID              string                 `db:"uuid"`
+	Name              string                 `db:"name"`
+	RegistryUUID      string                 `db:"registry_uuid"`
+	RepoName          string                 `db:"repo_name"`
+	DownloadCount     int64                  `db:"download_count"`
+	PackageType       artifact.PackageType   `db:"package_type"`
+	Labels            sql.NullString         `db:"labels"`
+	LatestVersion     string                 `db:"latest_version"`
+	CreatedAt         int64                  `db:"created_at"`
+	ModifiedAt        int64                  `db:"modified_at"`
+	Tag               *string                `db:"tag"`
+	Version           string                 `db:"version"`
+	Metadata          *json.RawMessage       `db:"metadata"`
+	IsQuarantined     bool                   `db:"is_quarantined"`
+	QuarantineReason  *string                `db:"quarantine_reason"`
+	ArtifactType      *artifact.ArtifactType `db:"artifact_type"`
+	Tags              *string                `db:"tags"`
+	ArtifactDeletedAt *int64                 `db:"artifact_deleted_at"`
+	RegistryType      *artifact.RegistryType `db:"registry_type"`
 }
 
 type tagMetadataDB struct {
-	Name          string               `db:"name"`
-	Size          string               `db:"size"`
-	PackageType   artifact.PackageType `db:"package_type"`
-	DigestCount   int                  `db:"digest_count"`
-	ModifiedAt    int64                `db:"modified_at"`
-	SchemaVersion int                  `db:"manifest_schema_version"`
-	NonConformant bool                 `db:"manifest_non_conformant"`
-	Payload       []byte               `db:"manifest_payload"`
-	MediaType     string               `db:"mt_media_type"`
-	Digest        []byte               `db:"manifest_digest"`
-	DownloadCount int64                `db:"download_count"`
-	ArtifactUUID  sql.NullString       `db:"artifact_uuid"`
+	Name              string               `db:"name"`
+	Size              string               `db:"size"`
+	PackageType       artifact.PackageType `db:"package_type"`
+	DigestCount       int                  `db:"digest_count"`
+	ModifiedAt        int64                `db:"modified_at"`
+	SchemaVersion     int                  `db:"manifest_schema_version"`
+	NonConformant     bool                 `db:"manifest_non_conformant"`
+	Payload           []byte               `db:"manifest_payload"`
+	MediaType         string               `db:"mt_media_type"`
+	Digest            []byte               `db:"manifest_digest"`
+	DownloadCount     int64                `db:"download_count"`
+	ArtifactDeletedAt *int64               `db:"artifact_deleted_at"`
+	ArtifactUUID      sql.NullString       `db:"artifact_uuid"`
 }
 
 type ociVersionMetadataDB struct {
-	Size          string               `db:"size"`
-	PackageType   artifact.PackageType `db:"package_type"`
-	DigestCount   int                  `db:"digest_count"`
-	ModifiedAt    int64                `db:"modified_at"`
-	SchemaVersion int                  `db:"manifest_schema_version"`
-	NonConformant bool                 `db:"manifest_non_conformant"`
-	Payload       []byte               `db:"manifest_payload"`
-	MediaType     string               `db:"mt_media_type"`
-	Digest        []byte               `db:"manifest_digest"`
-	DownloadCount int64                `db:"download_count"`
-	Tags          *string              `db:"tags"`
-	ArtifactUUID  sql.NullString       `db:"artifact_uuid"`
+	Size              string               `db:"size"`
+	PackageType       artifact.PackageType `db:"package_type"`
+	DigestCount       int                  `db:"digest_count"`
+	ModifiedAt        int64                `db:"modified_at"`
+	SchemaVersion     int                  `db:"manifest_schema_version"`
+	NonConformant     bool                 `db:"manifest_non_conformant"`
+	Payload           []byte               `db:"manifest_payload"`
+	MediaType         string               `db:"mt_media_type"`
+	Digest            []byte               `db:"manifest_digest"`
+	DownloadCount     int64                `db:"download_count"`
+	Tags              *string              `db:"tags"`
+	ArtifactDeletedAt *int64               `db:"artifact_deleted_at"`
+	ArtifactUUID      sql.NullString       `db:"artifact_uuid"`
 }
 
 type tagDetailDB struct {
@@ -248,13 +256,10 @@ func (t tagDao) DeleteTagByName(
 	return count == 1, nil
 }
 
-// DeleteTagByName deletes a tag by name within a repository.
-//
-//	A boolean is returned to denote whether the tag was
-//
+// DeleteTagByManifestID deletes a tag by name within a repository.
+// A boolean is returned to denote whether the tag was
 // deleted or not. This avoids the need for a separate preceding
-//
-//	`SELECT` to find if it exists.
+// `SELECT` to find if it exists.
 func (t tagDao) DeleteTagByManifestID(
 	ctx context.Context,
 	repoID int64,
@@ -387,9 +392,13 @@ func (t tagDao) GetAllArtifactsByParentID(
 	latestVersion bool,
 	packageTypes []string,
 ) (*[]types.ArtifactMetadata, error) {
-	q1 := t.GetAllArtifactOnParentIDQueryForNonOCI(parentID, latestVersion, registryIDs, packageTypes, search, false)
+	q1 := t.GetAllArtifactOnParentIDQueryForNonOCI(
+		parentID, latestVersion, registryIDs, packageTypes, search, false,
+	)
 
-	q2 := t.GetAllArtifactsQueryByParentIDForOCI(parentID, latestVersion, registryIDs, packageTypes, search)
+	q2 := t.GetAllArtifactsQueryByParentIDForOCI(
+		parentID, latestVersion, registryIDs, packageTypes, search,
+	)
 
 	q1SQL, q1Args, err := q1.ToSql()
 	if err != nil {
@@ -405,7 +414,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	finalQuery := fmt.Sprintf(`
     SELECT repo_name, name, package_type, version, modified_at,
            labels, download_count, is_quarantined, quarantine_reason, artifact_type,
-		   registry_uuid, uuid, registry_type
+           artifact_deleted_at, registry_uuid, uuid, registry_type
     FROM (%s UNION ALL %s) AS combined
 `, q1SQL, q2SQL)
 
@@ -452,8 +461,9 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		COALESCE(t2.download_count,0) as download_count,
         false as is_quarantined,
 		'' as quarantine_reason,
-        r.registry_type as registry_type,
-        i.image_type as artifact_type `,
+        i.image_type as artifact_type,
+        NULL as artifact_deleted_at,
+        r.registry_type as registry_type`,
 	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
@@ -474,14 +484,13 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 		)
 
 	if latestVersion {
-		q2 = q2.Join(
-			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
+		baseSubquery := `(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
 			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
-			JOIN registries r ON t.tag_registry_id = r.registry_id 
-			WHERE r.registry_parent_id = ? ) AS a 
-			ON t.tag_id = a.id`, parentID, // nolint:goconst
-		).
-			Where("a.rank = 1")
+			JOIN registries r ON t.tag_registry_id = r.registry_id`
+		joinClause := joinTagsWithImages
+		whereClause := " WHERE r.registry_parent_id = ?" + whereImageDeletedAtIsNull
+		rowNumSubquery := baseSubquery + joinClause + whereClause + `) AS a`
+		q2 = q2.Join(rowNumSubquery+` ON t.tag_id = a.id`, parentID).Where("a.rank = 1")
 	}
 
 	if len(*registryIDs) > 0 {
@@ -495,6 +504,9 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 	if search != "" {
 		q2 = q2.Where("t.tag_image_name LIKE ?", sqlPartialMatch(search))
 	}
+
+	q2 = q2.Where("i.image_deleted_at IS NULL")
+
 	return q2
 }
 
@@ -573,13 +585,16 @@ func (t tagDao) getCoreArtifactsQuery(
 		r.registry_package_type as package_type,
 		ar.artifact_version as version, 
 		ar.artifact_updated_at as modified_at, 
-        r.registry_type as registry_type,
-		i.image_type as artifact_type`,
+		i.image_labels as labels,
+		i.image_type as artifact_type,
+		ar.artifact_deleted_at as artifact_deleted_at,
+        r.registry_type as registry_type`,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		Where("r.registry_parent_id = ?", parentID)
+		Where("r.registry_parent_id = ?", parentID).
+		Where("ar.artifact_deleted_at IS NULL")
 
 	// Apply filters
 	if len(*registryIDs) > 0 {
@@ -601,8 +616,8 @@ func (t tagDao) getCoreArtifactsQuery(
 	}
 
 	return query.OrderBy(fmt.Sprintf("%s %s", sortField, sortByOrder)).
-		Limit(uint64(limit)).  // nolint:gosec
-		Offset(uint64(offset)) // nolint:gosec
+		Limit(uint64(limit)).  //nolint:gosec
+		Offset(uint64(offset)) //nolint:gosec
 }
 
 type enrichmentData struct {
@@ -783,8 +798,9 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		COALESCE(t2.download_count, 0) as download_count,
         (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
         qp.quarantined_path_reason as quarantine_reason,
-        r.registry_type as registry_type,
-        i.image_type as artifact_type`+suffix,
+        i.image_type as artifact_type,
+        ar.artifact_deleted_at as artifact_deleted_at,
+        r.registry_type as registry_type`+suffix,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
@@ -806,15 +822,13 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		)
 
 	if latestVersion {
-		q1 = q1.Join(
-			`(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
+		baseSubquery := `(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
 			ORDER BY ar.artifact_updated_at DESC) AS rank FROM artifacts ar 
-            JOIN images i ON i.image_id = ar.artifact_image_id 
+			JOIN images i ON i.image_id = ar.artifact_image_id 
 			JOIN registries r ON i.image_registry_id = r.registry_id 
-			WHERE r.registry_parent_id = ? ) AS a 
-			ON ar.artifact_id = a.id`, parentID, // nolint:goconst
-		).
-			Where("a.rank = 1")
+			WHERE r.registry_parent_id = ? AND ar.artifact_deleted_at IS NULL`
+		rowNumSubquery := baseSubquery + `) AS a`
+		q1 = q1.Join(rowNumSubquery+` ON ar.artifact_id = a.id`, parentID).Where("a.rank = 1")
 	}
 
 	if len(*registryIDs) > 0 {
@@ -828,6 +842,9 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 	if search != "" {
 		q1 = q1.Where("i.image_name LIKE ?", sqlPartialMatch(search))
 	}
+
+	q1 = q1.Where("ar.artifact_deleted_at IS NULL")
+
 	return q1
 }
 
@@ -846,13 +863,13 @@ func (t tagDao) CountAllOCIArtifactsByParentID(
 		)
 
 	if latestVersion {
-		q = q.Join(
-			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
+		baseSubquery := `(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
 			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
-			JOIN registries r ON t.tag_registry_id = r.registry_id 
-			WHERE r.registry_parent_id = ? ) AS a 
-			ON t.tag_id = a.id`, parentID, // nolint:goconst
-		).Where("a.rank = 1")
+			JOIN registries r ON t.tag_registry_id = r.registry_id`
+		joinClause := joinTagsWithImages
+		whereClause := " WHERE r.registry_parent_id = ?" + whereImageDeletedAtIsNull
+		rowNumSubquery := baseSubquery + joinClause + whereClause + `) AS a`
+		q = q.Join(rowNumSubquery+` ON t.tag_id = a.id`, parentID).Where("a.rank = 1")
 	}
 	if len(*registryIDs) > 0 {
 		q = q.Where(sq.Eq{"r.registry_name": registryIDs})
@@ -865,6 +882,8 @@ func (t tagDao) CountAllOCIArtifactsByParentID(
 	if len(packageTypes) > 0 {
 		q = q.Where(sq.Eq{"registry_package_type": packageTypes})
 	}
+
+	q = q.Where("ar.image_deleted_at IS NULL")
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -886,24 +905,26 @@ func (t tagDao) CountAllArtifactsByParentID(
 ) (int64, error) {
 	if untaggedImagesEnabled {
 		// Use the new unified count function for all artifacts
-		return t.CountAllArtifactsByParentIDUntagged(ctx, parentID, registryIDs, search, latestVersion, packageTypes)
+		return t.CountAllArtifactsByParentIDUntagged(
+			ctx, parentID, registryIDs, search, latestVersion, packageTypes,
+		)
 	}
 
 	q := databaseg.Builder.Select("COUNT(*)").
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		Where("r.registry_parent_id = ? AND r.registry_package_type NOT IN ('DOCKER', 'HELM')", parentID)
+		Where("r.registry_parent_id = ? AND r.registry_package_type NOT IN ('DOCKER', 'HELM')", parentID).
+		Where("ar.artifact_deleted_at IS NULL")
 
 	if latestVersion {
-		q = q.Join(
-			`(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
+		baseSubquery := `(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
 			ORDER BY ar.artifact_updated_at DESC) AS rank FROM artifacts ar 
-            JOIN images i ON i.image_id = ar.artifact_image_id 
+			JOIN images i ON i.image_id = ar.artifact_image_id 
 			JOIN registries r ON i.image_registry_id = r.registry_id 
-			WHERE r.registry_parent_id = ? ) AS a 
-			ON ar.artifact_id = a.id`, parentID,
-		).Where("a.rank = 1")
+			WHERE r.registry_parent_id = ? AND ar.artifact_deleted_at IS NULL`
+		rowNumSubquery := baseSubquery + `) AS a`
+		q = q.Join(rowNumSubquery+` ON ar.artifact_id = a.id`, parentID).Where("a.rank = 1")
 	}
 
 	if len(*registryIDs) > 0 {
@@ -948,7 +969,8 @@ func (t tagDao) CountAllArtifactsByParentIDUntagged(
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		Where("r.registry_parent_id = ?", parentID)
+		Where("r.registry_parent_id = ?", parentID).
+		Where("ar.artifact_deleted_at IS NULL")
 
 	// Apply filters
 	if len(*registryIDs) > 0 {
@@ -1033,6 +1055,7 @@ func (t tagDao) GetLatestTagMetadata(
 	parentID int64,
 	repoKey string,
 	imageName string,
+	opts ...types.QueryOption,
 ) (*types.ArtifactMetadata, error) {
 	// Precomputed download count subquery
 	downloadCountSubquery := `
@@ -1072,8 +1095,7 @@ func (t tagDao) GetLatestTagMetadata(
 			Where(
 				"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
 				parentID, repoKey, imageName,
-			).
-			OrderBy("t.tag_updated_at DESC").Limit(1)
+			)
 	} else {
 		q = databaseg.Builder.Select(
 			`r.registry_name AS repo_name,
@@ -1092,9 +1114,23 @@ func (t tagDao) GetLatestTagMetadata(
 			Where(
 				"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
 				parentID, repoKey, imageName,
-			).
-			OrderBy("t.tag_updated_at DESC").Limit(1)
+			)
 	}
+
+	// Apply query options
+	queryOpts := types.MakeQueryOptions(opts...)
+
+	// Apply delete filter
+	switch queryOpts.DeleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		q = q.Where("ar.image_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		q = q.Where("ar.image_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter - include all
+	}
+
+	q = q.OrderBy("t.tag_updated_at DESC").Limit(1)
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -1119,15 +1155,31 @@ func (t tagDao) GetLatestTagName(
 	parentID int64,
 	repoKey string,
 	imageName string,
+	opts ...types.QueryOption,
 ) (string, error) {
 	q := databaseg.Builder.Select("tag_name as name").
-		From("tags").
+		From("tags t").
 		Join("registries ON tag_registry_id = registry_id").
+		Join("images i ON i.image_registry_id = t.tag_registry_id AND i.image_name = t.tag_image_name").
 		Where(
 			"registry_parent_id = ? AND registry_name = ? AND tag_image_name = ?",
 			parentID, repoKey, imageName,
-		).
-		OrderBy("tag_updated_at DESC").Limit(1)
+		)
+
+	// Apply query options
+	queryOpts := types.MakeQueryOptions(opts...)
+
+	// Apply delete filter
+	switch queryOpts.DeleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		q = q.Where("i.image_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		q = q.Where("i.image_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter - include all
+	}
+
+	q = q.OrderBy("tag_updated_at DESC").Limit(1)
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -1144,6 +1196,7 @@ func (t tagDao) GetLatestTagName(
 	return tag, nil
 }
 
+// GetTagMetadata Get all records.
 func (t tagDao) GetTagMetadata(
 	ctx context.Context,
 	parentID int64,
@@ -1175,19 +1228,18 @@ func (t tagDao) GetTagMetadata(
 	}
 
 	q := databaseg.Builder.Select(
-		"registry_package_type as package_type, tag_name as name, "+
-			"tag_updated_at as modified_at, manifest_total_size as size, "+
+		"r.registry_package_type as package_type, t.tag_name as name, "+
+			"t.tag_updated_at as modified_at, manifest_total_size as size, "+
 			"oa.artifact_uuid as artifact_uuid",
 	).
-		From("tags").
-		Join("registries ON tag_registry_id = registry_id").
-		Join("manifests ON manifest_id = tag_manifest_id").
-		LeftJoin("images i ON i.image_registry_id = registry_id AND i.image_name = tag_image_name").
-		LeftJoin(fmt.Sprintf("oci_artifacts oa ON oa.artifact_image_id = i.image_id "+
-			"AND oa.version_digest = manifest_digest")).
+		From("tags t").
+		Join("registries r ON t.tag_registry_id = r.registry_id").
+		Join("manifests ON manifest_id = t.tag_manifest_id").
+		LeftJoin("images i ON i.image_registry_id = r.registry_id AND i.image_name = t.tag_image_name").
+		LeftJoin("oci_artifacts oa ON oa.artifact_image_id = i.image_id AND oa.version_digest = manifest_digest").
 		Where(
-			"registry_parent_id = ? AND registry_name = ?"+
-				" AND tag_image_name = ? AND tag_name = ?", parentID, repoKey, imageName, name,
+			"r.registry_parent_id = ? AND r.registry_name = ?"+
+				" AND t.tag_image_name = ? AND t.tag_name = ?", parentID, repoKey, imageName, name,
 		)
 
 	withClause := fmt.Sprintf("WITH oci_artifacts AS (%s)", ociArtifactsSQL)
@@ -1210,12 +1262,14 @@ func (t tagDao) GetTagMetadata(
 	return t.mapToTagMetadata(ctx, dst)
 }
 
+// GetOCIVersionMetadata Get all records.
 func (t tagDao) GetOCIVersionMetadata(
 	ctx context.Context,
 	parentID int64,
 	repoKey string,
 	imageName string,
 	dgst string,
+	opts ...types.QueryOption,
 ) (*types.OciVersionMetadata, error) {
 	digestBytes, err := types.GetDigestBytes(digest.Digest(dgst))
 	if err != nil {
@@ -1229,6 +1283,9 @@ func (t tagDao) GetOCIVersionMetadata(
 		decodeFunction = "unhex(a.artifact_version)"
 	}
 
+	// Apply query options
+	queryOpts := types.MakeQueryOptions(opts...)
+
 	ociArtifactsCTE := databaseg.Builder.Select(
 		"a.artifact_uuid, a.artifact_image_id," +
 			"CASE  WHEN a.artifact_version ~ '^[0-9A-Fa-f]+$' " +
@@ -1239,6 +1296,16 @@ func (t tagDao) GetOCIVersionMetadata(
 		Join("images i ON a.artifact_image_id = i.image_id").
 		Join("registries r ON r.registry_id = i.image_registry_id").
 		Where("r.registry_package_type IN ('DOCKER','HELM')")
+
+	// Apply delete filter to CTE
+	switch queryOpts.DeleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		ociArtifactsCTE = ociArtifactsCTE.Where("i.image_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		ociArtifactsCTE = ociArtifactsCTE.Where("i.image_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter - include all
+	}
 
 	ociArtifactsSQL, ociArtifactsArgs, err := ociArtifactsCTE.ToSql()
 	if err != nil {
@@ -1251,16 +1318,15 @@ func (t tagDao) GetOCIVersionMetadata(
 			"oa.artifact_uuid as artifact_uuid",
 	).
 		From("manifests").
-		Join("registries ON manifest_registry_id = registry_id").
-		LeftJoin("images i ON i.image_registry_id = registry_id AND i.image_name = manifest_image_name").
-		LeftJoin(fmt.Sprintf("oci_artifacts oa ON oa.artifact_image_id = i.image_id "+
-			"AND oa.version_digest = manifest_digest")).
+		Join("registries r ON manifest_registry_id = r.registry_id").
+		LeftJoin("images i ON i.image_registry_id = r.registry_id AND i.image_name = manifest_image_name").
+		LeftJoin("oci_artifacts oa ON oa.artifact_image_id = i.image_id AND oa.version_digest = manifest_digest").
 		Where(
-			"registry_parent_id = ? AND registry_name = ?"+
+			"r.registry_parent_id = ? AND r.registry_name = ?"+
 				" AND manifest_image_name = ? AND manifest_digest = ?", parentID, repoKey, imageName, digestBytes,
 		)
 
-	withClause := fmt.Sprintf("WITH oci_artifacts AS (%s)", ociArtifactsSQL)
+	withClause := "WITH oci_artifacts AS (" + ociArtifactsSQL + ")"
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
@@ -1280,12 +1346,29 @@ func (t tagDao) GetOCIVersionMetadata(
 	return t.mapToOciVersion(dst)
 }
 
-func (t tagDao) GetLatestTag(ctx context.Context, repoID int64, imageName string) (*types.Tag, error) {
+func (t tagDao) GetLatestTag(
+	ctx context.Context, repoID int64, imageName string, opts ...types.QueryOption,
+) (*types.Tag, error) {
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(tagDB{}), ",")).
-		From("tags").
-		Where("tag_registry_id = ? AND tag_image_name = ?", repoID, imageName).
-		OrderBy("tag_updated_at DESC").Limit(1)
+		From("tags t").
+		Join("images i ON i.image_registry_id = t.tag_registry_id AND i.image_name = t.tag_image_name").
+		Where("t.tag_registry_id = ? AND t.tag_image_name = ?", repoID, imageName)
+
+	// Apply query options
+	queryOpts := types.MakeQueryOptions(opts...)
+
+	// Apply delete filter
+	switch queryOpts.DeleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("i.image_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("i.image_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter - include all
+	}
+
+	stmt = stmt.OrderBy("t.tag_updated_at DESC").Limit(1)
 
 	db := dbtx.GetAccessor(ctx, t.db)
 
@@ -1307,6 +1390,13 @@ func (t tagDao) GetAllArtifactsByRepo(
 	sortByField string, sortByOrder string, limit int, offset int, search string,
 	labels []string,
 ) (*[]types.ArtifactMetadata, error) {
+	baseSubquery := `(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
+		ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
+		JOIN registries r ON t.tag_registry_id = r.registry_id`
+	joinClause := joinTagsWithImages
+	whereClause := " WHERE r.registry_parent_id = ? AND r.registry_name = ? AND i.image_deleted_at IS NULL"
+	rowNumSubquery := baseSubquery + joinClause + whereClause + `) AS a`
+
 	q := databaseg.Builder.Select(
 		`r.registry_name as repo_name, t.tag_image_name as name, 
 		r.registry_package_type as package_type, t.tag_name as latest_version, 
@@ -1314,13 +1404,7 @@ func (t tagDao) GetAllArtifactsByRepo(
 		COALESCE(t2.download_count, 0) as download_count`,
 	).
 		From("tags t").
-		Join(
-			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
-			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
-			JOIN registries r ON t.tag_registry_id = r.registry_id  
-			WHERE r.registry_parent_id = ? AND r.registry_name = ? ) AS a 
-			ON t.tag_id = a.id`, parentID, repoKey, // nolint:goconst
-		).
+		Join(rowNumSubquery+` ON t.tag_id = a.id`, parentID, repoKey).
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Join(
 			"images ar ON ar.image_registry_id = t.tag_registry_id"+
@@ -1350,6 +1434,8 @@ func (t tagDao) GetAllArtifactsByRepo(
 		q = q.Where("'^_' || ar.image_labels || '^_' LIKE ?", labelsVal)
 	}
 
+	q = q.Where("ar.image_deleted_at IS NULL")
+
 	sortField := "t.tag_" + sortByField
 	if sortByField == downloadCount {
 		sortField = downloadCount
@@ -1375,20 +1461,23 @@ func (t tagDao) CountAllArtifactsByRepo(
 	ctx context.Context, parentID int64, repoKey string,
 	search string, labels []string,
 ) (int64, error) {
+	baseSubquery := `(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
+		ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
+		JOIN registries r ON t.tag_registry_id = r.registry_id`
+	joinClause := joinTagsWithImages
+	whereClause := " WHERE r.registry_parent_id = ? AND r.registry_name = ? AND i.image_deleted_at IS NULL"
+	rowNumSubquery := baseSubquery + joinClause + whereClause + `) AS a`
+
 	q := databaseg.Builder.Select("COUNT(*)").
 		From("tags t").
-		Join(
-			`(SELECT t.tag_id as id, ROW_NUMBER() OVER (PARTITION BY t.tag_registry_id, t.tag_image_name 
-			ORDER BY t.tag_updated_at DESC) AS rank FROM tags t 
-			JOIN registries r ON t.tag_registry_id = r.registry_id 
-			WHERE r.registry_parent_id = ? AND r.registry_name = ? ) AS a ON t.tag_id = a.id`, parentID, repoKey,
-		).
+		Join(rowNumSubquery+` ON t.tag_id = a.id`, parentID, repoKey).
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Join(
 			"images ar ON ar.image_registry_id = t.tag_registry_id AND" +
 				" ar.image_name = t.tag_image_name",
 		).
-		Where("a.rank = 1 ")
+		Where("a.rank = 1 ").
+		Where("ar.image_deleted_at IS NULL")
 
 	if search != "" {
 		q = q.Where("tag_image_name LIKE ?", sqlPartialMatch(search))
@@ -1421,19 +1510,21 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 	search string,
 ) (*[]types.OciVersionMetadata, error) {
 	q := databaseg.Builder.Select(
-		`t.tag_name as name, m.manifest_total_size as size, 
-		r.registry_package_type as package_type, t.tag_updated_at as modified_at, 
-		m.manifest_schema_version, m.manifest_non_conformant, m.manifest_payload, 
+		`t.tag_name as name, m.manifest_total_size as size,
+		r.registry_package_type as package_type, t.tag_updated_at as modified_at,
+		m.manifest_schema_version, m.manifest_non_conformant, m.manifest_payload,
 		mt.mt_media_type, m.manifest_digest`,
 	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Join("manifests m ON t.tag_manifest_id = m.manifest_id").
 		Join("media_types mt ON mt.mt_id = m.manifest_media_type_id").
+		Join("images i ON i.image_registry_id = t.tag_registry_id AND i.image_name = t.tag_image_name").
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
 			parentID, repoKey, image,
-		)
+		).
+		Where("i.image_deleted_at IS NULL")
 
 	if search != "" {
 		q = q.Where("tag_name LIKE ?", sqlPartialMatch(search))
@@ -1526,13 +1617,15 @@ func (t tagDao) GetAllOciVersionsByRepoAndImage(
 		tagAggExpr+" AS tags",
 	).
 		From("manifests m").
-		LeftJoin("tags t ON m.manifest_id = t.tag_manifest_id"). //
+		LeftJoin("tags t ON m.manifest_id = t.tag_manifest_id").
 		Join("registries r ON m.manifest_registry_id = r.registry_id").
 		Join("media_types mt ON mt.mt_id = m.manifest_media_type_id").
+		Join("images i ON i.image_registry_id = r.registry_id AND i.image_name = m.manifest_image_name").
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ? AND m.manifest_image_name = ?",
 			parentID, repoKey, image,
-		)
+		).
+		Where("i.image_deleted_at IS NULL")
 
 	if search != "" {
 		digestBytes, err := types.GetDigestBytes(digest.Digest(search))
@@ -1581,10 +1674,12 @@ func (t tagDao) GetOciTagsInfo(
 	).
 		From("tags t").
 		Join("manifests m ON t.tag_manifest_id = m.manifest_id").
+		Join("images i ON i.image_registry_id = t.tag_registry_id AND i.image_name = t.tag_image_name").
 		Where(
 			"m.manifest_registry_id = ? AND m.manifest_image_name = ?",
 			registryID, image,
-		)
+		).
+		Where("i.image_deleted_at IS NULL")
 
 	if search != "" {
 		q = q.Where("t.tag_name LIKE ?", sqlPartialMatch(search))
@@ -1610,13 +1705,15 @@ func (t tagDao) CountAllTagsByRepoAndImage(
 	repoKey string, image string, search string,
 ) (int64, error) {
 	stmt := databaseg.Builder.Select("COUNT(*)").
-		From("tags").
+		From("tags t").
 		Join("registries ON tag_registry_id = registry_id").
 		Join("manifests ON tag_manifest_id = manifest_id").
+		Join("images i ON i.image_registry_id = t.tag_registry_id AND i.image_name = t.tag_image_name").
 		Where(
 			"registry_parent_id = ? AND registry_name = ?"+
 				" AND tag_image_name = ?", parentID, repoKey, image,
-		)
+		).
+		Where("i.image_deleted_at IS NULL")
 
 	if search != "" {
 		stmt = stmt.Where("tag_name LIKE ?", sqlPartialMatch(search))
@@ -1709,19 +1806,21 @@ func (t tagDao) CountOciVersionByRepoAndImage(
 	repoKey string, image string, search string,
 ) (int64, error) {
 	stmt := databaseg.Builder.Select("COUNT(*)").
-		From("manifests").
-		Join("registries ON manifest_registry_id = registry_id").
+		From("manifests m").
+		Join("registries r ON m.manifest_registry_id = r.registry_id").
+		Join("images i ON i.image_registry_id = r.registry_id AND i.image_name = m.manifest_image_name").
 		Where(
-			"registry_parent_id = ? AND registry_name = ?"+
-				" AND manifest_image_name = ?", parentID, repoKey, image,
-		)
+			"r.registry_parent_id = ? AND r.registry_name = ?"+
+				" AND m.manifest_image_name = ?", parentID, repoKey, image,
+		).
+		Where("i.image_deleted_at IS NULL")
 
 	if search != "" {
 		digestBytes, err := types.GetDigestBytes(digest.Digest(search))
 		if err != nil {
 			return 0, fmt.Errorf("invalid digest: %s, error: %w", search, err)
 		}
-		stmt = stmt.Where("manifest_digest = ?", digestBytes)
+		stmt = stmt.Where("m.manifest_digest = ?", digestBytes)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -1745,8 +1844,10 @@ func (t tagDao) FindTag(
 ) (*types.Tag, error) {
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(tagDB{}), ",")).
-		From("tags").
-		Where("tag_registry_id = ? AND tag_image_name = ? AND tag_name = ?", repoID, imageName, name)
+		From("tags t").
+		Join("images i ON i.image_registry_id = t.tag_registry_id AND i.image_name = t.tag_image_name").
+		Where("t.tag_registry_id = ? AND t.tag_image_name = ? AND t.tag_name = ?", repoID, imageName, name).
+		Where("i.image_deleted_at IS NULL")
 
 	db := dbtx.GetAccessor(ctx, t.db)
 
@@ -1900,6 +2001,12 @@ func (t tagDao) mapToArtifactMetadata(
 		}
 	}
 
+	var deletedAt *time.Time
+	if dst.ArtifactDeletedAt != nil {
+		t := time.UnixMilli(*dst.ArtifactDeletedAt)
+		deletedAt = &t
+	}
+
 	artifactMetadata := &types.ArtifactMetadata{
 		Name:             dst.Name,
 		UUID:             dst.UUID,
@@ -1915,6 +2022,7 @@ func (t tagDao) mapToArtifactMetadata(
 		IsQuarantined:    dst.IsQuarantined,
 		QuarantineReason: dst.QuarantineReason,
 		ArtifactType:     dst.ArtifactType,
+		DeletedAt:        deletedAt,
 		RegistryType:     dst.RegistryType,
 	}
 
@@ -1992,6 +2100,10 @@ func (t tagDao) mapToTagMetadata(
 		Payload:       dst.Payload,
 		DownloadCount: dst.DownloadCount,
 	}
+	if dst.ArtifactDeletedAt != nil {
+		deletedAt := time.UnixMilli(*dst.ArtifactDeletedAt)
+		tagMetadata.ArtifactDeletedAt = &deletedAt
+	}
 	if dst.Digest != nil {
 		dgst := types.Digest(util.GetHexEncodedString(dst.Digest))
 		tagMetadata.Digest = string(dgst)
@@ -2016,6 +2128,10 @@ func (t tagDao) mapToOciVersion(
 		NonConformant: dst.NonConformant,
 		MediaType:     dst.MediaType,
 		Payload:       dst.Payload,
+	}
+	if dst.ArtifactDeletedAt != nil {
+		deletedAt := time.UnixMilli(*dst.ArtifactDeletedAt)
+		ociVersion.ArtifactDeletedAt = &deletedAt
 	}
 	if dst.Tags != nil {
 		ociVersion.Tags = strings.Split(*dst.Tags, ",")

@@ -22,6 +22,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -58,7 +59,7 @@ func (c *APIController) GetOciArtifactTags(
 	}
 
 	image := string(r.Artifact)
-	_, err = c.ImageStore.GetByName(ctx, regInfo.RegistryID, image)
+	_, err = c.ImageStore.GetByName(ctx, regInfo.RegistryID, image, types.WithAllDeleted())
 	if err != nil {
 		return getOCIArtifacts404Error(ctx, fmt.Errorf("failed to get image by name: [%s], error: %w", image, err))
 	}

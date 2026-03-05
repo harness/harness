@@ -377,7 +377,7 @@ func TestGetRegistryRequestBaseInfo(t *testing.T) {
 			setupMocks: func(_ *mocks.SpacePathStore, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepository *mocks.RegistryRepository) {
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root").Return(&gitnesstypes.SpaceCore{ID: 1}, nil)
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(&gitnesstypes.SpaceCore{ID: 2}, nil)
-				mockRegistryRepository.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(&types.Registry{
+				mockRegistryRepository.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(&types.Registry{
 					ID:   3,
 					Type: api.RegistryTypeVIRTUAL,
 				}, nil)
@@ -429,7 +429,7 @@ func TestGetRegistryRequestBaseInfo(t *testing.T) {
 			setupMocks: func(_ *mocks.SpacePathStore, mockSpaceFinder *mocks.SpaceFinder, mockRegistryRepository *mocks.RegistryRepository) {
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root").Return(&gitnesstypes.SpaceCore{ID: 1}, nil)
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(&gitnesstypes.SpaceCore{ID: 2}, nil)
-				mockRegistryRepository.On("GetByParentIDAndName", mock.Anything, int64(2), "reg").Return(nil, fmt.Errorf("not found"))
+				mockRegistryRepository.On("GetByParentIDAndName", mock.Anything, int64(2), "reg", mock.AnythingOfType("types.QueryOption")).Return(nil, fmt.Errorf("not found"))
 			},
 			expectedError: "registry not found",
 		},

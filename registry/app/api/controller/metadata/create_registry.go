@@ -167,7 +167,7 @@ func (c *APIController) CreateRegistry(
 	}
 
 	ref := space.Path + "/" + upstreamproxyEntity.RepoKey
-	jsonResponse, err := c.CreateUpstreamProxyResponseJSONResponse(ctx, upstreamproxyEntity, ref)
+	jsonResponse, err := c.BuildUpstreamProxyResponse(ctx, upstreamproxyEntity, ref)
 	if err != nil {
 		//nolint:nilerr
 		return artifact.CreateRegistry500JSONResponse{
@@ -220,7 +220,7 @@ func (c *APIController) createVirtualRegistry(
 		return throwCreateRegistry400Error(err), nil
 	}
 	ref := space.Path + "/" + repoEntity.Name
-	jsonResponse, err := c.CreateVirtualRepositoryResponse(ctx,
+	jsonResponse, err := c.BuildVirtualRepositoryResponse(ctx,
 		repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies),
 		cleanupPolicies, repoURL, ref)
 	if err != nil {
@@ -504,7 +504,9 @@ func isDuplicateKeyError(err error) bool {
 }
 
 func (c *APIController) handleDuplicateRegistryError(ctx context.Context, registry *registrytypes.Registry) error {
-	registryData, err := c.RegFinder.FindByRootParentID(ctx, registry.RootParentID, registry.Name)
+	registryData, err := c.RegFinder.FindByRootParentID(
+		ctx, registry.RootParentID, registry.Name, registrytypes.WithAllDeleted(),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to fetch existing registry details: %w", err)
 	}

@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
+	"github.com/harness/gitness/registry/app/services/deletion"
 	"github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -95,6 +96,8 @@ func NewAPIHandler(
 	packageWrapper interfaces.PackageWrapper,
 	publicAccess publicaccess.Service,
 	quarantineFinder quarantine.Finder,
+	untaggedImagesEnabled func(ctx context.Context) bool,
+	deletionService *deletion.Service,
 	storageService *storage.Service,
 	app *docker.App,
 ) APIHandler {
@@ -132,11 +135,10 @@ func NewAPIHandler(
 		quarantineArtifactRepository,
 		quarantineFinder,
 		spaceStore,
-		func(_ context.Context) bool {
-			return true
-		},
+		untaggedImagesEnabled,
 		packageWrapper,
 		publicAccess,
+		deletionService,
 		storageService,
 		app,
 	)

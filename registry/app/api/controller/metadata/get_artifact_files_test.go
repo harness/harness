@@ -318,12 +318,18 @@ func setupFilesController(_ *testing.T, packageType artifact.PackageType) *metad
 		Return([]coretypes.PermissionCheck{})
 	mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).
 		Return(true, nil)
-	mockRegistryRepo.On("GetByParentIDAndName", mock.Anything, int64(2), "test-registry").
-		Return(registry, nil)
-	mockImageStore.On("GetByNameAndType", mock.Anything, int64(1), "test-artifact", mock.Anything).
-		Return(image, nil)
-	mockArtifactStore.On("GetByName", mock.Anything, int64(1), "v1.0.0").
-		Return(art, nil)
+	mockRegistryRepo.On(
+		"GetByParentIDAndName", mock.Anything, int64(2), "test-registry",
+		mock.AnythingOfType("types.QueryOption"),
+	).Return(registry, nil)
+	mockImageStore.On(
+		"GetByNameAndType", mock.Anything, int64(1), "test-artifact",
+		mock.Anything, mock.AnythingOfType("types.QueryOption"),
+	).Return(image, nil)
+	mockArtifactStore.On(
+		"GetByName", mock.Anything, int64(1), "v1.0.0",
+		mock.AnythingOfType("types.QueryOption"),
+	).Return(art, nil)
 
 	eventReporter := createEventReporter()
 	mockPackageWrapper := new(mocks.MockPackageWrapper)
@@ -371,6 +377,7 @@ func setupFilesController(_ *testing.T, packageType artifact.PackageType) *metad
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		mockPackageWrapper,                            // packageWrapper
 		nil,                                           // publicAccess
+		nil,                                           // deletionService
 		nil,                                           // storageService
 		nil,                                           // app
 	)
@@ -445,6 +452,7 @@ func setupFilesControllerWithError(_ *testing.T, errorType string) *metadata.API
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)

@@ -276,7 +276,7 @@ func (c *APIController) getUpstreamProxyIDs(ctx context.Context, registryID int6
 }
 
 func (c *APIController) getUpstreamProxyKeys(ctx context.Context, ids []int64) []string {
-	repoKeys, _ := c.RegistryRepository.FetchUpstreamProxyKeys(ctx, ids)
+	repoKeys, _ := c.RegistryRepository.FetchUpstreamProxyKeys(ctx, ids, types.WithAllDeleted())
 	return repoKeys
 }
 
@@ -322,7 +322,7 @@ func getRepoEntityFields(dto api.RegistryRequest) ([]string, []string, string, [
 	return allowedPattern, blockedPattern, description, labels
 }
 
-func (c *APIController) CreateVirtualRepositoryResponse(
+func (c *APIController) BuildVirtualRepositoryResponse(
 	ctx context.Context,
 	registry *types.Registry,
 	upstreamProxyKeys []string,
@@ -336,6 +336,11 @@ func (c *APIController) CreateVirtualRepositoryResponse(
 	}
 	createdAt := GetTimeInMs(registry.CreatedAt)
 	modifiedAt := GetTimeInMs(registry.UpdatedAt)
+	var deletedAt *string
+	if registry.DeletedAt != nil {
+		d := GetTimeInMs(*registry.DeletedAt)
+		deletedAt = &d
+	}
 	allowedPattern := registry.AllowedPattern
 	blockedPattern := registry.BlockedPattern
 	labels := registry.Labels
@@ -357,13 +362,14 @@ func (c *APIController) CreateVirtualRepositoryResponse(
 			Config:         &config,
 			Labels:         &labels,
 			IsPublic:       isPublic,
+			DeletedAt:      deletedAt,
 		},
 		Status: api.StatusSUCCESS,
 	}
 	return response, nil
 }
 
-func (c *APIController) CreateUpstreamProxyResponseJSONResponse(
+func (c *APIController) BuildUpstreamProxyResponse(
 	ctx context.Context,
 	upstreamproxy *types.UpstreamProxy,
 	registryRef string,
@@ -374,8 +380,14 @@ func (c *APIController) CreateUpstreamProxyResponseJSONResponse(
 	}
 	createdAt := GetTimeInMs(upstreamproxy.CreatedAt)
 	modifiedAt := GetTimeInMs(upstreamproxy.UpdatedAt)
+	var deletedAt *string
+	if upstreamproxy.DeletedAt != nil {
+		d := GetTimeInMs(*upstreamproxy.DeletedAt)
+		deletedAt = &d
+	}
 	allowedPattern := upstreamproxy.AllowedPattern
 	blockedPattern := upstreamproxy.BlockedPattern
+
 	configAuth := &api.UpstreamConfig_Auth{}
 
 	if api.AuthType(upstreamproxy.RepoAuthType) == api.AuthTypeUserPassword {
@@ -430,6 +442,7 @@ func (c *APIController) CreateUpstreamProxyResponseJSONResponse(
 			ModifiedAt:     &modifiedAt,
 			Config:         registryConfig,
 			IsPublic:       isPublic,
+			DeletedAt:      deletedAt,
 		},
 		Status: api.StatusSUCCESS,
 	}

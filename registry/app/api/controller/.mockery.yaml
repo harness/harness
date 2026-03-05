@@ -19,6 +19,14 @@ packages:
         config:
           filename: "tag_repository.go"
           dir: "./mocks"
+      ImageRepository:
+        config:
+          filename: "image_repository.go"
+          dir: "./mocks"
+      RegistryRepository:
+        config:
+          filename: "registry_repository.go"
+          dir: "./mocks"
   github.com/harness/gitness/registry/app/api/interfaces:
     config:
       inpackage: false

@@ -81,9 +81,20 @@ func (c *APIController) GetArtifactFiles(
 	image := string(r.Artifact)
 	version := string(r.Version)
 
-	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, reqInfo.ParentID, reqInfo.RegistryIdentifier)
-
+	registry, err := c.RegistryRepository.GetByParentIDAndName(
+		ctx,
+		reqInfo.ParentID,
+		reqInfo.RegistryIdentifier,
+		types.WithAllDeleted(),
+	)
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return artifact.GetArtifactFiles404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, "registry not found"),
+				),
+			}, nil
+		}
 		return artifact.GetArtifactFiles500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
@@ -101,7 +112,7 @@ func (c *APIController) GetArtifactFiles(
 			}, nil
 		}
 	}
-	img, err := c.ImageStore.GetByNameAndType(ctx, reqInfo.RegistryID, image, artifactType)
+	img, err := c.ImageStore.GetByNameAndType(ctx, reqInfo.RegistryID, image, artifactType, types.WithAllDeleted())
 
 	if err != nil {
 		if errors.Is(err, store.ErrResourceNotFound) {
@@ -117,7 +128,7 @@ func (c *APIController) GetArtifactFiles(
 			),
 		}, nil
 	}
-	art, err := c.ArtifactStore.GetByName(ctx, img.ID, version)
+	art, err := c.ArtifactStore.GetByName(ctx, img.ID, version, types.WithAllDeleted())
 
 	if err != nil {
 		if errors.Is(err, store.ErrResourceNotFound) {

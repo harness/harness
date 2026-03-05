@@ -39,7 +39,7 @@ func EmitReadEvent(
 // The callback should be executed inside a database transaction so that if it fails,
 // the transaction can be rolled back.
 func EmitCommitEventCallback(
-	ctx context.Context,
+	_ context.Context,
 	hook BlobActionHook,
 	event BlobCommitEvent,
 ) func(ctx context.Context) error {

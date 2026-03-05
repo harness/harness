@@ -37,11 +37,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	ulimit  = uint64(0)
-	uoffset = uint64(0)
-)
-
 type UpstreamproxyDao struct {
 	registryDao store.RegistryRepository
 	db          *sqlx.DB
@@ -135,10 +130,23 @@ func getUpstreamProxyQuery() squirrel.SelectBuilder {
 		LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id ")
 }
 
-func (r UpstreamproxyDao) Get(ctx context.Context, id int64) (upstreamProxy *types.UpstreamProxy, err error) {
+func (r UpstreamproxyDao) Get(
+	ctx context.Context,
+	id int64,
+	opts ...types.QueryOption,
+) (upstreamProxy *types.UpstreamProxy, err error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	q := getUpstreamProxyQuery()
 	q = q.Where("r.registry_id = ? AND r.registry_type = 'UPSTREAM'", id)
 
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		q = q.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		q = q.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter
+	}
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
@@ -158,11 +166,21 @@ func (r UpstreamproxyDao) GetByRegistryIdentifier(
 	ctx context.Context,
 	parentID int64,
 	repoKey string,
+	opts ...types.QueryOption,
 ) (upstreamProxy *types.UpstreamProxy, err error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	q := getUpstreamProxyQuery()
 	q = q.Where("r.registry_parent_id = ? AND r.registry_name = ? AND r.registry_type = 'UPSTREAM'",
 		parentID, repoKey)
 
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		q = q.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		q = q.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter
+	}
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
@@ -183,7 +201,8 @@ func (r UpstreamproxyDao) GetByParentID(ctx context.Context, parentID string) (
 ) {
 	q := getUpstreamProxyQuery()
 	q = q.Where("r.registry_parent_id = ? AND r.registry_type = 'UPSTREAM'",
-		parentID)
+		parentID).
+		Where("r.registry_deleted_at IS NULL")
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -297,7 +316,8 @@ func (r UpstreamproxyDao) GetAll(
 ) (upstreamProxies *[]types.UpstreamProxy, err error) {
 	q := getUpstreamProxyQuery()
 	q = q.Where("r.registry_parent_id = ? AND r.registry_type = 'UPSTREAM'",
-		parentID)
+		parentID).
+		Where("r.registry_deleted_at IS NULL")
 
 	if search != "" {
 		q = q.Where(" r.registry_name LIKE ?", sqlPartialMatch(search))
@@ -307,6 +327,7 @@ func (r UpstreamproxyDao) GetAll(
 		q = q.Where(" AND r.registry_package_type in ? ", packageTypes)
 	}
 
+	var ulimit, uoffset uint64
 	if limit > 0 {
 		ulimit = uint64(limit)
 	}
@@ -339,10 +360,11 @@ func (r UpstreamproxyDao) CountAll(
 		From(" registries r").
 		LeftJoin(" upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id ").
 		Where("r.registry_parent_id = ? AND r.registry_type = 'UPSTREAM'",
-			parentID)
+			parentID).
+		Where("r.registry_deleted_at IS NULL")
 
 	if search != "" {
-		q = q.Where(" r.registry_name LIKE '%" + search + "%' ")
+		q = q.Where("r.registry_name LIKE ?", sqlPartialMatch(search))
 	}
 
 	if len(packageTypes) > 0 {

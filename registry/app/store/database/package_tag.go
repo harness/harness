@@ -55,8 +55,10 @@ type PackageTagMetadataDB struct {
 	Version string `db:"package_tag_version"`
 }
 
-func (r PackageTagDao) FindByImageNameAndRegID(ctx context.Context,
-	image string, regID int64, imageType *string) ([]*types.PackageTagMetadata, error) {
+func (r PackageTagDao) FindByImageNameAndRegID(
+	ctx context.Context,
+	image string, regID int64, imageType *string,
+) ([]*types.PackageTagMetadata, error) {
 	stmt := databaseg.Builder.
 		Select("p.package_tag_id as package_tag_id, "+
 			"p.package_tag_name as package_tag_name,"+
@@ -65,7 +67,8 @@ func (r PackageTagDao) FindByImageNameAndRegID(ctx context.Context,
 		From("package_tags as p").
 		Join("artifacts as a ON p.package_tag_artifact_id = a.artifact_id").
 		Join("images as i ON a.artifact_image_id = i.image_id").
-		Where("i.image_name = ?  AND i.image_registry_id = ?", image, regID)
+		Where("i.image_name = ?  AND i.image_registry_id = ?", image, regID).
+		Where("a.artifact_deleted_at IS NULL")
 
 	if imageType != nil {
 		stmt = stmt.Where("i.image_type = ?", *imageType)
@@ -90,8 +93,10 @@ func (r PackageTagDao) FindByImageNameAndRegID(ctx context.Context,
 	return r.mapToPackageTagList(ctx, dst)
 }
 
-func (r PackageTagDao) DeleteByTagAndImageName(ctx context.Context,
-	tag string, image string, regID int64) error {
+func (r PackageTagDao) DeleteByTagAndImageName(
+	ctx context.Context,
+	tag string, image string, regID int64,
+) error {
 	// TODO: postgres query can be optimised here
 	stmt := databaseg.Builder.Delete("package_tags").
 		Where("package_tag_id IN (SELECT p.package_tag_id FROM package_tags p"+
@@ -177,8 +182,10 @@ func (r PackageTagDao) Create(ctx context.Context, tag *types.PackageTag) (strin
 	return tag.ID, nil
 }
 
-func (r PackageTagDao) mapToPackageTagList(ctx context.Context,
-	dst []PackageTagMetadataDB) ([]*types.PackageTagMetadata, error) {
+func (r PackageTagDao) mapToPackageTagList(
+	ctx context.Context,
+	dst []PackageTagMetadataDB,
+) ([]*types.PackageTagMetadata, error) {
 	tags := make([]*types.PackageTagMetadata, 0, len(dst))
 	for _, d := range dst {
 		tag := r.mapToPackageTag(ctx, d)
@@ -190,7 +197,8 @@ func (r PackageTagDao) mapToPackageTag(_ context.Context, dst PackageTagMetadata
 	return &types.PackageTagMetadata{
 		ID:      dst.ID,
 		Name:    dst.Name,
-		Version: dst.Version}
+		Version: dst.Version,
+	}
 }
 
 func mapToInternalPackageTag(ctx context.Context, in *types.PackageTag) *PackageTagDB {

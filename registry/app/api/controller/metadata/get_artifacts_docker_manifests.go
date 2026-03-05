@@ -192,7 +192,12 @@ func (c *APIController) ProcessManifest(
 	regInfo *types.RegistryRequestBaseInfo,
 	image, version string, byTag bool,
 ) ([]artifact.DockerManifestDetails, error) {
-	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.ParentID, regInfo.RegistryIdentifier)
+	registry, err := c.RegistryRepository.GetByParentIDAndName(
+		ctx,
+		regInfo.ParentID,
+		regInfo.RegistryIdentifier,
+		types.WithAllDeleted(),
+	)
 	if err != nil {
 		return nil, err
 	}

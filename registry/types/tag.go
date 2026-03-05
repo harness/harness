@@ -53,6 +53,7 @@ type ArtifactMetadata struct {
 	RegistryType     *artifact.RegistryType
 	ArtifactType     *artifact.ArtifactType
 	Tags             []string
+	DeletedAt        *time.Time
 }
 
 type ImageMetadata struct {
@@ -66,24 +67,26 @@ type ImageMetadata struct {
 	LatestVersion string
 	CreatedAt     time.Time
 	ModifiedAt    time.Time
+	DeletedAt     *time.Time
 }
 
 type OciVersionMetadata struct {
-	Name             string
-	Size             string
-	PackageType      artifact.PackageType
-	DigestCount      int
-	ModifiedAt       time.Time
-	SchemaVersion    int
-	NonConformant    bool
-	Payload          Payload
-	MediaType        string
-	Digest           string
-	DownloadCount    int64
-	Tags             []string
-	IsQuarantined    bool
-	QuarantineReason string
-	ArtifactUUID     string
+	Name              string
+	Size              string
+	PackageType       artifact.PackageType
+	DigestCount       int
+	ModifiedAt        time.Time
+	SchemaVersion     int
+	NonConformant     bool
+	Payload           Payload
+	MediaType         string
+	Digest            string
+	DownloadCount     int64
+	Tags              []string
+	IsQuarantined     bool
+	QuarantineReason  string
+	ArtifactDeletedAt *time.Time
+	ArtifactUUID      string
 }
 
 type TagDetail struct {

@@ -103,7 +103,9 @@ func (c *APIController) UpdateArtifactLabels(
 	}
 
 	// TODO: use the correct way to get download count if this endpoint is used
-	tag, err := c.TagStore.GetLatestTagMetadata(ctx, regInfo.ParentID, regInfo.RegistryIdentifier, a)
+	tag, err := c.TagStore.GetLatestTagMetadata(
+		ctx, regInfo.ParentID, regInfo.RegistryIdentifier, a, types.WithAllDeleted(),
+	)
 
 	if err != nil {
 		return artifact.UpdateArtifactLabels500JSONResponse{

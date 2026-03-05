@@ -76,6 +76,8 @@ type registryDB struct {
 	UpdatedAt       int64                 `db:"registry_updated_at"`
 	CreatedBy       int64                 `db:"registry_created_by"`
 	UpdatedBy       int64                 `db:"registry_updated_by"`
+	DeletedAt       *int64                `db:"registry_deleted_at"`
+	DeletedBy       *int64                `db:"registry_deleted_by"`
 }
 
 type registryNameID struct {
@@ -83,32 +85,45 @@ type registryNameID struct {
 	Name string `db:"registry_name"`
 }
 
+// GetByUUID gets a registry by its UUID (includes soft-deleted registries).
 func (r registryDao) GetByUUID(ctx context.Context, uuid string) (*types.Registry, error) {
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
 		From("registries").
 		Where("registry_uuid = ?", uuid)
 
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to convert query to sql")
+	}
+
 	db := dbtx.GetAccessor(ctx, r.db)
 
 	dst := new(registryDB)
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
-	}
-
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find registry by uuid")
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom find query")
 	}
 
 	return r.mapToRegistry(ctx, dst)
 }
 
-func (r registryDao) Get(ctx context.Context, id int64) (*types.Registry, error) {
+func (r registryDao) Get(
+	ctx context.Context, id int64, opts ...types.QueryOption,
+) (*types.Registry, error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
 		From("registries").
 		Where("registry_id = ?", id)
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter
+	}
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
@@ -127,13 +142,23 @@ func (r registryDao) Get(ctx context.Context, id int64) (*types.Registry, error)
 
 func (r registryDao) GetByParentIDAndName(
 	ctx context.Context, parentID int64,
-	name string,
+	name string, opts ...types.QueryOption,
 ) (*types.Registry, error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	log.Ctx(ctx).Info().Msgf("GetByParentIDAndName: parentID: %d, name: %s", parentID, name)
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
 		From("registries").
 		Where("registry_parent_id = ? AND registry_name = ?", parentID, name)
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filtering
+	}
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
@@ -152,12 +177,22 @@ func (r registryDao) GetByParentIDAndName(
 
 func (r registryDao) GetByRootParentIDAndName(
 	ctx context.Context, parentID int64,
-	name string,
+	name string, opts ...types.QueryOption,
 ) (*types.Registry, error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
 		From("registries").
 		Where("registry_root_parent_id = ? AND registry_name = ?", parentID, name)
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filtering
+	}
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
@@ -176,7 +211,8 @@ func (r registryDao) GetByRootParentIDAndName(
 
 func (r registryDao) Count(ctx context.Context) (int64, error) {
 	stmt := databaseg.Builder.Select("COUNT(*)").
-		From("registries")
+		From("registries").
+		Where("registry_deleted_at IS NULL")
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -196,6 +232,7 @@ func (r registryDao) Count(ctx context.Context) (int64, error) {
 func (r registryDao) FetchUpstreamProxyKeys(
 	ctx context.Context,
 	ids []int64,
+	opts ...types.QueryOption,
 ) (repokeys []string, err error) {
 	orderedRepoKeys := make([]string, 0)
 
@@ -203,10 +240,20 @@ func (r registryDao) FetchUpstreamProxyKeys(
 		return orderedRepoKeys, nil
 	}
 
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryNameID{}), ",")).
 		From("registries").
 		Where(sq.Eq{"registry_id": ids})
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filtering
+	}
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
@@ -239,11 +286,23 @@ func (r registryDao) FetchUpstreamProxyKeys(
 	return orderedRepoKeys, nil
 }
 
-func (r registryDao) GetByIDIn(ctx context.Context, ids []int64) (*[]types.Registry, error) {
+func (r registryDao) GetByIDIn(
+	ctx context.Context, ids []int64, opts ...types.QueryOption,
+) (*[]types.Registry, error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	stmt := databaseg.Builder.
 		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(registryDB{}), ",")).
 		From("registries").
 		Where(sq.Eq{"registry_id": ids})
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filtering
+	}
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
@@ -275,6 +334,7 @@ type RegistryMetadataDB struct {
 	Size          int64                 `db:"size"`
 	Labels        sql.NullString        `db:"registry_labels"`
 	Config        sql.NullString        `db:"registry_config"`
+	DeletedAt     *int64                `db:"registry_deleted_at"`
 }
 
 func (r registryDao) GetAll(
@@ -305,9 +365,7 @@ func (r registryDao) GetAll(
 		COALESCE(u.upstream_proxy_config_url, '') AS url,
 		r.registry_config,
 		r.registry_labels,
-		0 AS artifact_count,
-		0 AS size,
-		0 AS download_count
+		r.registry_deleted_at
 	`
 
 	var query sq.SelectBuilder
@@ -315,7 +373,8 @@ func (r registryDao) GetAll(
 		Select(selectFields).
 		From("registries r").
 		LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
-		Where(sq.Eq{"r.registry_parent_id": parentIDs})
+		Where(sq.Eq{"r.registry_parent_id": parentIDs}).
+		Where("r.registry_deleted_at IS NULL")
 
 	// Apply search filter
 	if search != "" {
@@ -375,7 +434,7 @@ func (r registryDao) GetAll(
 		registryIDStrings[i] = reg.RegID
 	}
 
-	// Fetch aggregate data sequentially
+	// Fetch aggregate data sequentially with soft delete filtering
 	artifactCounts, err := r.fetchArtifactCounts(ctx, registryIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch artifact counts: %w", err)
@@ -422,16 +481,18 @@ func (r registryDao) GetAll(
 	return r.mapToRegistryMetadataList(ctx, dst)
 }
 
-// fetchArtifactCounts fetches artifact counts for given registry IDs.
-func (r registryDao) fetchArtifactCounts(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
+// fetchArtifactCounts fetches artifact counts for given registry IDs with soft delete filtering.
+func (r registryDao) fetchArtifactCounts(
+	ctx context.Context, registryIDs []int64,
+) (map[int64]int64, error) {
 	if len(registryIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
 
 	query := `
-		SELECT image_registry_id, COUNT(images.image_id) AS count
+		SELECT image_registry_id, COUNT(image_id) AS count
 		FROM images
-		WHERE image_registry_id IN (?) AND image_enabled = TRUE
+		WHERE image_registry_id IN (?) AND image_enabled = TRUE AND image_deleted_at IS NULL
 		GROUP BY image_registry_id
 	`
 
@@ -459,8 +520,10 @@ func (r registryDao) fetchArtifactCounts(ctx context.Context, registryIDs []int6
 	return counts, nil
 }
 
-// fetchOCIBlobSizes fetches OCI blob sizes for given registry IDs.
-func (r registryDao) fetchOCIBlobSizes(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
+// fetchOCIBlobSizes fetches OCI blob sizes for given registry IDs with soft delete filtering.
+func (r registryDao) fetchOCIBlobSizes(
+	ctx context.Context, registryIDs []int64,
+) (map[int64]int64, error) {
 	if len(registryIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
@@ -498,7 +561,12 @@ func (r registryDao) fetchOCIBlobSizes(ctx context.Context, registryIDs []int64)
 }
 
 // fetchGenericBlobSizes fetches generic blob sizes for given registry IDs.
-func (r registryDao) fetchGenericBlobSizes(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
+// NOTE: Soft delete filtering is NOT applied for Generic artifacts due to schema limitations.
+// Filtering would require expensive SPLIT_PART operations on node_path for every row.
+// TODO: Add node_artifact_id FK and node_deleted_at column to enable proper soft delete filtering.
+func (r registryDao) fetchGenericBlobSizes(
+	ctx context.Context, registryIDs []int64,
+) (map[int64]int64, error) {
 	if len(registryIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
@@ -548,6 +616,7 @@ func (r registryDao) fetchDownloadCounts(ctx context.Context, registryIDs []int6
 		LEFT JOIN artifacts a ON d.download_stat_artifact_id = a.artifact_id
 		LEFT JOIN images i ON a.artifact_image_id = i.image_id
 		WHERE i.image_registry_id IN (?) AND i.image_enabled = TRUE
+		  AND a.artifact_deleted_at IS NULL
 		GROUP BY i.image_registry_id
 	`
 
@@ -576,12 +645,16 @@ func (r registryDao) fetchDownloadCounts(ctx context.Context, registryIDs []int6
 }
 
 func (r registryDao) CountAll(
-	ctx context.Context, parentIDs []int64,
-	packageTypes []string, search string, repoType string,
-) (int64, error) {
+	ctx context.Context,
+	parentIDs []int64,
+	packageTypes []string,
+	search string,
+	repoType string,
+) (count int64, err error) {
 	stmt := databaseg.Builder.Select("COUNT(*)").
 		From("registries").
-		Where(sq.Eq{"registry_parent_id": parentIDs})
+		Where(sq.Eq{"registry_parent_id": parentIDs}).
+		Where("registry_deleted_at IS NULL")
 
 	if !commons.IsEmpty(search) {
 		stmt = stmt.Where("registry_name LIKE ?", "%"+search+"%")
@@ -602,12 +675,12 @@ func (r registryDao) CountAll(
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
-	var count int64
-	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	var countResult int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&countResult)
 	if err != nil {
 		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
-	return count, nil
+	return countResult, nil
 }
 
 func (r registryDao) Create(ctx context.Context, registry *types.Registry) (id int64, err error) {
@@ -708,20 +781,19 @@ func mapToInternalRegistry(ctx context.Context, in *types.Registry) *registryDB 
 	}
 }
 
-func (r registryDao) Delete(ctx context.Context, parentID int64, name string) (err error) {
+func (r registryDao) Delete(ctx context.Context, parentID int64, name string) error {
 	stmt := databaseg.Builder.Delete("registries").
 		Where("registry_parent_id = ? AND registry_name = ?", parentID, name)
 
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return fmt.Errorf("failed to convert purge registry query to sql: %w", err)
-	}
-
 	db := dbtx.GetAccessor(ctx, r.db)
 
-	_, err = db.ExecContext(ctx, sql, args...)
+	query, args, err := stmt.ToSql()
 	if err != nil {
-		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+		return errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if _, err := db.ExecContext(ctx, query, args...); err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to delete registry")
 	}
 
 	return nil
@@ -770,7 +842,8 @@ func (r registryDao) FetchUpstreamProxyIDs(
 		From("registries").
 		Where("registry_parent_id = ?", parentID).
 		Where(sq.Eq{"registry_name": repokeys}).
-		Where("registry_type = ?", artifact.RegistryTypeUPSTREAM)
+		Where("registry_type = ?", artifact.RegistryTypeUPSTREAM).
+		Where("registry_deleted_at IS NULL")
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
@@ -789,6 +862,7 @@ func (r registryDao) FetchUpstreamProxyIDs(
 func (r registryDao) FetchRegistriesIDByUpstreamProxyID(
 	ctx context.Context, upstreamProxyID string,
 	rootParentID int64,
+	opts ...types.QueryOption,
 ) (ids []int64, err error) {
 	var registryIDs []int64
 
@@ -806,6 +880,19 @@ func (r registryDao) FetchRegistriesIDByUpstreamProxyID(
 			"%^_"+upstreamProxyID,
 		).
 		Where("registry_type = ?", artifact.RegistryTypeVIRTUAL)
+
+	// Apply query options
+	queryOpts := types.MakeQueryOptions(opts...)
+
+	// Apply delete filter
+	switch queryOpts.DeleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter - include all
+	}
 
 	db := dbtx.GetAccessor(ctx, r.db)
 
@@ -844,6 +931,12 @@ func (r registryDao) mapToRegistry(ctx context.Context, dst *registryDB) (*types
 		}
 	}
 
+	var deletedAt *time.Time
+	if dst.DeletedAt != nil {
+		t := time.UnixMilli(*dst.DeletedAt)
+		deletedAt = &t
+	}
+
 	return &types.Registry{
 		ID:              dst.ID,
 		UUID:            dst.UUID,
@@ -862,6 +955,8 @@ func (r registryDao) mapToRegistry(ctx context.Context, dst *registryDB) (*types
 		UpdatedAt:       time.UnixMilli(dst.UpdatedAt),
 		CreatedBy:       dst.CreatedBy,
 		UpdatedBy:       dst.UpdatedBy,
+		DeletedAt:       deletedAt,
+		DeletedBy:       dst.DeletedBy,
 	}, nil
 }
 
@@ -888,6 +983,12 @@ func (r registryDao) mapToRegistryMetadata(ctx context.Context, dst *RegistryMet
 		}
 	}
 
+	var deletedAt *time.Time
+	if dst.DeletedAt != nil {
+		t := time.UnixMilli(*dst.DeletedAt)
+		deletedAt = &t
+	}
+
 	return &store.RegistryMetadata{
 		RegUUID:       dst.RegUUID,
 		RegID:         dst.RegID,
@@ -903,15 +1004,31 @@ func (r registryDao) mapToRegistryMetadata(ctx context.Context, dst *RegistryMet
 		Size:          dst.Size,
 		Labels:        util.StringToArr(dst.Labels.String),
 		Config:        config,
+		DeletedAt:     deletedAt,
 	}
 }
 
 // GetIDsByParentSpace returns all registry IDs under a given parent space.
-func (r registryDao) GetIDsByParentSpace(ctx context.Context, parentSpaceID int64) ([]int64, error) {
+func (r registryDao) GetIDsByParentSpace(
+	ctx context.Context, parentSpaceID int64, opts ...types.QueryOption,
+) ([]int64, error) {
 	stmt := databaseg.Builder.
 		Select("registry_id").
 		From("registries").
 		Where("registry_parent_id = ?", parentSpaceID)
+
+	// Apply query options
+	queryOpts := types.MakeQueryOptions(opts...)
+
+	// Apply delete filter
+	switch queryOpts.DeleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		stmt = stmt.Where("registry_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter - include all
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

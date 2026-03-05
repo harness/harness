@@ -611,7 +611,8 @@ func (dao manifestDao) GetManifestPayload(
 			"r.registry_parent_id = ? AND r.registry_name = ? AND "+
 				"manifest_image_name = ? AND manifest_digest = ?",
 			parentID, repoKey, imageName, digestBytes,
-		)
+		).
+		Where("r.registry_deleted_at IS NULL")
 
 	toSQL, args, err := stmt.ToSql()
 	if err != nil {
@@ -646,7 +647,8 @@ func (dao manifestDao) FindManifestPayloadByTagName(
 			"r.registry_parent_id = ? AND r.registry_name = ?"+
 				" AND manifest_image_name = ? AND t.tag_name = ?",
 			parentID, repoKey, imageName, version,
-		)
+		).
+		Where("r.registry_deleted_at IS NULL")
 
 	toSQL, args, err := stmt.ToSql()
 	if err != nil {

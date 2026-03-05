@@ -57,37 +57,28 @@ type imageDB struct {
 	UpdatedAt    int64                  `db:"image_updated_at"`
 	CreatedBy    int64                  `db:"image_created_by"`
 	UpdatedBy    int64                  `db:"image_updated_by"`
+	DeletedAt    *int64                 `db:"image_deleted_at"`
+	DeletedBy    *int64                 `db:"image_deleted_by"`
 }
 
 type imageLabelDB struct {
 	Labels sql.NullString `db:"labels"`
 }
 
-func (i ImageDao) GetByUUID(ctx context.Context, uuid string) (*types.Image, error) {
-	stmt := databaseg.Builder.
-		Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
-		From("images").
-		Where("image_uuid = ?", uuid)
-
-	db := dbtx.GetAccessor(ctx, i.db)
-
-	dst := new(imageDB)
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
-	}
-
-	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find image by uuid")
-	}
-
-	return i.mapToImage(ctx, dst)
-}
-
-func (i ImageDao) Get(ctx context.Context, id int64) (*types.Image, error) {
+func (i ImageDao) Get(ctx context.Context, id int64, opts ...types.QueryOption) (*types.Image, error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
-		From("images").
-		Where("image_id = ?", id)
+		From("images i").
+		Where("i.image_id = ?", id)
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		q = q.Where("i.image_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		q = q.Where("i.image_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filter
+	}
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -100,7 +91,7 @@ func (i ImageDao) Get(ctx context.Context, id int64) (*types.Image, error) {
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get image")
 	}
-	return i.mapToImage(ctx, dst)
+	return i.mapImageDB(ctx, dst)
 }
 
 func (i ImageDao) DeleteByImageNameAndRegID(ctx context.Context, regID int64, image string) (err error) {
@@ -144,10 +135,48 @@ func (i ImageDao) DeleteByImageNameIfNoLinkedArtifacts(
 	return nil
 }
 
-func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) (*types.Image, error) {
+// GetByUUID gets an image by its UUID (includes soft-deleted images).
+func (i ImageDao) GetByUUID(
+	ctx context.Context, uuid string,
+) (*types.Image, error) {
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
-		From("images").
-		Where("image_registry_id = ? AND image_name = ? AND image_type IS NULL", registryID, name)
+		From("images i").
+		Where("i.image_uuid = ?", uuid)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	dst := new(imageDB)
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing find query")
+	}
+
+	return i.mapImageDB(ctx, dst)
+}
+
+func (i ImageDao) GetByName(
+	ctx context.Context,
+	registryID int64,
+	name string,
+	opts ...types.QueryOption,
+) (*types.Image, error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
+		From("images i").
+		Where("i.image_registry_id = ? AND i.image_name = ? AND i.image_type IS NULL", registryID, name)
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		q = q.Where("i.image_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		q = q.Where("i.image_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filtering
+	}
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -160,21 +189,32 @@ func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) 
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get image")
 	}
-	return i.mapToImage(ctx, dst)
+	return i.mapImageDB(ctx, dst)
 }
 
 func (i ImageDao) GetByNameAndType(
-	ctx context.Context, registryID int64, name string,
-	artifactType *artifact.ArtifactType,
+	ctx context.Context, registryID int64,
+	name string, artifactType *artifact.ArtifactType, opts ...types.QueryOption,
 ) (*types.Image, error) {
+	deleteFilter := types.ExtractDeleteFilter(opts...)
+	// If artifactType is nil or empty, fall back to GetByName
 	if artifactType == nil || *artifactType == "" {
-		return i.GetByName(ctx, registryID, name)
+		return i.GetByName(ctx, registryID, name, opts...)
 	}
 
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
-		From("images").
-		Where("image_registry_id = ? AND image_name = ?", registryID, name).
-		Where("image_type = ?", *artifactType)
+		From("images i").
+		Where("i.image_registry_id = ? AND i.image_name = ?", registryID, name).
+		Where("i.image_type = ?", *artifactType)
+
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		q = q.Where("i.image_deleted_at IS NULL")
+	case types.DeleteFilterOnlyDeleted:
+		q = q.Where("i.image_deleted_at IS NOT NULL")
+	case types.DeleteFilterIncludeDeleted:
+		// No filtering
+	}
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -187,12 +227,49 @@ func (i ImageDao) GetByNameAndType(
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get image")
 	}
-	return i.mapToImage(ctx, dst)
+	return i.mapImageDB(ctx, dst)
+}
+
+// checkSoftDeletedImageExists checks if a soft-deleted image exists with the same registry_id, name, and type.
+func (i ImageDao) checkSoftDeletedImageExists(
+	ctx context.Context, registryID int64, name string, artifactType *artifact.ArtifactType,
+) error {
+	checkQuery := databaseg.Builder.Select("image_id").
+		From("images").
+		Where("image_registry_id = ? AND image_name = ? AND image_deleted_at IS NOT NULL", registryID, name)
+
+	// Handle artifact type matching (NULL or specific type)
+	if artifactType == nil {
+		checkQuery = checkQuery.Where("image_type IS NULL")
+	} else {
+		checkQuery = checkQuery.Where("image_type = ?", *artifactType)
+	}
+
+	checkSQL, checkArgs, err := checkQuery.ToSql()
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to build check query")
+	}
+
+	db := dbtx.GetAccessor(ctx, i.db)
+	var existingID int64
+	err = db.QueryRowContext(ctx, checkSQL, checkArgs...).Scan(&existingID)
+	if err == nil {
+		// Soft-deleted image exists with same identifier
+		return errors.New("image with same name already exists but is soft-deleted")
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to check for soft-deleted image")
+	}
+	return nil
 }
 
 func (i ImageDao) CreateOrUpdate(ctx context.Context, image *types.Image) error {
 	if commons.IsEmpty(image.Name) {
 		return errors.New("package/image name is empty")
+	}
+
+	// Check if a soft-deleted image exists with the same registry_id, name, and type
+	if err := i.checkSoftDeletedImageExists(ctx, image.RegistryID, image.Name, image.ArtifactType); err != nil {
+		return err
 	}
 	var conflictCondition string
 	if image.ArtifactType == nil {
@@ -246,7 +323,8 @@ func (i ImageDao) GetLabelsByParentIDAndRepo(
 	q := databaseg.Builder.Select("a.image_labels as labels").
 		From("images a").
 		Join("registries r ON r.registry_id = a.image_registry_id").
-		Where("r.registry_parent_id = ? AND r.registry_name = ?", parentID, repo)
+		Where("r.registry_parent_id = ? AND r.registry_name = ?", parentID, repo).
+		Where("a.image_deleted_at IS NULL")
 
 	if search != "" {
 		q = q.Where("a.image_labels LIKE ?", "%"+search+"%")
@@ -278,7 +356,8 @@ func (i ImageDao) CountLabelsByParentIDAndRepo(
 	q := databaseg.Builder.Select("a.image_labels as labels").
 		From("images a").
 		Join("registries r ON r.registry_id = a.image_registry_id").
-		Where("r.registry_parent_id = ? AND r.registry_name = ?", parentID, repo)
+		Where("r.registry_parent_id = ? AND r.registry_name = ?", parentID, repo).
+		Where("a.image_deleted_at IS NULL")
 
 	if search != "" {
 		q = q.Where("a.image_labels LIKE ?", "%"+search+"%")
@@ -304,13 +383,12 @@ func (i ImageDao) GetByRepoAndName(
 	ctx context.Context, parentID int64,
 	repo string, name string,
 ) (*types.Image, error) {
-	q := databaseg.Builder.Select("a.image_id, a.image_name, "+
-		" a.image_registry_id, a.image_labels, a.image_created_at, "+
-		" a.image_updated_at, a.image_created_by, a.image_updated_by").
+	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(imageDB{}), ",")).
 		From("images a").
 		Join(" registries r ON r.registry_id = a.image_registry_id").
 		Where("r.registry_parent_id = ? AND r.registry_name = ? AND a.image_name = ?",
-			parentID, repo, name)
+			parentID, repo, name).
+		Where("a.image_deleted_at IS NULL")
 
 	sql, args, err := q.ToSql()
 	if err != nil {
@@ -323,7 +401,7 @@ func (i ImageDao) GetByRepoAndName(
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact")
 	}
-	return i.mapToImage(ctx, dst)
+	return i.mapImageDB(ctx, dst)
 }
 
 func (i ImageDao) Update(ctx context.Context, image *types.Image) (err error) {
@@ -442,9 +520,13 @@ func (i ImageDao) mapToInternalImage(ctx context.Context, in *types.Image) *imag
 	}
 }
 
-func (i ImageDao) mapToImage(_ context.Context, dst *imageDB) (*types.Image, error) {
-	createdBy := dst.CreatedBy
-	updatedBy := dst.UpdatedBy
+func (i ImageDao) mapImageDB(_ context.Context, dst *imageDB) (*types.Image, error) {
+	var deletedAt *time.Time
+	if dst.DeletedAt != nil {
+		t := time.UnixMilli(*dst.DeletedAt)
+		deletedAt = &t
+	}
+
 	return &types.Image{
 		ID:           dst.ID,
 		UUID:         dst.UUID,
@@ -455,8 +537,10 @@ func (i ImageDao) mapToImage(_ context.Context, dst *imageDB) (*types.Image, err
 		Enabled:      dst.Enabled,
 		CreatedAt:    time.UnixMilli(dst.CreatedAt),
 		UpdatedAt:    time.UnixMilli(dst.UpdatedAt),
-		CreatedBy:    createdBy,
-		UpdatedBy:    updatedBy,
+		CreatedBy:    dst.CreatedBy,
+		UpdatedBy:    dst.UpdatedBy,
+		DeletedAt:    deletedAt,
+		DeletedBy:    dst.DeletedBy,
 	}, nil
 }
 

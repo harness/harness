@@ -119,7 +119,10 @@ type LocalBase interface {
 		imageUUID string, artifactUUID string,
 	)
 
-	CheckIfVersionExists(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error)
+	CheckIfVersionExists(
+		ctx context.Context,
+		info pkg.PackageArtifactInfo,
+	) (bool, error)
 
 	DeletePackage(ctx context.Context, info pkg.PackageArtifactInfo) error
 
@@ -508,9 +511,10 @@ func (l *localBase) uploadInternal(
 		err = pkg.GetRegistryCheckAccess(ctx, l.authorizer, l.spaceFinder,
 			info.ParentID, info, enum.PermissionArtifactsDelete)
 		if err != nil {
-			return nil, "", usererror.Forbidden(fmt.Sprintf("Not enough permissions to overwrite file %s "+
-				"(needs DELETE permission).",
-				fileName))
+			return nil, "", usererror.Forbidden(
+				fmt.Sprintf("Not enough permissions to overwrite file %s "+
+					"(needs DELETE permission).",
+					fileName))
 		}
 	}
 
@@ -611,7 +615,10 @@ func (l *localBase) Download(
 	}
 
 	path := "/" + info.Image + "/" + version + "/" + fileName
-	reg, _ := l.registryFinder.FindByRootParentID(ctx, info.RootParentID, info.RegIdentifier)
+	reg, err := l.registryFinder.FindByRootParentID(ctx, info.RootParentID, info.RegIdentifier)
+	if err != nil {
+		return responseHeaders, nil, "", err
+	}
 
 	fileReader, _, redirectURL, err := l.fileManager.DownloadFileByPath(ctx, path, reg.ID,
 		info.RegIdentifier, info.RootIdentifier, true)
@@ -684,12 +691,19 @@ func (l *localBase) ExistsByFilePath(ctx context.Context, registryID int64, file
 	return exists, err
 }
 
-func (l *localBase) CheckIfVersionExists(ctx context.Context, info pkg.PackageArtifactInfo) (bool, error) {
+func (l *localBase) CheckIfVersionExists(
+	ctx context.Context,
+	info pkg.PackageArtifactInfo,
+) (bool, error) {
 	_, err := l.artifactDao.GetByRegistryImageAndVersion(ctx,
-		info.BaseArtifactInfo().RegistryID, info.BaseArtifactInfo().Image, info.GetVersion())
+		info.BaseArtifactInfo().RegistryID,
+		info.BaseArtifactInfo().Image,
+		info.GetVersion(),
+	)
 	if err != nil {
 		return false, err
 	}
+
 	return true, nil
 }
 

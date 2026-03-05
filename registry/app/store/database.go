@@ -218,7 +218,7 @@ type TagRepository interface {
 	CountAllArtifactsByParentID(
 		ctx context.Context, parentID int64,
 		registryIDs *[]string, search string,
-		latestVersion bool, packageTypes []string, untaggedImagesEnabled bool,
+		latestVersion bool, packageTypes []string, includeUntagged bool,
 	) (int64, error)
 
 	GetAllArtifactsByRepo(
@@ -232,11 +232,15 @@ type TagRepository interface {
 		parentID int64,
 		repoKey string,
 		imageName string,
+		opts ...types.QueryOption,
 	) (*types.ArtifactMetadata, error)
 
 	GetLatestTagName(
-		ctx context.Context, parentID int64, repoKey string,
+		ctx context.Context,
+		parentID int64,
+		repoKey string,
 		imageName string,
+		opts ...types.QueryOption,
 	) (string, error)
 
 	GetTagMetadata(
@@ -253,6 +257,7 @@ type TagRepository interface {
 		repoKey string,
 		imageName string,
 		dgst string,
+		opts ...types.QueryOption,
 	) (*types.OciVersionMetadata, error)
 
 	CountAllArtifactsByRepo(
@@ -265,7 +270,7 @@ type TagRepository interface {
 		name string,
 	) (*types.TagDetail, error)
 
-	GetLatestTag(ctx context.Context, repoID int64, imageName string) (*types.Tag, error)
+	GetLatestTag(ctx context.Context, repoID int64, imageName string, opts ...types.QueryOption) (*types.Tag, error)
 
 	GetAllTagsByRepoAndImage(
 		ctx context.Context,
@@ -342,13 +347,14 @@ type UpstreamProxyConfig struct {
 
 type UpstreamProxyConfigRepository interface {
 	// Get the upstreamproxy specified by ID
-	Get(ctx context.Context, id int64) (upstreamProxy *types.UpstreamProxy, err error)
+	Get(ctx context.Context, id int64, opts ...types.QueryOption) (upstreamProxy *types.UpstreamProxy, err error)
 
 	// GetByRepoKey gets the upstreamproxy specified by registry key
 	GetByRegistryIdentifier(
 		ctx context.Context,
 		parentID int64,
 		repoKey string,
+		opts ...types.QueryOption,
 	) (upstreamProxy *types.UpstreamProxy, err error)
 
 	// GetByParentUniqueId gets the upstreamproxy specified by parent id and parent unique id
@@ -406,29 +412,31 @@ type RegistryMetadata struct {
 	ArtifactCount int64
 	DownloadCount int64
 	Size          int64
+	DeletedAt     *time.Time
 }
 
 type RegistryRepository interface {
-	GetByUUID(ctx context.Context, uuid string) (*types.Registry, error)
 	// Get the repository specified by ID
-	Get(ctx context.Context, id int64) (repository *types.Registry, err error)
+	Get(ctx context.Context, id int64, opts ...types.QueryOption) (repository *types.Registry, err error)
 	// GetByName gets the repository specified by name
 	GetByIDIn(
-		ctx context.Context, ids []int64,
+		ctx context.Context, ids []int64, opts ...types.QueryOption,
 	) (registries *[]types.Registry, err error)
 	// GetByName gets the repository specified by parent id and name
 	GetByParentIDAndName(
 		ctx context.Context, parentID int64,
-		name string,
+		name string, opts ...types.QueryOption,
 	) (registry *types.Registry, err error)
 	GetByRootParentIDAndName(
 		ctx context.Context, parentID int64,
-		name string,
+		name string, opts ...types.QueryOption,
 	) (registry *types.Registry, err error)
 	// Create a repository
 	Create(ctx context.Context, repository *types.Registry) (id int64, err error)
-	// Delete the repository specified by ID
+	// Delete the repository specified by ID (hard delete)
 	Delete(ctx context.Context, parentID int64, name string) (err error)
+	// GetByUUID gets a registry by its UUID
+	GetByUUID(ctx context.Context, uuid string) (*types.Registry, error)
 	// Update updates the repository. Only the properties specified by "props" will be updated if it is set
 	Update(ctx context.Context, repository *types.Registry) (err error)
 
@@ -457,13 +465,14 @@ type RegistryRepository interface {
 	FetchRegistriesIDByUpstreamProxyID(
 		ctx context.Context, upstreamProxyID string,
 		rootParentID int64,
+		opts ...types.QueryOption,
 	) (ids []int64, err error)
 
-	FetchUpstreamProxyKeys(ctx context.Context, ids []int64) (repokeys []string, err error)
+	FetchUpstreamProxyKeys(ctx context.Context, ids []int64, opts ...types.QueryOption) (repokeys []string, err error)
 	Count(ctx context.Context) (int64, error)
 
 	// GetIDsByParentSpace returns all registry IDs under a given parent space
-	GetIDsByParentSpace(ctx context.Context, parentSpaceID int64) ([]int64, error)
+	GetIDsByParentSpace(ctx context.Context, parentSpaceID int64, opts ...types.QueryOption) ([]int64, error)
 
 	// UpdateParentSpace updates the parent space ID for all registries under a given source space to target space
 	UpdateParentSpace(ctx context.Context, srcSpaceID int64, targetSpaceID int64) (int64, error)
@@ -486,18 +495,17 @@ type RegistryBlobRepository interface {
 }
 
 type ImageRepository interface {
-	GetByUUID(ctx context.Context, uuid string) (*types.Image, error)
-	// Get an Artifact specified by ID
-	Get(ctx context.Context, id int64) (*types.Image, error)
+	// Get an Image specified by ID
+	Get(ctx context.Context, id int64, opts ...types.QueryOption) (*types.Image, error)
 	// Get an Artifact specified by Artifact Name
 	GetByName(
 		ctx context.Context, registryID int64,
-		name string,
+		name string, opts ...types.QueryOption,
 	) (*types.Image, error)
 
 	GetByNameAndType(
 		ctx context.Context, registryID int64,
-		name string, artifactType *artifact.ArtifactType,
+		name string, artifactType *artifact.ArtifactType, opts ...types.QueryOption,
 	) (*types.Image, error)
 
 	// Get the Labels specified by Parent ID and Repo
@@ -523,17 +531,24 @@ type ImageRepository interface {
 
 	UpdateStatus(ctx context.Context, artifact *types.Image) (err error)
 
+	// Hard delete methods
 	DeleteByImageNameAndRegID(ctx context.Context, regID int64, image string) (err error)
 	DeleteByImageNameIfNoLinkedArtifacts(ctx context.Context, regID int64, image string) (err error)
 
+	// GetByUUID gets an image by its UUID
+	GetByUUID(ctx context.Context, uuid string) (*types.Image, error)
 	DuplicateImage(ctx context.Context, sourceImage *types.Image, targetRegistryID int64) (*types.Image, error)
 }
 
 type ArtifactRepository interface {
-	GetByUUID(ctx context.Context, uuid string) (*types.Artifact, error)
 	Get(ctx context.Context, id int64) (*types.Artifact, error)
 	// Get an Artifact specified by ID
-	GetByName(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
+	GetByName(
+		ctx context.Context,
+		imageID int64,
+		version string,
+		opts ...types.QueryOption,
+	) (*types.Artifact, error)
 	// Get an Artifact specified by RegistryID, image name and version
 	GetByRegistryImageAndVersion(
 		ctx context.Context, registryID int64, image string, version string,
@@ -545,20 +560,26 @@ type ArtifactRepository interface {
 	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) (int64, error)
 	Count(ctx context.Context) (int64, error)
 	GetAllArtifactsByParentID(
-		ctx context.Context, id int64,
-		i *[]string, field string, order string,
-		limit int, offset int, term string,
-		version bool, packageTypes []string,
+		ctx context.Context, parentID int64,
+		registryIDs *[]string, sortByField string,
+		sortByOrder string, limit int, offset int, search string,
+		latestVersion bool, packageTypes []string,
 	) (*[]types.ArtifactMetadata, error)
+
 	CountAllArtifactsByParentID(
 		ctx context.Context, parentID int64,
-		registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
+		registryIDs *[]string,
+		search string,
+		latestVersion bool,
+		packageTypes []string,
 	) (int64, error)
+
 	GetArtifactsByRepo(
 		ctx context.Context, parentID int64, repoKey string, sortByField string, sortByOrder string,
 		limit int, offset int, search string, labels []string,
 		artifactType *artifact.ArtifactType,
 	) (*[]types.ArtifactMetadata, error)
+
 	CountArtifactsByRepo(
 		ctx context.Context, parentID int64, repoKey, search string, labels []string,
 		artifactType *artifact.ArtifactType,
@@ -577,7 +598,7 @@ type ArtifactRepository interface {
 	) (int64, error)
 	GetArtifactMetadata(
 		ctx context.Context, id int64, identifier string, image string, version string,
-		artifactType *artifact.ArtifactType,
+		artifactType *artifact.ArtifactType, opts ...types.QueryOption,
 	) (*types.ArtifactMetadata, error)
 	UpdateArtifactMetadata(
 		ctx context.Context, metadata json.RawMessage,
@@ -589,9 +610,13 @@ type ArtifactRepository interface {
 		error,
 	)
 
+	// Hard delete methods
 	DeleteByImageNameAndRegistryID(ctx context.Context, regID int64, image string) (err error)
-
 	DeleteByVersionAndImageName(ctx context.Context, image string, version string, regID int64) (err error)
+
+	// GetByUUID gets an artifact by its UUID
+	GetByUUID(ctx context.Context, uuid string) (*types.Artifact, error)
+
 	GetLatestByImageID(ctx context.Context, imageID int64) (*types.Artifact, error)
 
 	// get latest artifacts from all images under repo
@@ -815,8 +840,10 @@ type WebhooksExecutionRepository interface {
 }
 
 type PackageTagRepository interface {
-	FindByImageNameAndRegID(ctx context.Context,
-		image string, regID int64, imageType *string) ([]*types.PackageTagMetadata, error)
+	FindByImageNameAndRegID(
+		ctx context.Context,
+		image string, regID int64, imageType *string,
+	) ([]*types.PackageTagMetadata, error)
 
 	Create(ctx context.Context, tag *types.PackageTag) (string, error)
 

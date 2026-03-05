@@ -73,9 +73,15 @@ func (c *APIController) GetArtifactSummary(
 	}
 
 	image := string(r.Artifact)
-	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID)
-
+	registry, err := c.RegistryRepository.Get(ctx, regInfo.RegistryID, types.WithAllDeleted())
 	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return artifact.GetArtifactSummary404JSONResponse{
+				NotFoundJSONResponse: artifact.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, "registry not found"),
+				),
+			}, nil
+		}
 		return artifact.GetArtifactSummary500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
@@ -118,7 +124,7 @@ func (c *APIController) getImageMetadata(
 	ctx context.Context, registry *types.Registry, image string,
 	artifactType *artifact.ArtifactType,
 ) (*types.ImageMetadata, error) {
-	img, err := c.ImageStore.GetByNameAndType(ctx, registry.ID, image, artifactType)
+	img, err := c.ImageStore.GetByNameAndType(ctx, registry.ID, image, artifactType, types.WithAllDeleted())
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +141,7 @@ func (c *APIController) getImageMetadata(
 		PackageType:   registry.PackageType,
 		CreatedAt:     img.CreatedAt,
 		ArtifactType:  img.ArtifactType,
+		DeletedAt:     img.DeletedAt,
 	}
 	//nolint:nestif
 	if registry.PackageType == artifact.PackageTypeDOCKER || registry.PackageType == artifact.PackageTypeHELM {
@@ -146,7 +153,7 @@ func (c *APIController) getImageMetadata(
 			imgMetadata.LatestVersion = latestManifest.Digest.String()
 			imgMetadata.ModifiedAt = latestManifest.CreatedAt
 		} else {
-			latestTag, err := c.TagStore.GetLatestTag(ctx, registry.ID, image)
+			latestTag, err := c.TagStore.GetLatestTag(ctx, registry.ID, image, types.WithAllDeleted())
 			if err != nil {
 				return nil, err
 			}
@@ -158,8 +165,15 @@ func (c *APIController) getImageMetadata(
 		if err != nil {
 			return nil, err
 		}
-		imgMetadata.LatestVersion = latestArtifact.Version
-		imgMetadata.ModifiedAt = latestArtifact.UpdatedAt
+
+		// If no artifacts exist, set empty values
+		if latestArtifact == nil {
+			imgMetadata.LatestVersion = ""
+			imgMetadata.ModifiedAt = img.UpdatedAt
+		} else {
+			imgMetadata.LatestVersion = latestArtifact.Version
+			imgMetadata.ModifiedAt = latestArtifact.UpdatedAt
+		}
 	}
 	return imgMetadata, nil
 }

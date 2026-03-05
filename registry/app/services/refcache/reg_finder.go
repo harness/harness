@@ -30,11 +30,11 @@ type RegistryFinder interface {
 	MarkChanged(ctx context.Context, reg *types.Registry)
 	FindByID(ctx context.Context, repoID int64) (*types.Registry, error)
 	FindByUUID(ctx context.Context, repoUUID uuid.UUID) (*types.Registry, error)
-	FindByRootRef(ctx context.Context, rootParentRef string, regIdentifier string) (
+	FindByRootRef(ctx context.Context, rootParentRef string, regIdentifier string, opts ...types.QueryOption) (
 		*types.Registry,
 		error,
 	)
-	FindByRootParentID(ctx context.Context, rootParentID int64, regIdentifier string) (
+	FindByRootParentID(ctx context.Context, rootParentID int64, regIdentifier string, opts ...types.QueryOption) (
 		*types.Registry,
 		error,
 	)
@@ -92,7 +92,10 @@ func (r registryFinder) FindByUUID(ctx context.Context, repoUUID uuid.UUID) (*ty
 	return r.regUUIDCache.Get(ctx, repoUUID.String())
 }
 
-func (r registryFinder) FindByRootRef(ctx context.Context, rootParentRef string, regIdentifier string) (
+func (r registryFinder) FindByRootRef(
+	ctx context.Context, rootParentRef string, regIdentifier string,
+	opts ...types.QueryOption,
+) (
 	*types.Registry,
 	error,
 ) {
@@ -100,19 +103,44 @@ func (r registryFinder) FindByRootRef(ctx context.Context, rootParentRef string,
 	if err != nil {
 		return nil, fmt.Errorf("error finding space by root-ref: %w", err)
 	}
-	return r.FindByRootParentID(ctx, space.ID, regIdentifier)
+	return r.FindByRootParentID(ctx, space.ID, regIdentifier, opts...)
 }
 
-func (r registryFinder) FindByRootParentID(ctx context.Context, rootParentID int64, regIdentifier string) (
+func (r registryFinder) FindByRootParentID(
+	ctx context.Context, rootParentID int64, regIdentifier string, opts ...types.QueryOption,
+) (
 	*types.Registry,
 	error,
 ) {
+	// Cache lookup always uses WithAllDeleted to get the registry ID
 	registryID, err := r.regRootRefCache.Get(ctx,
 		types.RegistryRootRefCacheKey{RootParentID: rootParentID, RegistryIdentifier: regIdentifier})
 	if err != nil {
 		return nil, fmt.Errorf("error finding registry by root-ref: %w", err)
 	}
-	return r.regIDCache.Get(ctx, registryID)
+
+	// Get registry from cache
+	reg, err := r.regIDCache.Get(ctx, registryID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply soft delete filter based on opts
+	deleteFilter := types.ExtractDeleteFilter(opts...)
+	switch deleteFilter {
+	case types.DeleteFilterExcludeDeleted:
+		if reg.DeletedAt != nil {
+			return nil, fmt.Errorf("registry is deleted")
+		}
+	case types.DeleteFilterOnlyDeleted:
+		if reg.DeletedAt == nil {
+			return nil, fmt.Errorf("registry is not deleted")
+		}
+	case types.DeleteFilterIncludeDeleted:
+		// No filtering - return all registries
+	}
+
+	return reg, nil
 }
 
 func (r registryFinder) Update(ctx context.Context, registry *types.Registry) (err error) {
@@ -124,7 +152,7 @@ func (r registryFinder) Update(ctx context.Context, registry *types.Registry) (e
 }
 
 func (r registryFinder) Delete(ctx context.Context, parentID int64, name string) (err error) {
-	registry, err := r.inner.GetByParentIDAndName(ctx, parentID, name)
+	registry, err := r.inner.GetByParentIDAndName(ctx, parentID, name, types.WithAllDeleted())
 	if err != nil {
 		return fmt.Errorf("error finding registry by parent-ref: %w", err)
 	}

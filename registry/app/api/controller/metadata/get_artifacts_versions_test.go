@@ -326,6 +326,7 @@ func setupVersionsController(_ *testing.T, packageType artifact.PackageType) *me
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		mockPackageWrapper,                            // packageWrapper
 		nil,                                           // publicAccess
+		nil,                                           // deletionService
 		nil,                                           // storageService
 		nil,                                           // app
 	)
@@ -406,6 +407,7 @@ func setupVersionsControllerWithError(_ *testing.T, errorType string) *metadata.
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)

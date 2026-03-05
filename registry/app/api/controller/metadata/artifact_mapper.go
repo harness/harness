@@ -110,6 +110,11 @@ func mapToArtifactMetadata(
 	untaggedImagesEnabled bool,
 ) *artifactapi.ArtifactMetadata {
 	lastModified := GetTimeInMs(artifact.ModifiedAt)
+	var deletedAt *string
+	if artifact.DeletedAt != nil {
+		d := GetTimeInMs(*artifact.DeletedAt)
+		deletedAt = &d
+	}
 	packageType := artifact.PackageType
 	pullCommand := GetPullCommand(ctx, artifact.Name, artifact.Version,
 		string(packageType), registryURL, setupDetailsAuthHeaderPrefix, artifact.ArtifactType, !untaggedImagesEnabled)
@@ -127,12 +132,18 @@ func mapToArtifactMetadata(
 		IsQuarantined:      &artifact.IsQuarantined,
 		QuarantineReason:   artifact.QuarantineReason,
 		ArtifactType:       artifact.ArtifactType,
+		DeletedAt:          deletedAt,
 		RegistryType:       artifact.RegistryType,
 	}
 }
 
 func mapToRegistryArtifactMetadata(artifact types.ArtifactMetadata) *artifactapi.RegistryArtifactMetadata {
 	lastModified := GetTimeInMs(artifact.ModifiedAt)
+	var deletedAt *string
+	if artifact.DeletedAt != nil {
+		d := GetTimeInMs(*artifact.DeletedAt)
+		deletedAt = &d
+	}
 	packageType := artifact.PackageType
 	return &artifactapi.RegistryArtifactMetadata{
 		RegistryIdentifier: artifact.RepoName,
@@ -146,6 +157,7 @@ func mapToRegistryArtifactMetadata(artifact types.ArtifactMetadata) *artifactapi
 		DownloadsCount:     &artifact.DownloadCount,
 		IsQuarantined:      &artifact.IsQuarantined,
 		ArtifactType:       artifact.ArtifactType,
+		DeletedAt:          deletedAt,
 	}
 }
 
@@ -819,6 +831,12 @@ func GetRPMArtifactDetail(
 func GetArtifactSummary(artifact types.ImageMetadata) *artifactapi.ArtifactSummaryResponseJSONResponse {
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.ModifiedAt)
+	var deletedAt *string
+	if artifact.DeletedAt != nil {
+		d := GetTimeInMs(*artifact.DeletedAt)
+		deletedAt = &d
+	}
+
 	artifactVersionSummary := &artifactapi.ArtifactSummary{
 		CreatedAt:      &createdAt,
 		ModifiedAt:     &modifiedAt,
@@ -826,6 +844,7 @@ func GetArtifactSummary(artifact types.ImageMetadata) *artifactapi.ArtifactSumma
 		ImageName:      artifact.Name,
 		PackageType:    artifact.PackageType,
 		ArtifactType:   artifact.ArtifactType,
+		DeletedAt:      deletedAt,
 		RegistryUUID:   artifact.RegistryUUID,
 		Uuid:           artifact.UUID,
 	}
@@ -843,9 +862,16 @@ func GetArtifactVersionSummary(
 	isQuarantined bool,
 	quarantineReason string,
 	artifactType *artifactapi.ArtifactType,
+	deletedAt *time.Time,
 	artifactUUID string,
 	registryUUID string,
 ) *artifactapi.ArtifactVersionSummaryResponseJSONResponse {
+	var deletedAtStr *string
+	if deletedAt != nil {
+		d := GetTimeInMs(*deletedAt)
+		deletedAtStr = &d
+	}
+
 	artifactVersionSummary := &artifactapi.ArtifactVersionSummary{
 		ImageName:        artifactName,
 		PackageType:      packageType,
@@ -853,6 +879,7 @@ func GetArtifactVersionSummary(
 		IsQuarantined:    &isQuarantined,
 		QuarantineReason: &quarantineReason,
 		ArtifactType:     artifactType,
+		DeletedAt:        deletedAtStr,
 		Uuid:             artifactUUID,
 		RegistryUUID:     registryUUID,
 	}

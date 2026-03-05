@@ -152,7 +152,7 @@ func (bs *genericBlobStore) newBlobUpload(ctx context.Context, id, path, rootIde
 // Write takes a file writer and a multipart form file or file reader,
 // streams the file to the writer, and calculates hashes.
 func (bs *genericBlobStore) Write(
-	ctx context.Context, w BlobWriter, file multipart.File,
+	_ context.Context, w BlobWriter, file multipart.File,
 	fileReader io.Reader,
 ) (types.FileInfo, error) {
 	// Create new hash.Hash instances for SHA256 and SHA512

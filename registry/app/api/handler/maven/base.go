@@ -105,7 +105,8 @@ func (h *Handler) GetArtifactInfo(r *http.Request, remoteSupport bool) (pkg.Mave
 	registry, err := h.RegistryFinder.FindByRootParentID(ctx, rootSpace.ID, registryIdentifier)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf(
-			"registry %s not found for root: %s. Reason: %s", registryIdentifier, rootSpace.Identifier, err,
+			"registry %s not found for root: %s. Reason: %s",
+			registryIdentifier, rootSpace.Identifier, err,
 		)
 		return pkg.MavenArtifactInfo{}, errcode.ErrCodeRegNotFound
 	}

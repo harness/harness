@@ -12,27 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package deletion
 
 import (
-	"time"
+	"github.com/harness/gitness/registry/app/api/interfaces"
 
-	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/google/wire"
 )
 
-// Image DTO object.
-type Image struct {
-	ID           int64
-	UUID         string
-	Name         string
-	ArtifactType *artifact.ArtifactType
-	RegistryID   int64
-	Enabled      bool
-	Labels       []string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	CreatedBy    int64
-	UpdatedBy    int64
-	DeletedAt    *time.Time
-	DeletedBy    *int64
+// ProvidePackageWrapper converts interfaces.PackageWrapper to deletion.PackageWrapper.
+func ProvidePackageWrapper(pw interfaces.PackageWrapper) PackageWrapper {
+	return pw
 }
+
+// WireSet provides a wire set for this package.
+var WireSet = wire.NewSet(
+	NewService,
+	ProvidePackageWrapper,
+)

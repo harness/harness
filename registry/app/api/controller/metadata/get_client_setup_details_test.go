@@ -587,6 +587,7 @@ func TestGenerateClientSetupDetails_WithUntaggedImages(t *testing.T) {
 				}, // untaggedImagesEnabled
 				nil, // packageWrapper
 				nil, // publicAccess
+				nil, // deletionService
 				nil, // storageService
 				nil, // app
 			)
@@ -661,6 +662,7 @@ func TestGenerateClientSetupDetails_MavenWithGroupID(t *testing.T) {
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)
@@ -796,6 +798,7 @@ func setupControllerForPackageType(_ *testing.T, packageType artifact.PackageTyp
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)
@@ -886,13 +889,12 @@ func setupControllerForError(_ *testing.T, errorType string) *metadata.APIContro
 		func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 		nil, // packageWrapper
 		nil, // publicAccess
+		nil, // deletionService
 		nil, // storageService
 		nil, // app
 	)
 }
 
-// TestGenerateClientSetupDetailsSnapshot tests that the generated client setup details
-// match the expected snapshots for all package types. This ensures consistency across runs.
 func TestGenerateClientSetupDetailsSnapshot(t *testing.T) {
 	artifactParam := artifact.ArtifactParam("test-artifact")
 	versionParam := artifact.VersionParam("v1.0.0")
@@ -1040,6 +1042,7 @@ func TestGenerateClientSetupDetailsSnapshot(t *testing.T) {
 				func(_ context.Context) bool { return false }, // untaggedImagesEnabled
 				nil, // packageWrapper
 				nil, // publicAccess
+				nil, // deletionService
 				nil, // storageService
 				nil, // app
 			)

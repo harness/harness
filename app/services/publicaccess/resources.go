@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -83,7 +84,9 @@ func (s *service) getResourceRegistry(
 	if err != nil {
 		return 0, fmt.Errorf("failed to disect leaf from path: %w", err)
 	}
-	repo, err := s.registryFinder.FindByRootRef(ctx, rootRef, registryIdentifier)
+	// Pass WithAllDeleted to find both active and soft-deleted registries
+	// This is needed when checking public access for deleted registries (e.g., in list API with deleted=ONLY)
+	repo, err := s.registryFinder.FindByRootRef(ctx, rootRef, registryIdentifier, types.WithAllDeleted())
 	if err != nil {
 		return 0, fmt.Errorf("failed to find repo: %w", err)
 	}

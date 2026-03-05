@@ -1,4 +1,4 @@
-//  Copyright 2023 Harness, Inc.
+// Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,14 @@
 
 package types
 
-import (
-	"time"
+// DeleteFilter defines the filtering behavior for soft-deleted entities.
+type DeleteFilter string
 
-	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+const (
+	// DeleteFilterExcludeDeleted excludes soft-deleted entities (default behavior).
+	DeleteFilterExcludeDeleted DeleteFilter = "EXCLUDE"
+	// DeleteFilterOnlyDeleted returns only soft-deleted entities.
+	DeleteFilterOnlyDeleted DeleteFilter = "ONLY"
+	// DeleteFilterIncludeDeleted returns all entities regardless of soft-delete status.
+	DeleteFilterIncludeDeleted DeleteFilter = "INCLUDE"
 )
-
-// Image DTO object.
-type Image struct {
-	ID           int64
-	UUID         string
-	Name         string
-	ArtifactType *artifact.ArtifactType
-	RegistryID   int64
-	Enabled      bool
-	Labels       []string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	CreatedBy    int64
-	UpdatedBy    int64
-	DeletedAt    *time.Time
-	DeletedBy    *int64
-}

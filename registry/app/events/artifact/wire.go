@@ -37,7 +37,13 @@ func ProvideArtifactReporter(eventsSystem *events.System) (*Reporter, error) {
 	return reporter, nil
 }
 
+// ProvideArtifactReporterValue converts *Reporter to Reporter for wire injection.
+func ProvideArtifactReporterValue(reporter *Reporter) Reporter {
+	return *reporter
+}
+
 var WireSet = wire.NewSet(
 	ProvideReaderFactory,
 	ProvideArtifactReporter,
+	ProvideArtifactReporterValue,
 )

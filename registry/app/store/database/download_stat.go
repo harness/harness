@@ -100,7 +100,8 @@ func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 		).
 		From("artifacts a").
 		Join("images i ON a.artifact_image_id = i.image_id").
-		Where("a.artifact_version = ? AND i.image_registry_id = ? AND i.image_name = ? ")
+		Where("a.artifact_version = ? AND i.image_registry_id = ? AND i.image_name = ? ").
+		Where("a.artifact_deleted_at IS NULL")
 	if artifactType != nil && *artifactType != "" {
 		selectQuery = selectQuery.Where("i.image_type = ?")
 	} else {
@@ -148,6 +149,7 @@ func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 func (d DownloadStatDao) GetTotalDownloadsForImage(ctx context.Context, imageID int64) (int64, error) {
 	q := databaseg.Builder.Select(`count(*)`).
 		From("artifacts art").Where("art.artifact_image_id = ?", imageID).
+		Where("art.artifact_deleted_at IS NULL").
 		Join("download_stats ds ON ds.download_stat_artifact_id = art.artifact_id")
 
 	sql, args, err := q.ToSql()
@@ -200,7 +202,9 @@ func (d DownloadStatDao) GetTotalDownloadsForManifests(
 		Join("download_stats ds ON ds.download_stat_artifact_id = art.artifact_id").Where(sq.And{
 		sq.Eq{"artifact_image_id": imageID},
 		sq.Eq{"artifact_version": artifactVersions},
-	}, "art").GroupBy("art.artifact_version")
+	}, "art").
+		Where("art.artifact_deleted_at IS NULL").
+		GroupBy("art.artifact_version")
 
 	sql, args, err := q.ToSql()
 	if err != nil {

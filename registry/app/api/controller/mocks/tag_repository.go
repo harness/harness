@@ -1356,8 +1356,8 @@ func (_c *MockTagRepository_GetAllTagsByRepoAndImage_Call) RunAndReturn(run func
 }
 
 // GetLatestTag provides a mock function for the type MockTagRepository
-func (_mock *MockTagRepository) GetLatestTag(ctx context.Context, repoID int64, imageName string) (*types.Tag, error) {
-	ret := _mock.Called(ctx, repoID, imageName)
+func (_mock *MockTagRepository) GetLatestTag(ctx context.Context, repoID int64, imageName string, opts ...types.QueryOption) (*types.Tag, error) {
+	ret := _mock.Called(ctx, repoID, imageName, opts)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetLatestTag")
@@ -1365,18 +1365,18 @@ func (_mock *MockTagRepository) GetLatestTag(ctx context.Context, repoID int64, 
 
 	var r0 *types.Tag
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string) (*types.Tag, error)); ok {
-		return returnFunc(ctx, repoID, imageName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, ...types.QueryOption) (*types.Tag, error)); ok {
+		return returnFunc(ctx, repoID, imageName, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string) *types.Tag); ok {
-		r0 = returnFunc(ctx, repoID, imageName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, ...types.QueryOption) *types.Tag); ok {
+		r0 = returnFunc(ctx, repoID, imageName, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.Tag)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string) error); ok {
-		r1 = returnFunc(ctx, repoID, imageName)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, ...types.QueryOption) error); ok {
+		r1 = returnFunc(ctx, repoID, imageName, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1392,8 +1392,9 @@ type MockTagRepository_GetLatestTag_Call struct {
 //   - ctx context.Context
 //   - repoID int64
 //   - imageName string
-func (_e *MockTagRepository_Expecter) GetLatestTag(ctx interface{}, repoID interface{}, imageName interface{}) *MockTagRepository_GetLatestTag_Call {
-	return &MockTagRepository_GetLatestTag_Call{Call: _e.mock.On("GetLatestTag", ctx, repoID, imageName)}
+//   - queryOptions types.QueryOption
+func (_e *MockTagRepository_Expecter) GetLatestTag(ctx interface{}, repoID interface{}, imageName interface{}, queryOptions interface{}) *MockTagRepository_GetLatestTag_Call {
+	return &MockTagRepository_GetLatestTag_Call{Call: _e.mock.On("GetLatestTag", ctx, repoID, imageName, queryOptions)}
 }
 
 func (_c *MockTagRepository_GetLatestTag_Call) Run(run func(ctx context.Context, repoID int64, imageName string)) *MockTagRepository_GetLatestTag_Call {
@@ -1430,8 +1431,8 @@ func (_c *MockTagRepository_GetLatestTag_Call) RunAndReturn(run func(ctx context
 }
 
 // GetLatestTagMetadata provides a mock function for the type MockTagRepository
-func (_mock *MockTagRepository) GetLatestTagMetadata(ctx context.Context, parentID int64, repoKey string, imageName string) (*types.ArtifactMetadata, error) {
-	ret := _mock.Called(ctx, parentID, repoKey, imageName)
+func (_mock *MockTagRepository) GetLatestTagMetadata(ctx context.Context, parentID int64, repoKey string, imageName string, opts ...types.QueryOption) (*types.ArtifactMetadata, error) {
+	ret := _mock.Called(ctx, parentID, repoKey, imageName, opts)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetLatestTagMetadata")
@@ -1439,18 +1440,18 @@ func (_mock *MockTagRepository) GetLatestTagMetadata(ctx context.Context, parent
 
 	var r0 *types.ArtifactMetadata
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string) (*types.ArtifactMetadata, error)); ok {
-		return returnFunc(ctx, parentID, repoKey, imageName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, ...types.QueryOption) (*types.ArtifactMetadata, error)); ok {
+		return returnFunc(ctx, parentID, repoKey, imageName, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string) *types.ArtifactMetadata); ok {
-		r0 = returnFunc(ctx, parentID, repoKey, imageName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, ...types.QueryOption) *types.ArtifactMetadata); ok {
+		r0 = returnFunc(ctx, parentID, repoKey, imageName, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.ArtifactMetadata)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, string) error); ok {
-		r1 = returnFunc(ctx, parentID, repoKey, imageName)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, string, ...types.QueryOption) error); ok {
+		r1 = returnFunc(ctx, parentID, repoKey, imageName, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1467,8 +1468,9 @@ type MockTagRepository_GetLatestTagMetadata_Call struct {
 //   - parentID int64
 //   - repoKey string
 //   - imageName string
-func (_e *MockTagRepository_Expecter) GetLatestTagMetadata(ctx interface{}, parentID interface{}, repoKey interface{}, imageName interface{}) *MockTagRepository_GetLatestTagMetadata_Call {
-	return &MockTagRepository_GetLatestTagMetadata_Call{Call: _e.mock.On("GetLatestTagMetadata", ctx, parentID, repoKey, imageName)}
+//   - queryOptions types.QueryOption
+func (_e *MockTagRepository_Expecter) GetLatestTagMetadata(ctx interface{}, parentID interface{}, repoKey interface{}, imageName interface{}, queryOptions interface{}) *MockTagRepository_GetLatestTagMetadata_Call {
+	return &MockTagRepository_GetLatestTagMetadata_Call{Call: _e.mock.On("GetLatestTagMetadata", ctx, parentID, repoKey, imageName, queryOptions)}
 }
 
 func (_c *MockTagRepository_GetLatestTagMetadata_Call) Run(run func(ctx context.Context, parentID int64, repoKey string, imageName string)) *MockTagRepository_GetLatestTagMetadata_Call {
@@ -1510,8 +1512,8 @@ func (_c *MockTagRepository_GetLatestTagMetadata_Call) RunAndReturn(run func(ctx
 }
 
 // GetLatestTagName provides a mock function for the type MockTagRepository
-func (_mock *MockTagRepository) GetLatestTagName(ctx context.Context, parentID int64, repoKey string, imageName string) (string, error) {
-	ret := _mock.Called(ctx, parentID, repoKey, imageName)
+func (_mock *MockTagRepository) GetLatestTagName(ctx context.Context, parentID int64, repoKey string, imageName string, opts ...types.QueryOption) (string, error) {
+	ret := _mock.Called(ctx, parentID, repoKey, imageName, opts)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetLatestTagName")
@@ -1519,16 +1521,16 @@ func (_mock *MockTagRepository) GetLatestTagName(ctx context.Context, parentID i
 
 	var r0 string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string) (string, error)); ok {
-		return returnFunc(ctx, parentID, repoKey, imageName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, ...types.QueryOption) (string, error)); ok {
+		return returnFunc(ctx, parentID, repoKey, imageName, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string) string); ok {
-		r0 = returnFunc(ctx, parentID, repoKey, imageName)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, ...types.QueryOption) string); ok {
+		r0 = returnFunc(ctx, parentID, repoKey, imageName, opts...)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, string) error); ok {
-		r1 = returnFunc(ctx, parentID, repoKey, imageName)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, string, ...types.QueryOption) error); ok {
+		r1 = returnFunc(ctx, parentID, repoKey, imageName, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1545,8 +1547,9 @@ type MockTagRepository_GetLatestTagName_Call struct {
 //   - parentID int64
 //   - repoKey string
 //   - imageName string
-func (_e *MockTagRepository_Expecter) GetLatestTagName(ctx interface{}, parentID interface{}, repoKey interface{}, imageName interface{}) *MockTagRepository_GetLatestTagName_Call {
-	return &MockTagRepository_GetLatestTagName_Call{Call: _e.mock.On("GetLatestTagName", ctx, parentID, repoKey, imageName)}
+//   - queryOptions types.QueryOption
+func (_e *MockTagRepository_Expecter) GetLatestTagName(ctx interface{}, parentID interface{}, repoKey interface{}, imageName interface{}, queryOptions interface{}) *MockTagRepository_GetLatestTagName_Call {
+	return &MockTagRepository_GetLatestTagName_Call{Call: _e.mock.On("GetLatestTagName", ctx, parentID, repoKey, imageName, queryOptions)}
 }
 
 func (_c *MockTagRepository_GetLatestTagName_Call) Run(run func(ctx context.Context, parentID int64, repoKey string, imageName string)) *MockTagRepository_GetLatestTagName_Call {
@@ -1588,8 +1591,8 @@ func (_c *MockTagRepository_GetLatestTagName_Call) RunAndReturn(run func(ctx con
 }
 
 // GetOCIVersionMetadata provides a mock function for the type MockTagRepository
-func (_mock *MockTagRepository) GetOCIVersionMetadata(ctx context.Context, parentID int64, repoKey string, imageName string, dgst string) (*types.OciVersionMetadata, error) {
-	ret := _mock.Called(ctx, parentID, repoKey, imageName, dgst)
+func (_mock *MockTagRepository) GetOCIVersionMetadata(ctx context.Context, parentID int64, repoKey string, imageName string, dgst string, opts ...types.QueryOption) (*types.OciVersionMetadata, error) {
+	ret := _mock.Called(ctx, parentID, repoKey, imageName, dgst, opts)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetOCIVersionMetadata")
@@ -1597,18 +1600,18 @@ func (_mock *MockTagRepository) GetOCIVersionMetadata(ctx context.Context, paren
 
 	var r0 *types.OciVersionMetadata
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, string) (*types.OciVersionMetadata, error)); ok {
-		return returnFunc(ctx, parentID, repoKey, imageName, dgst)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, string, ...types.QueryOption) (*types.OciVersionMetadata, error)); ok {
+		return returnFunc(ctx, parentID, repoKey, imageName, dgst, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, string) *types.OciVersionMetadata); ok {
-		r0 = returnFunc(ctx, parentID, repoKey, imageName, dgst)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string, string, ...types.QueryOption) *types.OciVersionMetadata); ok {
+		r0 = returnFunc(ctx, parentID, repoKey, imageName, dgst, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.OciVersionMetadata)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, string, string) error); ok {
-		r1 = returnFunc(ctx, parentID, repoKey, imageName, dgst)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, string, string, string, ...types.QueryOption) error); ok {
+		r1 = returnFunc(ctx, parentID, repoKey, imageName, dgst, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1626,8 +1629,9 @@ type MockTagRepository_GetOCIVersionMetadata_Call struct {
 //   - repoKey string
 //   - imageName string
 //   - dgst string
-func (_e *MockTagRepository_Expecter) GetOCIVersionMetadata(ctx interface{}, parentID interface{}, repoKey interface{}, imageName interface{}, dgst interface{}) *MockTagRepository_GetOCIVersionMetadata_Call {
-	return &MockTagRepository_GetOCIVersionMetadata_Call{Call: _e.mock.On("GetOCIVersionMetadata", ctx, parentID, repoKey, imageName, dgst)}
+//   - queryOptions types.QueryOption
+func (_e *MockTagRepository_Expecter) GetOCIVersionMetadata(ctx interface{}, parentID interface{}, repoKey interface{}, imageName interface{}, dgst interface{}, queryOptions interface{}) *MockTagRepository_GetOCIVersionMetadata_Call {
+	return &MockTagRepository_GetOCIVersionMetadata_Call{Call: _e.mock.On("GetOCIVersionMetadata", ctx, parentID, repoKey, imageName, dgst, queryOptions)}
 }
 
 func (_c *MockTagRepository_GetOCIVersionMetadata_Call) Run(run func(ctx context.Context, parentID int64, repoKey string, imageName string, dgst string)) *MockTagRepository_GetOCIVersionMetadata_Call {
