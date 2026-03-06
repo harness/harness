@@ -980,6 +980,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/blame/{path}", opGetBlame)
 
+	opGetLanguages := openapi3.Operation{}
+	opGetLanguages.WithTags("repository")
+	opGetLanguages.WithMapOfAnything(map[string]any{"operationId": "getLanguages"})
+	_ = reflector.SetRequest(&opGetLanguages, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opGetLanguages, []*types.RepoLangStat{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetLanguages, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opGetLanguages, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opGetLanguages, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opGetLanguages, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/languages", opGetLanguages)
+
 	importProgressRepository := openapi3.Operation{}
 	importProgressRepository.WithTags("repository")
 	importProgressRepository.WithMapOfAnything(map[string]any{"operationId": "importProgressRepository"})
