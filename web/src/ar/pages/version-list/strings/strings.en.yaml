@@ -17,6 +17,10 @@ table:
     tags: Tags
     scanStatus: Evaluation Status
 actions:
+  addTag: Add Tag
+  addTagDescription: Add tags by typing in the field below and pressing enter. Tags are unique across versions. If you add a tag that is already used by another version, the tag will be moved to this version.
+  addTagPlaceholder: Type tag name and press Enter
+  tagNameEntity: Tag name
   deleteVersion: Delete
   archiveVersion: Archive
   restoreVersion: Restore
@@ -24,5 +28,7 @@ actions:
   removeQuarantine: Remove From Quarantine
   reEvaluate: Re-Evaluate
 messages:
+  addTagSuccess: Tag added successfully
+  addTagFailed: Failed to add tag
   reEvaluateSuccess: Submitted request for Re-Evaluation successfully!
   reEvaluateFailed: Failed to submit request!

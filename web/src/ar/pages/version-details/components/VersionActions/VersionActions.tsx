@@ -34,6 +34,7 @@ import RemoveQurantineMenuItem from './RemoveQurantineMenuItem'
 import DownloadVersionMenuItem from './DownloadVersionMenuItem'
 import SoftDeleteVersionMenuItem from './SoftDeleteVersionMenuItem'
 import ReEvaluateMenuItem from './ReEvaluateMenuItem'
+import AddTagMenuItem from './AddTagMenuItem'
 
 export default function VersionActions({
   data,
@@ -170,6 +171,20 @@ export default function VersionActions({
           artifactKey={artifactKey}
           repoKey={repoKey}
           versionKey={digest ?? versionKey}
+          data={data}
+          pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
+      {isAllowed(VersionAction.AddTag) && (
+        <AddTagMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={versionKey}
           data={data}
           pageType={pageType}
           readonly={readonly}

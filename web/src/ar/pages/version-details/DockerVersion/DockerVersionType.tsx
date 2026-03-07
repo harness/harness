@@ -67,7 +67,8 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.DownloadCommand,
     VersionAction.ViewVersionDetails,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.AddTag
   ]
 
   protected allowedActionsOnVersionDetailsPage = [

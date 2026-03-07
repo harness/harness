@@ -400,12 +400,18 @@ export interface StringsMap {
   'versionDetails.versionArchived': string
   'versionDetails.versionDeleted': string
   'versionDetails.versionRestored': string
+  'versionList.actions.addTag': string
+  'versionList.actions.addTagDescription': string
+  'versionList.actions.addTagPlaceholder': string
   'versionList.actions.archiveVersion': string
   'versionList.actions.deleteVersion': string
   'versionList.actions.quarantine': string
   'versionList.actions.reEvaluate': string
   'versionList.actions.removeQuarantine': string
   'versionList.actions.restoreVersion': string
+  'versionList.actions.tagNameEntity': string
+  'versionList.messages.addTagFailed': string
+  'versionList.messages.addTagSuccess': string
   'versionList.messages.reEvaluateFailed': string
   'versionList.messages.reEvaluateSuccess': string
   'versionList.page': string

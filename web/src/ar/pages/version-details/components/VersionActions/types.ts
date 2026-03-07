@@ -39,5 +39,6 @@ export enum VersionAction {
   ViewVersionDetails = 'viewVersionDetails',
   Quarantine = 'quarantine',
   Download = 'download',
-  ReEvaluate = 'reEvaluate'
+  ReEvaluate = 'reEvaluate',
+  AddTag = 'addTag'
 }
