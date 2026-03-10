@@ -55,7 +55,6 @@ type CreateInput struct {
 	DefaultBranch string         `json:"default_branch"`
 	Description   string         `json:"description"`
 	IsPublic      bool           `json:"is_public"`
-	ForkID        int64          `json:"fork_id"`
 	Tags          types.RepoTags `json:"tags"`
 	CreateFileOptions
 }
@@ -140,7 +139,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Created:       now,
 			Updated:       now,
 			LastGITPush:   now, // even in case of an empty repo, the git repo got created.
-			ForkID:        in.ForkID,
+			ForkID:        0,
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       isEmpty,
 			Tags:          tags,

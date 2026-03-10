@@ -62,7 +62,6 @@ type RepoStore struct {
 }
 
 type repository struct {
-	// TODO: int64 ID doesn't match DB
 	ID          int64    `db:"repo_id"`
 	Version     int64    `db:"repo_version"`
 	ParentID    int64    `db:"repo_parent_id"`
@@ -78,10 +77,10 @@ type repository struct {
 	SizeLFS     int64 `db:"repo_lfs_size"`
 	SizeUpdated int64 `db:"repo_size_updated"`
 
-	GitUID        string `db:"repo_git_uid"`
-	DefaultBranch string `db:"repo_default_branch"`
-	ForkID        int64  `db:"repo_fork_id"`
-	PullReqSeq    int64  `db:"repo_pullreq_seq"`
+	GitUID        string   `db:"repo_git_uid"`
+	DefaultBranch string   `db:"repo_default_branch"`
+	ForkID        null.Int `db:"repo_fork_id"` // in DB this is not a FK: 0 is stored if a repo is not a fork
+	PullReqSeq    int64    `db:"repo_pullreq_seq"`
 
 	NumForks       int `db:"repo_num_forks"`
 	NumPulls       int `db:"repo_num_pulls"`
@@ -844,7 +843,7 @@ func (s *RepoStore) UpdateNumForks(ctx context.Context, repoID int64, delta int6
 
 func (s *RepoStore) ClearForkID(ctx context.Context, repoUpstreamID int64) error {
 	stmt := database.Builder.Update("repositories").
-		Set("repo_fork_id", nil).
+		Set("repo_fork_id", 0).
 		Where("repo_fork_id = ?", repoUpstreamID)
 
 	sql, args, err := stmt.ToSql()
@@ -913,7 +912,7 @@ func (s *RepoStore) mapToRepo(
 		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
 		DefaultBranch:  in.DefaultBranch,
-		ForkID:         in.ForkID,
+		ForkID:         in.ForkID.Int64,
 		PullReqSeq:     in.PullReqSeq,
 		NumForks:       in.NumForks,
 		NumPulls:       in.NumPulls,
@@ -1004,7 +1003,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
 		DefaultBranch:  in.DefaultBranch,
-		ForkID:         in.ForkID,
+		ForkID:         null.NewInt(in.ForkID, true),
 		PullReqSeq:     in.PullReqSeq,
 		NumForks:       in.NumForks,
 		NumPulls:       in.NumPulls,
