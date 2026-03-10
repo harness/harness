@@ -515,7 +515,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	mergeService, err := merge.ProvideService(ctx, config, gitInterface, reporter8, readerFactory2, eventsReaderFactory, repoFinder, repoStore, pullReqStore, pullReqActivityStore, checkStore, pullReqReviewerStore, principalInfoCache, principalStore, autoMergeStore, protectionManager, codeownersService, usergroupService, provider, streamer, pubSub, instrumentService, lockerLocker)
+	mergeService, err := merge.ProvideService(ctx, config, gitInterface, transactor, reporter8, readerFactory2, eventsReaderFactory, repoFinder, repoStore, pullReqStore, pullReqActivityStore, checkStore, pullReqReviewerStore, principalInfoCache, principalStore, autoMergeStore, protectionManager, codeownersService, usergroupService, provider, streamer, pubSub, instrumentService, lockerLocker)
 	if err != nil {
 		return nil, err
 	}

@@ -98,22 +98,23 @@ func GetAllPullReqActivityTypes() ([]PullReqActivityType, PullReqActivityType) {
 
 // PullReqActivityType enumeration.
 const (
-	PullReqActivityTypeComment                 PullReqActivityType = "comment"
-	PullReqActivityTypeCodeComment             PullReqActivityType = "code-comment"
-	PullReqActivityTypeTitleChange             PullReqActivityType = "title-change"
-	PullReqActivityTypeStateChange             PullReqActivityType = "state-change"
-	PullReqActivityTypeReviewSubmit            PullReqActivityType = "review-submit"
-	PullReqActivityTypeReviewerAdd             PullReqActivityType = "reviewer-add"
-	PullReqActivityTypeUserGroupReviewerAdd    PullReqActivityType = "user-group-reviewer-add"
-	PullReqActivityTypeReviewerDelete          PullReqActivityType = "reviewer-delete"
-	PullReqActivityTypeUserGroupReviewerDelete PullReqActivityType = "user-group-reviewer-delete"
-	PullReqActivityTypeBranchUpdate            PullReqActivityType = "branch-update"
-	PullReqActivityTypeBranchDelete            PullReqActivityType = "branch-delete"
-	PullReqActivityTypeBranchRestore           PullReqActivityType = "branch-restore"
-	PullReqActivityTypeTargetBranchChange      PullReqActivityType = "target-branch-change"
-	PullReqActivityTypeMerge                   PullReqActivityType = "merge"
-	PullReqActivityTypeLabelModify             PullReqActivityType = "label-modify"
-	PullReqActivityTypeNonUniqueMergeBase      PullReqActivityType = "non-unique-merge-base"
+	PullReqActivityTypeComment                         PullReqActivityType = "comment"
+	PullReqActivityTypeCodeComment                     PullReqActivityType = "code-comment"
+	PullReqActivityTypeTitleChange                     PullReqActivityType = "title-change"
+	PullReqActivityTypeStateChange                     PullReqActivityType = "state-change"
+	PullReqActivityTypeReviewSubmit                    PullReqActivityType = "review-submit"
+	PullReqActivityTypeReviewerAdd                     PullReqActivityType = "reviewer-add"
+	PullReqActivityTypeUserGroupReviewerAdd            PullReqActivityType = "user-group-reviewer-add"
+	PullReqActivityTypeReviewerDelete                  PullReqActivityType = "reviewer-delete"
+	PullReqActivityTypeUserGroupReviewerDelete         PullReqActivityType = "user-group-reviewer-delete"
+	PullReqActivityTypeBranchUpdate                    PullReqActivityType = "branch-update"
+	PullReqActivityTypeBranchDelete                    PullReqActivityType = "branch-delete"
+	PullReqActivityTypeBranchRestore                   PullReqActivityType = "branch-restore"
+	PullReqActivityTypeTargetBranchChange              PullReqActivityType = "target-branch-change"
+	PullReqActivityTypeMerge                           PullReqActivityType = "merge"
+	PullReqActivityTypeLabelModify                     PullReqActivityType = "label-modify"
+	PullReqActivityTypeNonUniqueMergeBase              PullReqActivityType = "non-unique-merge-base"
+	PullReqActivityTypeAutoMergeUnsupportedMergeMethod PullReqActivityType = "auto-merge-unsupported-merge-method"
 )
 
 var pullReqActivityTypes = sortEnum([]PullReqActivityType{
@@ -132,6 +133,8 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeTargetBranchChange,
 	PullReqActivityTypeMerge,
 	PullReqActivityTypeLabelModify,
+	PullReqActivityTypeNonUniqueMergeBase,
+	PullReqActivityTypeAutoMergeUnsupportedMergeMethod,
 })
 
 // PullReqActivityKind defines kind of pull request activity system message.

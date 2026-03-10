@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -34,8 +35,10 @@ func (c *Controller) AutoMergeDisable(
 		return fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
+	var pr *types.PullReq
+
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
-		pr, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
+		pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
 		if err != nil {
 			return fmt.Errorf("failed to get pull request by number: %w", err)
 		}
@@ -66,6 +69,8 @@ func (c *Controller) AutoMergeDisable(
 	if err != nil {
 		return fmt.Errorf("failed to disable auto merge for the pull request: %w", err)
 	}
+
+	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqAutoMergeDisabled, pr)
 
 	return nil
 }

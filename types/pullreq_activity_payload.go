@@ -243,3 +243,11 @@ type PullRequestActivityPayloadNonUniqueMergeBase struct {
 func (a *PullRequestActivityPayloadNonUniqueMergeBase) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeNonUniqueMergeBase
 }
+
+type PullRequestActivityPayloadAutoMergeDisabled struct {
+	MergeMethod enum.MergeMethod `json:"merge_method"`
+}
+
+func (a *PullRequestActivityPayloadAutoMergeDisabled) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeAutoMergeUnsupportedMergeMethod
+}

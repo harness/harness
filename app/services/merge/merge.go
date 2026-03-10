@@ -17,8 +17,11 @@ package merge
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller"
+	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
@@ -33,9 +36,10 @@ import (
 )
 
 var (
-	ErrNotEligible   = errors.New("not eligible")
-	ErrRuleViolation = errors.New("rule violation error")
-	ErrConflict      = errors.New("conflict error")
+	ErrNotEligible      = errors.New("not eligible")
+	ErrRuleViolation    = errors.New("rule violation error")
+	ErrConflict         = errors.New("conflict error")
+	ErrMethodNotAllowed = errors.New("merge method not allowed")
 )
 
 // Timeout is the max time we give a merge to succeed.
@@ -76,7 +80,17 @@ func (s *Service) autoMerge(ctx context.Context, pr *types.PullReq) error {
 		DeleteBranch: autoMerge.DeleteBranch,
 	}
 
-	pr, branchDeleted, err := s.Merge(ctx, pr, input)
+	prMerged, branchDeleted, err := s.Merge(ctx, pr, input)
+	if errors.Is(err, ErrMethodNotAllowed) {
+		log.Debug().
+			Msg("auto-merge pull request could not be performed because merge method is not allowed by rules")
+
+		err = s.disableAutoMerge(ctx, pr.ID, autoMerge.MergeMethod)
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to disable auto merge for PR")
+		}
+		return nil
+	}
 	if errors.Is(err, ErrNotEligible) {
 		log.Debug().
 			Msg("auto-merge pull request could not be performed because the pull request is not eligible")
@@ -98,7 +112,7 @@ func (s *Service) autoMerge(ctx context.Context, pr *types.PullReq) error {
 	}
 
 	log.Info().
-		Str("merge_method", string(*pr.MergeMethod)).
+		Str("merge_method", string(*prMerged.MergeMethod)).
 		Bool("branch_deleted", branchDeleted).
 		Msg("successfully auto-merged pull request")
 
@@ -197,6 +211,9 @@ func (s *Service) Merge(
 	}
 
 	if violations != nil {
+		if !slices.Contains(ruleOut.AllowedMethods, input.MergeMethod) {
+			return nil, false, ErrMethodNotAllowed
+		}
 		return nil, false, ErrRuleViolation
 	}
 
@@ -262,4 +279,64 @@ func (s *Service) Merge(
 	}
 
 	return pr, branchDeleted, nil
+}
+
+func (s *Service) disableAutoMerge(ctx context.Context, prID int64, method enum.MergeMethod) error {
+	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
+
+	var (
+		targetRepo *types.RepositoryCore
+		pr         *types.PullReq
+	)
+
+	err := controller.TxOptLock(ctx, s.tx, func(ctx context.Context) error {
+		var err error
+
+		pr, err = s.pullreqStore.Find(ctx, prID)
+		if err != nil {
+			return fmt.Errorf("failed to find pull request by ID: %w", err)
+		}
+
+		// Just to be safe, make sure the PR has not been already merged or auto-merge disabled.
+		if pr.Merged != nil || pr.State != enum.PullReqStateOpen || pr.IsDraft ||
+			pr.SubState != enum.PullReqSubStateAutoMerge {
+			return events.NewDiscardEventError(errors.New("PR not open or auto-merge already disabled"))
+		}
+
+		pr.SubState = enum.PullReqSubStateNone
+		pr.ActivitySeq++
+
+		targetRepo, err = s.repoFinder.FindByID(ctx, pr.TargetRepoID)
+		if err != nil {
+			return fmt.Errorf("failed to get target repository: %w", err)
+		}
+
+		err = s.pullreqStore.Update(ctx, pr)
+		if err != nil {
+			return fmt.Errorf("failed to update pull request: %w", err)
+		}
+
+		_, err = s.autoMergeStore.Delete(ctx, pr.ID)
+		if err != nil {
+			return fmt.Errorf("failed to update auto merge state: %w", err)
+		}
+
+		activityPayload := &types.PullRequestActivityPayloadAutoMergeDisabled{
+			MergeMethod: method,
+		}
+
+		_, err = s.activityStore.CreateWithPayload(ctx, pr, systemPrincipal.ID, activityPayload, nil)
+		if err != nil {
+			return fmt.Errorf("failed to add disable auto-merge activity: %w", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to disable auto merge for the pull request: %w", err)
+	}
+
+	s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqAutoMergeDisabled, pr)
+
+	return nil
 }

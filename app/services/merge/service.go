@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -39,6 +40,7 @@ import (
 
 type Service struct {
 	git                git.Interface
+	tx                 dbtx.Transactor
 	eventReporter      *pullreqevents.Reporter
 	repoFinder         refcache.RepoFinder
 	repoStore          store.RepoStore
@@ -63,6 +65,7 @@ func NewService(
 	ctx context.Context,
 	config *types.Config,
 	git git.Interface,
+	tx dbtx.Transactor,
 	eventReporter *pullreqevents.Reporter,
 	statusCheckFactory *events.ReaderFactory[*checkevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
@@ -86,6 +89,7 @@ func NewService(
 ) (*Service, error) {
 	service := &Service{
 		git:                git,
+		tx:                 tx,
 		eventReporter:      eventReporter,
 		repoFinder:         repoFinder,
 		repoStore:          repoStore,

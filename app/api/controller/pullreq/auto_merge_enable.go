@@ -106,6 +106,9 @@ func (c *Controller) AutoMergeEnable(
 		Message:      autoMerge.Message,
 		DeleteBranch: autoMerge.DeleteBranch,
 	})
+	if errors.Is(err, merge.ErrMethodNotAllowed) {
+		return nil, usererror.BadRequest("The provided merge method is not allowed by the rules.")
+	}
 	if err != nil &&
 		!errors.Is(err, merge.ErrNotEligible) &&
 		!errors.Is(err, merge.ErrRuleViolation) &&
@@ -160,6 +163,8 @@ func (c *Controller) AutoMergeEnable(
 	if err != nil {
 		return nil, fmt.Errorf("failed to enable auto merge for the pull request: %w", err)
 	}
+
+	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqAutoMergeEnabled, pr)
 
 	return &types.AutoMergeResponse{
 		MergeResponse: nil,

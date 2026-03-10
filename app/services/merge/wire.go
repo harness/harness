@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -44,6 +45,7 @@ var WireSet = wire.NewSet(
 func ProvideService(ctx context.Context,
 	config *types.Config,
 	git git.Interface,
+	tx dbtx.Transactor,
 	eventReporter *pullreqevents.Reporter,
 	statusCheckFactory *events.ReaderFactory[*checkevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
@@ -69,6 +71,7 @@ func ProvideService(ctx context.Context,
 		ctx,
 		config,
 		git,
+		tx,
 		eventReporter,
 		statusCheckFactory,
 		pullreqEvReaderFactory,

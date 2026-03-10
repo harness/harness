@@ -51,6 +51,9 @@ const (
 	SSETypePullReqMarkedAsDraft  SSEType = "pullreq_marked_as_draft"
 	SSETypePullReqReadyForReview SSEType = "pullreq_ready_for_review"
 
+	SSETypePullReqAutoMergeEnabled  SSEType = "pullreq_auto_merge_enabled"
+	SSETypePullReqAutoMergeDisabled SSEType = "pullreq_auto_merge_disabled"
+
 	// Branches.
 
 	SSETypeBranchMergableUpdated SSEType = "branch_mergable_updated"
