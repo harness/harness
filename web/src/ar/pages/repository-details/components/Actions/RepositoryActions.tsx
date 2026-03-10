@@ -25,7 +25,12 @@ import type { RepositoryActionsProps } from './types'
 import DeleteRepositoryMenuItem from './DeleteRepository'
 import SoftDeleteRepositoryMenuItem from './SoftDeleteRepository'
 
-export default function RepositoryActions({ data, readonly, pageType }: RepositoryActionsProps): JSX.Element {
+export default function RepositoryActions({
+  data,
+  readonly,
+  pageType,
+  registryRef
+}: RepositoryActionsProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const allowSoftDelete = useAllowSoftDelete()
   return (
@@ -40,7 +45,13 @@ export default function RepositoryActions({ data, readonly, pageType }: Reposito
       )}
       <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
       {pageType === PageType.Table && (
-        <SetupClientMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+        <SetupClientMenuItem
+          data={data}
+          readonly={readonly}
+          pageType={pageType}
+          registryRef={registryRef}
+          onClose={() => setOpen(false)}
+        />
       )}
     </ActionButton>
   )

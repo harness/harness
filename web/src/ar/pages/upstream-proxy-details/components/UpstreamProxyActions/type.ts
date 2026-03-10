@@ -21,4 +21,6 @@ export interface UpstreamProxyActionProps {
   data: Repository
   readonly: boolean
   pageType: PageType
+  /** Pre-computed registry ref (e.g. from list). Passed to Setup Client. */
+  registryRef?: string
 }

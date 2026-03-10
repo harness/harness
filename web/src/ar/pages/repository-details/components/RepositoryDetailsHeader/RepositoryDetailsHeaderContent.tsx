@@ -47,6 +47,7 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
   const { identifier, labels, description, modifiedAt, packageType, isPublic, deletedAt } = data || {}
   const { isCurrentSessionPublic } = useAppStore()
   const { getString } = useStrings()
+
   return (
     <Container>
       <Layout.Horizontal data-testid="registry-header-container" spacing="medium" flex={{ alignItems: 'center' }}>

@@ -36,6 +36,8 @@ export interface RepositoryActionsProps<T> {
   readonly: boolean
   type: RepositoryConfigType
   pageType: PageType
+  /** Pre-computed registry ref (e.g. from list). When set, used for Setup Client. */
+  registryRef?: string
 }
 
 export interface RepositoySetupClientProps {
@@ -43,6 +45,8 @@ export interface RepositoySetupClientProps {
   repoKey: string
   artifactKey?: string
   versionKey?: string
+  /** Pre-computed registry ref (e.g. from list). When set, used for client-setup-details API. */
+  registryRef?: string
 }
 
 export interface RepositoryDetailsHeaderProps<T> {

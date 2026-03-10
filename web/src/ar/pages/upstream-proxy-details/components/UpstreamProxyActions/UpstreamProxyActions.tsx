@@ -25,7 +25,12 @@ import SoftDeleteRepositoryMenuItem from '@ar/pages/repository-details/component
 
 import type { UpstreamProxyActionProps } from './type'
 
-export default function UpstreamProxyActions({ data, readonly, pageType }: UpstreamProxyActionProps): JSX.Element {
+export default function UpstreamProxyActions({
+  data,
+  readonly,
+  pageType,
+  registryRef
+}: UpstreamProxyActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const allowSoftDelete = useAllowSoftDelete()
   return (
@@ -40,7 +45,13 @@ export default function UpstreamProxyActions({ data, readonly, pageType }: Upstr
       )}
       <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
       {pageType === PageType.Table && (
-        <SetupClientMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+        <SetupClientMenuItem
+          data={data}
+          readonly={readonly}
+          pageType={pageType}
+          registryRef={registryRef}
+          onClose={() => setOpen(false)}
+        />
       )}
     </ActionButton>
   )

@@ -34,12 +34,15 @@ interface SetupClientContentProps {
   artifactKey?: string
   versionKey?: string
   packageType: PackageType
+  /** Pre-computed registry ref (e.g. from list). When set, used for client-setup-details API. */
+  registryRef?: string
 }
 
 export default function SetupClientContent(props: SetupClientContentProps): JSX.Element {
-  const { onClose, packageType, repoKey } = props
+  const { onClose, packageType, repoKey, registryRef: registryRefProp } = props
   const { getString } = useStrings()
-  const spaceRef = useGetSpaceRef(repoKey)
+  const spaceRefFromScope = useGetSpaceRef(repoKey)
+  const registryRef = registryRefProp ?? spaceRefFromScope
 
   const {
     isFetching: loading,
@@ -47,7 +50,7 @@ export default function SetupClientContent(props: SetupClientContentProps): JSX.
     error,
     refetch
   } = useGetClientSetupDetailsQuery({
-    registry_ref: spaceRef,
+    registry_ref: registryRef,
     queryParams: {
       artifact: props.artifactKey,
       version: props.versionKey

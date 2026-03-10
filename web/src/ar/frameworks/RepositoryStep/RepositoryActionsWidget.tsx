@@ -26,10 +26,12 @@ import type { RepositoryActionsProps } from './Repository'
 interface RepositoryActionsWidgetProps<T> extends RepositoryActionsProps<T> {
   factory?: RepositoryAbstractFactory
   packageType: RepositoryPackageType
+  /** Pre-computed registry ref from list (path). Passed to actions for Setup Client. */
+  registryRef?: string
 }
 
 export default function RepositoryActionsWidget<T>(props: RepositoryActionsWidgetProps<T>): JSX.Element {
-  const { factory = repositoryFactory, packageType, type, data, readonly, pageType } = props
+  const { factory = repositoryFactory, packageType, type, data, readonly, pageType, registryRef } = props
   const { getString } = useStrings()
   const repositoryType = factory?.getRepositoryType(packageType)
   if (!repositoryType) {
@@ -39,6 +41,7 @@ export default function RepositoryActionsWidget<T>(props: RepositoryActionsWidge
     data,
     readonly,
     type,
-    pageType
+    pageType,
+    registryRef
   })
 }

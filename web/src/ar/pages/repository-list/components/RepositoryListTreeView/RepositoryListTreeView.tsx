@@ -19,7 +19,7 @@ import { compact as lodashCompact } from 'lodash-es'
 import { Switch } from 'react-router-dom'
 import { Container } from '@harnessio/uicore'
 
-import { useAppStore, useParentHooks, useRoutes } from '@ar/hooks'
+import { useAppStore, useParentHooks, useRoutes, encodeRef } from '@ar/hooks'
 import { PageType } from '@ar/common/types'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
 import RepositoryProvider from '@ar/pages/repository-details/context/RepositoryProvider'
@@ -151,7 +151,9 @@ export default function RepositoryListTreeView() {
     const { metadata } = node
     const { entityType, repositoryIdentifier, artifactIdentifier, versionIdentifier } = metadata || {}
     switch (entityType) {
-      case TreeNodeEntityEnum.REGISTRY:
+      case TreeNodeEntityEnum.REGISTRY: {
+        const path: string | undefined = metadata?.path
+        const registryRef = path ? encodeRef(path) : undefined
         return (
           <RepositoryActionsWidget
             packageType={metadata.packageType}
@@ -159,8 +161,10 @@ export default function RepositoryListTreeView() {
             pageType={PageType.Table}
             type={metadata.type}
             readonly={false}
+            registryRef={registryRef}
           />
         )
+      }
       case TreeNodeEntityEnum.ARTIFACT:
         return (
           <ArtifactActionsWidget

@@ -107,22 +107,13 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
 
   renderActions(props: RepositoryActionsProps<Repository>): JSX.Element {
     if (props.type === RepositoryConfigType.VIRTUAL) {
-      return <RepositoryActions data={props.data} readonly={props.readonly} pageType={props.pageType} />
+      return <RepositoryActions {...props} />
     }
-    return <UpstreamProxyActions data={props.data} readonly={props.readonly} pageType={props.pageType} />
+    return <UpstreamProxyActions {...props} />
   }
 
   renderSetupClient(props: RepositoySetupClientProps): JSX.Element {
-    const { repoKey, onClose, artifactKey, versionKey } = props
-    return (
-      <SetupClientContent
-        repoKey={repoKey}
-        artifactKey={artifactKey}
-        versionKey={versionKey}
-        onClose={onClose}
-        packageType={RepositoryPackageType.DOCKER}
-      />
-    )
+    return <SetupClientContent {...props} packageType={RepositoryPackageType.DOCKER} />
   }
 
   renderRepositoryDetailsHeader(props: RepositoryDetailsHeaderProps<Repository>): JSX.Element {

@@ -27,10 +27,12 @@ import type { RepositoryAbstractFactory } from './RepositoryAbstractFactory'
 interface RepositorySetupClientWidgetProps extends RepositoySetupClientProps {
   factory?: RepositoryAbstractFactory
   type: RepositoryPackageType
+  /** Pre-computed registry ref (e.g. from list). When set, used for client-setup-details API. */
+  registryRef?: string
 }
 
 export default function RepositorySetupClientWidget(props: RepositorySetupClientWidgetProps): JSX.Element {
-  const { factory = repositoryFactory, type, onClose, repoKey, artifactKey, versionKey } = props
+  const { factory = repositoryFactory, type, onClose, repoKey, artifactKey, versionKey, registryRef } = props
   const { getString } = useStrings()
   const repositoryType = factory?.getRepositoryType(type)
   if (!repositoryType) {
@@ -40,6 +42,7 @@ export default function RepositorySetupClientWidget(props: RepositorySetupClient
     onClose,
     repoKey,
     artifactKey,
-    versionKey
+    versionKey,
+    registryRef
   })
 }

@@ -21,6 +21,7 @@ import type { RegistryMetadata } from '@harnessio/react-har-service-client'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
 
 import ScopeBadge from '@ar/components/Badge/ScopeBadge'
+import { encodeRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings/String'
 import TableCells from '@ar/components/TableCells/TableCells'
 import { getEntityScopeType } from '@ar/hooks/useGetPageScope'
@@ -102,6 +103,8 @@ export const RepositoryDownloadsCell: CellType = ({ value }) => {
 }
 
 export const RepositoryActionsCell: CellType = ({ row }) => {
+  const { path } = row.original
+  const registryRef = path ? encodeRef(path) : undefined
   return (
     <RepositoryActionsWidget
       type={row.original.type as RepositoryConfigType}
@@ -109,6 +112,7 @@ export const RepositoryActionsCell: CellType = ({ row }) => {
       data={row.original}
       readonly={false}
       pageType={PageType.Table}
+      registryRef={registryRef}
     />
   )
 }

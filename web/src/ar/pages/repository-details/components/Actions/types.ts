@@ -22,4 +22,6 @@ export interface RepositoryActionsProps {
   readonly: boolean
   pageType: PageType
   onClose?: () => void
+  /** Pre-computed registry ref from list (path + /+). When set, used for client-setup-details API. */
+  registryRef?: string
 }

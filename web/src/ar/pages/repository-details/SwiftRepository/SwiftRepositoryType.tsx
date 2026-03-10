@@ -84,20 +84,11 @@ export class SwiftRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
   }
 
   renderActions(props: RepositoryActionsProps<Repository>): JSX.Element {
-    return <RepositoryActions data={props.data} readonly={props.readonly} pageType={props.pageType} />
+    return <RepositoryActions {...props} />
   }
 
   renderSetupClient(props: RepositoySetupClientProps): JSX.Element {
-    const { repoKey, onClose, artifactKey, versionKey } = props
-    return (
-      <SetupClientContent
-        repoKey={repoKey}
-        artifactKey={artifactKey}
-        versionKey={versionKey}
-        onClose={onClose}
-        packageType={RepositoryPackageType.SWIFT}
-      />
-    )
+    return <SetupClientContent {...props} packageType={RepositoryPackageType.SWIFT} />
   }
 
   renderRepositoryDetailsHeader(props: RepositoryDetailsHeaderProps<Repository>): JSX.Element {
