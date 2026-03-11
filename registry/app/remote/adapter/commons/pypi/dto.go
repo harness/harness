@@ -115,16 +115,40 @@ func GetPyPIVersion(filename string) string {
 	case ".whl", ".egg":
 		return splits[1]
 	case ".tar.gz", ".tar.bz2", ".tar.xz", ".zip", ".dmg", ".app":
+		// Source distribution format: {name}-{version}.ext
+		// The version starts at the first segment that begins with a digit (or 'v'/'V' + digit).
+		// We join all remaining segments to handle versions containing hyphens (e.g., "4.0-b3").
+		if idx := findVersionStart(splits); idx > 0 {
+			return strings.Join(splits[idx:], "-")
+		}
 		return splits[len(splits)-1]
 	case ".exe":
 		match := exeRegex.FindStringSubmatch(filename)
 		if len(match) > 1 {
 			return match[1]
 		}
+		if idx := findVersionStart(splits); idx > 0 {
+			return strings.Join(splits[idx:], "-")
+		}
 		return splits[len(splits)-1]
 	default:
 		return ""
 	}
+}
+
+// findVersionStart returns the index of the first segment (starting from index 1)
+// that looks like the beginning of a version string.
+func findVersionStart(segments []string) int {
+	for i := 1; i < len(segments); i++ {
+		s := segments[i]
+		if len(s) > 0 && s[0] >= '0' && s[0] <= '9' {
+			return i
+		}
+		if len(s) > 1 && (s[0] == 'v' || s[0] == 'V') && s[1] >= '0' && s[1] <= '9' {
+			return i
+		}
+	}
+	return -1
 }
 
 func stripRecognizedExtension(filename string) (string, string, error) {
