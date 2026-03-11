@@ -54,6 +54,7 @@ export enum RepositoryPackageType {
   DOCKER = 'DOCKER',
   HELM = 'HELM',
   GENERIC = 'GENERIC',
+  RAW = 'RAW',
   MAVEN = 'MAVEN',
   NPM = 'NPM',
   GRADLE = 'GRADLE',

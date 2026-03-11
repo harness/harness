@@ -16,12 +16,12 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const btnContainer: string
-export declare const discardBtn: string
-export declare const packagesPageBody: string
-export declare const pageBody: string
-export declare const saveButton: string
-export declare const stickyBtnContainer: string
-export declare const tabsContainer: string
-export declare const tagRender: string
-export declare const v3FilesPageWrapper: string
+export declare const itemsPerPageText: string
+export declare const nextButton: string
+export declare const pageSizeDropdown: string
+export declare const pageText: string
+export declare const prevButton: string
+export declare const prevNextButtonGroup: string
+export declare const roundedButton: string
+export declare const separator: string
+export declare const wrapper: string

@@ -22,6 +22,12 @@
   --page-header-height: 253px !important;
 }
 
+.v3FilesPageWrapper {
+  width: 100%;
+  margin-top: var(--spacing-large);
+  margin-left: var(--spacing-large);
+}
+
 .tabsContainer {
   --tab-container-page-header-height: var(--har-repository-details-page-header-height);
 }

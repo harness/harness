@@ -16,12 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const btnContainer: string
-export declare const discardBtn: string
-export declare const packagesPageBody: string
-export declare const pageBody: string
-export declare const saveButton: string
-export declare const stickyBtnContainer: string
-export declare const tabsContainer: string
-export declare const tagRender: string
-export declare const v3FilesPageWrapper: string
+export declare const checksumContainer: string
+export declare const copyChecksumBtn: string
+export declare const table: string

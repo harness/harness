@@ -24,6 +24,7 @@ import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import PropertiesFormContent from '@ar/components/PropertiesForm/PropertiesFormContent'
+import ArtifactFileListV3Page from '@ar/pages/version-details/components/ArtifactFileListV3/ArtifactFileListV3Page'
 import RepositoryConfigurationFormWidget from '@ar/frameworks/RepositoryStep/RepositoryConfigurationFormWidget'
 
 import { LocalArtifactType, RepositoryDetailsTab } from './constants'
@@ -52,6 +53,14 @@ export default function RepositoryDetailsTabPage(props: RepositoryDetailsTabPage
   switch (tab) {
     case RepositoryDetailsTab.PACKAGES:
       return <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} />
+    case RepositoryDetailsTab.FILES:
+      return (
+        <ArtifactFileListV3Page
+          registryId={data?.uuid ?? ''}
+          repositoryIdentifier={data?.identifier ?? ''}
+          pageBodyClassName={css.packagesPageBody}
+        />
+      )
     case RepositoryDetailsTab.DATASETS:
       return (
         <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} artifactType={LocalArtifactType.DATASET} />
