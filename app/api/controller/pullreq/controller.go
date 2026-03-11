@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -80,6 +81,7 @@ type Controller struct {
 	dotRangeService        *dotrange.Service
 	codeOwners             *codeowners.Service
 	locker                 *locker.Locker
+	settings               *settings.Service
 	importer               *migrate.PullReq
 	labelSvc               *label.Service
 	instrumentation        instrument.Service
@@ -119,6 +121,7 @@ func NewController(
 	dotRangeService *dotrange.Service,
 	codeowners *codeowners.Service,
 	locker *locker.Locker,
+	settings *settings.Service,
 	importer *migrate.PullReq,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
@@ -157,6 +160,7 @@ func NewController(
 		dotRangeService:        dotRangeService,
 		codeOwners:             codeowners,
 		locker:                 locker,
+		settings:               settings,
 		importer:               importer,
 		labelSvc:               labelSvc,
 		instrumentation:        instrumentation,
