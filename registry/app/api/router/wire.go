@@ -74,6 +74,8 @@ func APIHandlerProvider(
 	repoDao store.RegistryRepository,
 	upstreamproxyDao store.UpstreamProxyConfigRepository,
 	fileManager filemanager.FileManager,
+	blobDao store.BlobRepository,
+	genericBlobDao store.GenericBlobRepository,
 	tagDao store.TagRepository,
 	manifestDao store.ManifestRepository,
 	cleanupPolicyDao store.CleanupPolicyRepository,
@@ -111,6 +113,8 @@ func APIHandlerProvider(
 	return harness.NewAPIHandler(
 		repoDao,
 		fileManager,
+		blobDao,
+		genericBlobDao,
 		upstreamproxyDao,
 		tagDao,
 		manifestDao,

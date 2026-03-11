@@ -66,6 +66,8 @@ type APIHandler interface {
 func NewAPIHandler(
 	repoDao store.RegistryRepository,
 	fileManager filemanager.FileManager,
+	blobDao store.BlobRepository,
+	genericBlobDao store.GenericBlobRepository,
 	upstreamproxyDao store.UpstreamProxyConfigRepository,
 	tagDao store.TagRepository,
 	manifestDao store.ManifestRepository,
@@ -109,6 +111,8 @@ func NewAPIHandler(
 	apiController := metadata.NewAPIController(
 		repoDao,
 		fileManager,
+		blobDao,
+		genericBlobDao,
 		upstreamproxyDao,
 		tagDao,
 		manifestDao,

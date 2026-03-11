@@ -284,6 +284,8 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 	return metadata.NewAPIController(
 		mockRegistryRepo,           // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore
@@ -359,6 +361,8 @@ func setupControllerWithError(_ *testing.T, errorType string) *metadata.APIContr
 	return metadata.NewAPIController(
 		nil,                        // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore
@@ -552,6 +556,8 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 	return metadata.NewAPIController(
 		mockRegistryRepo,           // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore

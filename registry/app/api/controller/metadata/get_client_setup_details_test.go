@@ -556,6 +556,8 @@ func TestGenerateClientSetupDetails_WithUntaggedImages(t *testing.T) {
 			controller := metadata.NewAPIController(
 				nil,             // repositoryStore
 				fileManager,     // fileManager
+				nil,             // blobStore
+				nil,             // genericBlobStore
 				nil,             // upstreamProxyStore
 				nil,             // tagStore
 				nil,             // manifestStore
@@ -633,6 +635,8 @@ func TestGenerateClientSetupDetails_MavenWithGroupID(t *testing.T) {
 	controller := metadata.NewAPIController(
 		nil,             // repositoryStore
 		fileManager,     // fileManager
+		nil,             // blobStore
+		nil,             // genericBlobStore
 		nil,             // upstreamProxyStore
 		nil,             // tagStore
 		nil,             // manifestStore
@@ -769,6 +773,8 @@ func setupControllerForPackageType(_ *testing.T, packageType artifact.PackageTyp
 	return metadata.NewAPIController(
 		mockRegistryRepo,           // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore
@@ -860,6 +866,8 @@ func setupControllerForError(_ *testing.T, errorType string) *metadata.APIContro
 	return metadata.NewAPIController(
 		mockRegistryRepo,           // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore
@@ -1013,6 +1021,8 @@ func TestGenerateClientSetupDetailsSnapshot(t *testing.T) {
 			controller := metadata.NewAPIController(
 				nil,                     // repositoryStore
 				fileManager,             // fileManager
+				nil,                     // blobStore
+				nil,                     // genericBlobStore
 				nil,                     // upstreamProxyStore
 				nil,                     // tagStore
 				nil,                     // manifestStore

@@ -348,6 +348,8 @@ func setupFilesController(_ *testing.T, packageType artifact.PackageType) *metad
 	return metadata.NewAPIController(
 		mockRegistryRepo,           // repositoryStore
 		mockFileManager,            // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore
@@ -423,6 +425,8 @@ func setupFilesControllerWithError(_ *testing.T, errorType string) *metadata.API
 	return metadata.NewAPIController(
 		nil,                        // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore

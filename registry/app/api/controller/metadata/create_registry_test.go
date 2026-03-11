@@ -244,6 +244,8 @@ func TestCreateRegistry(t *testing.T) {
 				return metadata.NewAPIController(
 					mockRegistryRepo,
 					fileManager,
+					nil, // blobStore
+					nil, // genericBlobStore
 					nil, // upstreamProxyStore.
 					nil, // tagStore.
 					nil, // manifestStore.
@@ -335,6 +337,8 @@ func TestCreateRegistry(t *testing.T) {
 				return metadata.NewAPIController(
 					mockRegistryRepo,
 					fileManager,
+					nil, // blobStore
+					nil, // genericBlobStore
 					nil, // upstreamProxyStore.
 					nil, // tagStore.
 					nil, // manifestStore.

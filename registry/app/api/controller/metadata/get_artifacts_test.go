@@ -221,6 +221,8 @@ func setupArtifactsControllerWithError(_ *testing.T, errorType string) *metadata
 	return metadata.NewAPIController(
 		nil,                        // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore
@@ -387,6 +389,8 @@ func setupArtifactsSnapshotController(
 	return metadata.NewAPIController(
 		mockRegistryRepo,           // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		mockTagStore,               // tagStore
 		nil,                        // manifestStore

@@ -297,6 +297,8 @@ func setupVersionsController(_ *testing.T, packageType artifact.PackageType) *me
 	return metadata.NewAPIController(
 		mockRegistryRepo,           // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore
@@ -378,6 +380,8 @@ func setupVersionsControllerWithError(_ *testing.T, errorType string) *metadata.
 	return metadata.NewAPIController(
 		nil,                        // repositoryStore
 		fileManager,                // fileManager
+		nil,                        // blobStore
+		nil,                        // genericBlobStore
 		nil,                        // upstreamProxyStore
 		nil,                        // tagStore
 		nil,                        // manifestStore

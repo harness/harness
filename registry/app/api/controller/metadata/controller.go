@@ -87,6 +87,8 @@ type APIController struct {
 func NewAPIController(
 	repositoryStore store.RegistryRepository,
 	fileManager filemanager.FileManager,
+	blobStore store.BlobRepository,
+	genericBlobStore store.GenericBlobRepository,
 	upstreamProxyStore store.UpstreamProxyConfigRepository,
 	tagStore store.TagRepository,
 	manifestStore store.ManifestRepository,
@@ -122,6 +124,8 @@ func NewAPIController(
 ) *APIController {
 	return &APIController{
 		fileManager:                  fileManager,
+		BlobStore:                    blobStore,
+		GenericBlobStore:             genericBlobStore,
 		RegistryRepository:           repositoryStore,
 		UpstreamProxyStore:           upstreamProxyStore,
 		TagStore:                     tagStore,
