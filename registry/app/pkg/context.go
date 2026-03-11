@@ -25,8 +25,11 @@ type BaseInfo struct {
 	PathPackageType artifact.PackageType
 	PathRoot        string
 	ParentID        int64
-	RootIdentifier  string
-	RootParentID    int64
+	// Fixme(Arvind): This is lowercase in case of OCI flows and not a valid rootIdentifier.
+	// Use RootParentID in those cases
+	// Will deprecate once storage layers are cleaned up.
+	RootIdentifier string
+	RootParentID   int64
 }
 
 type ArtifactInfo struct {

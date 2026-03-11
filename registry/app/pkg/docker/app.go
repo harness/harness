@@ -21,6 +21,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
+	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
@@ -49,6 +50,7 @@ type App struct {
 	Config         *types.Config
 	storageService *registrystorage.Service
 	bucketService  BucketService
+	spaceFinder    refcache.SpaceFinder
 }
 
 // NewApp takes a configuration and returns a configured app.
@@ -61,12 +63,14 @@ func NewApp(
 	storageResolver registrystorage.StorageResolver,
 	gcService gc.Service,
 	bucketService BucketService,
+	spaceFinder refcache.SpaceFinder,
 ) *App {
 	app := &App{
 		Context:        ctx,
 		Config:         cfg,
 		storageService: storageService,
 		bucketService:  bucketService,
+		spaceFinder:    spaceFinder,
 	}
 	app.configureSecret(cfg) //nolint:contextcheck
 	gcService.Start(ctx, spaceStore, blobRepo, storageResolver, cfg)
@@ -141,9 +145,13 @@ func (app *App) GetBlobsContext(
 	}
 
 	if blobLocator.BlobID != 0 || blobLocator.GenericBlobID != uuid.Nil {
+		space, err := app.spaceFinder.FindByID(c, blobLocator.RootParentID)
+		if err != nil {
+			return nil, fmt.Errorf("could not find blob store root: %w", err)
+		}
 		// For reads and lazy replication
 		if result := app.bucketService.GetBlobStore(c, info.RegIdentifier, info.RootIdentifier, blobLocator.BlobID,
-			digest.Digest(info.Digest).String()); result != nil {
+			digest.Digest(info.Digest).String(), space.Identifier); result != nil {
 			ctx.OciBlobStore = result.OciStore
 		}
 	}

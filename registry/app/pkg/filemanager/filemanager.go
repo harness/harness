@@ -93,7 +93,7 @@ func (f *fileManager) UploadFile(
 		RegistryID:   regID,
 		RootParentID: rootParentID,
 	}
-	blobContext, err := f.getBlobsContext(ctx, rootIdentifier, "", "", "", blobLocator)
+	blobContext, err := f.getBlobsContext(ctx, "", rootIdentifier, "", "", blobLocator)
 	if err != nil {
 		return types.FileInfo{}, fmt.Errorf("failed to get blob context: %w", err)
 	}
@@ -126,8 +126,8 @@ func (f *fileManager) getBlobsContext(
 
 	// For reads and Lazy Replication
 	if f.bucketService != nil && blobID != "" {
-		if result := f.bucketService.GetBlobStore(c, registryIdentifier, rootIdentifier, blobID,
-			sha256); result != nil {
+		if result := f.bucketService.GetBlobStore(c, registryIdentifier, rootIdentifier, blobID, sha256,
+			rootIdentifier); result != nil {
 			ctx.genericBlobStore = result.GenericStore
 			return ctx, nil
 		}
@@ -574,7 +574,7 @@ func (f *fileManager) UploadFileNoDBUpdate(
 		RootParentID: rootParentID,
 		RegistryID:   regID,
 	}
-	blobContext, err := f.getBlobsContext(ctx, rootIdentifier, "", "", "", blobLocator)
+	blobContext, err := f.getBlobsContext(ctx, "", rootIdentifier, "", "", blobLocator)
 	if err != nil {
 		return types.FileInfo{}, fmt.Errorf("failed to get blob context: %w", err)
 	}
@@ -603,7 +603,7 @@ func (f *fileManager) HeadByDigest(
 		RootParentID: rootParentID,
 		RegistryID:   registryID,
 	}
-	blobContext, err := f.getBlobsContext(ctx, rootIdentifier, "", "", "", blobLocator)
+	blobContext, err := f.getBlobsContext(ctx, "", rootIdentifier, "", "", blobLocator)
 	if err != nil {
 		return false, 0, fmt.Errorf("failed to get blob context: %w", err)
 	}

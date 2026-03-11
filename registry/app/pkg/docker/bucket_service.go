@@ -33,6 +33,12 @@ type BucketService interface {
 	// For OCI operations, pass repoKey. For generic operations, pass empty string for repoKey.
 	// blobID can be int64 for OCI blobs or string for generic blobs.
 	// If no suitable bucket is found, returns nil and the caller should fall back to using their default blob store.
-	GetBlobStore(ctx context.Context, repoKey string, rootIdentifier string,
-		blobID any, digest string) *BlobStore
+	GetBlobStore(
+		ctx context.Context,
+		repoKey string,
+		rootIdentifier string,
+		blobID any,
+		digest string,
+		rootSpaceIdentifier string,
+	) *BlobStore
 }
