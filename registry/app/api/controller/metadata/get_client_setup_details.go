@@ -363,7 +363,7 @@ func (c *APIController) getAnonymousGenericClientSetupDetails(
 	blankString string,
 	registryType artifact.RegistryType,
 ) artifact.ClientSetupDetails {
-	header3 := "Download Artifact"
+	header3 := "Download Artifact (Deprecated)"
 	//nolint:lll
 	section3step1Header := "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths."
 	//nolint:lll
@@ -439,14 +439,14 @@ func (c *APIController) getAnonymousGenericClientSetupDetails(
 	})
 
 	sections := []artifact.ClientSetupSection{
-		section3,
 		section4,
+		section3,
 	}
 
 	if registryType == artifact.RegistryTypeUPSTREAM {
 		sections = []artifact.ClientSetupSection{
-			section3,
 			section4,
+			section3,
 		}
 	}
 
@@ -478,7 +478,7 @@ func (c *APIController) getGenericClientSetupDetails(
 		Steps: &section1steps,
 	})
 
-	header2 := "Upload Artifact"
+	header2 := "Upload Artifact (Deprecated)"
 	//nolint:lll
 	section2step1Header := "Run this curl command in your terminal to push the artifact at package level. This command works for non-nested paths."
 	//nolint:lll
@@ -501,7 +501,7 @@ func (c *APIController) getGenericClientSetupDetails(
 		Steps: &section2steps,
 	})
 
-	header3 := "Download Artifact"
+	header3 := "Download Artifact (Deprecated)"
 	//nolint:lll
 	section3step1Header := "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths."
 	//nolint:lll
@@ -608,16 +608,16 @@ func (c *APIController) getGenericClientSetupDetails(
 
 	sections := []artifact.ClientSetupSection{
 		section1,
+		section4,
 		section2,
 		section3,
-		section4,
 	}
 
 	if registryType == artifact.RegistryTypeUPSTREAM {
 		sections = []artifact.ClientSetupSection{
 			section1,
-			section3,
 			section4,
+			section3,
 		}
 	}
 

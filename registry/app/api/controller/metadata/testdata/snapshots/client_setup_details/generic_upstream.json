@@ -13,22 +13,6 @@
       "type": "INLINE"
     },
     {
-      "header": "Download Artifact",
-      "steps": [
-        {
-          "commands": [
-            {
-              "label": "",
-              "value": "curl --location 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0?filename=\u003cFILENAME\u003e' \\\n --header 'Authorization: Bearer \u003cAPI_KEY\u003e' -J -O"
-            }
-          ],
-          "header": "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths.",
-          "type": "Static"
-        }
-      ],
-      "type": "INLINE"
-    },
-    {
       "header": "File Operations (Supports both nested and flat paths)",
       "steps": [
         {
@@ -59,6 +43,22 @@
             }
           ],
           "header": "Delete a file from a specific path within the package (only deletes cached file).",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Download Artifact (Deprecated)",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "curl --location 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0?filename=\u003cFILENAME\u003e' \\\n --header 'Authorization: Bearer \u003cAPI_KEY\u003e' -J -O"
+            }
+          ],
+          "header": "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths.",
           "type": "Static"
         }
       ],
