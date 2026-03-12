@@ -73,15 +73,16 @@ func ManifestServiceProvider(
 	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
 	artifactEventReporter *registryevents.Reporter,
-	urlProvider url.Provider,
-	auditService audit.Service,
+	urlProvider url.Provider, auditService audit.Service, registryBlobStore store.RegistryBlobRepository,
 ) ManifestService {
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
 		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spaceFinder,
 		ociImageIndexMappingDao, *artifactEventReporter, urlProvider, func(_ context.Context) bool {
 			return true
-		}, auditService)
+		},
+		auditService, registryBlobStore,
+	)
 }
 
 func RemoteRegistryProvider(

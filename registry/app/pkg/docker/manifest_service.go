@@ -74,6 +74,7 @@ type manifestService struct {
 	urlProvider             urlprovider.Provider
 	untaggedImagesEnabled   func(ctx context.Context) bool
 	auditService            audit.Service
+	registryBlobStore       store.RegistryBlobRepository
 }
 
 func NewManifestService(
@@ -84,7 +85,7 @@ func NewManifestService(
 	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spaceFinder refcache.SpaceFinder,
 	ociImageIndexMappingDao store.OCIImageIndexMappingRepository, artifactEventReporter registryevents.Reporter,
 	urlProvider urlprovider.Provider, untaggedImagesEnabled func(ctx context.Context) bool,
-	auditService audit.Service,
+	auditService audit.Service, registryBlobStore store.RegistryBlobRepository,
 ) ManifestService {
 	return &manifestService{
 		registryDao:             registryDao,
@@ -105,6 +106,7 @@ func NewManifestService(
 		urlProvider:             urlProvider,
 		untaggedImagesEnabled:   untaggedImagesEnabled,
 		auditService:            auditService,
+		registryBlobStore:       registryBlobStore,
 	}
 }
 
