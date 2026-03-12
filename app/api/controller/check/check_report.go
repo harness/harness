@@ -45,6 +45,11 @@ type ReportInput struct {
 	Ended   int64 `json:"ended,omitempty"`
 }
 
+const (
+	maxSummaryLength = 2048
+	maxLinkLength    = 2048
+)
+
 // TODO: Can we drop the '$' - depends on whether harness allows it.
 var regexpCheckIdentifier = "^[0-9a-zA-Z-_.$]{1,127}$"
 var matcherCheckIdentifier = regexp.MustCompile(regexpCheckIdentifier)
@@ -64,6 +69,14 @@ func (in *ReportInput) Sanitize(
 
 	if !matcherCheckIdentifier.MatchString(in.Identifier) {
 		return usererror.BadRequestf("Identifier must match the regular expression: %s", regexpCheckIdentifier)
+	}
+
+	if len(in.Summary) > maxSummaryLength {
+		return usererror.BadRequestf("Summary can be at most %d bytes long.", maxSummaryLength)
+	}
+
+	if len(in.Link) > maxLinkLength {
+		return usererror.BadRequestf("Link can be at most %d bytes long.", maxLinkLength)
 	}
 
 	_, ok := in.Status.Sanitize()
