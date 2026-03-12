@@ -233,11 +233,6 @@ func (d *driver) CopyObject(ctx context.Context, srcKey, destBucket, destKey str
 		}
 	}
 
-	// Verify the destination object exists
-	_, err = d.S3.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(destBucket),
-		Key:    aws.String(destKey),
-	})
 	return err
 }
 
