@@ -176,6 +176,7 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.warnSubtitle': string
   'repositoryDetails.tabs.configuration': string
   'repositoryDetails.tabs.datasets': string
+  'repositoryDetails.tabs.files': string
   'repositoryDetails.tabs.models': string
   'repositoryDetails.tabs.packages': string
   'repositoryDetails.tabs.properties': string
@@ -288,11 +289,15 @@ export interface StringsMap {
   'versionDetails.artifactDetails.tabs.layers': string
   'versionDetails.artifactDetails.tabs.manifest': string
   'versionDetails.artifactDetails.tabs.readme': string
+  'versionDetails.artifactFiles.itemsPerPage': string
   'versionDetails.artifactFiles.noFilesTitle': string
+  'versionDetails.artifactFiles.pageLabel': string
   'versionDetails.artifactFiles.table.columns.checksum': string
   'versionDetails.artifactFiles.table.columns.created': string
   'versionDetails.artifactFiles.table.columns.downloadCommand': string
+  'versionDetails.artifactFiles.table.columns.id': string
   'versionDetails.artifactFiles.table.columns.name': string
+  'versionDetails.artifactFiles.table.columns.path': string
   'versionDetails.artifactFiles.table.columns.size': string
   'versionDetails.cards.container.title': string
   'versionDetails.cards.container.versionDigest': string
@@ -639,6 +644,7 @@ export interface StringsMap {
   'repositoryTypes.npm': string
   'repositoryTypes.nuget': string
   'repositoryTypes.pypi': string
+  'repositoryTypes.raw': string
   'repositoryTypes.rpm': string
   'repositoryTypes.swift': string
   restore: string

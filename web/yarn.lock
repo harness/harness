@@ -1921,10 +1921,10 @@
   resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-2.1.1.tgz#2da3036602ed9b9446d8139c72009e6dc1e25642"
   integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
-"@harnessio/icons@^2.1.18":
-  version "2.1.20"
-  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.20.tgz#e3d95107ff70f635009e87f28d61adaa64d9ebc0"
-  integrity sha512-3wtngGnVltw/Y89cmBRMQVwFO/p+lixHG/ROU/pVtTqCooBr/fiSk6uqkQLzhqde7g7W1FWbdFFdyBeKBG8k2w==
+"@harnessio/icons@2.1.22":
+  version "2.1.22"
+  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.22.tgz#61b6bbaf747db1bb6484ee7e08411d9829aded94"
+  integrity sha512-yLu5Ih4km10cUfBcwLJXfFEFfuXKECrwUt74Hr2fNmjKFRDq+OjUnph3iGIelfAHGxLAVoyAkznmQBbibBNRTA==
 
 "@harnessio/oats-cli@^3.0.0":
   version "3.0.0"
@@ -1945,10 +1945,10 @@
     yargs "^17.6.2"
     zod "^3.19.1"
 
-"@harnessio/react-har-service-client@0.50.0":
-  version "0.50.0"
-  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.50.0.tgz#ad5f92a119d0b05deda0238b18d63a3461f1ff81"
-  integrity sha512-KJtEBOv3RXgc/tOF5KkKVkb8VWinc48swhl6B/Pp9u2CC5uWNXXFMUoZ8FADRefK19qMyXmHVpe6gVF1tDc5Pw==
+"@harnessio/react-har-service-client@0.51.0":
+  version "0.51.0"
+  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.51.0.tgz#b8f07f537db9adfccaa15646425ca395629af992"
+  integrity sha512-PJYneexvC83FusxVGY59VZy/zxlmeKtoxyPQDeE5gPOErG6S/316QkW55F4QS37lohdCWEGSTBKce+yn8jxy7g==
   dependencies:
     "@harnessio/oats-cli" "^3.0.0"
 

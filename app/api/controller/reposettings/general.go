@@ -22,14 +22,16 @@ import (
 
 // GeneralSettings represent the general repository settings as exposed externally.
 type GeneralSettings struct {
-	FileSizeLimit *int64 `json:"file_size_limit" yaml:"file_size_limit" description:"file size limit in bytes"`
-	GitLFSEnabled *bool  `json:"git_lfs_enabled" yaml:"git_lfs_enabled"`
+	FileSizeLimit    *int64 `json:"file_size_limit" yaml:"file_size_limit" description:"file size limit in bytes"`
+	GitLFSEnabled    *bool  `json:"git_lfs_enabled" yaml:"git_lfs_enabled"`
+	AutoMergeEnabled *bool  `json:"auto_merge_enabled" yaml:"auto_merge_enabled"`
 }
 
 func GetDefaultGeneralSettings() *GeneralSettings {
 	return &GeneralSettings{
-		FileSizeLimit: ptr.Int64(settings.DefaultFileSizeLimit),
-		GitLFSEnabled: ptr.Bool(settings.DefaultGitLFSEnabled),
+		FileSizeLimit:    ptr.Int64(settings.DefaultFileSizeLimit),
+		GitLFSEnabled:    ptr.Bool(settings.DefaultGitLFSEnabled),
+		AutoMergeEnabled: ptr.Bool(settings.DefaultAutoMergeEnabled),
 	}
 }
 
@@ -37,6 +39,7 @@ func GetGeneralSettingsMappings(s *GeneralSettings) []settings.SettingHandler {
 	return []settings.SettingHandler{
 		settings.Mapping(settings.KeyFileSizeLimit, s.FileSizeLimit),
 		settings.Mapping(settings.KeyGitLFSEnabled, s.GitLFSEnabled),
+		settings.Mapping(settings.KeyAutoMergeEnabled, s.AutoMergeEnabled),
 	}
 }
 
@@ -54,6 +57,13 @@ func GetGeneralSettingsAsKeyValues(s *GeneralSettings) []settings.KeyValue {
 		kvs = append(kvs, settings.KeyValue{
 			Key:   settings.KeyGitLFSEnabled,
 			Value: s.GitLFSEnabled,
+		})
+	}
+
+	if s.AutoMergeEnabled != nil {
+		kvs = append(kvs, settings.KeyValue{
+			Key:   settings.KeyAutoMergeEnabled,
+			Value: s.AutoMergeEnabled,
 		})
 	}
 

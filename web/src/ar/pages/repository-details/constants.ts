@@ -34,6 +34,7 @@ export const POLICY_ACTION = 'onstep'
 
 export enum RepositoryDetailsTab {
   PACKAGES = 'packages',
+  FILES = 'files',
   DATASETS = 'datasets',
   MODELS = 'models',
   CONFIGURATION = 'configuration',
@@ -86,6 +87,13 @@ export const RepositoryDetailsTabs: RepositoryDetailsTabSpec[] = [
     value: RepositoryDetailsTab.PACKAGES,
     mode: RepositoryListViewTypeEnum.LIST,
     artifactType: LocalArtifactType.ARTIFACTS,
+    isSupportedInPublicView: true
+  },
+  {
+    label: 'repositoryDetails.tabs.files',
+    value: RepositoryDetailsTab.FILES,
+    mode: RepositoryListViewTypeEnum.LIST,
+    packageType: RepositoryPackageType.RAW,
     isSupportedInPublicView: true
   },
   {

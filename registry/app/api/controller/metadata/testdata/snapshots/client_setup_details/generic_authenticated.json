@@ -13,38 +13,6 @@
       "type": "INLINE"
     },
     {
-      "header": "Upload Artifact",
-      "steps": [
-        {
-          "commands": [
-            {
-              "label": "",
-              "value": "curl --location --request PUT 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0' \\\n--form 'filename=\"\u003cFILENAME\u003e\"' \\\n--form 'file=@\"\u003cFILE_PATH\u003e\"' \\\n--form 'description=\"\u003cDESC\u003e\"' \\\n--header 'Authorization: Bearer \u003cAPI_KEY\u003e'"
-            }
-          ],
-          "header": "Run this curl command in your terminal to push the artifact at package level. This command works for non-nested paths.",
-          "type": "Static"
-        }
-      ],
-      "type": "INLINE"
-    },
-    {
-      "header": "Download Artifact",
-      "steps": [
-        {
-          "commands": [
-            {
-              "label": "",
-              "value": "curl --location 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0?filename=\u003cFILENAME\u003e' \\\n --header 'Authorization: Bearer \u003cAPI_KEY\u003e' -J -O"
-            }
-          ],
-          "header": "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths.",
-          "type": "Static"
-        }
-      ],
-      "type": "INLINE"
-    },
-    {
       "header": "File Operations (Supports both nested and flat paths)",
       "steps": [
         {
@@ -85,6 +53,38 @@
             }
           ],
           "header": "Delete a file from a specific path within the package.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Upload Artifact (Deprecated)",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "curl --location --request PUT 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0' \\\n--form 'filename=\"\u003cFILENAME\u003e\"' \\\n--form 'file=@\"\u003cFILE_PATH\u003e\"' \\\n--form 'description=\"\u003cDESC\u003e\"' \\\n--header 'Authorization: Bearer \u003cAPI_KEY\u003e'"
+            }
+          ],
+          "header": "Run this curl command in your terminal to push the artifact at package level. This command works for non-nested paths.",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Download Artifact (Deprecated)",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "curl --location 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0?filename=\u003cFILENAME\u003e' \\\n --header 'Authorization: Bearer \u003cAPI_KEY\u003e' -J -O"
+            }
+          ],
+          "header": "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths.",
           "type": "Static"
         }
       ],

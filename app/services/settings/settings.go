@@ -28,4 +28,6 @@ var (
 	DefaultPrincipalCommitterMatch     = false
 	KeyGitLFSEnabled               Key = "git_lfs_enabled"
 	DefaultGitLFSEnabled               = true
+	KeyAutoMergeEnabled            Key = "auto_merge_enabled"
+	DefaultAutoMergeEnabled            = false
 )

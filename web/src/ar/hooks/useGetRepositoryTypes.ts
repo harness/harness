@@ -69,6 +69,15 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     icon: 'generic-repository-type'
   },
   {
+    label: 'repositoryTypes.raw',
+    value: RepositoryPackageType.RAW,
+    icon: 'raw_icon',
+    parent: Parent.Enterprise,
+    featureFlag: FeatureFlags.HAR_SWIFT_PACKAGE,
+    tooltip: 'Coming Soon!',
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
     label: 'repositoryTypes.maven',
     value: RepositoryPackageType.MAVEN,
     icon: 'maven-repository-type'

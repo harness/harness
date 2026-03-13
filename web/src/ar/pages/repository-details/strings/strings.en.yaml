@@ -62,6 +62,7 @@ repositoryForm:
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'
+  files: Files
   datasets: Datasets
   models: Models
   webhooks: Webhooks

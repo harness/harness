@@ -241,6 +241,10 @@ func (s *Service) DeleteOCIArtifactVersion(
 				if err != nil {
 					return err
 				}
+				_, err = s.registryBlobStore.UnlinkBlobByImageName(ctx, regInfo.RegistryID, imageName)
+				if err != nil {
+					return fmt.Errorf("failed to unlink registry blobs: %w", err)
+				}
 			}
 			return nil
 		})

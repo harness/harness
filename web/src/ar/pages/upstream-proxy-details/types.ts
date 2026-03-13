@@ -21,6 +21,7 @@ export enum UpstreamProxyPackageType {
   DOCKER = 'DOCKER',
   HELM = 'HELM',
   GENERIC = 'GENERIC',
+  RAW = 'RAW',
   MAVEN = 'MAVEN',
   NPM = 'NPM',
   PYTHON = 'PYTHON',

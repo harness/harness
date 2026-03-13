@@ -19,6 +19,7 @@ import { DockerRepositoryType } from './DockerRepository/DockerRepositoryType'
 import { MavenRepositoryType } from './MavenRepository/MavenRepository'
 import { HelmRepositoryType } from './HelmRepository/HelmRepositoryType'
 import { GenericRepositoryType } from './GenericRepository/GenericRepositoryType'
+import { RawRepositoryType } from './RawRepository/RawRepositoryType'
 import { NpmRepositoryType } from './NpmRepository/NpmRepositoryType'
 import { PythonRepositoryType } from './PythonRepository/PythonRepositoryType'
 import { NuGetRepositoryType } from './NuGetRepository/NuGetRepositoryType'
@@ -34,6 +35,7 @@ import { SwiftRepositoryType } from './SwiftRepository/SwiftRepositoryType'
 repositoryFactory.registerStep(new DockerRepositoryType())
 repositoryFactory.registerStep(new HelmRepositoryType())
 repositoryFactory.registerStep(new GenericRepositoryType())
+repositoryFactory.registerStep(new RawRepositoryType())
 repositoryFactory.registerStep(new MavenRepositoryType())
 repositoryFactory.registerStep(new NpmRepositoryType())
 repositoryFactory.registerStep(new PythonRepositoryType())

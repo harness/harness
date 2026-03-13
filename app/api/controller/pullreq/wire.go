@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -75,6 +76,7 @@ func ProvideController(
 	dotRangeService *dotrange.Service,
 	codeOwners *codeowners.Service,
 	locker *locker.Locker,
+	settings *settings.Service,
 	importer *migrate.PullReq,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
@@ -112,6 +114,7 @@ func ProvideController(
 		dotRangeService,
 		codeOwners,
 		locker,
+		settings,
 		importer,
 		labelSvc,
 		instrumentation,

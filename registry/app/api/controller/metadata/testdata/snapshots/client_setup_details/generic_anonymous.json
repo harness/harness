@@ -3,22 +3,6 @@
   "secHeader": "Follow these instructions to install/use Generic artifacts or compatible packages.",
   "sections": [
     {
-      "header": "Download Artifact",
-      "steps": [
-        {
-          "commands": [
-            {
-              "label": "",
-              "value": "curl --location 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0?filename=\u003cFILENAME\u003e' -J -O"
-            }
-          ],
-          "header": "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths.",
-          "type": "Static"
-        }
-      ],
-      "type": "INLINE"
-    },
-    {
       "header": "File Operations (Supports both nested and flat paths)",
       "steps": [
         {
@@ -39,6 +23,22 @@
             }
           ],
           "header": "Get file metadata from a specific path (HEAD request).",
+          "type": "Static"
+        }
+      ],
+      "type": "INLINE"
+    },
+    {
+      "header": "Download Artifact (Deprecated)",
+      "steps": [
+        {
+          "commands": [
+            {
+              "label": "",
+              "value": "curl --location 'http://example.com/registry/test-registry/GENERIC/generic/test-artifact/v1.0.0?filename=\u003cFILENAME\u003e' -J -O"
+            }
+          ],
+          "header": "Run this command in your terminal to download the artifact at package level. This command works for non-nested paths.",
           "type": "Static"
         }
       ],

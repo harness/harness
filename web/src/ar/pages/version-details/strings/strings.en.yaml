@@ -107,13 +107,17 @@ deploymentsTable:
     instanceCount: Instance Count
 artifactFiles:
   noFilesTitle: No files found
+  itemsPerPage: items per page
+  pageLabel: "Page {{ page }}"
   table:
     columns:
       name: Name
+      path: Path
       size: Size
       checksum: Checksum
       downloadCommand: Download Command
       created: Created
+      id: ID
 dependencyList:
   dependencyNameWithRelease: "{{ name }} (release: {{ release }})"
   table:

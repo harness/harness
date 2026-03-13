@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/merge"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -75,6 +76,15 @@ func (c *Controller) AutoMergeEnable(
 	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
+	}
+
+	var autoMergeEnabled bool
+	explicitlySet, err := c.settings.RepoGet(ctx, targetRepo.ID, settings.KeyAutoMergeEnabled, &autoMergeEnabled)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo auto-merge enabled setting: %w", err)
+	}
+	if !explicitlySet || !autoMergeEnabled {
+		return nil, usererror.BadRequest("Auto merge setting is not enabled for the repository.")
 	}
 
 	pr, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)

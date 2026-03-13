@@ -1,0 +1,81 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pageSizeDropdown {
+  max-height: 200px;
+  overflow-y: auto;
+  min-width: 60px;
+  font-size: 24px !important;
+
+  button,
+  [role='button'] {
+    font-size: 14px !important;
+  }
+}
+
+.itemsPerPageText,
+.pageText {
+  color: var(--grey-800);
+}
+
+.separator {
+  width: 0;
+  height: 30px;
+  border-left: 1px solid var(--grey-200);
+  margin: 0 var(--spacing-small);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.prevNextButtonGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+
+.roundedButton {
+  min-width: 32px;
+  height: 32px !important;
+  padding: 0 !important;
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
+  border: 1px solid var(--grey-200) !important;
+  border-radius: 6px !important;
+  opacity: 1 !important;
+
+  &:hover:not(:disabled) {
+    background-color: var(--primary-1) !important;
+    border-color: var(--grey-300) !important;
+  }
+
+  &:disabled {
+    color: var(--grey-400) !important;
+    background-color: var(--white) !important;
+  }
+}
+
+.prevButton {
+  margin-right: 0;
+}
+
+.nextButton {
+  margin-left: 0;
+}

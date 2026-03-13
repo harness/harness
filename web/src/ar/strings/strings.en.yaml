@@ -122,6 +122,7 @@ repositoryTypes:
   docker: Docker
   helm: Helm
   generic: Generic
+  raw: Raw
   maven: Maven
   npm: NPM
   gradle: Gradle
