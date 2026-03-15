@@ -46,7 +46,7 @@ func ProvidePackageWrapperProvider(
 	packageFactory.Register(pkg.NewPythonPackageType(registryHelper))
 	packageFactory.Register(pkg.NewNugetPackageType(registryHelper))
 	packageFactory.Register(pkg.NewRPMPackageType(registryHelper))
-	packageFactory.Register(pkg.NewNPMPackageType(registryHelper))
+	packageFactory.Register(pkg.NewNPMPackageType(registryHelper, nil))
 	packageFactory.Register(pkg.NewGoPackageType(registryHelper))
 	packageFactory.Register(pkg.NewHuggingFacePackageType(registryHelper))
 

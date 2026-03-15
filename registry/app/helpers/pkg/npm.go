@@ -31,6 +31,14 @@ type NPMPackageType interface {
 	interfaces.PackageHelper
 }
 
+// NpmMetadataHelper provides NPM-specific metadata operations.
+type NpmMetadataHelper interface {
+	UpdatePackageMetadata(
+		ctx context.Context, principalID int64, rootParentID int64,
+		registryID int64, image string, version string,
+	) error
+}
+
 type npmPackageType struct {
 	packageType          string
 	registryHelper       interfaces.RegistryHelper
@@ -38,9 +46,10 @@ type npmPackageType struct {
 	validUpstreamSources []string
 	upstreamSourceConfig map[string]UpstreamSourceConfig
 	pathPackageType      string
+	npmMetadataHelper    NpmMetadataHelper
 }
 
-func NewNPMPackageType(registryHelper interfaces.RegistryHelper) NPMPackageType {
+func NewNPMPackageType(registryHelper interfaces.RegistryHelper, npmMetadataHelper NpmMetadataHelper) NPMPackageType {
 	return &npmPackageType{
 		packageType:     string(artifact.PackageTypeNPM),
 		registryHelper:  registryHelper,
@@ -61,6 +70,7 @@ func NewNPMPackageType(registryHelper interfaces.RegistryHelper) NPMPackageType 
 				urlRequired: false,
 			},
 		},
+		npmMetadataHelper: npmMetadataHelper,
 	}
 }
 
@@ -217,11 +227,20 @@ func (c *npmPackageType) BuildPackageIndexAsync(
 }
 
 func (c *npmPackageType) BuildPackageMetadataAsync(
-	_ context.Context,
-	_ *types.Registry,
-	_ types.BuildPackageMetadataTaskPayload,
+	ctx context.Context,
+	registry *types.Registry,
+	payload types.BuildPackageMetadataTaskPayload,
 ) error {
-	return fmt.Errorf("not implemented")
+	err := c.npmMetadataHelper.UpdatePackageMetadata(
+		ctx, payload.PrincipalID, registry.RootParentID,
+		registry.ID, payload.Image, payload.Version,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to build NPM package metadata for registry %d, package %s@%s: %w",
+			registry.ID, payload.Image, payload.Version, err,
+		)
+	}
+	return nil
 }
 
 func (c *npmPackageType) GetNodePathsForImage(

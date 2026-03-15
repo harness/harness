@@ -244,7 +244,7 @@ func TestNugetPackageType_GetPkgDownloadURL(t *testing.T) {
 
 func TestNPMPackageType_GetPkgDownloadURL(t *testing.T) {
 	mockHelper := &mockRegistryHelper{}
-	npmPackage := NewNPMPackageType(mockHelper)
+	npmPackage := NewNPMPackageType(mockHelper, nil)
 
 	tests := []struct {
 		name               string

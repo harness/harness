@@ -388,7 +388,7 @@ func TestRpmPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
 }
 
 func TestNpmPackageType_GetNodePathsForImage_Updated(t *testing.T) {
-	npmPackage := NewNPMPackageType(nil)
+	npmPackage := NewNPMPackageType(nil, nil)
 
 	tests := []struct {
 		name          string
@@ -422,7 +422,7 @@ func TestNpmPackageType_GetNodePathsForImage_Updated(t *testing.T) {
 }
 
 func TestNpmPackageType_GetNodePathsForArtifact_Updated(t *testing.T) {
-	npmPackage := NewNPMPackageType(nil)
+	npmPackage := NewNPMPackageType(nil, nil)
 
 	tests := []struct {
 		name          string
