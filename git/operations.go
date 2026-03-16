@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
@@ -382,6 +383,15 @@ func (s *Service) validateAndPrepareCommitFilesHeader(
 	// trim refs/heads/ prefixes to avoid issues when calling gitea API
 	params.Branch = strings.TrimPrefix(strings.TrimSpace(params.Branch), gitReferenceNamePrefixBranch)
 	params.NewBranch = strings.TrimPrefix(strings.TrimSpace(params.NewBranch), gitReferenceNamePrefixBranch)
+
+	// Validate the new branch name before any git operations. This is intentionally placed before the
+	// isEmpty early-return so it applies to empty repos as well. It also serves as a safety net for any
+	// caller that invokes CommitFiles directly without going through the controller-level Sanitize().
+	if params.Branch != params.NewBranch {
+		if err := check.BranchName(params.NewBranch); err != nil {
+			return nil, errors.InvalidArgument(err.Error())
+		}
+	}
 
 	// if the repo is empty then we can skip branch existence checks
 	if isEmpty {

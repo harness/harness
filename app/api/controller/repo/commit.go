@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -82,6 +83,12 @@ func (in *CommitFilesOptions) Sanitize() error {
 
 	if len(in.Message) > 65536 { // TODO: Check if the message length limit is acceptable.
 		return usererror.BadRequest("Commit message is too long.")
+	}
+
+	if in.NewBranch != "" {
+		if err := check.BranchName(in.NewBranch); err != nil {
+			return usererror.BadRequestf("Invalid branch name: %s", err.Error())
+		}
 	}
 
 	return nil
