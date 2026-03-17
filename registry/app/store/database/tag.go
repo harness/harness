@@ -1629,10 +1629,14 @@ func (t tagDao) GetAllOciVersionsByRepoAndImage(
 
 	if search != "" {
 		digestBytes, err := types.GetDigestBytes(digest.Digest(search))
-		if err != nil {
-			return nil, fmt.Errorf("invalid digest: %s, error: %w", search, err)
+		if err == nil {
+			q = q.Where("m.manifest_digest = ?", digestBytes)
+		} else {
+			q = q.Where(
+				"EXISTS (SELECT 1 FROM tags st WHERE st.tag_manifest_id = m.manifest_id AND st.tag_name LIKE ?)",
+				sqlPartialMatch(search),
+			)
 		}
-		q = q.Where("m.manifest_digest = ?", digestBytes)
 	}
 
 	q = q.GroupBy("m.manifest_total_size, r.registry_package_type, m.manifest_created_at, " +
@@ -1817,10 +1821,14 @@ func (t tagDao) CountOciVersionByRepoAndImage(
 
 	if search != "" {
 		digestBytes, err := types.GetDigestBytes(digest.Digest(search))
-		if err != nil {
-			return 0, fmt.Errorf("invalid digest: %s, error: %w", search, err)
+		if err == nil {
+			stmt = stmt.Where("m.manifest_digest = ?", digestBytes)
+		} else {
+			stmt = stmt.Where(
+				"EXISTS (SELECT 1 FROM tags st WHERE st.tag_manifest_id = m.manifest_id AND st.tag_name LIKE ?)",
+				sqlPartialMatch(search),
+			)
 		}
-		stmt = stmt.Where("m.manifest_digest = ?", digestBytes)
 	}
 
 	sql, args, err := stmt.ToSql()
