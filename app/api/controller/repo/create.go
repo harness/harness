@@ -20,6 +20,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -276,7 +277,10 @@ func (c *Controller) createGitRepository(
 	if options.License != "" && options.License != "none" {
 		content, err = resources.ReadLicense(options.License)
 		if err != nil {
-			return nil, false, fmt.Errorf("failed to read license '%s': %w", options.License, err)
+			if os.IsNotExist(err) {
+				return nil, false, usererror.BadRequestf("Unsupported license template %q.", options.License)
+			}
+			return nil, false, fmt.Errorf("failed to read license %q: %w", options.License, err)
 		}
 		files = append(files, git.File{
 			Path:    "LICENSE",
@@ -286,7 +290,10 @@ func (c *Controller) createGitRepository(
 	if options.GitIgnore != "" {
 		content, err = resources.ReadGitIgnore(options.GitIgnore)
 		if err != nil {
-			return nil, false, fmt.Errorf("failed to read git ignore '%s': %w", options.GitIgnore, err)
+			if os.IsNotExist(err) {
+				return nil, false, usererror.BadRequestf("Unsupported gitignore template %q.", options.GitIgnore)
+			}
+			return nil, false, fmt.Errorf("failed to read gitignore %q: %w", options.GitIgnore, err)
 		}
 		files = append(files, git.File{
 			Path:    ".gitignore",

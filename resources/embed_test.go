@@ -226,6 +226,63 @@ func TestGitIgnoresUnique(t *testing.T) {
 	}
 }
 
+func TestGitIgnoresExcludesNonGitignoreFiles(t *testing.T) {
+	files, err := GitIgnores()
+	if err != nil {
+		t.Fatalf("GitIgnores() returned error: %v", err)
+	}
+
+	// The embedded gitignore directory contains non-.gitignore files
+	// (README.md, CONTRIBUTING.md, LICENSE). These must NOT appear in the listing.
+	excluded := map[string]bool{
+		"README":          true,
+		"README.md":       true,
+		"CONTRIBUTING":    true,
+		"CONTRIBUTING.md": true,
+		"LICENSE":         true,
+	}
+
+	for _, file := range files {
+		if excluded[file] {
+			t.Errorf("GitIgnores() returned non-gitignore entry %q that should be filtered out", file)
+		}
+	}
+}
+
+func TestGitIgnoresAllReadable(t *testing.T) {
+	files, err := GitIgnores()
+	if err != nil {
+		t.Fatalf("GitIgnores() returned error: %v", err)
+	}
+
+	for _, file := range files {
+		t.Run(file, func(t *testing.T) {
+			content, err := ReadGitIgnore(file)
+			if err != nil {
+				t.Fatalf("ReadGitIgnore(%q) returned error: %v", file, err)
+			}
+			if len(content) == 0 {
+				t.Errorf("ReadGitIgnore(%q) returned empty content", file)
+			}
+		})
+	}
+}
+
+func TestReadGitIgnoreRejectsNonGitignoreFiles(t *testing.T) {
+	// Attempting to read non-gitignore filenames that exist in the directory
+	// (but lack the .gitignore extension) should fail.
+	names := []string{"README.md", "CONTRIBUTING.md", "LICENSE"}
+
+	for _, name := range names {
+		t.Run(name, func(t *testing.T) {
+			_, err := ReadGitIgnore(name)
+			if err == nil {
+				t.Errorf("ReadGitIgnore(%q) expected error for non-gitignore file", name)
+			}
+		})
+	}
+}
+
 func minInt(a, b int) int {
 	if a < b {
 		return a
