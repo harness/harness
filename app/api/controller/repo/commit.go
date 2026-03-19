@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
@@ -69,8 +70,8 @@ type CommitFilesOptions struct {
 func (in *CommitFilesOptions) Sanitize() error {
 	in.Title = strings.TrimSpace(in.Title)
 	in.Message = strings.TrimSpace(in.Message)
-	in.Branch = strings.TrimSpace(in.Branch)
-	in.NewBranch = strings.TrimSpace(in.NewBranch)
+	in.Branch = strings.TrimPrefix(strings.TrimSpace(in.Branch), api.BranchPrefix)
+	in.NewBranch = strings.TrimPrefix(strings.TrimSpace(in.NewBranch), api.BranchPrefix)
 
 	if in.Author != nil {
 		in.Author.Name = strings.TrimSpace(in.Author.Name)

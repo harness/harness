@@ -21,10 +21,12 @@ import (
 
 func TestCommitFilesOptions_Sanitize(t *testing.T) {
 	tests := []struct {
-		name      string
-		opts      CommitFilesOptions
-		wantErr   bool
-		errSubstr string
+		name          string
+		opts          CommitFilesOptions
+		wantErr       bool
+		errSubstr     string
+		wantBranch    string
+		wantNewBranch string
 	}{
 		{
 			name: "valid with no new branch",
@@ -33,7 +35,8 @@ func TestCommitFilesOptions_Sanitize(t *testing.T) {
 				Message: "description",
 				Branch:  "main",
 			},
-			wantErr: false,
+			wantErr:    false,
+			wantBranch: "main",
 		},
 		{
 			name: "valid with new branch",
@@ -42,7 +45,9 @@ func TestCommitFilesOptions_Sanitize(t *testing.T) {
 				Branch:    "main",
 				NewBranch: "feat/new-feature",
 			},
-			wantErr: false,
+			wantErr:       false,
+			wantBranch:    "main",
+			wantNewBranch: "feat/new-feature",
 		},
 		{
 			name: "invalid new branch with spaces",
@@ -90,12 +95,72 @@ func TestCommitFilesOptions_Sanitize(t *testing.T) {
 				Title:  "my commit",
 				Branch: "main",
 			},
-			wantErr: false,
+			wantErr:    false,
+			wantBranch: "main",
 		},
 		{
 			name:    "title too long",
 			opts:    CommitFilesOptions{Title: strings.Repeat("a", 1025)},
 			wantErr: true,
+		},
+		{
+			name: "branch with refs/heads/ prefix is stripped",
+			opts: CommitFilesOptions{
+				Title:  "my commit",
+				Branch: "refs/heads/test-abhishek",
+			},
+			wantErr:    false,
+			wantBranch: "test-abhishek",
+		},
+		{
+			name: "new branch with refs/heads/ prefix is stripped",
+			opts: CommitFilesOptions{
+				Title:     "my commit",
+				Branch:    "main",
+				NewBranch: "refs/heads/feat/new-feature",
+			},
+			wantErr:       false,
+			wantBranch:    "main",
+			wantNewBranch: "feat/new-feature",
+		},
+		{
+			name: "both branch and new branch with refs/heads/ prefix are stripped",
+			opts: CommitFilesOptions{
+				Title:     "my commit",
+				Branch:    "refs/heads/main",
+				NewBranch: "refs/heads/feat/new-feature",
+			},
+			wantErr:       false,
+			wantBranch:    "main",
+			wantNewBranch: "feat/new-feature",
+		},
+		{
+			name: "branch with refs/heads/ prefix and whitespace",
+			opts: CommitFilesOptions{
+				Title:  "my commit",
+				Branch: "  refs/heads/test-branch  ",
+			},
+			wantErr:    false,
+			wantBranch: "test-branch",
+		},
+		{
+			name: "branch without refs/heads/ prefix is unchanged",
+			opts: CommitFilesOptions{
+				Title:  "my commit",
+				Branch: "feature/my-branch",
+			},
+			wantErr:    false,
+			wantBranch: "feature/my-branch",
+		},
+		{
+			name: "new branch with refs/heads/ prefix and invalid chars still fails validation",
+			opts: CommitFilesOptions{
+				Title:     "my commit",
+				Branch:    "main",
+				NewBranch: "refs/heads/my~branch",
+			},
+			wantErr:   true,
+			errSubstr: "Invalid branch name",
 		},
 	}
 
@@ -109,6 +174,16 @@ func TestCommitFilesOptions_Sanitize(t *testing.T) {
 			if tt.errSubstr != "" && err != nil {
 				if !strings.Contains(err.Error(), tt.errSubstr) {
 					t.Errorf("Sanitize() error = %q, want substring %q", err.Error(), tt.errSubstr)
+				}
+			}
+			if err == nil && tt.wantBranch != "" {
+				if tt.opts.Branch != tt.wantBranch {
+					t.Errorf("Sanitize() Branch = %q, want %q", tt.opts.Branch, tt.wantBranch)
+				}
+			}
+			if err == nil && tt.wantNewBranch != "" {
+				if tt.opts.NewBranch != tt.wantNewBranch {
+					t.Errorf("Sanitize() NewBranch = %q, want %q", tt.opts.NewBranch, tt.wantNewBranch)
 				}
 			}
 		})
