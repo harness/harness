@@ -160,8 +160,8 @@ func (c *localRegistry) GetPackageMetadata(
 
 func sortPackageMetadata(ctx context.Context, metadata pythontype.PackageMetadata) {
 	sort.Slice(metadata.Files, func(i, j int) bool {
-		version1 := pypi.GetPyPIVersion(metadata.Files[i].Name)
-		version2 := pypi.GetPyPIVersion(metadata.Files[j].Name)
+		version1 := pypi.GetPyPIVersion(metadata.Files[i].Name, metadata.Name)
+		version2 := pypi.GetPyPIVersion(metadata.Files[j].Name, metadata.Name)
 		if version1 == "" || version2 == "" || version1 == version2 {
 			return metadata.Files[i].Name < metadata.Files[j].Name
 		}

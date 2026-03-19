@@ -88,11 +88,10 @@ func (p Package) RequiresPython() string {
 	return html.UnescapeString(val)
 }
 
-// Version Fetches version from format:
-// The wheel filename is {distribution}-{version}(-{build tag})?-{python tag}-{abi tag}-{platform tag}.whl
-// SRC: https://packaging.python.org/en/latest/specifications/binary-distribution-format/#file-name-convention
-func (p Package) Version() string {
-	return GetPyPIVersion(p.Name)
+// Version extracts the version from the package filename.
+// packageName is the distribution name used to find the exact name-version split point.
+func (p Package) Version(packageName ...string) string {
+	return GetPyPIVersion(p.Name, packageName...)
 }
 
 func (p Package) String() string {
@@ -100,7 +99,12 @@ func (p Package) String() string {
 		p.RequiresPython())
 }
 
-func GetPyPIVersion(filename string) string {
+// GetPyPIVersion extracts the version from a Python package filename.
+// Following pip's approach: when packageName is provided, it canonicalizes both
+// the name and filename segments to find the exact split point between name and version.
+// When packageName is empty, it falls back to heuristic-based parsing.
+// Reference: https://github.com/pypa/pip/blob/main/src/pip/_internal/index/package_finder.py
+func GetPyPIVersion(filename string, packageName ...string) string {
 	base, ext, err := stripRecognizedExtension(filename)
 	if err != nil {
 		return ""
@@ -115,14 +119,27 @@ func GetPyPIVersion(filename string) string {
 	case ".whl", ".egg":
 		return splits[1]
 	case ".tar.gz", ".tar.bz2", ".tar.xz", ".zip", ".dmg", ".app":
-		// Source distribution format: {name}-{version}.ext
-		// The version starts at the first segment that begins with a digit (or 'v'/'V' + digit).
-		// We join all remaining segments to handle versions containing hyphens (e.g., "4.0-b3").
+		if len(packageName) > 0 && packageName[0] != "" {
+			if idx := findNameVersionSep(base, packageName[0]); idx >= 0 {
+				version := base[idx+1:]
+				// Verify the version part starts with a digit or 'v' prefix.
+				// Filenames like "package-docs-1.0.tar.gz" would give "docs-1.0"
+				// which should fall through to the heuristic.
+				if len(version) > 0 && (version[0] >= '0' && version[0] <= '9' ||
+					((version[0] == 'v' || version[0] == 'V') && len(version) > 1 && version[1] >= '0' && version[1] <= '9')) {
+					return version
+				}
+			}
+		}
+		// Fallback: find first digit-starting segment.
 		if idx := findVersionStart(splits); idx > 0 {
 			return strings.Join(splits[idx:], "-")
 		}
 		return splits[len(splits)-1]
 	case ".exe":
+		// For .exe files, prefer regex extraction since filenames contain platform
+		// tags (e.g., "package-1.0.1.win32-py2.3.exe") that findNameVersionSep
+		// would incorrectly include in the version.
 		match := exeRegex.FindStringSubmatch(filename)
 		if len(match) > 1 {
 			return match[1]
@@ -136,15 +153,47 @@ func GetPyPIVersion(filename string) string {
 	}
 }
 
-// findVersionStart returns the index of the first segment (starting from index 1)
-// that looks like the beginning of a version string.
-func findVersionStart(segments []string) int {
-	for i := 1; i < len(segments); i++ {
-		s := segments[i]
-		if len(s) > 0 && s[0] >= '0' && s[0] <= '9' {
+// findNameVersionSep finds the dash index that separates the package name from the version,
+// following pip's approach: iterate through each '-' and check if the prefix, when
+// canonicalized, matches the canonical package name.
+func findNameVersionSep(stem, packageName string) int {
+	canonicalName := canonicalizeName(packageName)
+	for i, c := range stem {
+		if c != '-' {
+			continue
+		}
+		if canonicalizeName(stem[:i]) == canonicalName {
 			return i
 		}
-		if len(s) > 1 && (s[0] == 'v' || s[0] == 'V') && s[1] >= '0' && s[1] <= '9' {
+	}
+	return -1
+}
+
+// canonicalizeName normalizes a Python package name per PEP 503:
+// lowercase, and replace any run of [-_.] with a single dash.
+func canonicalizeName(name string) string {
+	var b strings.Builder
+	b.Grow(len(name))
+	prevSep := false
+	for _, c := range strings.ToLower(name) {
+		if c == '-' || c == '_' || c == '.' {
+			if !prevSep {
+				b.WriteByte('-')
+				prevSep = true
+			}
+			continue
+		}
+		prevSep = false
+		b.WriteRune(c)
+	}
+	return b.String()
+}
+
+// findVersionStart returns the index of the first segment (starting from index 1)
+// that begins with a digit, indicating the start of a version string.
+func findVersionStart(segments []string) int {
+	for i := 1; i < len(segments); i++ {
+		if len(segments[i]) > 0 && segments[i][0] >= '0' && segments[i][0] <= '9' {
 			return i
 		}
 	}

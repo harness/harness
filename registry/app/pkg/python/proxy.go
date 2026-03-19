@@ -165,7 +165,7 @@ func (r *proxy) GetPackageMetadata(
 			RootIdentifier: info.RootIdentifier,
 			RegIdentifier:  info.RegIdentifier,
 			Image:          info.Image,
-			Version:        file.Version(),
+			Version:        file.Version(info.Image),
 			Filename:       file.Name,
 		})
 		if err2 != nil {
@@ -187,7 +187,7 @@ func (r *proxy) GetPackageMetadata(
 }
 
 func (r *proxy) putFileToLocal(ctx context.Context, pkg string, filename string, remote RemoteRegistryHelper) error {
-	version := pypi.GetPyPIVersion(filename)
+	version := pypi.GetPyPIVersion(filename, pkg)
 	metadata, err := remote.GetJSON(ctx, pkg, version)
 	if err != nil {
 		log.Ctx(ctx).Warn().Stack().Err(err).Msgf("fetching metadata for %s failed, %v", filename, err)
