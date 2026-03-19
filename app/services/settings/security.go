@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package reposettings
+package settings
 
 import (
-	"github.com/harness/gitness/app/services/settings"
-
 	"github.com/gotidy/ptr"
 )
 
@@ -28,28 +26,28 @@ type SecuritySettings struct {
 
 func GetDefaultSecuritySettings() *SecuritySettings {
 	return &SecuritySettings{
-		SecretScanningEnabled:   ptr.Bool(settings.DefaultSecretScanningEnabled),
-		PrincipalCommitterMatch: ptr.Bool(settings.DefaultPrincipalCommitterMatch),
+		SecretScanningEnabled:   ptr.Bool(DefaultSecretScanningEnabled),
+		PrincipalCommitterMatch: ptr.Bool(DefaultPrincipalCommitterMatch),
 	}
 }
 
-func GetSecuritySettingsMappings(s *SecuritySettings) []settings.SettingHandler {
-	return []settings.SettingHandler{
-		settings.Mapping(settings.KeySecretScanningEnabled, s.SecretScanningEnabled),
-		settings.Mapping(settings.KeyPrincipalCommitterMatch, s.PrincipalCommitterMatch),
+func GetSecuritySettingsMappings(s *SecuritySettings) []SettingHandler {
+	return []SettingHandler{
+		Mapping(KeySecretScanningEnabled, s.SecretScanningEnabled),
+		Mapping(KeyPrincipalCommitterMatch, s.PrincipalCommitterMatch),
 	}
 }
 
-func GetSecuritySettingsAsKeyValues(s *SecuritySettings) []settings.KeyValue {
-	kvs := make([]settings.KeyValue, 0, 2)
+func GetSecuritySettingsAsKeyValues(s *SecuritySettings) []KeyValue {
+	kvs := make([]KeyValue, 0, 2)
 
 	if s.SecretScanningEnabled != nil {
-		kvs = append(kvs, settings.KeyValue{Key: settings.KeySecretScanningEnabled, Value: *s.SecretScanningEnabled})
+		kvs = append(kvs, KeyValue{Key: KeySecretScanningEnabled, Value: *s.SecretScanningEnabled})
 	}
 
 	if s.PrincipalCommitterMatch != nil {
-		kvs = append(kvs, settings.KeyValue{
-			Key:   settings.KeyPrincipalCommitterMatch,
+		kvs = append(kvs, KeyValue{
+			Key:   KeyPrincipalCommitterMatch,
 			Value: s.PrincipalCommitterMatch,
 		})
 	}

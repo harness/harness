@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package reposettings
+package settings
 
 import (
-	"github.com/harness/gitness/app/services/settings"
-
 	"github.com/gotidy/ptr"
 )
 
@@ -29,40 +27,40 @@ type GeneralSettings struct {
 
 func GetDefaultGeneralSettings() *GeneralSettings {
 	return &GeneralSettings{
-		FileSizeLimit:    ptr.Int64(settings.DefaultFileSizeLimit),
-		GitLFSEnabled:    ptr.Bool(settings.DefaultGitLFSEnabled),
-		AutoMergeEnabled: ptr.Bool(settings.DefaultAutoMergeEnabled),
+		FileSizeLimit:    ptr.Int64(DefaultFileSizeLimit),
+		GitLFSEnabled:    ptr.Bool(DefaultGitLFSEnabled),
+		AutoMergeEnabled: ptr.Bool(DefaultAutoMergeEnabled),
 	}
 }
 
-func GetGeneralSettingsMappings(s *GeneralSettings) []settings.SettingHandler {
-	return []settings.SettingHandler{
-		settings.Mapping(settings.KeyFileSizeLimit, s.FileSizeLimit),
-		settings.Mapping(settings.KeyGitLFSEnabled, s.GitLFSEnabled),
-		settings.Mapping(settings.KeyAutoMergeEnabled, s.AutoMergeEnabled),
+func GetGeneralSettingsMappings(s *GeneralSettings) []SettingHandler {
+	return []SettingHandler{
+		Mapping(KeyFileSizeLimit, s.FileSizeLimit),
+		Mapping(KeyGitLFSEnabled, s.GitLFSEnabled),
+		Mapping(KeyAutoMergeEnabled, s.AutoMergeEnabled),
 	}
 }
 
-func GetGeneralSettingsAsKeyValues(s *GeneralSettings) []settings.KeyValue {
-	kvs := make([]settings.KeyValue, 0, 1)
+func GetGeneralSettingsAsKeyValues(s *GeneralSettings) []KeyValue {
+	kvs := make([]KeyValue, 0, 1)
 
 	if s.FileSizeLimit != nil {
-		kvs = append(kvs, settings.KeyValue{
-			Key:   settings.KeyFileSizeLimit,
+		kvs = append(kvs, KeyValue{
+			Key:   KeyFileSizeLimit,
 			Value: s.FileSizeLimit,
 		})
 	}
 
 	if s.GitLFSEnabled != nil {
-		kvs = append(kvs, settings.KeyValue{
-			Key:   settings.KeyGitLFSEnabled,
+		kvs = append(kvs, KeyValue{
+			Key:   KeyGitLFSEnabled,
 			Value: s.GitLFSEnabled,
 		})
 	}
 
 	if s.AutoMergeEnabled != nil {
-		kvs = append(kvs, settings.KeyValue{
-			Key:   settings.KeyAutoMergeEnabled,
+		kvs = append(kvs, KeyValue{
+			Key:   KeyAutoMergeEnabled,
 			Value: s.AutoMergeEnabled,
 		})
 	}

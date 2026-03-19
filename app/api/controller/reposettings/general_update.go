@@ -16,10 +16,10 @@ package reposettings
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types/enum"
 
@@ -31,8 +31,8 @@ func (c *Controller) GeneralUpdate(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	in *GeneralSettings,
-) (*GeneralSettings, error) {
+	in *settings.GeneralSettings,
+) (*settings.GeneralSettings, error) {
 	// migrating repos need to adjust repo settings (like file-size-limit) during the migration.
 	var additionalAllowedRepoStates = []enum.RepoState{enum.RepoStateMigrateGitPush}
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, additionalAllowedRepoStates...)
@@ -40,25 +40,16 @@ func (c *Controller) GeneralUpdate(
 		return nil, err
 	}
 
-	// read old settings values
-	old := GetDefaultGeneralSettings()
-	oldMappings := GetGeneralSettingsMappings(old)
-	err = c.settings.RepoMap(ctx, repo.ID, oldMappings...)
+	old, out, err := settings.RepoUpdateWithDefaults(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.GetDefaultGeneralSettings,
+		settings.GetGeneralSettingsMappings,
+		settings.GetGeneralSettingsAsKeyValues(in)...,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map settings (old): %w", err)
-	}
-
-	err = c.settings.RepoSetMany(ctx, repo.ID, GetGeneralSettingsAsKeyValues(in)...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to set settings: %w", err)
-	}
-
-	// read all settings and return complete config
-	out := GetDefaultGeneralSettings()
-	mappings := GetGeneralSettingsMappings(out)
-	err = c.settings.RepoMap(ctx, repo.ID, mappings...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map settings: %w", err)
+		return nil, err
 	}
 
 	err = c.auditService.Log(ctx,

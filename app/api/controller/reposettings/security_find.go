@@ -16,9 +16,9 @@ package reposettings
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -27,18 +27,17 @@ func (c *Controller) SecurityFind(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-) (*SecuritySettings, error) {
+) (*settings.SecuritySettings, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}
 
-	out := GetDefaultSecuritySettings()
-	mappings := GetSecuritySettingsMappings(out)
-	err = c.settings.RepoMap(ctx, repo.ID, mappings...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map settings: %w", err)
-	}
-
-	return out, nil
+	return settings.RepoMapWithDefaults(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.GetDefaultSecuritySettings,
+		settings.GetSecuritySettingsMappings,
+	)
 }

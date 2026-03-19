@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/services/settings"
 )
 
 func HandleGeneralUpdate(repoSettingCtrl *reposettings.Controller) http.HandlerFunc {
@@ -33,7 +34,7 @@ func HandleGeneralUpdate(repoSettingCtrl *reposettings.Controller) http.HandlerF
 			return
 		}
 
-		in := new(reposettings.GeneralSettings)
+		in := new(settings.GeneralSettings)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)

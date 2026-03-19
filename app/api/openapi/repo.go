@@ -18,9 +18,9 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/repo"
-	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
 	gittypes "github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/job"
@@ -194,12 +194,12 @@ type updateRepoPublicAccessRequest struct {
 
 type securitySettingsRequest struct {
 	repoRequest
-	reposettings.SecuritySettings
+	settings.SecuritySettings
 }
 
 type generalSettingsRequest struct {
 	repoRequest
-	reposettings.GeneralSettings
+	settings.GeneralSettings
 }
 
 type archiveRequest struct {
@@ -1226,7 +1226,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		map[string]any{"operationId": "updateSecuritySettings"})
 	_ = reflector.SetRequest(
 		&opSettingsSecurityUpdate, new(securitySettingsRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(reposettings.SecuritySettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(settings.SecuritySettings), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusUnauthorized)
@@ -1240,7 +1240,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opSettingsSecurityFind.WithMapOfAnything(
 		map[string]any{"operationId": "findSecuritySettings"})
 	_ = reflector.SetRequest(&opSettingsSecurityFind, new(repoRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(reposettings.SecuritySettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(settings.SecuritySettings), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusUnauthorized)
@@ -1255,7 +1255,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		map[string]any{"operationId": "updateGeneralSettings"})
 	_ = reflector.SetRequest(
 		&opSettingsGeneralUpdate, new(generalSettingsRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(reposettings.GeneralSettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(settings.GeneralSettings), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusUnauthorized)
@@ -1269,7 +1269,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opSettingsGeneralFind.WithMapOfAnything(
 		map[string]any{"operationId": "findGeneralSettings"})
 	_ = reflector.SetRequest(&opSettingsGeneralFind, new(repoRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(reposettings.GeneralSettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(settings.GeneralSettings), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusUnauthorized)

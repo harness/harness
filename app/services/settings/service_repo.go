@@ -16,6 +16,7 @@ package settings
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/types/enum"
 )
@@ -78,4 +79,52 @@ func (s *Service) RepoMap(
 		repoID,
 		handlers...,
 	)
+}
+
+// RepoMapWithDefaults returns default settings hydrated by repo-specific values.
+func RepoMapWithDefaults[T any](
+	ctx context.Context,
+	service *Service,
+	repoID int64,
+	getDefaults func() T,
+	getMappings func(T) []SettingHandler,
+) (T, error) {
+	out := getDefaults()
+	err := service.RepoMap(ctx, repoID, getMappings(out)...)
+	if err != nil {
+		var zero T
+		return zero, fmt.Errorf("failed to map settings: %w", err)
+	}
+
+	return out, nil
+}
+
+// RepoUpdateWithDefaults updates repo settings and returns old and new full settings snapshots.
+func RepoUpdateWithDefaults[T any](
+	ctx context.Context,
+	service *Service,
+	repoID int64,
+	getDefaults func() T,
+	getMappings func(T) []SettingHandler,
+	keyValues ...KeyValue,
+) (T, T, error) {
+	old, err := RepoMapWithDefaults(ctx, service, repoID, getDefaults, getMappings)
+	if err != nil {
+		var zero T
+		return zero, zero, fmt.Errorf("failed to map settings (old): %w", err)
+	}
+
+	err = service.RepoSetMany(ctx, repoID, keyValues...)
+	if err != nil {
+		var zero T
+		return zero, zero, fmt.Errorf("failed to set settings: %w", err)
+	}
+
+	out, err := RepoMapWithDefaults(ctx, service, repoID, getDefaults, getMappings)
+	if err != nil {
+		var zero T
+		return zero, zero, fmt.Errorf("failed to map settings (new): %w", err)
+	}
+
+	return old, out, nil
 }
