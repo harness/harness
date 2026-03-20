@@ -78,9 +78,13 @@ var (
 	}, []string{"operation", "provider", "bucket_id", "result", "error_type"})
 
 	ObjectStoreOperationDurationSeconds = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "object_store_operation_duration_seconds",
-		Help:    "Duration of object store operations in seconds",
-		Buckets: []float64{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 30},
+		Name: "object_store_operation_duration_seconds",
+		Help: "Duration of object store operations in seconds",
+		Buckets: []float64{
+			0.001, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5, 1, 2, 5, 10, 30,
+		},
+		NativeHistogramBucketFactor:    1.1,
+		NativeHistogramMaxBucketNumber: 100,
 	}, []string{"operation", "provider", "bucket_id", "result", "error_type"})
 
 	ObjectStoreBytesTransferredTotal = promauto.NewCounterVec(prometheus.CounterOpts{
