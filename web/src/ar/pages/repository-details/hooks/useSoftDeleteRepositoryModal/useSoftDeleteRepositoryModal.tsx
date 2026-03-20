@@ -17,7 +17,7 @@
 import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useDeleteRegistryV2Mutation } from '@harnessio/react-har-service-client'
+import { useDeleteRegistryV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -34,28 +34,24 @@ export default function useSoftDeleteRepositoryModal(props: useSoftDeleteReposit
   const { showSuccess, showError, clear } = useToaster()
   const { useConfirmationDialog } = useParentHooks()
   const { scope } = useAppStore()
-  const { accountId, projectIdentifier, orgIdentifier } = scope
+  const { accountId } = scope
 
-  const { mutateAsync: deleteRepository } = useDeleteRegistryV2Mutation()
+  const { mutateAsync: deleteRepository } = useDeleteRegistryV3Mutation()
 
   const handleDeleteRepository = async (): Promise<void> => {
     try {
-      const response = await deleteRepository({
+      await deleteRepository({
         queryParams: {
           account_identifier: accountId as string,
-          project_identifier: projectIdentifier,
-          org_identifier: orgIdentifier,
           force: false
         },
-        uuid
+        id: uuid
       })
-      if (response.content.status === 'SUCCESS') {
-        clear()
-        showSuccess(getString('repositoryDetails.repositoryForm.repositorySoftDeleted'))
-        onSuccess()
-      }
+      clear()
+      showSuccess(getString('repositoryDetails.repositoryForm.repositorySoftDeleted'))
+      onSuccess()
     } catch (e: any) {
-      showError(getErrorInfoFromErrorObject(e, true))
+      showError(getErrorInfoFromErrorObject(e?.error || e, true))
     }
   }
 

@@ -16,7 +16,7 @@
 
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useRestoreRegistryMutation } from '@harnessio/react-har-service-client'
+import { useRestoreRegistryV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -31,28 +31,24 @@ export default function useRestoreDeleteRepositoryModal(props: useRestoreDeleteR
   const { showSuccess, showError, clear } = useToaster()
   const { useConfirmationDialog } = useParentHooks()
   const { scope } = useAppStore()
-  const { accountId, projectIdentifier, orgIdentifier } = scope
+  const { accountId } = scope
 
-  const { mutateAsync: restoreRepository } = useRestoreRegistryMutation()
+  const { mutateAsync: restoreRepository } = useRestoreRegistryV3Mutation()
 
   const handleRestoreRepository = async (isConfirmed: boolean): Promise<void> => {
     if (isConfirmed) {
       try {
-        const response = await restoreRepository({
+        await restoreRepository({
           queryParams: {
-            account_identifier: accountId as string,
-            project_identifier: projectIdentifier,
-            org_identifier: orgIdentifier
+            account_identifier: accountId as string
           },
-          uuid
+          id: uuid
         })
-        if (response.content.status === 'SUCCESS') {
-          clear()
-          showSuccess(getString('repositoryDetails.repositoryForm.repositoryRestored'))
-          onSuccess()
-        }
+        clear()
+        showSuccess(getString('repositoryDetails.repositoryForm.repositoryRestored'))
+        onSuccess()
       } catch (e: any) {
-        showError(getErrorInfoFromErrorObject(e, true))
+        showError(getErrorInfoFromErrorObject(e?.error || e, true))
       }
     } else {
       closeDialog()

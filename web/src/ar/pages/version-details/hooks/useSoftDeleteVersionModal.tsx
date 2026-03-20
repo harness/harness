@@ -17,7 +17,7 @@
 import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useDeleteVersionMutation } from '@harnessio/react-har-service-client'
+import { useDeleteVersionV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useConfirmationDialog } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -33,28 +33,24 @@ export default function useSoftDeleteVersionModal(props: useSoftDeleteVersionMod
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
   const { scope } = useAppStore()
-  const { accountId, projectIdentifier, orgIdentifier } = scope
+  const { accountId } = scope
 
-  const { mutateAsync: softDeleteVersion } = useDeleteVersionMutation()
+  const { mutateAsync: softDeleteVersion } = useDeleteVersionV3Mutation()
 
   const handleSoftDeleteVersion = async (): Promise<void> => {
     try {
-      const response = await softDeleteVersion({
-        uuid,
+      await softDeleteVersion({
+        id: uuid,
         queryParams: {
-          account_identifier: accountId as string,
-          org_identifier: orgIdentifier,
-          project_identifier: projectIdentifier
+          account_identifier: accountId as string
         }
       })
-      if (response.content.status === 'SUCCESS') {
-        clear()
-        showSuccess(getString('versionDetails.versionArchived'))
-        onSuccess()
-        closeDialog()
-      }
+      clear()
+      showSuccess(getString('versionDetails.versionArchived'))
+      onSuccess()
+      closeDialog()
     } catch (e: any) {
-      showError(getErrorInfoFromErrorObject(e, true))
+      showError(getErrorInfoFromErrorObject(e?.error || e, true))
     }
   }
 

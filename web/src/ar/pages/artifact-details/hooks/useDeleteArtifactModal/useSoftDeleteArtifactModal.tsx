@@ -17,7 +17,7 @@
 import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useDeletePackageMutation } from '@harnessio/react-har-service-client'
+import { useDeletePackageV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -34,28 +34,24 @@ export default function useSoftDeleteArtifactModal(props: useSoftDeleteArtifactM
   const { showSuccess, showError, clear } = useToaster()
   const { useConfirmationDialog } = useParentHooks()
   const { scope } = useAppStore()
-  const { accountId, orgIdentifier, projectIdentifier } = scope
+  const { accountId } = scope
 
-  const { mutateAsync: softDeleteArtifact } = useDeletePackageMutation()
+  const { mutateAsync: softDeleteArtifact } = useDeletePackageV3Mutation()
 
   const handleSoftDeleteArtifact = async (): Promise<void> => {
     try {
-      const response = await softDeleteArtifact({
+      await softDeleteArtifact({
         queryParams: {
           account_identifier: accountId as string,
-          org_identifier: orgIdentifier,
-          project_identifier: projectIdentifier,
           force: false
         },
-        uuid
+        id: uuid
       })
-      if (response.content.status === 'SUCCESS') {
-        clear()
-        showSuccess(getString('artifactDetails.packageArchived'))
-        onSuccess()
-      }
+      clear()
+      showSuccess(getString('artifactDetails.packageArchived'))
+      onSuccess()
     } catch (e: any) {
-      showError(getErrorInfoFromErrorObject(e, true))
+      showError(getErrorInfoFromErrorObject(e?.error || e, true))
     }
   }
 

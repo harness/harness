@@ -17,7 +17,7 @@
 import { useState } from 'react'
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useRestoreVersionMutation } from '@harnessio/react-har-service-client'
+import { useRestoreVersionV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useConfirmationDialog } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -32,30 +32,26 @@ export default function useRestoreDeletedVersionModal(props: useRestoreDeletedVe
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
   const { scope } = useAppStore()
-  const { accountId, projectIdentifier, orgIdentifier } = scope
+  const { accountId } = scope
 
-  const { mutateAsync: restoreVersion } = useRestoreVersionMutation()
+  const { mutateAsync: restoreVersion } = useRestoreVersionV3Mutation()
 
   const handleRestoreVersion = async (isConfirmed: boolean): Promise<void> => {
     if (isConfirmed) {
       setSubmitting(true)
       try {
-        const response = await restoreVersion({
+        await restoreVersion({
           queryParams: {
-            account_identifier: accountId as string,
-            org_identifier: orgIdentifier,
-            project_identifier: projectIdentifier
+            account_identifier: accountId as string
           },
-          uuid
+          id: uuid
         })
-        if (response.content.status === 'SUCCESS') {
-          clear()
-          showSuccess(getString('versionDetails.versionRestored'))
-          onSuccess()
-          closeDialog()
-        }
+        clear()
+        showSuccess(getString('versionDetails.versionRestored'))
+        onSuccess()
+        closeDialog()
       } catch (e: any) {
-        showError(getErrorInfoFromErrorObject(e, true))
+        showError(getErrorInfoFromErrorObject(e?.error || e, true))
       } finally {
         setSubmitting(false)
       }

@@ -16,7 +16,7 @@
 
 import { Intent } from '@blueprintjs/core'
 import { getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useRestorePackageMutation } from '@harnessio/react-har-service-client'
+import { useRestorePackageV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -31,28 +31,24 @@ export default function useRestoreDeletedArtifactModal(props: useRestoreDeletedA
   const { showSuccess, showError, clear } = useToaster()
   const { useConfirmationDialog } = useParentHooks()
   const { scope } = useAppStore()
-  const { accountId, orgIdentifier, projectIdentifier } = scope
+  const { accountId } = scope
 
-  const { mutateAsync: restoreDeletedArtifact } = useRestorePackageMutation()
+  const { mutateAsync: restoreDeletedArtifact } = useRestorePackageV3Mutation()
 
   const handleRestoreDeletedArtifact = async (isConfirmed: boolean): Promise<void> => {
     if (isConfirmed) {
       try {
-        const response = await restoreDeletedArtifact({
+        await restoreDeletedArtifact({
           queryParams: {
-            account_identifier: accountId as string,
-            org_identifier: orgIdentifier,
-            project_identifier: projectIdentifier
+            account_identifier: accountId as string
           },
-          uuid
+          id: uuid
         })
-        if (response.content.status === 'SUCCESS') {
-          clear()
-          showSuccess(getString('artifactDetails.packageArchived'))
-          onSuccess()
-        }
+        clear()
+        showSuccess(getString('artifactDetails.packageArchived'))
+        onSuccess()
       } catch (e: any) {
-        showError(getErrorInfoFromErrorObject(e, true))
+        showError(getErrorInfoFromErrorObject(e?.error || e, true))
       }
     }
   }
