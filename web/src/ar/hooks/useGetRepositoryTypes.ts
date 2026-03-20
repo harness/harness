@@ -73,8 +73,9 @@ const RepositoryTypes: RepositoryTypeListItem[] = [
     value: RepositoryPackageType.RAW,
     icon: 'raw_icon',
     parent: Parent.Enterprise,
-    featureFlag: FeatureFlags.HAR_SWIFT_PACKAGE,
+    featureFlag: FeatureFlags.HAR_RAW_PACKAGE,
     tooltip: 'Coming Soon!',
+    disabled: true,
     tag: ThumbnailTagEnum.ComingSoon
   },
   {
