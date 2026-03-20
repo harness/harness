@@ -2,6 +2,8 @@ module github.com/drone/drone
 
 replace github.com/docker/docker => github.com/docker/engine v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible
 
+replace github.com/docker/go-units => github.com/docker/go-units v0.4.0
+
 require (
 	github.com/766b/chi-prometheus v0.0.0-20211217152057-87afa9aa2ca8
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e
@@ -65,7 +67,7 @@ require (
 	github.com/containerd/containerd v1.6.23 // indirect
 	github.com/containerd/errdefs v0.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/distribution v2.8.2-beta.1+incompatible // indirect
 	github.com/docker/docker v23.0.3+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -101,4 +103,4 @@ replace github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14
 
 replace github.com/containerd/containerd => github.com/containerd/containerd v1.7.29
 
-go 1.24.11
+go 1.24.13
