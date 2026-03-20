@@ -43,6 +43,7 @@ func RegisterEventListeners(
 					stream.WithMaxRetries(3),
 				))
 
+			_ = r.RegisterCreated(analyzer.importedRepoCreatedHandler)
 			_ = r.RegisterDefaultBranchUpdated(analyzer.defaultBranchUpdatedHandler)
 
 			return nil

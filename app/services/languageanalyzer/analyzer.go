@@ -146,6 +146,21 @@ func (a Analyzer) defaultBranchUpdatedHandler(
 	return nil
 }
 
+func (a Analyzer) importedRepoCreatedHandler(
+	ctx context.Context,
+	e *events.Event[*repoevents.CreatedPayload],
+) error {
+	if e.Payload.ImportedFrom == "" {
+		return nil
+	}
+
+	if err := a.AnalyzeLanguages(ctx, e.Payload.RepoID); err != nil {
+		return fmt.Errorf("failed to analyze repo languages after import: %w", err)
+	}
+
+	return nil
+}
+
 func (a *Analyzer) handleEventBranchUpdated(
 	ctx context.Context,
 	e *events.Event[*gitevents.BranchUpdatedPayload],
