@@ -115,6 +115,15 @@ type PackageWrapper interface {
 		registryID int64,
 		sourceRefs []types.SourceRef,
 	) error
+	// TriggerIndexEvents is a convenience method that triggers all 3 reindexing
+	// events for package types handled by PackageWrapper (Cargo, Composer, Conda, Dart, Swift, HuggingFace).
+	// This consolidates the common pattern of calling all 3 events sequentially.
+	TriggerIndexEvents(
+		ctx context.Context,
+		registryID int64,
+		artifactName string,
+		versionName string,
+	) error
 	GetNodePathsForImage(
 		packageType string,
 		artifactType *string,

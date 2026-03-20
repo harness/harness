@@ -647,7 +647,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	v3 := router.ProvideUntaggedImagesEnabled()
 	deletionPackageWrapper := deletion.ProvidePackageWrapper(packageWrapper)
 	reporter11 := artifact.ProvideArtifactReporterValue(artifactReporter)
-	reindexingService := reindexing.NewService(asyncprocessingReporter, reporter11)
+	reindexingService := reindexing.ProvideReindexingService(asyncprocessingReporter, reporter11, packageWrapper)
 	deletionService := deletion.NewService(artifactRepository, imageRepository, manifestRepository, tagRepository, registryBlobRepository, fileManager, transactor, v3, deletionPackageWrapper, reindexingService, artifactReporter, provider)
 	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, fileManager, blobRepository, genericBlobRepository, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, spaceFinder, transactor, accessor, authenticator, provider, authorizer, auditService, artifactRepository, webhooksRepository, webhooksExecutionRepository, service3, spacePathStore, artifactReporter, downloadStatRepository, config, registryBlobRepository, registryFinder, asyncprocessingReporter, registryHelper, spaceController, quarantineArtifactRepository, spaceStore, packageWrapper, cacheService, finder, v3, deletionService, storageService, app)
 	packageTagRepository := database2.ProvidePackageTagDao(db)

@@ -1661,6 +1661,75 @@ func (_c *MockPackageWrapper_ReportBuildRegistryIndexEvent_Call) RunAndReturn(ru
 	return _c
 }
 
+// TriggerIndexEvents provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) TriggerIndexEvents(ctx context.Context, registryID int64, artifactName string, versionName string) error {
+	ret := _mock.Called(ctx, registryID, artifactName, versionName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for TriggerIndexEvents")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, string, string) error); ok {
+		r0 = returnFunc(ctx, registryID, artifactName, versionName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockPackageWrapper_TriggerIndexEvents_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'TriggerIndexEvents'
+type MockPackageWrapper_TriggerIndexEvents_Call struct {
+	*mock.Call
+}
+
+// TriggerIndexEvents is a helper method to define mock.On call
+//   - ctx context.Context
+//   - registryID int64
+//   - artifactName string
+//   - versionName string
+func (_e *MockPackageWrapper_Expecter) TriggerIndexEvents(ctx interface{}, registryID interface{}, artifactName interface{}, versionName interface{}) *MockPackageWrapper_TriggerIndexEvents_Call {
+	return &MockPackageWrapper_TriggerIndexEvents_Call{Call: _e.mock.On("TriggerIndexEvents", ctx, registryID, artifactName, versionName)}
+}
+
+func (_c *MockPackageWrapper_TriggerIndexEvents_Call) Run(run func(ctx context.Context, registryID int64, artifactName string, versionName string)) *MockPackageWrapper_TriggerIndexEvents_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_TriggerIndexEvents_Call) Return(err error) *MockPackageWrapper_TriggerIndexEvents_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_TriggerIndexEvents_Call) RunAndReturn(run func(ctx context.Context, registryID int64, artifactName string, versionName string) error) *MockPackageWrapper_TriggerIndexEvents_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetNodePathsForImage provides a mock function for the type MockPackageWrapper
 func (_mock *MockPackageWrapper) GetNodePathsForImage(packageType string, artifactType *string, packageName string) ([]string, error) {
 	ret := _mock.Called(packageType, artifactType, packageName)

@@ -164,13 +164,25 @@ func (p *packageWrapper) DeleteArtifactVersion(
 	if err := pkg.DeleteVersion(ctx, regInfo, imageInfo, artifactName, versionName); err != nil {
 		return fmt.Errorf("failed to delete version: %w", err)
 	}
-	if err := p.ReportDeleteVersionEvent(ctx, regInfo.RegistryID, artifactName, versionName); err != nil {
+	// Note: Reindexing is handled separately by the caller (deletion service or reindexing service)
+	return nil
+}
+
+// TriggerIndexEvents triggers all 3 reindexing events for packages handled by PackageWrapper.
+// This consolidates the common pattern used by Cargo/Composer/Conda/Dart/Swift packages.
+func (p *packageWrapper) TriggerIndexEvents(
+	ctx context.Context,
+	registryID int64,
+	artifactName string,
+	versionName string,
+) error {
+	if err := p.ReportDeleteVersionEvent(ctx, registryID, artifactName, versionName); err != nil {
 		return fmt.Errorf("failed to report delete version event: %w", err)
 	}
-	if err := p.ReportBuildPackageIndexEvent(ctx, regInfo.RegistryID, artifactName); err != nil {
+	if err := p.ReportBuildPackageIndexEvent(ctx, registryID, artifactName); err != nil {
 		return fmt.Errorf("failed to report build package index event: %w", err)
 	}
-	if err := p.ReportBuildRegistryIndexEvent(ctx, regInfo.RegistryID, make([]types.SourceRef, 0)); err != nil {
+	if err := p.ReportBuildRegistryIndexEvent(ctx, registryID, make([]types.SourceRef, 0)); err != nil {
 		return fmt.Errorf("failed to report build registry index event: %w", err)
 	}
 	return nil

@@ -150,13 +150,12 @@ func (s *Service) DeleteArtifactVersionByPackageType(
 	case artifact.PackageTypeNPM, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON,
 		artifact.PackageTypeGENERIC, artifact.PackageTypeNUGET, artifact.PackageTypeRPM,
 		artifact.PackageTypeGO:
-		// Non-OCI types: delete + trigger reindexing
 		err = s.DeleteGenericArtifact(ctx, registryID, packageType, imageName, versionName)
 		if err != nil {
 			return err
 		}
 	default:
-		// Unknown types: delegate to package wrapper
+		// Cargo/Composer/Conda/Dart/Swift/HuggingFace: delegate to package wrapper for deletion
 		imageInfo, err := s.imageStore.GetByName(ctx, registryID, imageName, registrytypes.WithAllDeleted())
 		if err != nil {
 			return err
@@ -171,11 +170,9 @@ func (s *Service) DeleteArtifactVersionByPackageType(
 	if principalID != nil {
 		principalIDValue = *principalID
 	}
-	s.reindexingService.TriggerArtifactVersionReindexing(
+	return s.reindexingService.TriggerArtifactVersionReindexing(
 		ctx, packageType, registryID, imageName, versionName, principalIDValue,
 	)
-
-	return nil
 }
 
 // DeleteOCIArtifactVersion handles Docker/Helm artifact version deletion with webhook support.

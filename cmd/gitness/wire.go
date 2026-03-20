@@ -213,7 +213,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		infraproviderCtrl.WireSet,
 		gitspaceCtrl.WireSet,
 		registryevents.WireSet,
-		reindexing.NewService,
+		reindexing.WireSet,
 		gitevents.WireSet,
 		pullreqevents.WireSet,
 		repoevents.WireSet,
