@@ -509,6 +509,12 @@ func (m *mockArtifactDAO) RestoreByUUID(context.Context, string) error {
 	return nil
 }
 
+func (m *mockArtifactDAO) FindPackageIdentifiersByRepositoryURL(
+	context.Context, int64, string,
+) ([]string, error) {
+	return nil, nil //nolint:nilnil
+}
+
 type mockURLProvider struct {
 	pkgURL func(ctx context.Context, regRef string, pkgType string, params ...string) string
 }
