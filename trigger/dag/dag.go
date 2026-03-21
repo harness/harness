@@ -64,6 +64,55 @@ func (d *Dag) Ancestors(name string) []*Vertex {
 	return d.ancestors(vertex)
 }
 
+// Descendants returns the names of all vertices that transitively depend on
+// the given vertex (downstream in the DAG). Used e.g. to expand a stage
+// restart with cascade=true to include all downstream stages.
+func (d *Dag) Descendants(name string) []string {
+	reverseDep := d.buildReverseDep()
+	result := make(map[string]struct{})
+	d.collectDescendants(name, reverseDep, nil, result)
+	out := make([]string, 0, len(result))
+	for n := range result {
+		out = append(out, n)
+	}
+	return out
+}
+
+// buildReverseDep returns a map: for each vertex name, the set of vertex
+// names that list it in their dependencies (direct dependents). Built once in
+// O(V+E), then descendant lookups are O(1) per vertex.
+func (d *Dag) buildReverseDep() map[string]map[string]struct{} {
+	reverseDep := make(map[string]map[string]struct{})
+	for vName, vertex := range d.graph {
+		if vertex == nil {
+			continue
+		}
+		for _, dep := range vertex.graph {
+			if reverseDep[dep] == nil {
+				reverseDep[dep] = make(map[string]struct{})
+			}
+			reverseDep[dep][vName] = struct{}{}
+		}
+	}
+	return reverseDep
+}
+
+// collectDescendants walks the reverse-dependency graph from name, accumulating
+// all transitively reachable vertices into out. seen prevents revisiting.
+func (d *Dag) collectDescendants(name string, reverseDep map[string]map[string]struct{}, seen map[string]struct{}, out map[string]struct{}) {
+	if seen == nil {
+		seen = make(map[string]struct{})
+	}
+	if _, ok := seen[name]; ok {
+		return
+	}
+	seen[name] = struct{}{}
+	for child := range reverseDep[name] {
+		out[child] = struct{}{}
+		d.collectDescendants(child, reverseDep, seen, out)
+	}
+}
+
 // DetectCycles returns true if cycles are detected in the graph.
 func (d *Dag) DetectCycles() bool {
 	visited := make(map[string]bool)
