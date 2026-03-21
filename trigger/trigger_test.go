@@ -658,6 +658,401 @@ trigger:
 		"Created", "Updated")
 )
 
+func TestTrigger_StagesFilter(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	multiPipelineYaml := &core.Config{
+		Data: `
+kind: pipeline
+type: docker
+name: build
+steps:
+- name: compile
+  image: golang
+  commands:
+  - go build
+---
+kind: pipeline
+type: docker
+name: deploy
+depends_on:
+- build
+steps:
+- name: ship
+  image: alpine
+  commands:
+  - echo deploy
+`,
+	}
+
+	hookWithStages := &core.Hook{
+		Event:        core.EventPush,
+		Link:         "https://github.com/octocat/Hello-World/commit/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Timestamp:    1299283200,
+		Message:      "first commit",
+		Before:       "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+		After:        "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Ref:          "refs/heads/master",
+		Source:       "master",
+		Target:       "master",
+		Author:       "octocat",
+		AuthorName:   "The Octocat",
+		AuthorEmail:  "octocat@hello-world.com",
+		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
+		Sender:       "octocat",
+		Action:       "opened",
+		Stages:       []string{"build"},
+	}
+
+	checkBuild := func(_ context.Context, build *core.Build, stages []*core.Stage) {
+		if len(stages) != 1 {
+			t.Errorf("Want 1 stage, got %d", len(stages))
+			return
+		}
+		if stages[0].Name != "build" {
+			t.Errorf("Want stage name 'build', got %q", stages[0].Name)
+		}
+		if len(stages[0].DependsOn) != 0 {
+			t.Errorf("Want empty DependsOn for 'build', got %v", stages[0].DependsOn)
+		}
+		if stages[0].Status != core.StatusPending {
+			t.Errorf("Want status %s for 'build' (no deps), got %s", core.StatusPending, stages[0].Status)
+		}
+		for _, s := range stages {
+			if s.Name == "deploy" {
+				t.Error("'deploy' stage should not exist when filtered to 'build' only")
+			}
+		}
+	}
+
+	mockUsers := mock.NewMockUserStore(controller)
+	mockUsers.EXPECT().Find(gomock.Any(), dummyRepo.UserID).Return(dummyUser, nil)
+
+	mockRepos := mock.NewMockRepositoryStore(controller)
+	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
+
+	mockConfigService := mock.NewMockConfigService(controller)
+	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(multiPipelineYaml, nil)
+
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(multiPipelineYaml, nil)
+
+	mockValidateService := mock.NewMockValidateService(controller)
+	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
+
+	mockStatus := mock.NewMockStatusService(controller)
+	mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	mockQueue := mock.NewMockScheduler(controller)
+	mockQueue.EXPECT().Schedule(gomock.Any(), gomock.Any()).Return(nil)
+
+	mockBuilds := mock.NewMockBuildStore(controller)
+	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Do(checkBuild).Return(nil)
+
+	mockWebhooks := mock.NewMockWebhookSender(controller)
+	mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
+
+	triggerer := New(
+		nil,
+		mockConfigService,
+		mockConvertService,
+		nil,
+		mockStatus,
+		mockBuilds,
+		mockQueue,
+		mockRepos,
+		mockUsers,
+		mockValidateService,
+		mockWebhooks,
+	)
+
+	build, err := triggerer.Trigger(noContext, dummyRepo, hookWithStages)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+	if build == nil {
+		t.Error("Expected build to be created, got nil")
+	}
+}
+
+func TestTrigger_StagesFilter_AllFiltered(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	hookWithNonexistentStage := &core.Hook{
+		Event:        core.EventPush,
+		Link:         "https://github.com/octocat/Hello-World/commit/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Timestamp:    1299283200,
+		Message:      "first commit",
+		Before:       "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+		After:        "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Ref:          "refs/heads/master",
+		Source:       "master",
+		Target:       "master",
+		Author:       "octocat",
+		AuthorName:   "The Octocat",
+		AuthorEmail:  "octocat@hello-world.com",
+		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
+		Sender:       "octocat",
+		Action:       "opened",
+		Stages:       []string{"nonexistent"},
+	}
+
+	mockUsers := mock.NewMockUserStore(controller)
+	mockUsers.EXPECT().Find(gomock.Any(), dummyRepo.UserID).Return(dummyUser, nil)
+
+	mockConfigService := mock.NewMockConfigService(controller)
+	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
+
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
+
+	mockValidateService := mock.NewMockValidateService(controller)
+	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
+
+	triggerer := New(
+		nil,
+		mockConfigService,
+		mockConvertService,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		mockUsers,
+		mockValidateService,
+		nil,
+	)
+
+	build, err := triggerer.Trigger(noContext, dummyRepo, hookWithNonexistentStage)
+	if err != nil {
+		t.Errorf("Expected nil error when all stages filtered, got: %v", err)
+	}
+	if build != nil {
+		t.Errorf("Expected nil build when all stages filtered, got: %v", build)
+	}
+}
+
+func TestTrigger_StagesFilter_EmptyDoesNotFilter(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	hookWithEmptyStages := &core.Hook{
+		Event:        core.EventPush,
+		Link:         "https://github.com/octocat/Hello-World/commit/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Timestamp:    1299283200,
+		Message:      "first commit",
+		Before:       "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+		After:        "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Ref:          "refs/heads/master",
+		Source:       "master",
+		Target:       "master",
+		Author:       "octocat",
+		AuthorName:   "The Octocat",
+		AuthorEmail:  "octocat@hello-world.com",
+		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
+		Sender:       "octocat",
+		Action:       "opened",
+		Stages:       nil,
+	}
+
+	checkBuild := func(_ context.Context, build *core.Build, stages []*core.Stage) {
+		if diff := cmp.Diff(build, dummyBuild, ignoreBuildFields); diff != "" {
+			t.Errorf("Diff: %s", diff)
+		}
+	}
+
+	mockUsers := mock.NewMockUserStore(controller)
+	mockUsers.EXPECT().Find(gomock.Any(), dummyRepo.UserID).Return(dummyUser, nil)
+
+	mockRepos := mock.NewMockRepositoryStore(controller)
+	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
+
+	mockConfigService := mock.NewMockConfigService(controller)
+	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
+
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(dummyYaml, nil)
+
+	mockValidateService := mock.NewMockValidateService(controller)
+	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
+
+	mockStatus := mock.NewMockStatusService(controller)
+	mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	mockQueue := mock.NewMockScheduler(controller)
+	mockQueue.EXPECT().Schedule(gomock.Any(), gomock.Any()).Return(nil)
+
+	mockBuilds := mock.NewMockBuildStore(controller)
+	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Do(checkBuild).Return(nil)
+
+	mockWebhooks := mock.NewMockWebhookSender(controller)
+	mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
+
+	triggerer := New(
+		nil,
+		mockConfigService,
+		mockConvertService,
+		nil,
+		mockStatus,
+		mockBuilds,
+		mockQueue,
+		mockRepos,
+		mockUsers,
+		mockValidateService,
+		mockWebhooks,
+	)
+
+	build, err := triggerer.Trigger(noContext, dummyRepo, hookWithEmptyStages)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+	if build == nil {
+		t.Error("Expected build to be created when Stages is nil")
+	}
+}
+
+func TestTrigger_StagesFilter_MultipleStages(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	threePipelineYaml := &core.Config{
+		Data: `
+kind: pipeline
+type: docker
+name: build
+steps:
+- name: compile
+  image: golang
+  commands:
+  - go build
+---
+kind: pipeline
+type: docker
+name: test
+depends_on:
+- build
+steps:
+- name: unit
+  image: golang
+  commands:
+  - go test
+---
+kind: pipeline
+type: docker
+name: deploy
+depends_on:
+- test
+steps:
+- name: ship
+  image: alpine
+  commands:
+  - echo deploy
+`,
+	}
+
+	hookWithMultipleStages := &core.Hook{
+		Event:        core.EventPush,
+		Link:         "https://github.com/octocat/Hello-World/commit/7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Timestamp:    1299283200,
+		Message:      "first commit",
+		Before:       "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+		After:        "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Ref:          "refs/heads/master",
+		Source:       "master",
+		Target:       "master",
+		Author:       "octocat",
+		AuthorName:   "The Octocat",
+		AuthorEmail:  "octocat@hello-world.com",
+		AuthorAvatar: "https://avatars3.githubusercontent.com/u/583231",
+		Sender:       "octocat",
+		Action:       "opened",
+		Stages:       []string{"build", "test"},
+	}
+
+	checkBuild := func(_ context.Context, build *core.Build, stages []*core.Stage) {
+		if len(stages) != 2 {
+			t.Errorf("Want 2 stages, got %d", len(stages))
+			return
+		}
+		names := map[string]bool{}
+		for _, s := range stages {
+			names[s.Name] = true
+		}
+		if !names["build"] {
+			t.Error("Expected 'build' stage to be included")
+		}
+		if !names["test"] {
+			t.Error("Expected 'test' stage to be included")
+		}
+		if names["deploy"] {
+			t.Error("'deploy' stage should be filtered out")
+		}
+		for _, s := range stages {
+			if s.Name == "test" && len(s.DependsOn) == 1 && s.DependsOn[0] == "build" {
+				continue
+			}
+			if s.Name == "build" && len(s.DependsOn) == 0 {
+				continue
+			}
+			t.Errorf("Unexpected stage config: name=%q depends_on=%v", s.Name, s.DependsOn)
+		}
+	}
+
+	mockUsers := mock.NewMockUserStore(controller)
+	mockUsers.EXPECT().Find(gomock.Any(), dummyRepo.UserID).Return(dummyUser, nil)
+
+	mockRepos := mock.NewMockRepositoryStore(controller)
+	mockRepos.EXPECT().Increment(gomock.Any(), dummyRepo).Return(dummyRepo, nil)
+
+	mockConfigService := mock.NewMockConfigService(controller)
+	mockConfigService.EXPECT().Find(gomock.Any(), gomock.Any()).Return(threePipelineYaml, nil)
+
+	mockConvertService := mock.NewMockConvertService(controller)
+	mockConvertService.EXPECT().Convert(gomock.Any(), gomock.Any()).Return(threePipelineYaml, nil)
+
+	mockValidateService := mock.NewMockValidateService(controller)
+	mockValidateService.EXPECT().Validate(gomock.Any(), gomock.Any()).Return(nil)
+
+	mockStatus := mock.NewMockStatusService(controller)
+	mockStatus.EXPECT().Send(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	mockQueue := mock.NewMockScheduler(controller)
+	mockQueue.EXPECT().Schedule(gomock.Any(), gomock.Any()).Return(nil)
+
+	mockBuilds := mock.NewMockBuildStore(controller)
+	mockBuilds.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Do(checkBuild).Return(nil)
+
+	mockWebhooks := mock.NewMockWebhookSender(controller)
+	mockWebhooks.EXPECT().Send(gomock.Any(), gomock.Any()).Return(nil)
+
+	triggerer := New(
+		nil,
+		mockConfigService,
+		mockConvertService,
+		nil,
+		mockStatus,
+		mockBuilds,
+		mockQueue,
+		mockRepos,
+		mockUsers,
+		mockValidateService,
+		mockWebhooks,
+	)
+
+	build, err := triggerer.Trigger(noContext, dummyRepo, hookWithMultipleStages)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+	if build == nil {
+		t.Error("Expected build to be created, got nil")
+	}
+}
+
 func TestTrigger_MemoryLimitFormats(t *testing.T) {
 	tests := []struct {
 		name        string

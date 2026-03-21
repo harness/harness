@@ -17,19 +17,29 @@ package builds
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/handler/api/render"
 	"github.com/drone/drone/handler/api/request"
+	"github.com/drone/drone/trigger/dag"
 
 	"github.com/go-chi/chi"
 )
 
 // HandleRetry returns an http.HandlerFunc that processes http
 // requests to retry and re-execute a build.
+//
+// Optional query parameters:
+//   - stage: a single pipeline name to retry. When set, only this pipeline
+//     (and its dependents, if cascade is true) is included in the new build.
+	//   - cascade: when "true" and stage is set, automatically include all
+	//     downstream dependents of the requested stage. Ignored when stage
+	//     is not provided.
 func HandleRetry(
 	repos core.RepositoryStore,
 	builds core.BuildStore,
+	stages core.StageStore,
 	triggerer core.Triggerer,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -90,11 +100,43 @@ func HandleRetry(
 			Params:       map[string]string{},
 		}
 
+		if stageName := strings.TrimSpace(r.FormValue("stage")); stageName != "" {
+			hook.Stages = []string{stageName}
+			if r.FormValue("cascade") == "true" {
+				prevStages, err := stages.List(r.Context(), prev.ID)
+				if err != nil {
+					render.InternalError(w, err)
+					return
+				}
+				found := false
+				d := dag.New()
+				for _, s := range prevStages {
+					d.Add(s.Name, s.DependsOn...)
+					if s.Name == stageName {
+						found = true
+					}
+				}
+				if !found {
+					render.BadRequestf(w, "stage %q not found in build #%d", stageName, prev.Number)
+					return
+				}
+				for _, desc := range d.Descendants(stageName) {
+					hook.Stages = append(hook.Stages, desc)
+				}
+			}
+		}
+
 		for key, value := range r.URL.Query() {
 			if key == "access_token" {
 				continue
 			}
 			if key == "debug" {
+				continue
+			}
+			if key == "stage" {
+				continue
+			}
+			if key == "cascade" {
 				continue
 			}
 			if len(value) == 0 {
