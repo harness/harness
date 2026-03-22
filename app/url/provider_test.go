@@ -437,7 +437,7 @@ func TestProvider_GenerateUIPRURL(t *testing.T) {
 
 	ctx := context.Background()
 	got := p.GenerateUIPRURL(ctx, "org/repo", 123)
-	want := "http://ui.example.com/org/repo/pulls/123"
+	want := "http://ui.example.com/org/repo/-/pulls/123"
 
 	if got != want {
 		t.Errorf("GenerateUIPRURL() = %v, want %v", got, want)
@@ -462,7 +462,7 @@ func TestProvider_GenerateUICompareURL(t *testing.T) {
 
 	ctx := context.Background()
 	got := p.GenerateUICompareURL(ctx, "org/repo", "main", "develop")
-	want := "http://ui.example.com/org/repo/pulls/compare/main...develop"
+	want := "http://ui.example.com/org/repo/-/pulls/compare/main...develop"
 
 	if got != want {
 		t.Errorf("GenerateUICompareURL() = %v, want %v", got, want)
@@ -487,7 +487,7 @@ func TestProvider_GenerateUIRefURL(t *testing.T) {
 
 	ctx := context.Background()
 	got := p.GenerateUIRefURL(ctx, "org/repo", "abc123")
-	want := "http://ui.example.com/org/repo/commit/abc123"
+	want := "http://ui.example.com/org/repo/-/commit/abc123"
 
 	if got != want {
 		t.Errorf("GenerateUIRefURL() = %v, want %v", got, want)
@@ -631,7 +631,7 @@ func TestProvider_GenerateUIBuildURL(t *testing.T) {
 
 	ctx := context.Background()
 	got := p.GenerateUIBuildURL(ctx, "org/repo", "my-pipeline", 42)
-	want := "http://ui.example.com/org/repo/pipelines/my-pipeline/execution/42"
+	want := "http://ui.example.com/org/repo/-/pipelines/my-pipeline/execution/42"
 
 	if got != want {
 		t.Errorf("GenerateUIBuildURL() = %v, want %v", got, want)
