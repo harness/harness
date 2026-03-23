@@ -44,6 +44,10 @@ function DeleteModalContent({
   deleteBtnText
 }: DeleteModalContentProps) {
   const { getString } = useStrings()
+
+  // Show value in label so user knows what to type
+  const finalLabel = `${inputLabel} (${value})`
+
   return (
     <Formik
       initialValues={{ value: '' }}
@@ -61,7 +65,7 @@ function DeleteModalContent({
         <Container>
           <Layout.Vertical spacing="medium">
             <Text>{content}</Text>
-            <FormInput.Text label={inputLabel} name="value" placeholder={placeholder} intent={Intent.PRIMARY} />
+            <FormInput.Text label={finalLabel} name="value" placeholder={placeholder} intent={Intent.PRIMARY} />
           </Layout.Vertical>
           <Layout.Horizontal spacing="medium" margin={{ top: 'large' }}>
             <Button

@@ -22,8 +22,8 @@ compact: Compact View
 deleteModal:
   title: '{{ $.artifactList.table.actions.deleteRepository }}'
   contentText: This action will delete registry and all it's images and versions. Are you absolutely sure you want to proceed?
-  inputLabel: Type the registry name or ID to confirm
-  inputPlaceholder: Registry Name or ID
+  inputLabel: Type the registry name to confirm
+  inputPlaceholder: Registry Name
 softDeleteModal:
   title: Archive Registry
   contentText: This action will archive registry and all it's artifacts and versions. You can still restore it from the archived list.

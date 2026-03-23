@@ -65,6 +65,7 @@ export function useUtilsForDeleteVersion() {
       default:
         queryClient.invalidateQueries(['GetAllHarnessArtifacts'])
         queryClient.invalidateQueries(['ListArtifacts'])
+        queryClient.invalidateQueries(['ListVersions'])
         return
     }
   }

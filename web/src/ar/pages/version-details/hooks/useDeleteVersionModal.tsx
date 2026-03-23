@@ -69,7 +69,7 @@ export default function useDeleteVersionModal(props: useDeleteVersionModalProps)
     contentText: (
       <DeleteModalContent
         entity="version"
-        value={versionKey}
+        value={`${artifactKey}@${versionKey}`}
         onSubmit={handleDeleteVersion}
         onClose={handleCloseDialog}
         content={getString('versionDetails.deleteVersionModal.contentText')}
