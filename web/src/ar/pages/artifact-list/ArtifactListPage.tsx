@@ -28,7 +28,7 @@ import {
   Container
 } from '@harnessio/uicore'
 
-import { Parent } from '@ar/common/types'
+import { Parent, RepositoryPackageType } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import { DEFAULT_PAGE_INDEX, PreferenceScope, SoftDeleteFilterEnum } from '@ar/constants'
@@ -45,6 +45,8 @@ import { useArtifactListQueryParamOptions, type ArtifactListPageQueryParams } fr
 import useLocalGetAllHarnessArtifactsQuery from './hooks/useLocalGetAllHarnessArtifactsQuery'
 
 import css from './ArtifactListPage.module.scss'
+
+const EXCLUDED_PACKAGE_TYPES = [RepositoryPackageType.RAW]
 
 function ArtifactListPage(): JSX.Element {
   const { getString } = useStrings()
@@ -148,6 +150,7 @@ function ArtifactListPage(): JSX.Element {
             onChange={val => {
               updateQueryParams({ packageTypes: val, page: DEFAULT_PAGE_INDEX })
             }}
+            excludePackageTypes={EXCLUDED_PACKAGE_TYPES}
           />
           {HAR_CUSTOM_METADATA_ENABLED && parent === Parent.Enterprise && (
             <MetadataFilterSelector

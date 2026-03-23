@@ -14,27 +14,44 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 
 import { useStrings } from '@ar/frameworks/strings'
 import MultiSelectDropdownList from '@ar/components/MultiDropdownSelect/MultiDropdownSelect'
 import type { RepositoryPackageType } from '@ar/common/types'
 import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
 
+/** Stable default so `useMemo` deps are not invalidated every render when the prop is omitted. */
+const EMPTY_EXCLUDE_LIST: RepositoryPackageType[] = []
+
 interface PackageTypeSelectorProps {
   value: RepositoryPackageType[]
   onChange: (val: RepositoryPackageType[]) => void
+  /** When set, these package types are omitted from the dropdown and from the controlled selection shown in the UI. */
+  excludePackageTypes?: RepositoryPackageType[]
 }
 export default function PackageTypeSelector(props: PackageTypeSelectorProps): JSX.Element {
-  const { value, onChange } = props
+  const { value, onChange, excludePackageTypes } = props
   const { getString } = useStrings()
   const repositoryTypes = useGetRepositoryTypes()
+  const excluded = excludePackageTypes ?? EMPTY_EXCLUDE_LIST
+
+  const excludeSet = useMemo(() => new Set(excluded), [excluded])
+
+  const items = useMemo(
+    () =>
+      repositoryTypes
+        .filter(each => !each.disabled)
+        .filter(each => !excludeSet.has(each.value))
+        .map(each => ({ ...each, label: getString(each.label) })),
+    [repositoryTypes, excludeSet, getString]
+  )
 
   return (
     <MultiSelectDropdownList
       width={180}
       buttonTestId="package-type-select"
-      items={repositoryTypes.filter(each => !each.disabled).map(each => ({ ...each, label: getString(each.label) }))}
+      items={items}
       value={value}
       onSelect={onChange}
       placeholder={getString('repositoryList.selectPackageTypes')}
