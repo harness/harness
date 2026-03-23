@@ -75,13 +75,15 @@ export class HuggingfaceVersionType extends VersionStep<ArtifactVersionSummary> 
     VersionAction.SetupClient,
     VersionAction.ViewVersionDetails,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.CopyVersion
   ]
 
   protected allowedActionsOnVersionDetailsPage = [
     VersionAction.Delete,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.CopyVersion
   ]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {

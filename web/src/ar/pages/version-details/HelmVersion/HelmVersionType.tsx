@@ -60,13 +60,15 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.ViewVersionDetails,
     VersionAction.Quarantine,
     VersionAction.Download,
-    VersionAction.AddTag
+    VersionAction.AddTag,
+    VersionAction.CopyVersion
   ]
 
   protected allowedActionsOnVersionDetailsPage = [
     VersionAction.Delete,
     VersionAction.Quarantine,
-    VersionAction.Download
+    VersionAction.Download,
+    VersionAction.CopyVersion
   ]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {

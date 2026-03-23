@@ -76,14 +76,16 @@ export class DartVersionType extends VersionStep<ArtifactVersionSummary> {
     VersionAction.ViewVersionDetails,
     VersionAction.Quarantine,
     VersionAction.Download,
-    VersionAction.ReEvaluate
+    VersionAction.ReEvaluate,
+    VersionAction.CopyVersion
   ]
 
   protected allowedActionsOnVersionDetailsPage = [
     VersionAction.Delete,
     VersionAction.Quarantine,
     VersionAction.Download,
-    VersionAction.ReEvaluate
+    VersionAction.ReEvaluate,
+    VersionAction.CopyVersion
   ]
 
   renderVersionListTable(props: VersionListTableProps): JSX.Element {

@@ -1,0 +1,41 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use it except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.form {
+  min-width: 400px;
+}
+
+.sourceSection {
+  padding: var(--spacing-small, 8px) 0;
+}
+
+.separator {
+  height: 0;
+  width: 100%;
+  margin: var(--spacing-medium, 16px) auto;
+  border-top: 1px solid var(--grey-200, #ccc);
+}
+
+.inputWithSpinner {
+  position: relative;
+
+  .selectSpinner {
+    position: absolute;
+    right: 24px;
+    top: 32px;
+    pointer-events: none;
+  }
+}

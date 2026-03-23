@@ -323,6 +323,19 @@ export interface StringsMap {
   'versionDetails.cards.supplyChain.sbomScore': string
   'versionDetails.cards.supplyChain.title': string
   'versionDetails.cards.supplyChain.totalComponents': string
+  'versionDetails.copyVersionModal.organization': string
+  'versionDetails.copyVersionModal.packageName': string
+  'versionDetails.copyVersionModal.project': string
+  'versionDetails.copyVersionModal.registry': string
+  'versionDetails.copyVersionModal.registryName': string
+  'versionDetails.copyVersionModal.selectOrganization': string
+  'versionDetails.copyVersionModal.selectProject': string
+  'versionDetails.copyVersionModal.selectRegistry': string
+  'versionDetails.copyVersionModal.source': string
+  'versionDetails.copyVersionModal.target': string
+  'versionDetails.copyVersionModal.title': string
+  'versionDetails.copyVersionModal.version': string
+  'versionDetails.copyVersionModal.versionAndRegistryRequired': string
   'versionDetails.deleteVersionModal.contentText': string
   'versionDetails.deleteVersionModal.inputLabel': string
   'versionDetails.deleteVersionModal.inputPlaceholder': string
@@ -409,6 +422,7 @@ export interface StringsMap {
   'versionList.actions.addTagDescription': string
   'versionList.actions.addTagPlaceholder': string
   'versionList.actions.archiveVersion': string
+  'versionList.actions.copyVersion': string
   'versionList.actions.deleteVersion': string
   'versionList.actions.quarantine': string
   'versionList.actions.reEvaluate': string
@@ -417,6 +431,8 @@ export interface StringsMap {
   'versionList.actions.tagNameEntity': string
   'versionList.messages.addTagFailed': string
   'versionList.messages.addTagSuccess': string
+  'versionList.messages.copyVersionFailed': string
+  'versionList.messages.copyVersionSuccess': string
   'versionList.messages.reEvaluateFailed': string
   'versionList.messages.reEvaluateSuccess': string
   'versionList.page': string

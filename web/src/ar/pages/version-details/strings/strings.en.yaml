@@ -41,19 +41,19 @@ cards:
     denyListViolation: Deny List Violation
   container:
     title: Container
-    versionDigest: "{{ version}} ({{ digest }} digests)"
+    versionDigest: '{{ version}} ({{ digest }} digests)'
 overview:
   generalInformation:
     title: General Information
-    name: "{{ $.artifactList.table.columns.name }}"
+    name: '{{ $.artifactList.table.columns.name }}'
     version: Version
     packageType: Package type
     repositoryPath: Registry path
     digest: Digest
     url: URL to file
     projectUrl: Project URL
-    size: "{{ $.digestList.table.columns.size }}"
-    downloads: "{{ $.repositoryList.table.columns.downloads }}"
+    size: '{{ $.digestList.table.columns.size }}'
+    downloads: '{{ $.repositoryList.table.columns.downloads }}'
     uploadedBy: Uploaded At
     createdAndLastModifiedAt: Created | Last modified
     createdAt: Created At
@@ -85,10 +85,10 @@ artifactDetails:
     files: Files
     dependencies: Dependencies
   layers:
-    digest: "{{ $.digestList.table.columns.digest }}"
+    digest: '{{ $.digestList.table.columns.digest }}'
     imageLayers: Image Layers
     lastPush: Last Push
-    size: "{{ $.digestList.table.columns.size }}"
+    size: '{{ $.digestList.table.columns.size }}'
     archSelectLabel: OS/ARCH
     archSelectPlaceholder: Select OS/ARCH
 securityTests:
@@ -119,7 +119,7 @@ artifactFiles:
       created: Created
       id: ID
 dependencyList:
-  dependencyNameWithRelease: "{{ name }} (release: {{ release }})"
+  dependencyNameWithRelease: '{{ name }} (release: {{ release }})'
   table:
     columns:
       name: Dependency Name
@@ -132,6 +132,20 @@ deleteVersionModal:
   contentText: This action will delete version. Are you absolutely sure you want to proceed?
   inputLabel: Type the version name to confirm
   inputPlaceholder: Version Name
+copyVersionModal:
+  title: Copy Version
+  source: Source
+  target: Target
+  registryName: Registry Name
+  packageName: Package Name
+  version: Version
+  organization: Organization
+  project: Project
+  registry: Registry
+  selectOrganization: Select organization
+  selectProject: Select project
+  selectRegistry: Select registry
+  versionAndRegistryRequired: Version and target registry are required.
 softDeleteModal:
   title: Archive Version
   contentText: This action will archive version. You can still restore it from the archived list.

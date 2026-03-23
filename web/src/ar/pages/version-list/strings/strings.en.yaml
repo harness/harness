@@ -21,6 +21,7 @@ actions:
   addTagDescription: Add tags by typing in the field below and pressing enter. Tags are unique across versions. If you add a tag that is already used by another version, the tag will be moved to this version.
   addTagPlaceholder: Type tag name and press Enter
   tagNameEntity: Tag name
+  copyVersion: Copy Version
   deleteVersion: Delete
   archiveVersion: Archive
   restoreVersion: Restore
@@ -30,5 +31,7 @@ actions:
 messages:
   addTagSuccess: Tag added successfully
   addTagFailed: Failed to add tag
+  copyVersionSuccess: Version copied successfully
+  copyVersionFailed: Failed to copy version
   reEvaluateSuccess: Submitted request for Re-Evaluation successfully!
   reEvaluateFailed: Failed to submit request!

@@ -35,6 +35,7 @@ import DownloadVersionMenuItem from './DownloadVersionMenuItem'
 import SoftDeleteVersionMenuItem from './SoftDeleteVersionMenuItem'
 import ReEvaluateMenuItem from './ReEvaluateMenuItem'
 import AddTagMenuItem from './AddTagMenuItem'
+import CloneVersionMenuItem from './CloneVersionMenuItem'
 
 export default function VersionActions({
   data,
@@ -187,6 +188,21 @@ export default function VersionActions({
           versionKey={versionKey}
           data={data}
           pageType={pageType}
+          readonly={readonly}
+          onClose={() => {
+            setOpen(false)
+            onClose?.()
+          }}
+        />
+      )}
+      {!isCurrentSessionPublic && isAllowed(VersionAction.CopyVersion) && (
+        <CloneVersionMenuItem
+          artifactKey={artifactKey}
+          repoKey={repoKey}
+          versionKey={versionKey}
+          data={data}
+          pageType={pageType}
+          repoType={repoType}
           readonly={readonly}
           onClose={() => {
             setOpen(false)

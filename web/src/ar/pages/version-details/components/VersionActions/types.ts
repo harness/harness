@@ -40,5 +40,6 @@ export enum VersionAction {
   Quarantine = 'quarantine',
   Download = 'download',
   ReEvaluate = 'reEvaluate',
-  AddTag = 'addTag'
+  AddTag = 'addTag',
+  CopyVersion = 'copyVersion'
 }
