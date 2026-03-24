@@ -74,7 +74,8 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     value: UpstreamProxyPackageType.RAW,
     icon: 'raw_icon',
     parent: Parent.Enterprise,
-    featureFlag: FeatureFlags.HAR_SWIFT_PACKAGE,
+    featureFlag: FeatureFlags.HAR_RAW_PACKAGE,
+    disabled: true,
     tooltip: 'Coming Soon!',
     tag: ThumbnailTagEnum.ComingSoon
   },
