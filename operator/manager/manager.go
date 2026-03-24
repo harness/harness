@@ -247,14 +247,6 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*core.S
 // handleDetailsError marks a stage as error when Details() fails after the
 // stage has already been loaded from the database. It uses a two-step
 // approach to ensure the stage is always persisted even if teardown fails:
-//
-//  1. Direct m.Stages.Update() — guaranteed to unblock concurrency queue
-//     regardless of whether the build or repo records exist.
-//  2. m.AfterAll() — best-effort teardown for downstream effects (GitHub
-//     status checks, webhooks, build status, event publishing). Safe to
-//     call even if Step 1 failed; AfterAll handles its own errors. No
-//     optimistic-lock conflict because stage.Version is incremented in
-//     memory by Step 1 before Step 2 runs.
 func (m *Manager) handleDetailsError(ctx context.Context, stage *core.Stage, err error) (*Context, error) {
 	stage.Status = core.StatusError
 	stage.Error = err.Error()
