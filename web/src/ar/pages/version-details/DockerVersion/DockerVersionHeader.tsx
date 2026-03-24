@@ -82,6 +82,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
       <AvailablityBadge type={deletedAt ? AvailablityBadgeType.ARCHIVED : AvailablityBadgeType.AVAILABLE} />
       <Expander />
       <SetupClientButton
+        disabled={!!deletedAt}
         repositoryIdentifier={pathParams.repositoryIdentifier}
         artifactIdentifier={pathParams.artifactIdentifier}
         versionIdentifier={pathParams.versionIdentifier}

@@ -33,6 +33,8 @@ export default function RepositoryActions({
 }: RepositoryActionsProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const allowSoftDelete = useAllowSoftDelete()
+  const isDeleted = !!data.deletedAt
+
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
       {allowSoftDelete && (
@@ -44,7 +46,7 @@ export default function RepositoryActions({
         />
       )}
       <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
-      {pageType === PageType.Table && (
+      {!isDeleted && pageType === PageType.Table && (
         <SetupClientMenuItem
           data={data}
           readonly={readonly}

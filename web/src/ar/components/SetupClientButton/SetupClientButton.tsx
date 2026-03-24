@@ -26,10 +26,11 @@ interface SetupClientButtonProps {
   packageType: RepositoryPackageType
   artifactIdentifier?: string
   versionIdentifier?: string
+  disabled?: boolean
 }
 
 export default function SetupClientButton(props: SetupClientButtonProps): JSX.Element {
-  const { packageType } = props
+  const { packageType, disabled } = props
   const { getString } = useStrings()
   const [showSetupClientModal] = useSetupClientModal({
     repoKey: props.repositoryIdentifier,
@@ -40,6 +41,7 @@ export default function SetupClientButton(props: SetupClientButtonProps): JSX.El
 
   return (
     <Button
+      disabled={disabled}
       variation={ButtonVariation.SECONDARY}
       text={getString('actions.setupClient')}
       onClick={() => {

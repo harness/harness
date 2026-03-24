@@ -32,6 +32,7 @@ export default function SoftDeleteVersionMenuItem(props: VersionActionProps): JS
 
   const handleAfterDeleteVersion = () => {
     queryClient.invalidateQueries(['ListArtifacts'])
+    queryClient.invalidateQueries(['ListVersions'])
     queryClient.invalidateQueries(['GetArtifactVersionSummary'])
     onClose?.()
   }

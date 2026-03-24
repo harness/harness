@@ -41,6 +41,7 @@ export default function ArtifactActions({
     useBulkDownloadFile() &&
     ![RepositoryPackageType.DOCKER, RepositoryPackageType.HELM].includes(data.packageType as RepositoryPackageType)
   const allowSoftDelete = useAllowSoftDelete()
+  const isDeleted = !!data.deletedAt
 
   const isSupportedAction = (action: ArtifactActionsEnum) => {
     if (!allowedActions) {
@@ -78,7 +79,7 @@ export default function ArtifactActions({
           />
         </>
       )}
-      {pageType === PageType.Table && isSupportedAction(ArtifactActionsEnum.SetupClient) && (
+      {!isDeleted && pageType === PageType.Table && isSupportedAction(ArtifactActionsEnum.SetupClient) && (
         <SetupClientMenuItem
           data={data}
           pageType={pageType}
@@ -88,7 +89,7 @@ export default function ArtifactActions({
           repoKey={repoKey}
         />
       )}
-      {isBulkDownloadFileEnabled && isSupportedAction(ArtifactActionsEnum.Download) && (
+      {!isDeleted && isBulkDownloadFileEnabled && isSupportedAction(ArtifactActionsEnum.Download) && (
         <DownloadArtifactMenuItem
           data={data}
           pageType={pageType}

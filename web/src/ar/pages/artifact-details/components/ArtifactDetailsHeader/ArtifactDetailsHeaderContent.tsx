@@ -71,6 +71,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
           <Layout.Horizontal spacing="large">
             <CreatedAndModifiedAt createdAt={Number(createdAt)} modifiedAt={Number(modifiedAt)} />
             <SetupClientButton
+              disabled={!!deletedAt}
               repositoryIdentifier={repositoryIdentifier}
               artifactIdentifier={artifactIdentifier}
               packageType={packageType as RepositoryPackageType}

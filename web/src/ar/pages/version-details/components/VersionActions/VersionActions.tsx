@@ -59,6 +59,7 @@ export default function VersionActions({
   const allowSoftDelete = useAllowSoftDelete()
   const isFirewallEnabled = data.firewallMode ? data.firewallMode !== 'ALLOW' : false
   const allowReEvaluate = HAR_DEPENDENCY_FIREWALL && isFirewallEnabled && repoType === RepositoryConfigType.UPSTREAM
+  const isDeleted = !!data.deletedAt
 
   const isAllowed = (action: VersionAction): boolean => {
     if (!allowedActions) return true
@@ -99,7 +100,7 @@ export default function VersionActions({
           />
         </>
       )}
-      {isAllowed(VersionAction.SetupClient) && (
+      {!isDeleted && isAllowed(VersionAction.SetupClient) && (
         <SetupClientMenuItem
           data={data}
           pageType={pageType}
@@ -110,7 +111,7 @@ export default function VersionActions({
           repoKey={repoKey}
         />
       )}
-      {isAllowed(VersionAction.DownloadCommand) && (
+      {!isDeleted && isAllowed(VersionAction.DownloadCommand) && (
         <CopyMenuItem value={get(data, 'pullCommand', '')} onCopy={() => setOpen(false)} />
       )}
       {isAllowed(VersionAction.ViewVersionDetails) && (
@@ -125,35 +126,43 @@ export default function VersionActions({
           {getString('view')}
         </LinkMenuItem>
       )}
-      {!isCurrentSessionPublic && isAllowed(VersionAction.Quarantine) && !data.isQuarantined && digestCount < 2 && (
-        <QuarantineMenuItem
-          artifactKey={artifactKey}
-          repoKey={repoKey}
-          versionKey={digest ?? versionKey}
-          data={data}
-          pageType={pageType}
-          readonly={readonly}
-          onClose={() => {
-            setOpen(false)
-            onClose?.()
-          }}
-        />
-      )}
-      {!isCurrentSessionPublic && isAllowed(VersionAction.Quarantine) && data.isQuarantined && digestCount < 2 && (
-        <RemoveQurantineMenuItem
-          artifactKey={artifactKey}
-          repoKey={repoKey}
-          versionKey={digest ?? versionKey}
-          data={data}
-          pageType={pageType}
-          readonly={readonly}
-          onClose={() => {
-            setOpen(false)
-            onClose?.()
-          }}
-        />
-      )}
-      {isBulkDownloadFileEnabled && isAllowed(VersionAction.Download) && (
+      {!isDeleted &&
+        !isCurrentSessionPublic &&
+        isAllowed(VersionAction.Quarantine) &&
+        !data.isQuarantined &&
+        digestCount < 2 && (
+          <QuarantineMenuItem
+            artifactKey={artifactKey}
+            repoKey={repoKey}
+            versionKey={digest ?? versionKey}
+            data={data}
+            pageType={pageType}
+            readonly={readonly}
+            onClose={() => {
+              setOpen(false)
+              onClose?.()
+            }}
+          />
+        )}
+      {!isDeleted &&
+        !isCurrentSessionPublic &&
+        isAllowed(VersionAction.Quarantine) &&
+        data.isQuarantined &&
+        digestCount < 2 && (
+          <RemoveQurantineMenuItem
+            artifactKey={artifactKey}
+            repoKey={repoKey}
+            versionKey={digest ?? versionKey}
+            data={data}
+            pageType={pageType}
+            readonly={readonly}
+            onClose={() => {
+              setOpen(false)
+              onClose?.()
+            }}
+          />
+        )}
+      {!isDeleted && isBulkDownloadFileEnabled && isAllowed(VersionAction.Download) && (
         <DownloadVersionMenuItem
           artifactKey={artifactKey}
           repoKey={repoKey}
@@ -167,7 +176,7 @@ export default function VersionActions({
           }}
         />
       )}
-      {allowReEvaluate && isAllowed(VersionAction.ReEvaluate) && (
+      {!isDeleted && allowReEvaluate && isAllowed(VersionAction.ReEvaluate) && (
         <ReEvaluateMenuItem
           artifactKey={artifactKey}
           repoKey={repoKey}
@@ -181,7 +190,7 @@ export default function VersionActions({
           }}
         />
       )}
-      {isAllowed(VersionAction.AddTag) && (
+      {!isDeleted && isAllowed(VersionAction.AddTag) && (
         <AddTagMenuItem
           artifactKey={artifactKey}
           repoKey={repoKey}
@@ -195,7 +204,7 @@ export default function VersionActions({
           }}
         />
       )}
-      {!isCurrentSessionPublic && isAllowed(VersionAction.CopyVersion) && (
+      {!isDeleted && !isCurrentSessionPublic && isAllowed(VersionAction.CopyVersion) && (
         <CloneVersionMenuItem
           artifactKey={artifactKey}
           repoKey={repoKey}

@@ -80,6 +80,7 @@ export default function VersionDetailsHeaderContent(props: VersionDetailsHeaderC
         artifactIdentifier={pathParams.artifactIdentifier}
         versionIdentifier={pathParams.versionIdentifier}
         packageType={packageType as RepositoryPackageType}
+        disabled={!!data.deletedAt}
       />
       {!isCurrentSessionPublic && (
         <VersionActionsWidget

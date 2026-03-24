@@ -89,7 +89,11 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
         </Layout.Vertical>
         <Expander />
         <Layout.Horizontal>
-          <SetupClientButton repositoryIdentifier={identifier} packageType={packageType as RepositoryPackageType} />
+          <SetupClientButton
+            disabled={!!deletedAt}
+            repositoryIdentifier={identifier}
+            packageType={packageType as RepositoryPackageType}
+          />
           {!isCurrentSessionPublic && (
             <RepositoryActionsWidget
               type={RepositoryConfigType.VIRTUAL}
