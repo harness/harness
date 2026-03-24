@@ -654,11 +654,6 @@ type ArtifactRepository interface {
 	DuplicateArtifact(
 		ctx context.Context, sourceArtifact *types.Artifact, targetImageID int64,
 	) (*types.Artifact, error)
-
-	// FindPackageIdentifiersByRepositoryURL finds package identifiers by repository URL.
-	FindPackageIdentifiersByRepositoryURL(
-		ctx context.Context, registryID int64, repositoryURL string,
-	) ([]string, error)
 }
 
 type DownloadStatRepository interface {

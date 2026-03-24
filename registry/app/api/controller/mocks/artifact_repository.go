@@ -928,36 +928,6 @@ func (_m *ArtifactRepository) RestoreByUUID(ctx context.Context, uuid string) er
 	return r0
 }
 
-// FindPackageIdentifiersByRepositoryURL provides a mock function with given fields: ctx, registryID, repositoryURL
-func (_m *ArtifactRepository) FindPackageIdentifiersByRepositoryURL(ctx context.Context, registryID int64, repositoryURL string) ([]string, error) {
-	ret := _m.Called(ctx, registryID, repositoryURL)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindPackageIdentifiersByRepositoryURL")
-	}
-
-	var r0 []string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string) ([]string, error)); ok {
-		return rf(ctx, registryID, repositoryURL)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string) []string); ok {
-		r0 = rf(ctx, registryID, repositoryURL)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, int64, string) error); ok {
-		r1 = rf(ctx, registryID, repositoryURL)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // UpdateArtifactMetadata provides a mock function with given fields: ctx, metadata, artifactID
 func (_m *ArtifactRepository) UpdateArtifactMetadata(ctx context.Context, metadata json.RawMessage, artifactID int64) error {
 	ret := _m.Called(ctx, metadata, artifactID)
