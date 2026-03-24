@@ -90,7 +90,7 @@ describe('Verify RepositoryActions', () => {
 
     const deleteModal = await openModalDialog()
     expect(getByText(deleteModal, 'repositoryList.deleteModal.title')).toBeInTheDocument()
-    const deleteBtn = deleteModal.querySelector('button[aria-label=delete]')
+    const deleteBtn = deleteModal.querySelector('button[aria-label="actions.deleteForce"]')
     expect(deleteBtn).toBeInTheDocument()
     const cancelBtn = deleteModal.querySelector('button[aria-label=cancel]')
     expect(cancelBtn).toBeInTheDocument()

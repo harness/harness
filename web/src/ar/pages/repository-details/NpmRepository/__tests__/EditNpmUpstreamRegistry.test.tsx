@@ -191,7 +191,8 @@ describe('Verify header section for docker artifact registry', () => {
     await userEvent.click(actionItem!)
     deleteDialog = document.getElementsByClassName('bp3-dialog')[0]
     expect(deleteDialog).toBeInTheDocument()
-    const deleteBtn = deleteDialog.querySelector('button[aria-label=delete]')
+
+    const deleteBtn = deleteDialog.querySelector('button[aria-label="actions.deleteForce"]')
     expect(deleteBtn).toBeInTheDocument()
 
     const valueField = queryByNameAttribute('value', deleteDialog as HTMLElement)
@@ -235,8 +236,7 @@ describe('Verify header section for docker artifact registry', () => {
     expect(deleteDialog).toBeInTheDocument()
     expect(deleteDialog).toHaveTextContent('repositoryList.deleteModal.title')
     expect(deleteDialog).toHaveTextContent('repositoryList.deleteModal.contentText')
-
-    const deleteBtn = deleteDialog.querySelector('button[aria-label=delete]')
+    const deleteBtn = deleteDialog.querySelector('button[aria-label="actions.deleteForce"]')
     expect(deleteBtn).toBeInTheDocument()
 
     const valueField = queryByNameAttribute('value', deleteDialog as HTMLElement)

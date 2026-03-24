@@ -76,7 +76,7 @@ describe('Verify DeleteRepositoryModal', () => {
     expect(dialog).toHaveTextContent('repositoryList.deleteModal.title')
     expect(dialog).toHaveTextContent('repositoryList.deleteModal.contentText')
 
-    const deleteBtn = dialog.querySelector('button[aria-label=delete]')
+    const deleteBtn = dialog.querySelector('button[aria-label="actions.deleteForce"]')
     expect(deleteBtn).toBeInTheDocument()
     const cancelBtn = dialog.querySelector('button[aria-label=cancel]')
     expect(cancelBtn).toBeInTheDocument()
@@ -102,7 +102,7 @@ describe('Verify DeleteRepositoryModal', () => {
     await userEvent.click(actionItem!)
     const dialog = await openModalDialog()
 
-    const deleteBtn = dialog.querySelector('button[aria-label=delete]')
+    const deleteBtn = dialog.querySelector('button[aria-label="actions.deleteForce"]')
     expect(deleteBtn).toBeInTheDocument()
     const cancelBtn = dialog.querySelector('button[aria-label=cancel]')
     expect(cancelBtn).toBeInTheDocument()
@@ -146,7 +146,7 @@ describe('Verify DeleteRepositoryModal', () => {
     await userEvent.click(actionItem!)
     const dialog = await openModalDialog()
 
-    const deleteBtn = dialog.querySelector('button[aria-label=delete]')
+    const deleteBtn = dialog.querySelector('button[aria-label="actions.deleteForce"]')
     expect(deleteBtn).toBeInTheDocument()
     const cancelBtn = dialog.querySelector('button[aria-label=cancel]')
     expect(cancelBtn).toBeInTheDocument()

@@ -24,7 +24,7 @@ import { useStrings } from '@ar/frameworks/strings'
 
 interface useRestoreDeletedVersionModalProps {
   uuid: string
-  onSuccess: () => void
+  onSuccess: (isForceDeleted: boolean) => void
 }
 export default function useRestoreDeletedVersionModal(props: useRestoreDeletedVersionModalProps) {
   const { onSuccess, uuid } = props
@@ -48,7 +48,7 @@ export default function useRestoreDeletedVersionModal(props: useRestoreDeletedVe
         })
         clear()
         showSuccess(getString('versionDetails.versionRestored'))
-        onSuccess()
+        onSuccess(false)
         closeDialog()
       } catch (e: any) {
         showError(getErrorInfoFromErrorObject(e?.error || e, true))

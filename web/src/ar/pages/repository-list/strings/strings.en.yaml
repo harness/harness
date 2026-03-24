@@ -1,7 +1,7 @@
 pageHeading: Artifact Registries
 newRepository: New Artifact Registry
 newRegistry: New Registry
-registryCount: 'Total {{count}} Registries'
+registryCount: "Total {{count}} Registries"
 artifactRegistry:
   label: Artifact Registry
   subLabel: Manage internal packages and external dependencies through a unified registry.
@@ -17,18 +17,20 @@ scope:
   orgOnly: Organization Only
   accountRecursive: Account, Organizations, and Projects
   orgRecursive: Organization and Projects
-selectLabels: '{{ $.artifactList.table.columns.tags }}'
+selectLabels: "{{ $.artifactList.table.columns.tags }}"
 compact: Compact View
 deleteModal:
-  title: '{{ $.artifactList.table.actions.deleteRepository }}'
+  title: "{{ $.artifactList.table.actions.deleteRepository }}"
   contentText: This action will delete registry and all it's images and versions. Are you absolutely sure you want to proceed?
   inputLabel: Type the registry name to confirm
   inputPlaceholder: Registry Name
 softDeleteModal:
-  title: Archive Registry
-  contentText: This action will archive registry and all it's artifacts and versions. You can still restore it from the archived list.
+  title: Delete Registry
+  contentText: This action will delete registry and all it's packages and versions. You can still restore it from the deleted list.
   inputLabel: Type the registry name or ID to confirm
   inputPlaceholder: Registry Name or ID
+  forceLabel: Permanently delete registry and all it's packages and versions.
+  forceSubText: This action will delete registry and all it's packages and versions permanently. You can not restore it back.
 restoreModal:
   title: Restore Registry
   contentText: This action will restore registry and all it's artifacts and versions.
@@ -38,13 +40,13 @@ table:
   noRepositoriesTitle: There are no registries available.
   noArchivedRepositoriesTitle: There are no archived registries.
   columns:
-    nameAndEnvironment: '{{ $.artifactList.table.columns.name }}'
+    nameAndEnvironment: "{{ $.artifactList.table.columns.name }}"
     lastModified: Last Modified
     archivedAt: Archived At
     url: URL
-    size: '{{ $.digestList.table.columns.size }}'
-    artifacts: '{{ $.artifactList.pageHeading }}'
-    upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+    size: "{{ $.digestList.table.columns.size }}"
+    artifacts: "{{ $.artifactList.pageHeading }}"
+    upstreamProxies: "{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}"
     downloads: Downloads
     type: Type
   copyUrl: Copy URL

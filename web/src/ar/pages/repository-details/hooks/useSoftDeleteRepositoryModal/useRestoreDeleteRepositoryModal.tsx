@@ -22,7 +22,7 @@ import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 
 interface useRestoreDeleteRepositoryModalProps {
-  onSuccess: () => void
+  onSuccess: (isForceDeleted: boolean) => void
   uuid: string
 }
 export default function useRestoreDeleteRepositoryModal(props: useRestoreDeleteRepositoryModalProps) {
@@ -46,7 +46,7 @@ export default function useRestoreDeleteRepositoryModal(props: useRestoreDeleteR
         })
         clear()
         showSuccess(getString('repositoryDetails.repositoryForm.repositoryRestored'))
-        onSuccess()
+        onSuccess(false)
       } catch (e: any) {
         showError(getErrorInfoFromErrorObject(e?.error || e, true))
       }

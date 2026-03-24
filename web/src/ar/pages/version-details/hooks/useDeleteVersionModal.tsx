@@ -75,6 +75,7 @@ export default function useDeleteVersionModal(props: useDeleteVersionModalProps)
         content={getString('versionDetails.deleteVersionModal.contentText')}
         placeholder={getString('versionDetails.deleteVersionModal.inputPlaceholder')}
         inputLabel={getString('versionDetails.deleteVersionModal.inputLabel')}
+        forceDelete
       />
     ),
     customButtons: <></>,

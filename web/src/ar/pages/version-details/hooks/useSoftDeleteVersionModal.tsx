@@ -21,12 +21,12 @@ import { useDeleteVersionV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useConfirmationDialog } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import DeleteModalContent from '@ar/components/Form/DeleteModalContent'
+import DeleteModalContent, { DeleteFormValues } from '@ar/components/Form/DeleteModalContent'
 
 interface useSoftDeleteVersionModalProps {
   versionKey: string
   uuid: string
-  onSuccess: () => void
+  onSuccess: (isForceDeleted: boolean) => void
 }
 export default function useSoftDeleteVersionModal(props: useSoftDeleteVersionModalProps) {
   const { onSuccess, versionKey, uuid } = props
@@ -37,17 +37,18 @@ export default function useSoftDeleteVersionModal(props: useSoftDeleteVersionMod
 
   const { mutateAsync: softDeleteVersion } = useDeleteVersionV3Mutation()
 
-  const handleSoftDeleteVersion = async (): Promise<void> => {
+  const handleSoftDeleteVersion = async (values: DeleteFormValues): Promise<void> => {
     try {
       await softDeleteVersion({
         id: uuid,
         queryParams: {
-          account_identifier: accountId as string
+          account_identifier: accountId as string,
+          force: values.force
         }
       })
       clear()
       showSuccess(getString('versionDetails.versionArchived'))
-      onSuccess()
+      onSuccess(values.force)
       closeDialog()
     } catch (e: any) {
       showError(getErrorInfoFromErrorObject(e?.error || e, true))
@@ -69,7 +70,8 @@ export default function useSoftDeleteVersionModal(props: useSoftDeleteVersionMod
         content={getString('versionDetails.softDeleteModal.contentText')}
         placeholder={getString('versionDetails.softDeleteModal.inputPlaceholder')}
         inputLabel={getString('versionDetails.softDeleteModal.inputLabel')}
-        deleteBtnText={getString('actions.softDelete')}
+        forceLabel={getString('versionDetails.softDeleteModal.forceLabel')}
+        forceSubText={getString('versionDetails.softDeleteModal.forceSubText')}
       />
     ),
     customButtons: <></>,

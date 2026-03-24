@@ -21,11 +21,11 @@ import { useDeleteRegistryV3Mutation } from '@harnessio/react-har-service-client
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import DeleteModalContent from '@ar/components/Form/DeleteModalContent'
+import DeleteModalContent, { DeleteFormValues } from '@ar/components/Form/DeleteModalContent'
 
 interface useSoftDeleteRepositoryModalProps {
   repoKey: string
-  onSuccess: () => void
+  onSuccess: (isForceDeleted: boolean) => void
   uuid: string
 }
 export default function useSoftDeleteRepositoryModal(props: useSoftDeleteRepositoryModalProps) {
@@ -38,18 +38,18 @@ export default function useSoftDeleteRepositoryModal(props: useSoftDeleteReposit
 
   const { mutateAsync: deleteRepository } = useDeleteRegistryV3Mutation()
 
-  const handleDeleteRepository = async (): Promise<void> => {
+  const handleDeleteRepository = async (values: DeleteFormValues): Promise<void> => {
     try {
       await deleteRepository({
         queryParams: {
           account_identifier: accountId as string,
-          force: false
+          force: values.force
         },
         id: uuid
       })
       clear()
       showSuccess(getString('repositoryDetails.repositoryForm.repositorySoftDeleted'))
-      onSuccess()
+      onSuccess(values.force)
     } catch (e: any) {
       showError(getErrorInfoFromErrorObject(e?.error || e, true))
     }
@@ -70,7 +70,8 @@ export default function useSoftDeleteRepositoryModal(props: useSoftDeleteReposit
         content={getString('repositoryList.softDeleteModal.contentText')}
         placeholder={getString('repositoryList.softDeleteModal.inputPlaceholder')}
         inputLabel={getString('repositoryList.softDeleteModal.inputLabel')}
-        deleteBtnText={getString('actions.softDelete')}
+        forceLabel={getString('repositoryList.softDeleteModal.forceLabel')}
+        forceSubText={getString('repositoryList.softDeleteModal.forceSubText')}
       />
     ),
     customButtons: <></>,

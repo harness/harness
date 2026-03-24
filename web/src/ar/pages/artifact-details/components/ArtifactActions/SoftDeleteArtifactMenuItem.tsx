@@ -17,7 +17,6 @@
 import React from 'react'
 import { useHistory } from 'react-router-dom'
 
-import { PageType } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
 import { useParentComponents, useRoutes } from '@ar/hooks'
@@ -28,18 +27,18 @@ import useSoftDeleteArtifactModal from '../../hooks/useDeleteArtifactModal/useSo
 import useRestoreDeletedArtifactModal from '../../hooks/useDeleteArtifactModal/useRestoreDeletedArtifactModal'
 
 export default function SoftDeleteArtifactMenuItem(props: ArtifactActionProps): JSX.Element {
-  const { artifactKey, repoKey, readonly, onClose, data, pageType } = props
+  const { artifactKey, repoKey, readonly, onClose, data } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
   const history = useHistory()
   const routes = useRoutes()
 
-  const handleAfterDeleteRepository = (): void => {
+  const handleAfterDeleteRepository = (isForceDeleted: boolean): void => {
     onClose?.()
     queryClient.invalidateQueries(['GetAllArtifactsByRegistry'])
     queryClient.invalidateQueries(['ListPackages'])
     queryClient.invalidateQueries(['GetArtifactSummary'])
-    if (pageType === PageType.Table) {
+    if (isForceDeleted) {
       history.push(
         routes.toARRepositoryDetails({
           repositoryIdentifier: repoKey
@@ -80,8 +79,8 @@ export default function SoftDeleteArtifactMenuItem(props: ArtifactActionProps): 
       )}
       {!isDeleted && (
         <RbacMenuItem
-          icon="archive"
-          text={getString('artifactList.table.actions.archivePackage')}
+          icon="code-delete"
+          text={getString('actions.delete')}
           onClick={triggerSoftDelete}
           disabled={readonly}
           permission={{

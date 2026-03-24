@@ -12,10 +12,12 @@ deleteModal:
   inputLabel: Type the package name to confirm
   inputPlaceholder: Package Name
 softDeleteModal:
-  title: Archive Package
-  contentText: This action will archive package and all it's versions. You can still restore it from the archived list.
+  title: Delete Package
+  contentText: This action will delete package and all it's versions. You can still restore it from the deleted list.
   inputLabel: Type the package name to confirm
   inputPlaceholder: Package Name
+  forceLabel: Permanently delete package and all it's versions.
+  forceSubText: This action will delete package and all it's versions permanently. You can not restore it back.
 restoreModal:
   title: Restore Package
   contentText: This action will restore package and all it's versions.

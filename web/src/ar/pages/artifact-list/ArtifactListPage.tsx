@@ -209,7 +209,7 @@ function ArtifactListPage(): JSX.Element {
             />
             <ButtonTab
               id={SoftDeleteFilterEnum.ONLY}
-              title={getString('archived', { count: responseData?.meta?.deletedCount ?? 0 })}
+              title={getString('deleted', { count: responseData?.meta?.deletedCount ?? 0 })}
             />
           </ButtonTabs>
         </Container>

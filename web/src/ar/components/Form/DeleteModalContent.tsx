@@ -22,15 +22,21 @@ import { Button, ButtonVariation, Container, FormInput, Layout, Text } from '@ha
 
 import { useStrings } from '@ar/frameworks/strings'
 
+export interface DeleteFormValues {
+  value: string
+  force: boolean
+}
 interface DeleteModalContentProps {
   entity: string
   value: string
-  onSubmit: () => void
+  onSubmit: (values: DeleteFormValues) => void
   onClose: () => void
   content: string
   placeholder: string
   inputLabel: string
-  deleteBtnText?: string
+  forceLabel?: string
+  forceSubText?: string
+  forceDelete?: boolean
 }
 
 function DeleteModalContent({
@@ -41,7 +47,9 @@ function DeleteModalContent({
   content,
   placeholder,
   inputLabel,
-  deleteBtnText
+  forceLabel,
+  forceSubText,
+  forceDelete
 }: DeleteModalContentProps) {
   const { getString } = useStrings()
 
@@ -49,8 +57,8 @@ function DeleteModalContent({
   const finalLabel = `${inputLabel} (${value})`
 
   return (
-    <Formik
-      initialValues={{ value: '' }}
+    <Formik<DeleteFormValues>
+      initialValues={{ value: '', force: forceDelete ?? false }}
       onSubmit={onSubmit}
       validationSchema={object({
         value: string().required(getString('validationMessages.required')).oneOf(
@@ -63,15 +71,17 @@ function DeleteModalContent({
       })}>
       {formik => (
         <Container>
-          <Layout.Vertical spacing="medium">
-            <Text>{content}</Text>
+          <Layout.Vertical spacing="small">
+            <Text margin={{ bottom: 'medium' }}>{content}</Text>
             <FormInput.Text label={finalLabel} name="value" placeholder={placeholder} intent={Intent.PRIMARY} />
+            {forceLabel && <FormInput.CheckBox label={forceLabel} name="force" />}
+            {formik.values.force && forceSubText && <Text>{forceSubText}</Text>}
           </Layout.Vertical>
           <Layout.Horizontal spacing="medium" margin={{ top: 'large' }}>
             <Button
               variation={ButtonVariation.PRIMARY}
               intent="danger"
-              text={deleteBtnText || getString('delete')}
+              text={formik.values.force ? getString('actions.deleteForce') : getString('delete')}
               onClick={formik.submitForm}
             />
             <Button variation={ButtonVariation.SECONDARY} text={getString('cancel')} onClick={onClose} />

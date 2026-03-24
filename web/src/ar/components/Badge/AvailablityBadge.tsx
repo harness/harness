@@ -32,7 +32,7 @@ interface AvailablityBadgeProps {
 
 function ArchivedBadge() {
   const { getString } = useStrings()
-  return <Badge className={css.archivedBadge}>{getString('status.archived')}</Badge>
+  return <Badge className={css.archivedBadge}>{getString('status.deleted')}</Badge>
 }
 
 export default function AvailablityBadge(props: AvailablityBadgeProps): JSX.Element {

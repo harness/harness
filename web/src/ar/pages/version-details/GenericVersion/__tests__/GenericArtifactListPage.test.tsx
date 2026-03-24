@@ -335,7 +335,7 @@ describe('Test Registry Artifact List Page', () => {
     expect(globalGetByText(deleteDialog, 'artifactDetails.deleteArtifactModal.title')).toBeInTheDocument()
     expect(globalGetByText(deleteDialog, 'artifactDetails.deleteArtifactModal.contentText')).toBeInTheDocument()
 
-    const deleteBtn = deleteDialog.querySelector('button[aria-label=delete]')
+    const deleteBtn = deleteDialog.querySelector('button[aria-label="actions.deleteForce"]')
     const cancelBtn = deleteDialog.querySelector('button[aria-label=cancel]')
     expect(deleteBtn).toBeInTheDocument()
     expect(cancelBtn).toBeInTheDocument()

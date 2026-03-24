@@ -34,6 +34,7 @@ export default function RepositoryActions({
   const [open, setOpen] = useState(false)
   const allowSoftDelete = useAllowSoftDelete()
   const isDeleted = !!data.deletedAt
+  const allowDeletePermanently = allowSoftDelete ? isDeleted : true
 
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
@@ -45,7 +46,9 @@ export default function RepositoryActions({
           onClose={() => setOpen(false)}
         />
       )}
-      <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      {allowDeletePermanently && (
+        <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      )}
       {!isDeleted && pageType === PageType.Table && (
         <SetupClientMenuItem
           data={data}

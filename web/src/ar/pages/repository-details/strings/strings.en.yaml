@@ -24,7 +24,7 @@ repositoryForm:
   upstreamProxiesTitle: Upstream Proxies
   upstreamProxiesSubTitle: Connect to upstream package sources to automatically download and cache external dependencies for your builds.
   upstreamProxiesSubTitleWithLocalSupport: Connect to other artifact registry or upstream package sources to automatically download and cache external dependencies for your builds.
-  upstreamProxiesSubTitleWithLocalSupportNote: 'Note: Upstream proxies within the other artifact registries are not included.'
+  upstreamProxiesSubTitleWithLocalSupportNote: "Note: Upstream proxies within the other artifact registries are not included."
   newUpstreamProxy: New Upstream Proxy
   cleanupPoliciesTitle: Cleanup Policies
   cleanupPoliciesSubTitle: Setup periodic cleanup of registries limiting them by days and character patterns
@@ -41,7 +41,7 @@ repositoryForm:
   repositoryUpdated: Registry updated successfully
   repositoryDeleted: Registry deleted successfully
   repositoryRestored: Registry restored successfully
-  repositorySoftDeleted: Registry archived successfully
+  repositorySoftDeleted: Registry deleted successfully
   securityScan:
     title: Security
     containerScannerSelect:
@@ -61,7 +61,7 @@ repositoryForm:
     privateDescription: You can manage who can access this registry
 tabs:
   configuration: Configuration
-  packages: '{{ $.artifactList.pageHeading }}'
+  packages: "{{ $.artifactList.pageHeading }}"
   files: Files
   datasets: Datasets
   models: Models
@@ -75,7 +75,7 @@ upstreamProxiesSelectList:
     note:
       label: Note
       message: Proxies are queried by the ordered list below.
-  newUpstreamProxyLabel: '{{ $.repositoryDetails.repositoryForm.newUpstreamProxy }}'
+  newUpstreamProxyLabel: "{{ $.repositoryDetails.repositoryForm.newUpstreamProxy }}"
   addUpstreamProxies: Configure Upstream
 clientSetup:
   done: Done

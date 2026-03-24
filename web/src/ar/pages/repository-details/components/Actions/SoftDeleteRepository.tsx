@@ -22,22 +22,21 @@ import { useStrings } from '@ar/frameworks/strings'
 import { useParentComponents, useRoutes } from '@ar/hooks'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
-import { PageType } from '@ar/common/types'
 import type { RepositoryActionsProps } from './types'
 import useSoftDeleteRepositoryModal from '../../hooks/useSoftDeleteRepositoryModal/useSoftDeleteRepositoryModal'
 import useRestoreDeleteRepositoryModal from '../../hooks/useSoftDeleteRepositoryModal/useRestoreDeleteRepositoryModal'
 
-export default function SoftDeleteRepositoryMenuItem({ data, onClose, pageType }: RepositoryActionsProps): JSX.Element {
+export default function SoftDeleteRepositoryMenuItem({ data, onClose }: RepositoryActionsProps): JSX.Element {
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
   const history = useHistory()
   const routes = useRoutes()
 
-  const handleAfterDeleteRepository = (): void => {
+  const handleAfterDeleteRepository = (isForceDeleted: boolean): void => {
     queryClient.invalidateQueries(['ListRegistries'])
     queryClient.invalidateQueries(['GetRegistry'])
     onClose?.()
-    if (pageType === PageType.Table) {
+    if (isForceDeleted) {
       history.push(routes.toARRepositories())
     }
   }
@@ -72,8 +71,8 @@ export default function SoftDeleteRepositoryMenuItem({ data, onClose, pageType }
       )}
       {!isDeleted && (
         <RbacMenuItem
-          icon="archive"
-          text={getString('actions.softDelete')}
+          icon="code-delete"
+          text={getString('actions.delete')}
           onClick={triggerDelete}
           permission={{
             resource: {

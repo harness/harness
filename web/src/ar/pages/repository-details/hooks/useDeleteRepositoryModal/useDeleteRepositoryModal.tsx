@@ -66,6 +66,7 @@ export default function useDeleteRepositoryModal(props: useDeleteRepositoryModal
         content={getString('repositoryList.deleteModal.contentText')}
         placeholder={getString('repositoryList.deleteModal.inputPlaceholder')}
         inputLabel={getString('repositoryList.deleteModal.inputLabel')}
+        forceDelete
       />
     ),
     customButtons: <></>,

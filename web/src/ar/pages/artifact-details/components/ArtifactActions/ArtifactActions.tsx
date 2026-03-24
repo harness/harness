@@ -42,6 +42,7 @@ export default function ArtifactActions({
     ![RepositoryPackageType.DOCKER, RepositoryPackageType.HELM].includes(data.packageType as RepositoryPackageType)
   const allowSoftDelete = useAllowSoftDelete()
   const isDeleted = !!data.deletedAt
+  const allowDeletePermanently = allowSoftDelete ? isDeleted : true
 
   const isSupportedAction = (action: ArtifactActionsEnum) => {
     if (!allowedActions) {
@@ -66,17 +67,19 @@ export default function ArtifactActions({
               }}
             />
           )}
-          <DeleteArtifactMenuItem
-            artifactKey={artifactKey}
-            repoKey={repoKey}
-            data={data}
-            pageType={pageType}
-            readonly={readonly}
-            onClose={() => {
-              setOpen(false)
-              onClose?.()
-            }}
-          />
+          {allowDeletePermanently && (
+            <DeleteArtifactMenuItem
+              artifactKey={artifactKey}
+              repoKey={repoKey}
+              data={data}
+              pageType={pageType}
+              readonly={readonly}
+              onClose={() => {
+                setOpen(false)
+                onClose?.()
+              }}
+            />
+          )}
         </>
       )}
       {!isDeleted && pageType === PageType.Table && isSupportedAction(ArtifactActionsEnum.SetupClient) && (

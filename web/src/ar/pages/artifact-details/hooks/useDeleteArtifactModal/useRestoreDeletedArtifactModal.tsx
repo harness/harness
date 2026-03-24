@@ -22,7 +22,7 @@ import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 
 interface useRestoreDeletedArtifactModalProps {
-  onSuccess: () => void
+  onSuccess: (isForceDeleted: boolean) => void
   uuid: string
 }
 export default function useRestoreDeletedArtifactModal(props: useRestoreDeletedArtifactModalProps) {
@@ -46,7 +46,7 @@ export default function useRestoreDeletedArtifactModal(props: useRestoreDeletedA
         })
         clear()
         showSuccess(getString('artifactDetails.packageArchived'))
-        onSuccess()
+        onSuccess(false)
       } catch (e: any) {
         showError(getErrorInfoFromErrorObject(e?.error || e, true))
       }

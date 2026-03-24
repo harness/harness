@@ -33,6 +33,8 @@ export default function UpstreamProxyActions({
 }: UpstreamProxyActionProps): JSX.Element {
   const [open, setOpen] = useState(false)
   const allowSoftDelete = useAllowSoftDelete()
+  const isDeleted = !!data.deletedAt
+  const allowDeletePermanently = allowSoftDelete ? isDeleted : true
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
       {allowSoftDelete && (
@@ -43,7 +45,9 @@ export default function UpstreamProxyActions({
           onClose={() => setOpen(false)}
         />
       )}
-      <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      {allowDeletePermanently && (
+        <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      )}
       {pageType === PageType.Table && (
         <SetupClientMenuItem
           data={data}

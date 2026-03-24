@@ -21,11 +21,11 @@ import { useDeletePackageV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import DeleteModalContent from '@ar/components/Form/DeleteModalContent'
+import DeleteModalContent, { DeleteFormValues } from '@ar/components/Form/DeleteModalContent'
 
 interface useSoftDeleteArtifactModalProps {
   artifactKey: string
-  onSuccess: () => void
+  onSuccess: (isForceDeleted: boolean) => void
   uuid: string
 }
 export default function useSoftDeleteArtifactModal(props: useSoftDeleteArtifactModalProps) {
@@ -38,18 +38,18 @@ export default function useSoftDeleteArtifactModal(props: useSoftDeleteArtifactM
 
   const { mutateAsync: softDeleteArtifact } = useDeletePackageV3Mutation()
 
-  const handleSoftDeleteArtifact = async (): Promise<void> => {
+  const handleSoftDeleteArtifact = async (values: DeleteFormValues): Promise<void> => {
     try {
       await softDeleteArtifact({
         queryParams: {
           account_identifier: accountId as string,
-          force: false
+          force: values.force
         },
         id: uuid
       })
       clear()
       showSuccess(getString('artifactDetails.packageArchived'))
-      onSuccess()
+      onSuccess(values.force)
     } catch (e: any) {
       showError(getErrorInfoFromErrorObject(e?.error || e, true))
     }
@@ -70,7 +70,8 @@ export default function useSoftDeleteArtifactModal(props: useSoftDeleteArtifactM
         content={getString('artifactDetails.softDeleteModal.contentText')}
         placeholder={getString('artifactDetails.softDeleteModal.inputPlaceholder')}
         inputLabel={getString('artifactDetails.softDeleteModal.inputLabel')}
-        deleteBtnText={getString('actions.softDelete')}
+        forceLabel={getString('artifactDetails.softDeleteModal.forceLabel')}
+        forceSubText={getString('artifactDetails.softDeleteModal.forceSubText')}
       />
     ),
     customButtons: <></>,

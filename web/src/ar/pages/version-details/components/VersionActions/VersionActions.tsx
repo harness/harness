@@ -60,6 +60,7 @@ export default function VersionActions({
   const isFirewallEnabled = data.firewallMode ? data.firewallMode !== 'ALLOW' : false
   const allowReEvaluate = HAR_DEPENDENCY_FIREWALL && isFirewallEnabled && repoType === RepositoryConfigType.UPSTREAM
   const isDeleted = !!data.deletedAt
+  const allowDeletePermanently = allowSoftDelete ? isDeleted : true
 
   const isAllowed = (action: VersionAction): boolean => {
     if (!allowedActions) return true
@@ -86,18 +87,20 @@ export default function VersionActions({
               }}
             />
           )}
-          <DeleteVersionMenuItem
-            artifactKey={artifactKey}
-            repoKey={repoKey}
-            versionKey={versionKey}
-            data={data}
-            pageType={pageType}
-            readonly={readonly}
-            onClose={() => {
-              setOpen(false)
-              onClose?.()
-            }}
-          />
+          {allowDeletePermanently && (
+            <DeleteVersionMenuItem
+              artifactKey={artifactKey}
+              repoKey={repoKey}
+              versionKey={versionKey}
+              data={data}
+              pageType={pageType}
+              readonly={readonly}
+              onClose={() => {
+                setOpen(false)
+                onClose?.()
+              }}
+            />
+          )}
         </>
       )}
       {!isDeleted && isAllowed(VersionAction.SetupClient) && (

@@ -26,6 +26,8 @@ export interface StringsMap {
   'artifactDetails.restoreModal.inputPlaceholder': string
   'artifactDetails.restoreModal.title': string
   'artifactDetails.softDeleteModal.contentText': string
+  'artifactDetails.softDeleteModal.forceLabel': string
+  'artifactDetails.softDeleteModal.forceSubText': string
   'artifactDetails.softDeleteModal.inputLabel': string
   'artifactDetails.softDeleteModal.inputPlaceholder': string
   'artifactDetails.softDeleteModal.title': string
@@ -214,6 +216,8 @@ export interface StringsMap {
   'repositoryList.selectRegistryType': string
   'repositoryList.selectScope': string
   'repositoryList.softDeleteModal.contentText': string
+  'repositoryList.softDeleteModal.forceLabel': string
+  'repositoryList.softDeleteModal.forceSubText': string
   'repositoryList.softDeleteModal.inputLabel': string
   'repositoryList.softDeleteModal.inputPlaceholder': string
   'repositoryList.softDeleteModal.title': string
@@ -405,6 +409,8 @@ export interface StringsMap {
   'versionDetails.securityTests.tabs.vulnerabilities': string
   'versionDetails.selectDigestPlaceholder': string
   'versionDetails.softDeleteModal.contentText': string
+  'versionDetails.softDeleteModal.forceLabel': string
+  'versionDetails.softDeleteModal.forceSubText': string
   'versionDetails.softDeleteModal.inputLabel': string
   'versionDetails.softDeleteModal.inputPlaceholder': string
   'versionDetails.softDeleteModal.title': string
@@ -543,6 +549,7 @@ export interface StringsMap {
   'webhookList.webhookUpdated': string
   'actions.copyCommand': string
   'actions.delete': string
+  'actions.deleteForce': string
   'actions.edit': string
   'actions.executions': string
   'actions.quarantine': string
@@ -679,6 +686,7 @@ export interface StringsMap {
   'status.archived': string
   'status.available': string
   'status.blocked': string
+  'status.deleted': string
   'status.passed': string
   'status.warning': string
   stepNotFound: string

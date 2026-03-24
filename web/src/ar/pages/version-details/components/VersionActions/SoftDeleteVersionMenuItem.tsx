@@ -24,17 +24,23 @@ import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import type { VersionActionProps } from './types'
 import useSoftDeleteVersionModal from '../../hooks/useSoftDeleteVersionModal'
 import useRestoreDeletedVersionModal from '../../hooks/useRestoreDeletedVersionModal'
+import { useUtilsForDeleteVersion } from '../../hooks/useUtilsForDeleteVersion'
 
 export default function SoftDeleteVersionMenuItem(props: VersionActionProps): JSX.Element {
-  const { artifactKey, readonly, onClose, versionKey, data } = props
+  const { artifactKey, readonly, onClose, versionKey, data, pageType } = props
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
 
-  const handleAfterDeleteVersion = () => {
+  const { handleRedirectAfterDeleteVersion } = useUtilsForDeleteVersion()
+
+  const handleAfterDeleteVersion = (isForceDeleted: boolean) => {
     queryClient.invalidateQueries(['ListArtifacts'])
     queryClient.invalidateQueries(['ListVersions'])
     queryClient.invalidateQueries(['GetArtifactVersionSummary'])
     onClose?.()
+    if (isForceDeleted) {
+      handleRedirectAfterDeleteVersion(pageType)
+    }
   }
 
   const { triggerSoftDelete } = useSoftDeleteVersionModal({
@@ -69,8 +75,8 @@ export default function SoftDeleteVersionMenuItem(props: VersionActionProps): JS
       )}
       {!isDeleted && (
         <RbacMenuItem
-          icon="archive"
-          text={getString('versionList.actions.archiveVersion')}
+          icon="code-delete"
+          text={getString('actions.delete')}
           onClick={triggerSoftDelete}
           disabled={readonly}
           permission={{
