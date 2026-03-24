@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/paths"
@@ -40,6 +41,10 @@ func (c *Controller) UpdatePublicAccess(
 	repoCore, err := c.getRepoCheckAccessWithLinked(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
+	}
+
+	if repoCore.ForkID != 0 && in.IsPublic {
+		return nil, usererror.BadRequest("It is not allowed to make a fork repository public.")
 	}
 
 	parentPath, _, err := paths.DisectLeaf(repoCore.Path)

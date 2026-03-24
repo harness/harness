@@ -42,7 +42,6 @@ type CreateForkInput struct {
 	ParentRef  string `json:"parent_ref"`
 	Identifier string `json:"identifier"`
 	ForkBranch string `json:"fork_branch"`
-	IsPublic   *bool  `json:"is_public"`
 }
 
 func (in *CreateForkInput) sanitize() error {
@@ -95,39 +94,6 @@ func (c *Controller) CreateFork(
 		return nil, err
 	}
 
-	isUpstreamPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repoUpstream.Path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get repo public access: %w", err)
-	}
-
-	var isForkPublic bool
-
-	if in.IsPublic == nil {
-		isForkPublic = isUpstreamPublic
-	} else {
-		isForkPublic = *in.IsPublic
-	}
-
-	if isForkPublic {
-		if !isUpstreamPublic {
-			return nil, errors.InvalidArgument("Can not create a public fork from a private repository.")
-		}
-
-		isPublicAccessSupported, err := c.publicAccess.
-			IsPublicAccessSupported(ctx, enum.PublicResourceTypeRepo, parentSpace.Path)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to check if public access is supported for parent space %q: %w",
-				parentSpace.Path,
-				err,
-			)
-		}
-
-		if !isPublicAccessSupported {
-			return nil, errPublicRepoCreationDisabled
-		}
-	}
-
 	defaultBranch := repoUpstream.DefaultBranch
 
 	if in.ForkBranch != "" && repoUpstream.DefaultBranch != in.ForkBranch {
@@ -145,6 +111,8 @@ func (c *Controller) CreateFork(
 
 		defaultBranch = in.ForkBranch
 	}
+
+	const isForkPublic = false
 
 	err = c.repoCheck.Create(ctx, session, &CheckInput{
 		ParentRef:         parentSpace.Path,
