@@ -36,13 +36,17 @@ func (m *ImageStore) Get(ctx context.Context, id int64) (*types.Image, error) {
 	return r0, r1
 }
 
-// GetByName provides a mock function with given fields: ctx, registryID, name
-func (m *ImageStore) GetByName(ctx context.Context, registryID int64, name string) (*types.Image, error) {
-	ret := m.Called(ctx, registryID, name)
+// GetByName provides a mock function with given fields: ctx, registryID, name, opts
+func (m *ImageStore) GetByName(ctx context.Context, registryID int64, name string, opts ...types.QueryOption) (*types.Image, error) {
+	args := []interface{}{ctx, registryID, name}
+	for _, opt := range opts {
+		args = append(args, opt)
+	}
+	ret := m.Called(args...)
 
 	var r0 *types.Image
-	if rf, ok := ret.Get(0).(func(context.Context, int64, string) *types.Image); ok {
-		r0 = rf(ctx, registryID, name)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string, ...types.QueryOption) *types.Image); ok {
+		r0 = rf(ctx, registryID, name, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*types.Image)
@@ -50,8 +54,8 @@ func (m *ImageStore) GetByName(ctx context.Context, registryID int64, name strin
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int64, string) error); ok {
-		r1 = rf(ctx, registryID, name)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, string, ...types.QueryOption) error); ok {
+		r1 = rf(ctx, registryID, name, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}

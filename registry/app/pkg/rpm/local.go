@@ -85,7 +85,7 @@ func (c *localRegistry) UploadPackageFile(
 	ctx context.Context,
 	info rpmtype.ArtifactInfo,
 	file io.Reader,
-	fileName string,
+	_ string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
 	return c.registryHelper.UploadPackage(ctx, info, file)
 }
@@ -108,5 +108,5 @@ func (c *localRegistry) DownloadPackageFile(
 	ctx context.Context,
 	info rpmtype.ArtifactInfo,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
-	return downloadPackageFile(ctx, info, c.localBase)
+	return downloadPackageFile(ctx, info, c.localBase, c.artifactDao)
 }

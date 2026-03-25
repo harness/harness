@@ -195,11 +195,10 @@ func PackageHandlerProvider(
 }
 
 // ProvideUntaggedImagesEnabled provides a function for checking untagged images feature.
-// Gitness (standalone) doesn't have feature flags, so this defaults to false.
 // The harness-code registry-server uses a different provider that checks actual feature flags.
 func ProvideUntaggedImagesEnabled() func(ctx context.Context) bool {
 	return func(_ context.Context) bool {
-		return false // Gitness standalone defaults to tag-based mode
+		return true
 	}
 }
 

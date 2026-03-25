@@ -27,7 +27,10 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/types/rpm"
 	"github.com/harness/gitness/registry/app/storage"
+	"github.com/harness/gitness/registry/app/store"
 	rpmutil "github.com/harness/gitness/registry/app/utils/rpm"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Registry interface {
@@ -60,6 +63,7 @@ func downloadPackageFile(
 	ctx context.Context,
 	info rpm.ArtifactInfo,
 	localBase base.LocalBase,
+	artifactDao store.ArtifactRepository,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
 	var versionWithArch = info.Version
 	var epoch string
@@ -76,6 +80,13 @@ func downloadPackageFile(
 		return nil, nil, nil, "", fmt.Errorf("invalid version: %s", info.Version)
 	}
 	version = versionWithArch[:lastDotIndex]
+
+	// Check artifact exists and is NOT soft-deleted (LOCAL registry check)
+	_, err := artifactDao.GetByRegistryImageAndVersion(ctx, info.RegistryID, info.Image, info.Version)
+	if err != nil {
+		log.Ctx(ctx).Debug().Err(err).Msg("Artifact not found or soft-deleted in local registry")
+		return nil, nil, nil, "", fmt.Errorf("artifact not found or deleted: %w", err)
+	}
 
 	if epoch != "" {
 		versionPath = version + "/" + info.Arch + "/" + epoch

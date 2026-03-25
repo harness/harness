@@ -17,6 +17,7 @@ package python
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"sort"
@@ -95,6 +96,13 @@ func (c *localRegistry) DownloadPackageFile(
 	ctx context.Context,
 	info pythontype.ArtifactInfo,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	// Check artifact exists and is NOT soft-deleted (LOCAL registry check)
+	_, err := c.artifactDao.GetByRegistryImageAndVersion(ctx, info.RegistryID, info.Image, info.Version)
+	if err != nil {
+		log.Ctx(ctx).Debug().Err(err).Msg("Artifact not found or soft-deleted in local registry")
+		return nil, nil, nil, "", fmt.Errorf("artifact not found or deleted: %w", err)
+	}
+
 	headers, fileReader, redirectURL, err := c.localBase.Download(ctx, info.ArtifactInfo, info.Version,
 		info.Filename)
 	if err != nil {

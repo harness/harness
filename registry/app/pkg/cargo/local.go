@@ -36,6 +36,8 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
+
+	"github.com/rs/zerolog/log"
 )
 
 var _ pkg.Artifact = (*localRegistry)(nil)
@@ -164,6 +166,14 @@ func (c *localRegistry) DownloadPackageIndex(
 func (c *localRegistry) DownloadPackage(
 	ctx context.Context, info cargotype.ArtifactInfo,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	// Check artifact exists and is NOT soft-deleted (LOCAL registry check)
+	_, err := c.artifactDao.GetByRegistryImageAndVersion(ctx, info.RegistryID, info.Image, info.Version)
+	if err != nil {
+		log.Ctx(ctx).Debug().Err(err).Msg("Artifact not found or soft-deleted")
+		return &commons.ResponseHeaders{Headers: make(map[string]string), Code: 0}, nil, nil, "",
+			fmt.Errorf("artifact not found or deleted: %w", err)
+	}
+
 	path := getCrateFilePath(info.Image, info.Version)
 	response, fileReader, redirectURL, err := c.downloadFileInternal(ctx, info, path)
 	if err != nil {

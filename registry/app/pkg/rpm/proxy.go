@@ -102,7 +102,7 @@ func (r *proxy) DownloadPackageFile(
 	ctx context.Context,
 	info rpmtype.ArtifactInfo,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
-	headers, fileReader, readcloser, redirect, err := downloadPackageFile(ctx, info, r.localBase)
+	headers, fileReader, readcloser, redirect, err := downloadPackageFile(ctx, info, r.localBase, r.artifactDao)
 	if err == nil {
 		return headers, fileReader, readcloser, redirect, err
 	}

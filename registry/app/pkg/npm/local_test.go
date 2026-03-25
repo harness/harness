@@ -619,7 +619,8 @@ func TestHeadAndDownloadAndDeleteDelegation(t *testing.T) {
 		deletePackage: func(context.Context, pkg.PackageArtifactInfo) error { return nil },
 		deleteVersion: func(context.Context, pkg.PackageArtifactInfo) error { return nil },
 	}
-	lr := newLocalForTests(lb, nil, nil, nil, nil)
+	artDAO := &mockArtifactDAO{}
+	lr := newLocalForTests(lb, nil, nil, artDAO, nil)
 
 	ok, err := lr.HeadPackageMetadata(ctx, info)
 	assert.NoError(t, err)

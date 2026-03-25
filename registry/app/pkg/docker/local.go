@@ -555,6 +555,23 @@ func (r *LocalRegistry) ManifestExist(
 		}
 		return responseHeaders, descriptor, manifestResult, errs
 	}
+
+	// Check if artifact (manifest version) is soft-deleted
+	// Docker manifests are stored as artifacts with version = digest (in Harness internal format)
+	// Need to convert OCI digest format (sha256:abc...) to Harness format (01abc...)
+	harnessDigest, err := types.NewDigest(d)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msg("Failed to convert digest to Harness format")
+		errs = append(errs, errcode.ErrCodeManifestUnknown)
+		return responseHeaders, descriptor, nil, errs
+	}
+
+	_, err = r.artifactDao.GetByRegistryImageAndVersion(ctx, artInfo.RegistryID, artInfo.Image, harnessDigest.String())
+	if err != nil {
+		log.Ctx(ctx).Debug().Err(err).Msg("Artifact not found or soft-deleted in local registry")
+		errs = append(errs, errcode.ErrCodeManifestUnknown)
+		return responseHeaders, descriptor, nil, errs
+	}
 	// determine the type of the returned manifest
 	manifestType := manifestSchema2
 	manifestList, isManifestList := manifestResult.(*manifestlist.DeserializedManifestList)

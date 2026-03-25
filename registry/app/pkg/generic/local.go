@@ -111,6 +111,16 @@ func (c *localRegistry) DownloadFile(
 	info generic.ArtifactInfo,
 	filePath string,
 ) (*commons.ResponseHeaders, *storage.FileReader, io.ReadCloser, string, error) {
+	// Check artifact exists and is NOT soft-deleted (LOCAL registry check)
+	// Only check version if it's provided
+	if info.Version != "" {
+		_, err := c.artifactDao.GetByRegistryImageAndVersion(ctx, info.RegistryID, info.Image, info.Version)
+		if err != nil {
+			log.Ctx(ctx).Debug().Err(err).Msg("Artifact not found or soft-deleted in local registry")
+			return nil, nil, nil, "", fmt.Errorf("artifact not found or deleted: %w", err)
+		}
+	}
+
 	// For non-GENERIC package types, use raw file download
 	if info.Registry.PackageType != artifact.PackageTypeGENERIC {
 		return c.downloadRawFile(ctx, info, filePath)

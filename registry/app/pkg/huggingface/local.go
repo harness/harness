@@ -476,6 +476,14 @@ func (c *localRegistry) HeadFile(ctx context.Context, info huggingfacetype.Artif
 func (c *localRegistry) DownloadFile(ctx context.Context, info huggingfacetype.ArtifactInfo, fileName string) (
 	headers *commons.ResponseHeaders, body *storage.FileReader, redirectURL string, err error,
 ) {
+	// Check artifact exists and is NOT soft-deleted (LOCAL registry check)
+	// For HuggingFace, use Revision as version
+	_, err = c.artifactDao.GetByRegistryImageAndVersion(ctx, info.RegistryID, info.Repo, info.Revision)
+	if err != nil {
+		log.Ctx(ctx).Debug().Err(err).Msg("Artifact not found or soft-deleted in local registry")
+		return nil, nil, "", fmt.Errorf("artifact not found or deleted: %w", err)
+	}
+
 	headers, err = c.HeadFile(ctx, info, fileName)
 	if err != nil {
 		return headers, nil, "", err
