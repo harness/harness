@@ -138,6 +138,16 @@ export const UpstreamProxyPackageTypeList: UpstreamRepositoryPackageTypeListItem
     parent: Parent.Enterprise
   },
   {
+    label: 'repositoryTypes.swift',
+    value: UpstreamProxyPackageType.SWIFT,
+    icon: 'swift-logo',
+    parent: Parent.Enterprise,
+    featureFlag: FeatureFlags.HAR_SWIFT_PACKAGE,
+    disabled: true,
+    tooltip: 'Coming Soon!',
+    tag: ThumbnailTagEnum.ComingSoon
+  },
+  {
     label: 'repositoryTypes.debian',
     value: UpstreamProxyPackageType.DEBIAN,
     icon: 'debian-logo',

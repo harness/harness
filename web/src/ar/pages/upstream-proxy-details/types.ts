@@ -34,7 +34,8 @@ export enum UpstreamProxyPackageType {
   HUGGINGFACE = 'HUGGINGFACE',
   CONDA = 'CONDA',
   DART = 'DART',
-  COMPOSER = 'COMPOSER'
+  COMPOSER = 'COMPOSER',
+  SWIFT = 'SWIFT'
 }
 
 export enum UpstreamRepositoryURLInputSource {

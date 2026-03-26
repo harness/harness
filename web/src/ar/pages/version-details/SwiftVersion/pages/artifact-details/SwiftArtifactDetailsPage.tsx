@@ -26,7 +26,8 @@ import ReadmeFileContent from '@ar/pages/version-details/components/ReadmeFileCo
 import ArtifactFilesContent from '@ar/pages/version-details/components/ArtifactFileListTable/ArtifactFilesContent'
 
 import SwiftVersionDependencyContent from './SwiftVersionDependencyContent'
-import { SwiftArtifactDetails, SwiftArtifactDetailsTabEnum, type SwiftVersionDetailsQueryParams } from '../../types'
+import type { SwiftArtifactDetails, SwiftVersionDetailsQueryParams } from '../../types'
+import { SwiftArtifactDetailsTabEnum } from '../../types'
 
 export default function SwiftArtifactDetailsPage() {
   const { getString } = useStrings()

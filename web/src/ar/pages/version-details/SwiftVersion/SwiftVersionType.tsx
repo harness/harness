@@ -61,7 +61,6 @@ export class SwiftVersionType extends VersionStep<ArtifactVersionSummary> {
     [VersionListColumnEnum.Size]: { width: '100%' },
     [VersionListColumnEnum.FileCount]: { width: '100%' },
     [VersionListColumnEnum.DownloadCount]: { width: '100%' },
-    [VersionListColumnEnum.PullCommand]: { width: '100%' },
     [VersionListColumnEnum.LastModified]: { width: '100%' },
     [VersionListColumnEnum.Actions]: { width: '30%' }
   }
