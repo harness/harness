@@ -248,6 +248,12 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*core.S
 // stage has already been loaded from the database. It uses a two-step
 // approach to ensure the stage is always persisted even if teardown fails:
 func (m *Manager) handleDetailsError(ctx context.Context, stage *core.Stage, err error) (*Context, error) {
+	logrus.WithFields(logrus.Fields{
+		"stage.id":      stage.ID,
+		"stage.version": stage.Version,
+		"error":         err,
+	}).Warnln("manager: details failed, marking stage as error")
+
 	stage.Status = core.StatusError
 	stage.Error = err.Error()
 	stage.Stopped = time.Now().Unix()
@@ -259,6 +265,7 @@ func (m *Manager) handleDetailsError(ctx context.Context, stage *core.Stage, err
 	if dbErr := m.Stages.Update(noContext, stage); dbErr != nil {
 		logrus.WithError(dbErr).
 			WithField("stage.id", stage.ID).
+			WithField("stage.version", stage.Version).
 			Warnln("manager: failed to mark stage as error after details failure")
 	}
 
