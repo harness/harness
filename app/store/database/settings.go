@@ -205,3 +205,56 @@ func (s *SettingsStore) Upsert(ctx context.Context,
 
 	return nil
 }
+
+func (s *SettingsStore) Delete(
+	ctx context.Context,
+	scope enum.SettingsScope,
+	scopeID int64,
+	key string,
+) error {
+	return s.DeleteMany(ctx, scope, scopeID, key)
+}
+
+func (s *SettingsStore) DeleteMany(
+	ctx context.Context,
+	scope enum.SettingsScope,
+	scopeID int64,
+	keys ...string,
+) error {
+	if len(keys) == 0 {
+		return nil
+	}
+
+	keysLower := make([]string, len(keys))
+	for i, k := range keys {
+		keysLower[i] = strings.ToLower(k)
+	}
+
+	stmt := database.Builder.
+		Delete("settings").
+		Where(squirrel.Eq{"LOWER(setting_key)": keysLower})
+
+	switch scope {
+	case enum.SettingsScopeSpace:
+		stmt = stmt.Where("setting_space_id = ?", scopeID)
+	case enum.SettingsScopeRepo:
+		stmt = stmt.Where("setting_repo_id = ?", scopeID)
+	case enum.SettingsScopeSystem:
+		stmt = stmt.Where("setting_repo_id IS NULL AND setting_space_id IS NULL")
+	default:
+		return fmt.Errorf("setting scope %q is not supported", scope)
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Delete query failed")
+	}
+
+	return nil
+}

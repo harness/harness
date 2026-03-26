@@ -84,6 +84,7 @@ const (
 	ResourceTypePushRule              ResourceType = "push_rule"
 	ResourceTypePullRequest           ResourceType = "pull_request"
 	ResourceTypeRepositorySettings    ResourceType = "repository_settings"
+	ResourceTypeSpaceSettings         ResourceType = "space_settings"
 	ResourceTypeCodeWebhook           ResourceType = "code_webhook"
 	ResourceTypeRegistry              ResourceType = "registry"
 	ResourceTypeRegistryUpstreamProxy ResourceType = "registry_upstream_proxy"
@@ -101,6 +102,7 @@ func (a ResourceType) Validate() error {
 		ResourceTypePushRule,
 		ResourceTypePullRequest,
 		ResourceTypeRepositorySettings,
+		ResourceTypeSpaceSettings,
 		ResourceTypeCodeWebhook,
 		ResourceTypeRegistry,
 		ResourceTypeRegistryUpstreamProxy,

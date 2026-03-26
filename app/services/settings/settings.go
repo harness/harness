@@ -30,4 +30,6 @@ var (
 	DefaultGitLFSEnabled               = true
 	KeyAutoMergeEnabled            Key = "auto_merge_enabled"
 	DefaultAutoMergeEnabled            = false
+	DefaultBranchKey               Key = "default_branch"
+	DefaultBranch                      = string("main")
 )

@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -63,6 +64,11 @@ type restoreSpaceRequest struct {
 type importRepositoriesRequest struct {
 	spaceRequest
 	space.ImportRepositoriesInput
+}
+
+type generalSpaceSettingsRequest struct {
+	spaceRequest
+	settings.GeneralSettingsSpace
 }
 
 var queryParameterSortRepo = openapi3.ParameterOrRef{
@@ -332,6 +338,35 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(
 		http.MethodPost, "/spaces/{space_ref}/public-access", opUpdatePublicAccess)
+
+	opSettingsGeneralUpdate := openapi3.Operation{}
+	opSettingsGeneralUpdate.WithTags("space")
+	opSettingsGeneralUpdate.WithMapOfAnything(
+		map[string]any{"operationId": "updateSpaceGeneralSettings"})
+	_ = reflector.SetRequest(
+		&opSettingsGeneralUpdate, new(generalSpaceSettingsRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(settings.GeneralSettingsSpace), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPatch, "/spaces/{space_ref}/settings/general", opSettingsGeneralUpdate)
+
+	opSettingsGeneralFind := openapi3.Operation{}
+	opSettingsGeneralFind.WithTags("space")
+	opSettingsGeneralFind.WithMapOfAnything(
+		map[string]any{"operationId": "findSpaceGeneralSettings"})
+	_ = reflector.SetRequest(&opSettingsGeneralFind, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(settings.GeneralSettingsSpace), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodGet, "/spaces/{space_ref}/settings/general", opSettingsGeneralFind)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("space")

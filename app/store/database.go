@@ -380,6 +380,22 @@ type (
 			key string,
 			value json.RawMessage,
 		) error
+
+		// Delete deletes the setting with the given key for the provided scope.
+		Delete(
+			ctx context.Context,
+			scope enum.SettingsScope,
+			scopeID int64,
+			key string,
+		) error
+
+		// DeleteMany deletes the settings with the given keys for the provided scope.
+		DeleteMany(
+			ctx context.Context,
+			scope enum.SettingsScope,
+			scopeID int64,
+			keys ...string,
+		) error
 	}
 
 	// MembershipStore defines the membership data storage.

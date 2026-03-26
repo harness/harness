@@ -32,6 +32,7 @@ import (
 type Controller struct {
 	authorizer   authz.Authorizer
 	repoFinder   refcache.RepoFinder
+	spaceFinder  refcache.SpaceFinder
 	settings     *settings.Service
 	auditService audit.Service
 }
@@ -39,12 +40,14 @@ type Controller struct {
 func NewController(
 	authorizer authz.Authorizer,
 	repoFinder refcache.RepoFinder,
+	spaceFinder refcache.SpaceFinder,
 	settings *settings.Service,
 	auditService audit.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:   authorizer,
 		repoFinder:   repoFinder,
+		spaceFinder:  spaceFinder,
 		settings:     settings,
 		auditService: auditService,
 	}
@@ -73,4 +76,30 @@ func (c *Controller) getRepoCheckAccess(
 	}
 
 	return repo, nil
+}
+
+func (c *Controller) getSpaceCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+	reqPermission enum.Permission,
+) (*types.SpaceCore, error) {
+	space, err := c.spaceFinder.FindByRef(ctx, parentRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	err = apiauth.CheckSpaceScope(
+		ctx,
+		c.authorizer,
+		session,
+		space,
+		enum.ResourceTypeSpace,
+		reqPermission,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
 }

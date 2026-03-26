@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/app/services/refcache"
 	appstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
@@ -42,13 +43,16 @@ type SettingHandler interface {
 // Service is used to enhance interaction with the settings store.
 type Service struct {
 	settingsStore appstore.SettingsStore
+	spaceFinder   refcache.SpaceFinder
 }
 
 func NewService(
 	settingsStore appstore.SettingsStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Service {
 	return &Service{
 		settingsStore: settingsStore,
+		spaceFinder:   spaceFinder,
 	}
 }
 
@@ -91,6 +95,46 @@ func (s *Service) SetMany(
 		if err := s.Set(ctx, scope, scopeID, kv.Key, kv.Value); err != nil {
 			return fmt.Errorf("failed to set setting for key %q: %w", kv.Key, err)
 		}
+	}
+
+	return nil
+}
+
+// Delete deletes the setting with the given key for the given scope.
+func (s *Service) Delete(
+	ctx context.Context,
+	scope enum.SettingsScope,
+	scopeID int64,
+	key Key,
+) error {
+	err := s.settingsStore.Delete(
+		ctx,
+		scope,
+		scopeID,
+		string(key),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete setting in store: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteMany deletes the settings with the given keys for the given scope.
+func (s *Service) DeleteMany(
+	ctx context.Context,
+	scope enum.SettingsScope,
+	scopeID int64,
+	keys ...Key,
+) error {
+	keyStrings := make([]string, len(keys))
+	for i, key := range keys {
+		keyStrings[i] = string(key)
+	}
+
+	err := s.settingsStore.DeleteMany(ctx, scope, scopeID, keyStrings...)
+	if err != nil {
+		return fmt.Errorf("failed to delete settings in store: %w", err)
 	}
 
 	return nil

@@ -217,7 +217,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	usageSender usage.Sender,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
-	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, userGroupCtrl, webhookCtrl, checkCtrl)
+	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, repoSettingsCtrl, userGroupCtrl, webhookCtrl, checkCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
 		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, usageSender)
 	setupConnectors(r, connectorCtrl)
@@ -241,6 +241,7 @@ func setupSpaces(
 	appCtx context.Context,
 	infraProviderCtrl *infraprovider.Controller,
 	spaceCtrl *space.Controller,
+	repoSettingsCtrl *reposettings.Controller,
 	userGroupCtrl *usergroup.Controller,
 	webhookCtrl *webhook.Controller,
 	checkCtrl *check.Controller,
@@ -296,6 +297,11 @@ func setupSpaces(
 			r.Get("/checks/recent", handlercheck.HandleCheckListRecentSpace(checkCtrl))
 			r.Route("/usage", func(r chi.Router) {
 				r.Get("/metric", handlerspace.HandleUsageMetric(spaceCtrl))
+			})
+
+			r.Route("/settings", func(r chi.Router) {
+				r.Get("/general", handlerreposettings.HandleGeneralFindSpace(repoSettingsCtrl))
+				r.Patch("/general", handlerreposettings.HandleGeneralUpdateSpace(repoSettingsCtrl))
 			})
 		})
 	})

@@ -15,6 +15,7 @@
 package settings
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -26,6 +27,7 @@ var WireSet = wire.NewSet(
 
 func ProvideService(
 	settingsStore store.SettingsStore,
+	spaceFinder refcache.SpaceFinder,
 ) *Service {
-	return NewService(settingsStore)
+	return NewService(settingsStore, spaceFinder)
 }
