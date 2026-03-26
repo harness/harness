@@ -290,6 +290,7 @@ func LoadRepositoriesFromProviderSpace(
 	ctx context.Context,
 	provider Provider,
 	spaceSlug string,
+	includeSubgroupsRepos bool,
 ) ([]RepositoryInfo, Provider, error) {
 	if spaceSlug == "" {
 		return nil, provider, usererror.BadRequest("Provider space identifier is missing")
@@ -316,13 +317,22 @@ func LoadRepositoriesFromProviderSpace(
 
 	var optsv2 scm.RepoListOptions
 	listv2 := false
-	if provider.Type == ProviderTypeGitHub {
+	//nolint:exhaustive
+	switch provider.Type {
+	case ProviderTypeGitHub:
 		listv2 = true
 		optsv2 = scm.RepoListOptions{
 			ListOptions: opts,
 			RepoSearchTerm: scm.RepoSearchTerm{
 				User: spaceSlug,
 			},
+		}
+	case ProviderTypeGitLab:
+		listv2 = true
+		optsv2 = scm.RepoListOptions{
+			ListOptions:      opts,
+			Group:            spaceSlug,
+			IncludeSubgroups: includeSubgroupsRepos,
 		}
 	}
 
@@ -353,7 +363,8 @@ func LoadRepositoriesFromProviderSpace(
 
 		for _, scmRepo := range scmRepos {
 			// in some cases the namespace filter isn't working (e.g. Gitlab)
-			if !strings.EqualFold(scmRepo.Namespace, spaceSlug) {
+			// For GitLab with subgroups, namespace could be "group/subgroup", so use prefix match
+			if !matchesNamespace(provider.Type, scmRepo.Namespace, spaceSlug, includeSubgroupsRepos) {
 				continue
 			}
 
@@ -397,6 +408,19 @@ func extractRepoFromSlug(slug string) (string, error) {
 		return res[2], nil
 	}
 	return "", fmt.Errorf("repo name missing")
+}
+
+// matchesNamespace checks if the repository namespace matches the expected space slug.
+// For GitLab with includeSubgroups enabled, it matches the exact group or any subgroup
+// (e.g., "group" and "group/subgroup" match "group", but "grouptoo" does not).
+// For other providers or GitLab without includeSubgroups, it uses exact case-insensitive matching.
+func matchesNamespace(providerType ProviderType, repoNamespace, spaceSlug string, includeSubgroups bool) bool {
+	if providerType == ProviderTypeGitLab && includeSubgroups {
+		lower := strings.ToLower(repoNamespace)
+		slug := strings.ToLower(spaceSlug)
+		return lower == slug || strings.HasPrefix(lower, slug+"/")
+	}
+	return strings.EqualFold(repoNamespace, spaceSlug)
 }
 
 func convertSCMError(provider Provider, slug string, r *scm.Response, err error) error {

@@ -24,7 +24,7 @@ require (
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
 	github.com/drone/go-convert v0.0.0-20240821195621-c6d7be7727ec
 	github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522
-	github.com/drone/go-scm v1.38.9
+	github.com/drone/go-scm v1.42.1-0.20260325063554-c206c21da183
 	github.com/drone/runner-go v1.12.0
 	github.com/drone/spec v0.0.0-20230920145636-3827abdce961
 	github.com/dustin/go-humanize v1.0.1
@@ -71,6 +71,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/posthog/posthog-go v1.3.3
+	github.com/prometheus/client_golang v1.19.1
 	github.com/rs/xid v1.5.0
 	github.com/rs/zerolog v1.33.0
 	github.com/sassoftware/go-rpmutils v0.4.0
@@ -157,7 +158,6 @@ require (
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037 // indirect
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
-	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

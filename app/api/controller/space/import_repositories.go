@@ -39,7 +39,7 @@ type ImportRepositoriesInput struct {
 }
 
 type ImportRepositoriesOutput struct {
-	ImportingRepos []*repoctrl.RepositoryOutput `json:"importing_repos"`
+	ImportingRepos []*repoctrl.RepositoryOutput `json:"importing_repos"` //nolint:tagliatelle
 }
 
 // ImportRepositories imports repositories into an existing space.
@@ -57,7 +57,7 @@ func (c *Controller) ImportRepositories(
 	}
 
 	remoteRepositories, provider, err :=
-		importer.LoadRepositoriesFromProviderSpace(ctx, in.Provider, in.ProviderSpace)
+		importer.LoadRepositoriesFromProviderSpace(ctx, in.Provider, in.ProviderSpace, in.IncludeSubgroupsRepos)
 	if err != nil {
 		return ImportRepositoriesOutput{}, err
 	}

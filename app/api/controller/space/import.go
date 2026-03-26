@@ -31,9 +31,10 @@ import (
 )
 
 type ProviderInput struct {
-	Provider      importer.Provider       `json:"provider"`
-	ProviderSpace string                  `json:"provider_space"`
-	Pipelines     importer.PipelineOption `json:"pipelines"`
+	Provider              importer.Provider       `json:"provider"`
+	ProviderSpace         string                  `json:"provider_space"` //nolint:tagliatelle
+	Pipelines             importer.PipelineOption `json:"pipelines"`
+	IncludeSubgroupsRepos bool                    `json:"include_subgroups_repos"` //nolint:tagliatelle
 }
 
 type ImportInput struct {
@@ -60,7 +61,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	remoteRepositories, provider, err :=
-		importer.LoadRepositoriesFromProviderSpace(ctx, in.Provider, in.ProviderSpace)
+		importer.LoadRepositoriesFromProviderSpace(ctx, in.Provider, in.ProviderSpace, in.IncludeSubgroupsRepos)
 	if err != nil {
 		return nil, err
 	}
