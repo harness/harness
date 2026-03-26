@@ -16,7 +16,7 @@
 
 import React, { forwardRef } from 'react'
 import { Card, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useGetMetadataQuery, useUpdateMetadataMutation } from '@harnessio/react-har-service-client'
+import { useGetMetadataQuery, useSaveMetadataMutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -80,13 +80,13 @@ function PropertiesFormContent(props: PropertiesFormContentProps, formikRef: For
   })
   const initialValue = data?.content?.data?.metadata || []
 
-  const { mutateAsync: updateMetadata } = useUpdateMetadataMutation()
+  const { mutateAsync: saveMetadata } = useSaveMetadataMutation()
 
   const handleUpdateMetadata = async (values: PropertiesFormValues) => {
     try {
       setIsUpdating(true)
       const metadataValues = values.value.filter(each => each.key !== '' && each.value !== '')
-      const response = await updateMetadata({
+      const response = await saveMetadata({
         body: {
           metadata: metadataValues,
           registryIdentifier: repositoryIdentifier,
