@@ -244,6 +244,40 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*core.S
 	return stage, err
 }
 
+// handleDetailsError marks a stage as error when Details() fails after the
+// stage has already been loaded from the database. It uses a two-step
+// approach to ensure the stage is always persisted even if teardown fails:
+func (m *Manager) handleDetailsError(ctx context.Context, stage *core.Stage, err error) (*Context, error) {
+	logrus.WithFields(logrus.Fields{
+		"stage.id":      stage.ID,
+		"stage.version": stage.Version,
+		"error":         err,
+	}).Warnln("manager: details failed, marking stage as error")
+
+	stage.Status = core.StatusError
+	stage.Error = err.Error()
+	stage.Stopped = time.Now().Unix()
+	stage.Updated = time.Now().Unix()
+	if len(stage.Error) > 500 {
+		stage.Error = stage.Error[:500]
+	}
+
+	if dbErr := m.Stages.Update(noContext, stage); dbErr != nil {
+		logrus.WithError(dbErr).
+			WithField("stage.id", stage.ID).
+			WithField("stage.version", stage.Version).
+			Warnln("manager: failed to mark stage as error after details failure")
+	}
+
+	if afterErr := m.AfterAll(noContext, stage); afterErr != nil {
+		logrus.WithError(afterErr).
+			WithField("stage.id", stage.ID).
+			Warnln("manager: failed teardown after details error")
+	}
+
+	return nil, err
+}
+
 // Details fetches build details.
 func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 	logger := logrus.WithField("step-id", id)
@@ -259,20 +293,20 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot find build")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 	stages, err := m.Stages.List(ctx, stage.BuildID)
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot list stages")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 	build.Stages = stages
 	repo, err := m.Repos.Find(noContext, build.RepoID)
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot find repository")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 	logger = logger.WithFields(
 		logrus.Fields{
@@ -284,7 +318,7 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot find repository owner")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 	config, err := m.Config.Find(noContext, &core.ConfigArgs{
 		User:  user,
@@ -294,7 +328,7 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot find configuration")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 
 	// this code is temporarily in place to detect and convert
@@ -314,20 +348,20 @@ func (m *Manager) Details(ctx context.Context, id int64) (*Context, error) {
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot convert configuration")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 	var secrets []*core.Secret
 	tmpSecrets, err := m.Secrets.List(noContext, repo.ID)
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot list secrets")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 	tmpGlobalSecrets, err := m.Globals.List(noContext, repo.Namespace)
 	if err != nil {
 		logger = logger.WithError(err)
 		logger.Warnln("manager: cannot list global secrets")
-		return nil, err
+		return m.handleDetailsError(ctx, stage, err)
 	}
 	// TODO(bradrydzewski) can we delegate filtering
 	// secrets to the agent? If not, we should add
