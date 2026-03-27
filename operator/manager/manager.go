@@ -269,7 +269,7 @@ func (m *Manager) handleDetailsError(ctx context.Context, stage *core.Stage, err
 			Warnln("manager: failed to mark stage as error after details failure")
 	}
 
-	if afterErr := m.AfterAll(ctx, stage); afterErr != nil {
+	if afterErr := m.AfterAll(noContext, stage); afterErr != nil {
 		logrus.WithError(afterErr).
 			WithField("stage.id", stage.ID).
 			Warnln("manager: failed teardown after details error")
