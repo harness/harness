@@ -266,3 +266,13 @@ func (c *helmPackageType) GetPurlForArtifact(
 ) (string, error) {
 	return "", fmt.Errorf("PURL not supported for helm package type")
 }
+
+func (c *helmPackageType) GetPackageAndVersionFromNodePath(
+	_ string,
+) (string, string, string) {
+	return "", "", ""
+}
+
+func (c *helmPackageType) IsArtifactMainFile(_ string) bool {
+	return false
+}

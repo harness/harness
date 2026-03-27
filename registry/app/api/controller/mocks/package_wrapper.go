@@ -2067,3 +2067,138 @@ func (_c *MockPackageWrapper_GetPurlForArtifact_Call) RunAndReturn(run func(pack
 	_c.Call.Return(run)
 	return _c
 }
+
+// GetPackageAndVersionFromNodePath provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) GetPackageAndVersionFromNodePath(packageType string, nodePath string) (string, string, string, error) {
+	ret := _mock.Called(packageType, nodePath)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPackageAndVersionFromNodePath")
+	}
+
+	var r0 string
+	var r1 string
+	var r2 string
+	var r3 error
+	if returnFunc, ok := ret.Get(0).(func(string, string) (string, string, string, error)); ok {
+		return returnFunc(packageType, nodePath)
+	}
+	if returnFunc, ok := ret.Get(0).(func(string, string) string); ok {
+		r0 = returnFunc(packageType, nodePath)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(string, string) string); ok {
+		r1 = returnFunc(packageType, nodePath)
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+	if returnFunc, ok := ret.Get(2).(func(string, string) string); ok {
+		r2 = returnFunc(packageType, nodePath)
+	} else {
+		r2 = ret.Get(2).(string)
+	}
+	if returnFunc, ok := ret.Get(3).(func(string, string) error); ok {
+		r3 = returnFunc(packageType, nodePath)
+	} else {
+		r3 = ret.Error(3)
+	}
+	return r0, r1, r2, r3
+}
+
+// MockPackageWrapper_GetPackageAndVersionFromNodePath_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPackageAndVersionFromNodePath'
+type MockPackageWrapper_GetPackageAndVersionFromNodePath_Call struct {
+	*mock.Call
+}
+
+// GetPackageAndVersionFromNodePath is a helper method to define mock.On call
+//   - packageType string
+//   - nodePath string
+func (_e *MockPackageWrapper_Expecter) GetPackageAndVersionFromNodePath(packageType interface{}, nodePath interface{}) *MockPackageWrapper_GetPackageAndVersionFromNodePath_Call {
+	return &MockPackageWrapper_GetPackageAndVersionFromNodePath_Call{Call: _e.mock.On("GetPackageAndVersionFromNodePath", packageType, nodePath)}
+}
+
+func (_c *MockPackageWrapper_GetPackageAndVersionFromNodePath_Call) Run(run func(packageType string, nodePath string)) *MockPackageWrapper_GetPackageAndVersionFromNodePath_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPackageAndVersionFromNodePath_Call) Return(s1 string, s2 string, s3 string, err error) *MockPackageWrapper_GetPackageAndVersionFromNodePath_Call {
+	_c.Call.Return(s1, s2, s3, err)
+	return _c
+}
+
+func (_c *MockPackageWrapper_GetPackageAndVersionFromNodePath_Call) RunAndReturn(run func(packageType string, nodePath string) (string, string, string, error)) *MockPackageWrapper_GetPackageAndVersionFromNodePath_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// IsArtifactMainFile provides a mock function for the type MockPackageWrapper
+func (_mock *MockPackageWrapper) IsArtifactMainFile(packageType string, nodePath string) bool {
+	ret := _mock.Called(packageType, nodePath)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsArtifactMainFile")
+	}
+
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func(string, string) bool); ok {
+		r0 = returnFunc(packageType, nodePath)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	return r0
+}
+
+// MockPackageWrapper_IsArtifactMainFile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsArtifactMainFile'
+type MockPackageWrapper_IsArtifactMainFile_Call struct {
+	*mock.Call
+}
+
+// IsArtifactMainFile is a helper method to define mock.On call
+//   - packageType string
+//   - nodePath string
+func (_e *MockPackageWrapper_Expecter) IsArtifactMainFile(packageType interface{}, nodePath interface{}) *MockPackageWrapper_IsArtifactMainFile_Call {
+	return &MockPackageWrapper_IsArtifactMainFile_Call{Call: _e.mock.On("IsArtifactMainFile", packageType, nodePath)}
+}
+
+func (_c *MockPackageWrapper_IsArtifactMainFile_Call) Run(run func(packageType string, nodePath string)) *MockPackageWrapper_IsArtifactMainFile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockPackageWrapper_IsArtifactMainFile_Call) Return(b bool) *MockPackageWrapper_IsArtifactMainFile_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockPackageWrapper_IsArtifactMainFile_Call) RunAndReturn(run func(packageType string, nodePath string) bool) *MockPackageWrapper_IsArtifactMainFile_Call {
+	_c.Call.Return(run)
+	return _c
+}

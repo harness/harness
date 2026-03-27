@@ -82,7 +82,7 @@ func APIHandlerProvider(
 	imageDao store.ImageRepository,
 	spaceFinder refcache.SpaceFinder,
 	tx dbtx.Transactor,
-	db dbtx.Accessor,
+	_ dbtx.Accessor,
 	authenticator authn.Authenticator,
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,

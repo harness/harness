@@ -17,6 +17,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -26,6 +27,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 )
+
+var npmNodePathRegex = regexp.MustCompile(`^/(?:@([^/]+)/)?([^/]+)/([^/]+)/`)
 
 type NPMPackageType interface {
 	interfaces.PackageHelper
@@ -298,4 +301,28 @@ func (c *npmPackageType) GetPurlForArtifact(
 	}
 	encodedPackageName := strings.ReplaceAll(packageName, "@", "%40")
 	return fmt.Sprintf("pkg:npm/%s@%s", encodedPackageName, version), nil
+}
+
+func (c *npmPackageType) GetPackageAndVersionFromNodePath(
+	nodePath string,
+) (string, string, string) {
+	// Extract package name and version from node path
+	// Format: /{packageName}/{version}/filename
+	m := npmNodePathRegex.FindStringSubmatch(nodePath)
+	if len(m) == 4 {
+		scope := m[1]
+		name := m[2]
+		version := m[3]
+
+		if scope != "" {
+			return "@" + scope + "/" + name, version, ""
+		}
+		return name, version, ""
+	}
+	return "", "", ""
+}
+
+func (c *npmPackageType) IsArtifactMainFile(nodePath string) bool {
+	extension := getExtension(nodePath)
+	return extension == TarFileExtension || extension == TarGzFileExtension
 }

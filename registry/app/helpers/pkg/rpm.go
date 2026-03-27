@@ -17,6 +17,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -26,6 +27,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 )
+
+var rpmNodePathRegex = regexp.MustCompile(`^/([^/]+)/([^/]+)/([^/]+)/[^/]+$`)
 
 type RPMPackageType interface {
 	interfaces.PackageHelper
@@ -280,4 +283,23 @@ func (c *rpmPackageType) GetPurlForArtifact(
 		return "", fmt.Errorf("version cannot be empty")
 	}
 	return fmt.Sprintf("pkg:rpm/%s@%s", packageName, version), nil
+}
+
+func (c *rpmPackageType) GetPackageAndVersionFromNodePath(
+	nodePath string,
+) (string, string, string) {
+	// Extract package name and version from node path
+	// Format: /{packageName}/{version}/{arch}/{filename} (excluding repodata)
+	matches := rpmNodePathRegex.FindStringSubmatch(nodePath)
+	if len(matches) == 4 && matches[1] != "repodata" {
+		packageName := matches[1]
+		version := matches[2] + "." + matches[3]
+		return packageName, version, ""
+	}
+	return "", "", ""
+}
+
+func (c *rpmPackageType) IsArtifactMainFile(nodePath string) bool {
+	extension := getExtension(nodePath)
+	return extension == RpmFileEtension
 }

@@ -118,4 +118,8 @@ type PackageHelper interface {
 		packageName string,
 		version string,
 	) (string, error)
+	GetPackageAndVersionFromNodePath(
+		nodePath string,
+	) (string, string, string)
+	IsArtifactMainFile(nodePath string) bool
 }

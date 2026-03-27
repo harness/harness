@@ -461,3 +461,26 @@ func (p *packageWrapper) GetPurlForArtifact(
 	}
 	return pkg.GetPurlForArtifact(packageName, version)
 }
+
+func (p *packageWrapper) GetPackageAndVersionFromNodePath(
+	packageType string,
+	nodePath string,
+) (string, string, string, error) {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return "", "", "", fmt.Errorf("unsupported package type: %s", packageType)
+	}
+	packageName, version, artifactType := pkg.GetPackageAndVersionFromNodePath(nodePath)
+	return packageName, version, artifactType, nil
+}
+
+func (p *packageWrapper) IsArtifactMainFile(
+	packageType string,
+	nodePath string,
+) bool {
+	pkg := p.GetPackage(packageType)
+	if pkg == nil {
+		return false
+	}
+	return pkg.IsArtifactMainFile(nodePath)
+}

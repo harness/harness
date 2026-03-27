@@ -18,6 +18,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -30,6 +32,20 @@ import (
 	"github.com/harness/gitness/registry/types"
 	registryutils "github.com/harness/gitness/registry/utils"
 )
+
+const (
+	ZipFileExtension    = ".zip"
+	CrateFileExtension  = ".crate"
+	JarFileExtension    = ".jar"
+	WarFileExtension    = ".war"
+	TarFileExtension    = ".tar"
+	TarGzFileExtension  = ".tar.gz"
+	NugpkgFileExtension = ".nupkg"
+	WhlFileExtension    = ".whl"
+	RpmFileEtension     = ".rpm"
+)
+
+var cargoNodePathRegex = regexp.MustCompile(`^/crates/([^/]+)/([^/]+)(?:/.*)?$`)
 
 type CargoPackageType interface {
 	interfaces.PackageHelper
@@ -536,4 +552,28 @@ func (c *cargoPackageType) GetPurlForArtifact(
 		return "", fmt.Errorf("version cannot be empty")
 	}
 	return fmt.Sprintf("pkg:cargo/%s@%s", packageName, version), nil
+}
+
+func (c *cargoPackageType) GetPackageAndVersionFromNodePath(
+	nodePath string,
+) (string, string, string) {
+	// Extract package name and version from node path
+	// Format: /crates/{packageName}/{version}/{filename}
+	matches := cargoNodePathRegex.FindStringSubmatch(nodePath)
+	if len(matches) == 3 {
+		return matches[1], matches[2], ""
+	}
+	return "", "", ""
+}
+
+func (c *cargoPackageType) IsArtifactMainFile(nodePath string) bool {
+	extension := getExtension(nodePath)
+	return extension == CrateFileExtension || extension == ZipFileExtension
+}
+
+func getExtension(p string) string {
+	if strings.HasSuffix(p, TarGzFileExtension) {
+		return TarGzFileExtension
+	}
+	return path.Ext(p)
 }

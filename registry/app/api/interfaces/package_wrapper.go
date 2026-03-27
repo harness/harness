@@ -151,4 +151,12 @@ type PackageWrapper interface {
 		packageName string,
 		version string,
 	) (string, error)
+	GetPackageAndVersionFromNodePath(
+		packageType string,
+		nodePath string,
+	) (string, string, string, error)
+	IsArtifactMainFile(
+		packageType string,
+		nodePath string,
+	) bool
 }

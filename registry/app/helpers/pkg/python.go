@@ -17,6 +17,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
@@ -25,6 +26,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 )
+
+var pythonNodePathRegex = regexp.MustCompile(`^/([^/]+)/([^/]+)(?:/.*)?$`)
 
 type PythonPackageType interface {
 	interfaces.PackageHelper
@@ -270,4 +273,23 @@ func (c *pythonPackageType) GetPurlForArtifact(
 		return "", fmt.Errorf("version cannot be empty")
 	}
 	return fmt.Sprintf("pkg:pypi/%s@%s", packageName, version), nil
+}
+
+func (c *pythonPackageType) GetPackageAndVersionFromNodePath(
+	nodePath string,
+) (string, string, string) {
+	// Extract package name and version from node path
+	// Format: /{packageName}/{version}/filename
+	matches := pythonNodePathRegex.FindStringSubmatch(nodePath)
+	if len(matches) == 3 {
+		return matches[1], matches[2], ""
+	}
+	return "", "", ""
+}
+
+func (c *pythonPackageType) IsArtifactMainFile(nodePath string) bool {
+	extension := getExtension(nodePath)
+	return extension == WhlFileExtension ||
+		extension == TarGzFileExtension ||
+		extension == ZipFileExtension
 }

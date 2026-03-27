@@ -274,3 +274,13 @@ func (c *dockerPackageType) GetPurlForArtifact(
 ) (string, error) {
 	return "", fmt.Errorf("PURL not supported for docker package type")
 }
+
+func (c *dockerPackageType) GetPackageAndVersionFromNodePath(
+	_ string,
+) (string, string, string) {
+	return "", "", ""
+}
+
+func (c *dockerPackageType) IsArtifactMainFile(_ string) bool {
+	return false
+}

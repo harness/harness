@@ -289,3 +289,38 @@ func (c *mavenPackageType) GetPurlForArtifact(
 	}
 	return fmt.Sprintf("pkg:maven/%s/%s@%s", parts[0], parts[1], version), nil
 }
+
+func (c *mavenPackageType) GetPackageAndVersionFromNodePath(
+	nodePath string,
+) (string, string, string) {
+	path := strings.TrimPrefix(nodePath, "/")
+
+	parts := strings.Split(path, "/")
+	// Example:
+	// [com/fasterxml/jackson/core/jackson-databind/2.15.3/jackson-databind-2.15.3.jar]
+	// [com/fasterxml/jackson/core/jackson-databind/2.15.3-SNAPSHOT/jackson-databind-2.15.3-SNAPSHOT.jar]
+
+	if len(parts) < 4 {
+		return "", "", ""
+	}
+
+	version := parts[len(parts)-2]
+	// Normalize version (remove -SNAPSHOT)
+	version = strings.TrimSuffix(version, "-SNAPSHOT")
+
+	artifact := parts[len(parts)-3]
+
+	groupParts := parts[:len(parts)-3]
+
+	group := strings.Join(groupParts, ".")
+	pkg := group + ":" + artifact
+
+	return pkg, version, ""
+}
+
+func (c *mavenPackageType) IsArtifactMainFile(nodePath string) bool {
+	extension := getExtension(nodePath)
+	return extension == JarFileExtension ||
+		extension == WarFileExtension ||
+		extension == ZipFileExtension
+}

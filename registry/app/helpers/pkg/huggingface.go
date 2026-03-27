@@ -264,3 +264,13 @@ func (c *huggingFacePackageType) GetPurlForArtifact(
 ) (string, error) {
 	return "", fmt.Errorf("PURL not supported for huggingface package type")
 }
+
+func (c *huggingFacePackageType) GetPackageAndVersionFromNodePath(
+	_ string,
+) (string, string, string) {
+	return "", "", ""
+}
+
+func (c *huggingFacePackageType) IsArtifactMainFile(_ string) bool {
+	return false
+}
