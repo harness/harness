@@ -20,14 +20,17 @@ import type { ArtifactScanV3 } from '@harnessio/react-har-service-client'
 import { Button, ButtonSize, ButtonVariation, Layout, Text } from '@harnessio/uicore'
 import type { TableInstance, ColumnInstance, Row, Cell, CellValue, Renderer } from 'react-table'
 
-import TableCells from '@ar/components/TableCells/TableCells'
-import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
-import type { RepositoryPackageType } from '@ar/common/types'
-import { useRoutes } from '@ar/hooks'
-import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
-import ScanBadgeComponent from '@ar/components/Badge/ScanBadge'
+import { useFeatureFlags, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import TableCells from '@ar/components/TableCells/TableCells'
+import type { RepositoryPackageType } from '@ar/common/types'
+import ScanBadgeComponent from '@ar/components/Badge/ScanBadge'
+import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
+import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+
+import RepositoryActions from '../ViolationActions/ViolationActions'
 import { useViolationDetailsModal } from '../../hooks/useViolationDetailsModal/useViolationDetailsModal'
+
 import css from './TableCells.module.scss'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -112,10 +115,14 @@ export const ViolationActionsCell: CellType = ({ row }) => {
   const { original } = row
   const { id } = original
   const { getString } = useStrings()
+  const { HAR_DEPENDENCY_FIREWALL_EXEMPTIONS } = useFeatureFlags()
   const [showModal] = useViolationDetailsModal({ scanId: id })
   return (
-    <Button variation={ButtonVariation.SECONDARY} size={ButtonSize.SMALL} onClick={showModal}>
-      {getString('violationsList.table.columns.actions.violationDetails')}
-    </Button>
+    <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
+      <Button variation={ButtonVariation.SECONDARY} size={ButtonSize.SMALL} onClick={showModal}>
+        {getString('violationsList.table.columns.actions.violationDetails')}
+      </Button>
+      {HAR_DEPENDENCY_FIREWALL_EXEMPTIONS && <RepositoryActions scanId={id} data={original} />}
+    </Layout.Horizontal>
   )
 }

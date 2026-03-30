@@ -229,8 +229,8 @@ export const ScanStatusCell: CellType = ({ row }) => {
 
 export const LatestArtifactCell: CellType = ({ row }) => {
   const { original } = row
-  const { lastModified, deletedAt, isDeleted } = original
-  const lastModifiedTime = isDeleted ? deletedAt : lastModified
+  const { lastModified, deletedAt } = original
+  const lastModifiedTime = deletedAt ? deletedAt : lastModified
   return <TableCells.LastModifiedCell value={defaultTo(lastModifiedTime, 0)} />
 }
 

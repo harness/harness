@@ -55,3 +55,23 @@ violationDetailsModal:
   actions:
     requestException: Request Exception
     reEvaluate: Re-Evaluate
+createExemptionForm:
+  title: Request dependency exception
+  subTitle: Exceptions allow temporary use of blocked dependencies when business-critical. When you submit a request, all users with the "Exception Approver" role will be notified. Any approver can review and act on your request.
+  basicInformationSection:
+    title: Basic Information
+    packageName: Package Name
+    version: Version
+  exemptionDetailsAndJustificationSection:
+    title: Exception details and justification
+    exemptionDuration: Exception duration (in days)
+    businessJustification: Business justification
+    businessJustificationPlaceholder: Explain why this exception is necessary for your operation
+    remediationPlan: Remediation plan
+    remediationPlanPlaceholder: Describe your plan to upgrade or replace the dependency
+  actions:
+    submit: Send Exemption Request
+    cancel: Cancel
+  toasters:
+    success: Exemption request submitted successfully
+    error: Failed to submit exemption request

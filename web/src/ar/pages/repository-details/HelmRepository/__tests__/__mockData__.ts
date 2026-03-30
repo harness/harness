@@ -51,8 +51,7 @@ export const MockGetHelmArtifactsByRegistryResponse: GetAllArtifactsByRegistryOk
           registryPath: '',
           isPublic: false,
           registryUUID: 'uuid',
-          uuid: 'uuid',
-          isDeleted: false
+          uuid: 'uuid'
         }
       ],
       itemCount: 1,

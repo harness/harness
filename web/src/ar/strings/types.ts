@@ -461,6 +461,21 @@ export interface StringsMap {
   'violationsList.cards.dependencies': string
   'violationsList.cards.totalViolations': string
   'violationsList.cards.warningViolations': string
+  'violationsList.createExemptionForm.actions.cancel': string
+  'violationsList.createExemptionForm.actions.submit': string
+  'violationsList.createExemptionForm.basicInformationSection.packageName': string
+  'violationsList.createExemptionForm.basicInformationSection.title': string
+  'violationsList.createExemptionForm.basicInformationSection.version': string
+  'violationsList.createExemptionForm.exemptionDetailsAndJustificationSection.businessJustification': string
+  'violationsList.createExemptionForm.exemptionDetailsAndJustificationSection.businessJustificationPlaceholder': string
+  'violationsList.createExemptionForm.exemptionDetailsAndJustificationSection.exemptionDuration': string
+  'violationsList.createExemptionForm.exemptionDetailsAndJustificationSection.remediationPlan': string
+  'violationsList.createExemptionForm.exemptionDetailsAndJustificationSection.remediationPlanPlaceholder': string
+  'violationsList.createExemptionForm.exemptionDetailsAndJustificationSection.title': string
+  'violationsList.createExemptionForm.subTitle': string
+  'violationsList.createExemptionForm.title': string
+  'violationsList.createExemptionForm.toasters.error': string
+  'violationsList.createExemptionForm.toasters.success': string
   'violationsList.evaluatedAt': string
   'violationsList.noViolationsFound': string
   'violationsList.page': string
@@ -553,6 +568,7 @@ export interface StringsMap {
   'actions.edit': string
   'actions.executions': string
   'actions.quarantine': string
+  'actions.requestExemption': string
   'actions.restore': string
   'actions.scan': string
   'actions.setupClient': string

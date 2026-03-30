@@ -93,6 +93,7 @@ actions:
   executions: Executions
   copyCommand: Copy Command
   deleteForce: Delete Permanently
+  requestExemption: Request Exemption
 cleanupPolicy:
   name: Cleanup Policy Name
   addBtn: Add Cleanup Policy

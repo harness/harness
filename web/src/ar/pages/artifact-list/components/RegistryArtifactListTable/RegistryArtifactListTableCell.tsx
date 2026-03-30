@@ -103,8 +103,8 @@ export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
   const routes = useRoutes()
   const { getString } = useStrings()
   const { original } = row
-  const { latestVersion, lastModified, deletedAt, isDeleted } = original || {}
-  const lastModifiedTime = isDeleted ? deletedAt : lastModified
+  const { latestVersion, lastModified, deletedAt } = original || {}
+  const lastModifiedTime = deletedAt ? deletedAt : lastModified
   if (!latestVersion) {
     return (
       <Text color={Color.GREY_900} font={{ size: 'small' }}>

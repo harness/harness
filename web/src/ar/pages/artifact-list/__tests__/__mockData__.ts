@@ -139,8 +139,7 @@ export const mockGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
           type: 'VIRTUAL',
           url: 'space/repo1',
           isPublic: false,
-          uuid: 'uuid',
-          isDeleted: false
+          uuid: 'uuid'
         },
         {
           identifier: 'repo2',
@@ -152,8 +151,7 @@ export const mockGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
           registrySize: '100 MB',
           artifactsCount: 100,
           isPublic: false,
-          uuid: 'uuid',
-          isDeleted: false
+          uuid: 'uuid'
         },
         {
           identifier: 'upstream_1',
@@ -161,8 +159,7 @@ export const mockGetAllRegistriesResponse: GetAllRegistriesOkResponse = {
           type: 'UPSTREAM',
           url: 'space/upstream_1',
           isPublic: false,
-          uuid: 'uuid',
-          isDeleted: false
+          uuid: 'uuid'
         }
       ],
       itemCount: 3,
