@@ -87,7 +87,12 @@ func (s pushRuleSet) Violations(ctx context.Context, in *PushViolationsInput) (P
 	output := PushViolationsOutput{}
 
 	for _, r := range s.rules {
-		out, err := in.Protections[r.ID].Violations(ctx, in)
+		protection, ok := in.Protections[r.ID]
+		if !ok { // if the rule protection did not match the repo target
+			continue
+		}
+
+		out, err := protection.Violations(ctx, in)
 		if err != nil {
 			return PushViolationsOutput{}, fmt.Errorf(
 				"failed to backfill violations: %w", err,
