@@ -572,20 +572,35 @@ func (c *Controller) Merge(
 	isBypassed := protection.IsBypassed(violations)
 	mergedBy := session.Principal.ToPrincipalInfo()
 
-	pr, branchDeleted, err := c.mergeService.AfterMerge(
+	// Update pull request in the database
+	pr, seqBranchDeleted, err := c.mergeService.DatabaseUpdate(
+		ctx,
+		pr,
+		in.Method,
+		mergeOutput,
+		mergedBy,
+		isBypassed,
+		in.BypassMessage,
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to do post merge operations: %w", err)
+	}
+
+	// Try to delete the source branch and insert pull request activity for it.
+	var branchDeleted bool
+	if deleteSourceBranch {
+		branchDeleted = c.mergeService.DeleteBranchTry(ctx, pr, mergedBy, seqBranchDeleted)
+	}
+
+	// Publish pull request merge events
+	c.mergeService.Publish(
 		ctx,
 		pr,
 		targetRepo,
 		in.Method,
 		mergeOutput,
 		mergedBy,
-		isBypassed,
-		in.BypassMessage,
-		deleteSourceBranch,
 	)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to do post merge operations: %w", err)
-	}
 
 	if isBypassed {
 		err = c.auditService.Log(ctx,

@@ -263,20 +263,35 @@ func (s *Service) Merge(
 		return nil, false, ErrConflict
 	}
 
-	pr, branchDeleted, err := s.AfterMerge(
+	// Update pull request in the database
+	pr, seqBranchDeleted, err := s.DatabaseUpdate(
+		ctx,
+		pr,
+		input.MergeMethod,
+		mergeOutput,
+		principalInfo,
+		false,
+		"",
+	)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to update pull request after automerge: %w", err)
+	}
+
+	// Try to delete the source branch and insert pull request activity for it.
+	var branchDeleted bool
+	if deleteSourceBranch {
+		branchDeleted = s.DeleteBranchTry(ctx, pr, principalInfo, seqBranchDeleted)
+	}
+
+	// Publish pull request merge events
+	s.Publish(
 		ctx,
 		pr,
 		targetRepo,
 		input.MergeMethod,
 		mergeOutput,
 		principalInfo,
-		false,
-		"",
-		deleteSourceBranch,
 	)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to update pull request after automerge: %w", err)
-	}
 
 	return pr, branchDeleted, nil
 }
