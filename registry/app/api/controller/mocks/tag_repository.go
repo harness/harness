@@ -2374,3 +2374,53 @@ func (_c *MockTagRepository_TagsPaginated_Call) RunAndReturn(run func(ctx contex
 	_c.Call.Return(run)
 	return _c
 }
+
+// GetDownloadCountByImageID returns the cached download count for a single image.
+func (_mock *MockTagRepository) GetDownloadCountByImageID(ctx context.Context, imageID int64) (int64, error) {
+	ret := _mock.Called(ctx, imageID)
+	if len(ret) == 0 {
+		panic("no return value specified for GetDownloadCountByImageID")
+	}
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (int64, error)); ok {
+		return rf(ctx, imageID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) int64); ok {
+		r0 = rf(ctx, imageID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, imageID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetDownloadCountByManifests returns the cached download counts for manifests.
+func (_mock *MockTagRepository) GetDownloadCountByManifests(ctx context.Context, digests []string, imageID int64) (map[string]int64, error) {
+	ret := _mock.Called(ctx, digests, imageID)
+	if len(ret) == 0 {
+		panic("no return value specified for GetDownloadCountByManifests")
+	}
+	var r0 map[string]int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []string, int64) (map[string]int64, error)); ok {
+		return rf(ctx, digests, imageID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []string, int64) map[string]int64); ok {
+		r0 = rf(ctx, digests, imageID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]int64)
+		}
+	}
+	if rf, ok := ret.Get(1).(func(context.Context, []string, int64) error); ok {
+		r1 = rf(ctx, digests, imageID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}

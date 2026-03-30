@@ -329,6 +329,11 @@ type TagRepository interface {
 	GetQuarantineInfoForArtifacts(
 		ctx context.Context, artifacts []types.ArtifactIdentifier, parentID int64,
 	) (map[types.ArtifactIdentifier]*types.QuarantineInfo, error)
+
+	// GetDownloadCountByImageID returns the cached download count for an image.
+	GetDownloadCountByImageID(ctx context.Context, imageID int64) (int64, error)
+	// GetDownloadCountByManifests returns cached download counts for manifests.
+	GetDownloadCountByManifests(ctx context.Context, digests []string, imageID int64) (map[string]int64, error)
 }
 
 // UpstreamProxyConfig holds the record of a config of upstream proxy in DB.
@@ -654,6 +659,19 @@ type ArtifactRepository interface {
 	DuplicateArtifact(
 		ctx context.Context, sourceArtifact *types.Artifact, targetImageID int64,
 	) (*types.Artifact, error)
+
+	// GetDownloadCountByID returns the cached download count for a single artifact.
+	GetDownloadCountByID(ctx context.Context, artifactID int64) (int64, error)
+}
+
+// DownloadCountFinder provides cached download count lookups.
+type DownloadCountFinder interface {
+	FindByRegistryIDs(ctx context.Context, registryIDs []int64) (map[int64]int64, error)
+	FindByImageID(ctx context.Context, imageID int64) (int64, error)
+	FindByImageIDs(ctx context.Context, imageIDs []int64) (map[int64]int64, error)
+	FindByArtifactID(ctx context.Context, artifactID int64) (int64, error)
+	FindByArtifactIDs(ctx context.Context, artifactIDs []int64) (map[int64]int64, error)
+	FindByManifests(ctx context.Context, digests []string, imageID int64) (map[string]int64, error)
 }
 
 type DownloadStatRepository interface {
@@ -672,6 +690,10 @@ type DownloadStatRepository interface {
 		artifactType *artifact.ArtifactType,
 	) error
 	GetTotalDownloadsForArtifactID(ctx context.Context, artifactID int64) (int64, error)
+	GetTotalDownloadsForRegistryID(ctx context.Context, registryID int64) (int64, error)
+	GetTotalDownloadsForRegistryIDs(ctx context.Context, registryIDs []int64) ([]*types.DownloadCount, error)
+	GetTotalDownloadsForImageIDs(ctx context.Context, imageIDs []int64) ([]*types.DownloadCount, error)
+	GetTotalDownloadsForArtifactIDs(ctx context.Context, artifactIDs []int64) ([]*types.DownloadCount, error)
 }
 
 type BandwidthStatRepository interface {

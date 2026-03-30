@@ -28,3 +28,23 @@ type DownloadStat struct {
 	CreatedBy  int64
 	UpdatedBy  int64
 }
+
+// DownloadCount pairs an entity ID with its download count for ExtendedCache compatibility.
+type DownloadCount struct {
+	EntityID int64
+	Count    int64
+}
+
+func (d *DownloadCount) Identifier() int64 {
+	return d.EntityID
+}
+
+// ManifestDownloadCount pairs a composite key with its download count for ExtendedCache compatibility.
+type ManifestDownloadCount struct {
+	Key   string
+	Count int64
+}
+
+func (d *ManifestDownloadCount) Identifier() string {
+	return d.Key
+}

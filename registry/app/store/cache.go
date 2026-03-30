@@ -24,4 +24,9 @@ type (
 	RegistryRootRefCache         cache.Cache[types.RegistryRootRefCacheKey, int64]
 	RegistryUUIDCache            cache.Cache[string, *types.Registry]
 	UpstreamProxyRegistryIDCache cache.Cache[int64, *types.UpstreamProxy]
+
+	DownloadCountRegistryCache cache.ExtendedCache[int64, *types.DownloadCount]
+	DownloadCountImageCache    cache.ExtendedCache[int64, *types.DownloadCount]
+	DownloadCountArtifactCache cache.ExtendedCache[int64, *types.DownloadCount]
+	DownloadCountManifestCache cache.ExtendedCache[string, *types.ManifestDownloadCount]
 )

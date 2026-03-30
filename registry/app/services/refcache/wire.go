@@ -51,7 +51,17 @@ func ProvideUpstreamProxyFinder(
 	return NewUpstreamProxyFinder(upstreamProxyRepository, upstreamProxyRegistryIDCache, evictor)
 }
 
+func ProvideDownloadCountFinder(
+	registryCache store.DownloadCountRegistryCache,
+	imageCache store.DownloadCountImageCache,
+	artifactCache store.DownloadCountArtifactCache,
+	manifestCache store.DownloadCountManifestCache,
+) store.DownloadCountFinder {
+	return NewDownloadCountFinder(registryCache, imageCache, artifactCache, manifestCache)
+}
+
 var WireSet = wire.NewSet(
 	ProvideRegistryFinder,
 	ProvideUpstreamProxyFinder,
+	ProvideDownloadCountFinder,
 )

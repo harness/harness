@@ -51,7 +51,7 @@ func TestGetManifestDetails_WithSoftDeletedImage(t *testing.T) {
 
 	// Setup mocks
 	mockImageRepo := new(mocks.ImageRepository)
-	mockDownloadStatRepo := new(mocks.MockDownloadStatRepository)
+	mockTagRepo := new(mocks.MockTagRepository)
 	mockQuarantineRepo := new(mocks.MockQuarantineArtifactRepository)
 
 	// Mock GetByName - this is line 151 being tested
@@ -59,8 +59,8 @@ func TestGetManifestDetails_WithSoftDeletedImage(t *testing.T) {
 	mockImageRepo.On("GetByName", ctx, manifest.RegistryID, manifest.ImageName, mock.Anything).
 		Return(softDeletedImage, nil)
 
-	// Mock download stats
-	mockDownloadStatRepo.On("GetTotalDownloadsForManifests", ctx, mock.Anything, softDeletedImage.ID).
+	// Mock download count by manifests (called via TagStore)
+	mockTagRepo.On("GetDownloadCountByManifests", ctx, mock.Anything, softDeletedImage.ID).
 		Return(map[string]int64{}, nil)
 
 	// Mock quarantine check
@@ -71,7 +71,7 @@ func TestGetManifestDetails_WithSoftDeletedImage(t *testing.T) {
 	// Create controller
 	controller := &APIController{
 		ImageStore:                   mockImageRepo,
-		DownloadStatRepository:       mockDownloadStatRepo,
+		TagStore:                     mockTagRepo,
 		QuarantineArtifactRepository: mockQuarantineRepo,
 	}
 
@@ -108,13 +108,13 @@ func TestGetManifestDetails_WithActiveImage(t *testing.T) {
 	}
 
 	mockImageRepo := new(mocks.ImageRepository)
-	mockDownloadStatRepo := new(mocks.MockDownloadStatRepository)
+	mockTagRepo := new(mocks.MockTagRepository)
 	mockQuarantineRepo := new(mocks.MockQuarantineArtifactRepository)
 
 	mockImageRepo.On("GetByName", ctx, manifest.RegistryID, manifest.ImageName, mock.Anything).
 		Return(activeImage, nil)
 
-	mockDownloadStatRepo.On("GetTotalDownloadsForManifests", ctx, mock.Anything, activeImage.ID).
+	mockTagRepo.On("GetDownloadCountByManifests", ctx, mock.Anything, activeImage.ID).
 		Return(map[string]int64{}, nil)
 
 	mockQuarantineRepo.On(
@@ -123,7 +123,7 @@ func TestGetManifestDetails_WithActiveImage(t *testing.T) {
 
 	controller := &APIController{
 		ImageStore:                   mockImageRepo,
-		DownloadStatRepository:       mockDownloadStatRepo,
+		TagStore:                     mockTagRepo,
 		QuarantineArtifactRepository: mockQuarantineRepo,
 	}
 
@@ -161,13 +161,13 @@ func TestGetManifestDetails_WithManifestConfig(t *testing.T) {
 	}
 
 	mockImageRepo := new(mocks.ImageRepository)
-	mockDownloadStatRepo := new(mocks.MockDownloadStatRepository)
+	mockTagRepo := new(mocks.MockTagRepository)
 	mockQuarantineRepo := new(mocks.MockQuarantineArtifactRepository)
 
 	mockImageRepo.On("GetByName", ctx, manifest.RegistryID, manifest.ImageName, mock.Anything).
 		Return(image, nil)
 
-	mockDownloadStatRepo.On("GetTotalDownloadsForManifests", ctx, mock.Anything, image.ID).
+	mockTagRepo.On("GetDownloadCountByManifests", ctx, mock.Anything, image.ID).
 		Return(map[string]int64{}, nil)
 
 	mockQuarantineRepo.On(
@@ -176,7 +176,7 @@ func TestGetManifestDetails_WithManifestConfig(t *testing.T) {
 
 	controller := &APIController{
 		ImageStore:                   mockImageRepo,
-		DownloadStatRepository:       mockDownloadStatRepo,
+		TagStore:                     mockTagRepo,
 		QuarantineArtifactRepository: mockQuarantineRepo,
 	}
 

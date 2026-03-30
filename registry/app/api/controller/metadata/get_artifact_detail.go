@@ -141,7 +141,7 @@ func (c *APIController) GetArtifactDetails(
 		}, nil
 	}
 
-	downloadCount, err := c.DownloadStatRepository.GetTotalDownloadsForArtifactID(ctx, art.ID)
+	downloadCount, err := c.ArtifactStore.GetDownloadCountByID(ctx, art.ID)
 
 	if err != nil {
 		return artifact.GetArtifactDetails500JSONResponse{

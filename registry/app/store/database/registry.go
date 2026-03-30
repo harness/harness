@@ -46,14 +46,19 @@ type registryDao struct {
 	db *sqlx.DB
 
 	//FIXME: Arvind: Move this to controller layer later
-	mtRepository store.MediaTypesRepository
+	mtRepository        store.MediaTypesRepository
+	downloadCountFinder store.DownloadCountFinder
 }
 
-func NewRegistryDao(db *sqlx.DB, mtRepository store.MediaTypesRepository) store.RegistryRepository {
+func NewRegistryDao(
+	db *sqlx.DB, mtRepository store.MediaTypesRepository,
+	downloadCountFinder store.DownloadCountFinder,
+) store.RegistryRepository {
 	return &registryDao{
 		db: db,
 		//FIXME: Arvind: Move this to controller layer later
-		mtRepository: mtRepository,
+		mtRepository:        mtRepository,
+		downloadCountFinder: downloadCountFinder,
 	}
 }
 
@@ -604,44 +609,12 @@ func (r registryDao) fetchGenericBlobSizes(
 	return sizes, nil
 }
 
-// fetchDownloadCounts fetches download counts for given registry IDs.
+// fetchDownloadCounts fetches download counts for given registry IDs using the cache.
 func (r registryDao) fetchDownloadCounts(ctx context.Context, registryIDs []int64) (map[int64]int64, error) {
 	if len(registryIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
-
-	query := `
-		SELECT i.image_registry_id, COUNT(d.download_stat_id) AS download_count
-		FROM download_stats d
-		LEFT JOIN artifacts a ON d.download_stat_artifact_id = a.artifact_id
-		LEFT JOIN images i ON a.artifact_image_id = i.image_id
-		WHERE i.image_registry_id IN (?) AND i.image_enabled = TRUE
-		  AND a.artifact_deleted_at IS NULL
-		GROUP BY i.image_registry_id
-	`
-
-	db := dbtx.GetAccessor(ctx, r.db)
-	sql, args, err := sqlx.In(query, registryIDs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to build download counts query: %w", err)
-	}
-	sql = db.Rebind(sql)
-
-	type result struct {
-		RegistryID    int64 `db:"image_registry_id"`
-		DownloadCount int64 `db:"download_count"`
-	}
-	var results []result
-	if err := db.SelectContext(ctx, &results, sql, args...); err != nil {
-		return nil, fmt.Errorf("failed to fetch download counts: %w", err)
-	}
-
-	counts := make(map[int64]int64, len(results))
-	for _, r := range results {
-		counts[r.RegistryID] = r.DownloadCount
-	}
-
-	return counts, nil
+	return r.downloadCountFinder.FindByRegistryIDs(ctx, registryIDs)
 }
 
 func (r registryDao) CountAll(

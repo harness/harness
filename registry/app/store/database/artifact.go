@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
@@ -40,12 +41,14 @@ import (
 )
 
 type ArtifactDao struct {
-	db *sqlx.DB
+	db                  *sqlx.DB
+	downloadCountFinder store.DownloadCountFinder
 }
 
-func NewArtifactDao(db *sqlx.DB) store.ArtifactRepository {
+func NewArtifactDao(db *sqlx.DB, downloadCountFinder store.DownloadCountFinder) store.ArtifactRepository {
 	return &ArtifactDao{
-		db: db,
+		db:                  db,
+		downloadCountFinder: downloadCountFinder,
 	}
 }
 
@@ -653,31 +656,22 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 ) (*[]types.ArtifactMetadata, error) {
 	softDeleteClause := " AND a.artifact_deleted_at IS NULL"
 
-	// Build download count subquery - per artifact, with soft delete filter
-	downloadCountSubquery := fmt.Sprintf(`( SELECT a.artifact_id, COUNT(d.download_stat_id) as download_count 
-		FROM artifacts a 
-		JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id 
-		JOIN images i ON i.image_id = a.artifact_image_id 
-		JOIN registries r ON r.registry_id = i.image_registry_id 
-		WHERE r.registry_parent_id = ? %s 
-		GROUP BY a.artifact_id ) as t2`, softDeleteClause)
-
 	q := databaseg.Builder.Select(
-		`r.registry_name as repo_name, 
-		i.image_name as name, 
-		r.registry_package_type as package_type, 
-		a.artifact_version as version, 
-		a.artifact_updated_at as modified_at, 
-		i.image_labels as labels, 
+		`a.artifact_id,
+		r.registry_name as repo_name,
+		i.image_name as name,
+		r.registry_package_type as package_type,
+		a.artifact_version as version,
+		a.artifact_updated_at as modified_at,
+		i.image_labels as labels,
 		a.artifact_metadata as metadata,
-		COALESCE(t2.download_count,0) as download_count,
+		0 as download_count,
 		a.artifact_deleted_at as artifact_deleted_at`,
 	).
 		From("artifacts a").
 		Join("images i ON a.artifact_image_id = i.image_id").
 		Join("registries r ON r.registry_id = i.image_registry_id").
-		Where("r.registry_parent_id = ?", parentID).
-		LeftJoin(downloadCountSubquery+` ON a.artifact_id = t2.artifact_id`, parentID)
+		Where("r.registry_parent_id = ?", parentID)
 
 	if latestVersion {
 		rankSubquery := fmt.Sprintf(`(SELECT t.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY t.artifact_image_id
@@ -719,6 +713,11 @@ func (a ArtifactDao) GetAllArtifactsByParentID(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact metadata")
 	}
+
+	if err = a.populateArtifactDownloadCounts(ctx, dst); err != nil {
+		return nil, err
+	}
+
 	return a.mapToArtifactMetadataList(dst)
 }
 
@@ -780,33 +779,24 @@ func (a ArtifactDao) GetArtifactsByRepo(
 	softDeleteClause := " AND a.artifact_deleted_at IS NULL"
 
 	// Build rank subquery with soft delete filter
-	rankSubquery := fmt.Sprintf(`(SELECT a.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY a.artifact_image_id 
-		ORDER BY a.artifact_updated_at DESC) AS rank FROM artifacts a 
-		JOIN images i ON i.image_id = a.artifact_image_id  
-		JOIN registries r ON i.image_registry_id = r.registry_id  
+	rankSubquery := fmt.Sprintf(`(SELECT a.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY a.artifact_image_id
+		ORDER BY a.artifact_updated_at DESC) AS rank FROM artifacts a
+		JOIN images i ON i.image_id = a.artifact_image_id
+		Join registries r ON i.image_registry_id = r.registry_id
 		WHERE r.registry_parent_id = ? AND r.registry_name = ? %s) AS a1`, softDeleteClause)
 
-	// Build download count subquery - per artifact, with soft delete filter
-	downloadCountSubquery := fmt.Sprintf(`( SELECT a.artifact_id, COUNT(d.download_stat_id) as download_count 
-		FROM artifacts a 
-		JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id 
-		JOIN images i ON i.image_id = a.artifact_image_id 
-		JOIN registries r ON r.registry_id = i.image_registry_id 
-		WHERE r.registry_parent_id = ? AND r.registry_name = ? %s 
-		GROUP BY a.artifact_id ) as t2`, softDeleteClause)
-
 	q := databaseg.Builder.Select(
-		`r.registry_name as repo_name, i.image_name as name, i.image_uuid as uuid,
+		`a.artifact_id,
+		r.registry_name as repo_name, i.image_name as name, i.image_uuid as uuid,
 		r.registry_uuid as registry_uuid,
-		r.registry_package_type as package_type, a.artifact_version as latest_version, 
+		r.registry_package_type as package_type, a.artifact_version as latest_version,
 		a.artifact_updated_at as modified_at, i.image_labels as labels, i.image_type as artifact_type,
-		COALESCE(t2.download_count, 0) as download_count`,
+		0 as download_count`,
 	).
 		From("artifacts a").
 		Join(rankSubquery+` ON a.artifact_id = a1.id`, parentID, repoKey).
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
-		LeftJoin(downloadCountSubquery+` ON a.artifact_id = t2.artifact_id`, parentID, repoKey).
 		Where("a1.rank = 1 ")
 
 	if search != "" {
@@ -846,6 +836,11 @@ func (a ArtifactDao) GetArtifactsByRepo(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
+
+	if err = a.populateArtifactDownloadCounts(ctx, dst); err != nil {
+		return nil, err
+	}
+
 	return a.mapToArtifactMetadataList(dst)
 }
 
@@ -920,7 +915,7 @@ func (a ArtifactDao) GetLatestArtifactMetadata(
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get latest artifact ID")
 	}
 
-	// Step 2: Fetch full metadata with download count for this specific artifact
+	// Step 2: Fetch full metadata for this specific artifact.
 	metadataQuery := databaseg.Builder.Select(
 		`r.registry_name AS repo_name,
          r.registry_package_type AS package_type,
@@ -928,8 +923,7 @@ func (a ArtifactDao) GetLatestArtifactMetadata(
          a.artifact_version AS latest_version,
          a.artifact_created_at AS created_at,
          a.artifact_updated_at AS modified_at,
-         i.image_labels AS labels,
-         (SELECT COUNT(*) FROM download_stats WHERE download_stat_artifact_id = a.artifact_id) AS download_count`,
+         i.image_labels AS labels`,
 	).
 		From("artifacts a").
 		Join("images i ON i.image_id = a.artifact_image_id").
@@ -948,6 +942,13 @@ func (a ArtifactDao) GetLatestArtifactMetadata(
 	if err = db.GetContext(ctx, dst, sql2, args2...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact metadata")
 	}
+
+	// Fetch download count from cache.
+	downloadCount, dcErr := a.downloadCountFinder.FindByArtifactID(ctx, latestArtifactID)
+	if dcErr != nil {
+		return nil, fmt.Errorf("failed to fetch download count for artifact %d: %w", latestArtifactID, dcErr)
+	}
+	dst.DownloadCount = downloadCount
 
 	return a.mapToArtifactMetadata(dst)
 }
@@ -1036,11 +1037,7 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
-	artifactIDs := make([]any, 0, len(dst))
-	for _, art := range dst {
-		artifactIDs = append(artifactIDs, art.ID)
-	}
-	err = a.fetchDownloadStatsForArtifacts(ctx, artifactIDs, dst, sortByField == downloadCount, sortByOrder)
+	err = a.fetchDownloadStatsForArtifacts(ctx, dst)
 	if err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to fetch the download count for artifacts")
 	}
@@ -1049,49 +1046,36 @@ func (a ArtifactDao) GetAllVersionsByRepoAndImage(
 
 func (a ArtifactDao) fetchDownloadStatsForArtifacts(
 	ctx context.Context,
-	artifactIDs []any, dst []*nonOCIArtifactMetadataDB, sortByDownloadCount bool, sortOrder string,
+	dst []*nonOCIArtifactMetadataDB,
 ) error {
-	if len(artifactIDs) == 0 {
+	if len(dst) == 0 {
 		return nil
 	}
 
-	query, args, err := databaseg.Builder.
-		Select("download_stat_artifact_id", "COUNT(*) AS download_count").
-		From("download_stats").
-		Where(sq.Eq{"download_stat_artifact_id": artifactIDs}).
-		GroupBy("download_stat_artifact_id").
-		ToSql()
-	if err != nil {
-		return errors.Wrap(err, "building download stats query")
-	}
-
-	results := []downloadCountResult{}
-	if err := a.db.SelectContext(ctx, &results, query, args...); err != nil {
-		return errors.Wrap(err, "executing download stats query")
-	}
-
-	// Map artifact ID -> count
-	countMap := make(map[string]int64, len(results))
-	for _, r := range results {
-		countMap[r.ArtifactID] = r.DownloadCount
-	}
-
-	// Update download counts in dst
-	for _, artifact := range dst {
-		if count, ok := countMap[artifact.ID]; ok {
-			artifact.DownloadCount = count
-		} else {
-			artifact.DownloadCount = 0
+	ids := make([]int64, 0, len(dst))
+	for _, d := range dst {
+		parsed, err := strconv.ParseInt(d.ID, 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse artifact ID %q: %w", d.ID, err)
 		}
+		ids = append(ids, parsed)
 	}
 
-	if sortByDownloadCount {
-		sort.Slice(dst, func(i, j int) bool {
-			if sortOrder == "DESC" {
-				return dst[i].DownloadCount > dst[j].DownloadCount
-			}
-			return dst[i].DownloadCount < dst[j].DownloadCount
-		})
+	countMap, err := a.downloadCountFinder.FindByArtifactIDs(ctx, ids)
+	if err != nil {
+		return fmt.Errorf("failed to fetch download counts for artifacts: %w", err)
+	}
+
+	for _, d := range dst {
+		parsed, err := strconv.ParseInt(d.ID, 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse artifact ID %q: %w", d.ID, err)
+		}
+		if count, ok := countMap[parsed]; ok {
+			d.DownloadCount = count
+		} else {
+			d.DownloadCount = 0
+		}
 	}
 
 	return nil
@@ -1140,20 +1124,17 @@ func (a ArtifactDao) GetArtifactMetadata(
 ) (*types.ArtifactMetadata, error) {
 	deleteFilter := types.ExtractDeleteFilter(opts...)
 	q := databaseg.Builder.Select(
-		"r.registry_package_type as package_type, a.artifact_version as name,"+
+		"a.artifact_id, "+
+			"r.registry_package_type as package_type, a.artifact_version as name,"+
 			"a.artifact_updated_at as modified_at, "+
-			"COALESCE(COUNT(dc.download_stat_id), 0) as download_count, "+
 			"a.artifact_deleted_at").
 		From("artifacts a").
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON i.image_registry_id = registry_id").
-		LeftJoin("download_stats dc ON dc.download_stat_artifact_id = a.artifact_id").
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ?"+
 				" AND i.image_name = ? AND a.artifact_version = ?", id, identifier, image, version,
-		).
-		GroupBy("r.registry_package_type, a.artifact_version, a.artifact_updated_at, " +
-			"a.artifact_deleted_at")
+		)
 
 	if artifactType != nil && *artifactType != "" {
 		q = q.Where("i.image_type = ?", *artifactType)
@@ -1179,6 +1160,12 @@ func (a ArtifactDao) GetArtifactMetadata(
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get artifact metadata")
 	}
+
+	downloadCount, dcErr := a.downloadCountFinder.FindByArtifactID(ctx, dst.ID)
+	if dcErr != nil {
+		return nil, fmt.Errorf("failed to fetch download count for artifact %d: %w", dst.ID, dcErr)
+	}
+	dst.DownloadCount = downloadCount
 
 	return a.mapToArtifactMetadata(dst)
 }
@@ -1412,7 +1399,36 @@ type nonOCIArtifactMetadataDB struct {
 	ArtifactType     *artifact.ArtifactType `db:"artifact_type"`
 }
 
-type downloadCountResult struct {
-	ArtifactID    string `db:"download_stat_artifact_id"`
-	DownloadCount int64  `db:"download_count"`
+// GetDownloadCountByID returns the cached download count for a single artifact.
+func (a ArtifactDao) GetDownloadCountByID(ctx context.Context, artifactID int64) (int64, error) {
+	return a.downloadCountFinder.FindByArtifactID(ctx, artifactID)
+}
+
+func (a ArtifactDao) populateArtifactDownloadCounts(
+	ctx context.Context,
+	dst []*artifactMetadataDB,
+) error {
+	if len(dst) == 0 {
+		return nil
+	}
+
+	ids := make([]int64, 0, len(dst))
+	for _, d := range dst {
+		if d.ID > 0 {
+			ids = append(ids, d.ID)
+		}
+	}
+
+	countMap, err := a.downloadCountFinder.FindByArtifactIDs(ctx, ids)
+	if err != nil {
+		return fmt.Errorf("failed to fetch download counts for artifacts: %w", err)
+	}
+
+	for _, d := range dst {
+		if count, ok := countMap[d.ID]; ok {
+			d.DownloadCount = count
+		}
+	}
+
+	return nil
 }

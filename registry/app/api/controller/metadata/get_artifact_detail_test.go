@@ -271,7 +271,7 @@ func setupBasicController(_ *testing.T) *metadata.APIController {
 		"GetByName", mock.Anything, int64(1), "v1.0.0",
 		mock.AnythingOfType("types.QueryOption"),
 	).Return(art, nil)
-	mockDownloadStatRepo.On("GetTotalDownloadsForArtifactID", mock.Anything, int64(1)).
+	mockArtifactStore.On("GetDownloadCountByID", mock.Anything, int64(1)).
 		Return(int64(100), nil)
 	mockQuarantineRepo.On(
 		"GetByFilePath", mock.Anything, "", int64(1),
@@ -545,7 +545,7 @@ func setupSnapshotController(_ *testing.T, packageType artifact.PackageType) *me
 		"GetByName", mock.Anything, int64(1), "v1.0.0",
 		mock.AnythingOfType("types.QueryOption"),
 	).Return(art, nil)
-	mockDownloadStatRepo.On("GetTotalDownloadsForArtifactID", mock.Anything, int64(1)).
+	mockArtifactStore.On("GetDownloadCountByID", mock.Anything, int64(1)).
 		Return(int64(100), nil)
 	mockQuarantineRepo.On("GetByFilePath", mock.Anything, "", int64(1), "test-artifact", "v1.0.0", mock.Anything).
 		Return([]*types.QuarantineArtifact{}, nil)

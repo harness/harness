@@ -60,12 +60,14 @@ const (
 )
 
 type tagDao struct {
-	db *sqlx.DB
+	db                  *sqlx.DB
+	downloadCountFinder store.DownloadCountFinder
 }
 
-func NewTagDao(db *sqlx.DB) store.TagRepository {
+func NewTagDao(db *sqlx.DB, downloadCountFinder store.DownloadCountFinder) store.TagRepository {
 	return &tagDao{
-		db: db,
+		db:                  db,
+		downloadCountFinder: downloadCountFinder,
 	}
 }
 
@@ -84,6 +86,7 @@ type tagDB struct {
 
 type artifactMetadataDB struct {
 	ID                int64                  `db:"artifact_id"`
+	ImageID           int64                  `db:"image_id"`
 	UUID              string                 `db:"uuid"`
 	Name              string                 `db:"name"`
 	RegistryUUID      string                 `db:"registry_uuid"`
@@ -414,7 +417,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	finalQuery := fmt.Sprintf(`
     SELECT repo_name, name, package_type, version, modified_at,
            labels, download_count, is_quarantined, quarantine_reason, artifact_type,
-           artifact_deleted_at, registry_uuid, uuid, registry_type
+           artifact_deleted_at, registry_uuid, uuid, registry_type, image_id, artifact_id
     FROM (%s UNION ALL %s) AS combined
 `, q1SQL, q2SQL)
 
@@ -423,10 +426,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 
 	// Apply sorting based on provided field
 	sortField := "modified_at"
-	switch sortByField {
-	case downloadCount:
-		sortField = "download_count"
-	case imageName:
+	if sortByField == imageName {
 		sortField = "name"
 	}
 
@@ -441,6 +441,11 @@ func (t tagDao) GetAllArtifactsByParentID(
 	if err = db.SelectContext(ctx, &dst, finalQuery, finalArgs...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
+
+	if err = t.populateDownloadCounts(ctx, dst); err != nil {
+		return nil, err
+	}
+
 	return t.mapToArtifactMetadataList(dst)
 }
 
@@ -452,35 +457,27 @@ func (t tagDao) GetAllArtifactsQueryByParentIDForOCI(
 	q2 := databaseg.Builder.Select(
 		`r.registry_name as repo_name,
 		r.registry_uuid as registry_uuid,
-		t.tag_image_name as name, 
-		r.registry_package_type as package_type, 
-		t.tag_name as version, 
+		t.tag_image_name as name,
+		r.registry_package_type as package_type,
+		t.tag_name as version,
 		i.image_uuid as uuid,
-		t.tag_updated_at as modified_at, 
-		i.image_labels as labels, 
-		COALESCE(t2.download_count,0) as download_count,
-        false as is_quarantined,
+		i.image_id as image_id,
+		0 as artifact_id,
+		t.tag_updated_at as modified_at,
+		i.image_labels as labels,
+		0 as download_count,
+		false as is_quarantined,
 		'' as quarantine_reason,
-        i.image_type as artifact_type,
-        NULL as artifact_deleted_at,
-        r.registry_type as registry_type`,
+		i.image_type as artifact_type,
+		NULL as artifact_deleted_at,
+		r.registry_type as registry_type`,
 	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Where("r.registry_parent_id = ?", parentID).
 		Join(
-			"images i ON i.image_registry_id = t.tag_registry_id AND"+
+			"images i ON i.image_registry_id = t.tag_registry_id AND" +
 				" i.image_name = t.tag_image_name",
-		).
-		LeftJoin(
-			`( SELECT i.image_id, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
-			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
-			FROM artifacts a JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id 
-			GROUP BY a.artifact_image_id ) as t1 
-			JOIN images i ON i.image_id = t1.artifact_image_id 
-			JOIN registries r ON r.registry_id = i.image_registry_id 
-			WHERE r.registry_parent_id = ? GROUP BY i.image_id) as t2 
-			ON i.image_id = t2.image_id`, parentID,
 		)
 
 	if latestVersion {
@@ -630,10 +627,37 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 		return make(map[int64]enrichmentData), nil
 	}
 
+	// Get download counts from cache.
+	countMap, err := t.downloadCountFinder.FindByArtifactIDs(ctx, artifactIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch download counts: %w", err)
+	}
+
+	// Get tags from DB (only for OCI artifacts).
+	tagMap, err := t.getArtifactTags(ctx, artifactIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[int64]enrichmentData, len(artifactIDs))
+	for _, id := range artifactIDs {
+		result[id] = enrichmentData{
+			DownloadCount: countMap[id],
+			Tags:          tagMap[id],
+		}
+	}
+
+	return result, nil
+}
+
+func (t tagDao) getArtifactTags(ctx context.Context, artifactIDs []int64) (map[int64]string, error) {
+	if len(artifactIDs) == 0 {
+		return make(map[int64]string), nil
+	}
+
 	db := dbtx.GetAccessor(ctx, t.db)
 	driver := db.DriverName()
 
-	// Pick aggregation function and decode function depending on database
 	var tagAggExpr, decodeFunction string
 	if driver == driverPostgres {
 		tagAggExpr = "STRING_AGG(t.tag_name, ',')"
@@ -643,17 +667,12 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 		decodeFunction = "unhex(ar.artifact_version)"
 	}
 
-	// Build placeholders for the 3 IN clauses
-	var placeholders1, placeholders2, placeholders3, placeholders4 string
-	args := make([]interface{}, 0, len(artifactIDs)*4)
-	const placeholderSeparator = ", ?"
+	var placeholders1, placeholders2 string
+	args := make([]any, 0, len(artifactIDs)*2)
 
-	// nolint:nestif
+	//nolint:nestif
 	if driver == driverPostgres {
-		// PostgreSQL: sequential parameter numbering across entire query
 		paramIndex := 1
-
-		// First IN clause (main WHERE)
 		for i := range artifactIDs {
 			if i > 0 {
 				placeholders1 += fmt.Sprintf(", $%d", paramIndex)
@@ -662,8 +681,6 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 			}
 			paramIndex++
 		}
-
-		// Second IN clause (download_counts)
 		for i := range artifactIDs {
 			if i > 0 {
 				placeholders2 += fmt.Sprintf(", $%d", paramIndex)
@@ -672,45 +689,20 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 			}
 			paramIndex++
 		}
-
-		// Third IN clause (tag_lists)
-		for i := range artifactIDs {
-			if i > 0 {
-				placeholders3 += fmt.Sprintf(", $%d", paramIndex)
-			} else {
-				placeholders3 += fmt.Sprintf("$%d", paramIndex)
-			}
-			paramIndex++
-		}
-
-		// Fourth IN clause (main WHERE)
-		for i := range artifactIDs {
-			if i > 0 {
-				placeholders4 += fmt.Sprintf(", $%d", paramIndex)
-			} else {
-				placeholders4 += fmt.Sprintf("$%d", paramIndex)
-			}
-			paramIndex++
-		}
 	} else {
-		// SQLite: ? placeholders can be reused
+		const sep = ", ?"
 		for i := range artifactIDs {
 			if i > 0 {
-				placeholders1 += placeholderSeparator
-				placeholders2 += placeholderSeparator
-				placeholders3 += placeholderSeparator
-				placeholders4 += placeholderSeparator
+				placeholders1 += sep
+				placeholders2 += sep
 			} else {
 				placeholders1 += "?"
 				placeholders2 += "?"
-				placeholders3 += "?"
-				placeholders4 += "?"
 			}
 		}
 	}
 
-	// Arguments: artifactIDs repeated 4 times for the 4 IN clauses
-	for range 4 {
+	for range 2 {
 		for _, id := range artifactIDs {
 			args = append(args, id)
 		}
@@ -718,61 +710,39 @@ func (t tagDao) getArtifactEnrichmentData(ctx context.Context, artifactIDs []int
 
 	query := fmt.Sprintf(`
     WITH oci_artifacts AS (
-    SELECT a.artifact_image_id, a.artifact_id, a.artifact_version 
-    FROM artifacts a 
-		join images i ON a.artifact_image_id = i.image_id
-		join registries r ON r.registry_id = i.image_registry_id
-		where r.registry_package_type IN ('DOCKER','HELM')
-        and artifact_id IN (%s)
-	),
-    download_counts AS (
-        SELECT 
-            ds.download_stat_artifact_id AS artifact_id,
-            COUNT(ds.download_stat_id) AS download_count
-        FROM download_stats ds
-        WHERE ds.download_stat_artifact_id IN (%s)
-        GROUP BY ds.download_stat_artifact_id
-    ),
-    tag_lists AS (
-        SELECT 
-            ar.artifact_id,
-            %s AS tags
-        FROM oci_artifacts ar
-        JOIN images i ON i.image_id = ar.artifact_image_id
-        JOIN manifests m ON m.manifest_registry_id = i.image_registry_id 
-                         AND m.manifest_image_name = i.image_name
-                         AND m.manifest_digest = %s
-        JOIN tags t ON t.tag_manifest_id = m.manifest_id
-        WHERE ar.artifact_id IN (%s)
-        GROUP BY ar.artifact_id
+        SELECT a.artifact_image_id, a.artifact_id, a.artifact_version
+        FROM artifacts a
+        JOIN images i ON a.artifact_image_id = i.image_id
+        JOIN registries r ON r.registry_id = i.image_registry_id
+        WHERE r.registry_package_type IN ('DOCKER','HELM')
+          AND artifact_id IN (%s)
     )
-    SELECT 
+    SELECT
         ar.artifact_id,
-        COALESCE(dc.download_count, 0) AS download_count,
-        COALESCE(tl.tags, '') AS tags
-    FROM artifacts ar
-    LEFT JOIN download_counts dc ON dc.artifact_id = ar.artifact_id
-    LEFT JOIN tag_lists tl ON tl.artifact_id = ar.artifact_id
-    WHERE ar.artifact_id IN (%s);
-    `, placeholders1, placeholders2, tagAggExpr, decodeFunction, placeholders3, placeholders4)
+        %s AS tags
+    FROM oci_artifacts ar
+    JOIN images i ON i.image_id = ar.artifact_image_id
+    JOIN manifests m ON m.manifest_registry_id = i.image_registry_id
+                     AND m.manifest_image_name = i.image_name
+                     AND m.manifest_digest = %s
+    JOIN tags t ON t.tag_manifest_id = m.manifest_id
+    WHERE ar.artifact_id IN (%s)
+    GROUP BY ar.artifact_id
+    `, placeholders1, tagAggExpr, decodeFunction, placeholders2)
 
-	type enrichmentRow struct {
-		ArtifactID    int64  `db:"artifact_id"`
-		DownloadCount int64  `db:"download_count"`
-		Tags          string `db:"tags"`
+	type tagRow struct {
+		ArtifactID int64  `db:"artifact_id"`
+		Tags       string `db:"tags"`
 	}
 
-	var rows []enrichmentRow
+	var rows []tagRow
 	if err := db.SelectContext(ctx, &rows, query, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing enrichment query")
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing tags query")
 	}
 
-	result := make(map[int64]enrichmentData, len(rows))
+	result := make(map[int64]string, len(rows))
 	for _, row := range rows {
-		result[row.ArtifactID] = enrichmentData{
-			DownloadCount: row.DownloadCount,
-			Tags:          row.Tags,
-		}
+		result[row.ArtifactID] = row.Tags
 	}
 
 	return result, nil
@@ -787,39 +757,30 @@ func (t tagDao) GetAllArtifactOnParentIDQueryForNonOCI(
 		suffix = ", NULL AS tags "
 	}
 	q1 := databaseg.Builder.Select(
-		`r.registry_name as repo_name, 
+		`r.registry_name as repo_name,
 		r.registry_uuid as registry_uuid,
 		i.image_name as name,
 		r.registry_package_type as package_type,
 		ar.artifact_version as version,
-		ar.artifact_uuid as uuid, 
-		ar.artifact_updated_at as modified_at, 
-		i.image_labels as labels, 
-		COALESCE(t2.download_count, 0) as download_count,
-        (qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
-        qp.quarantined_path_reason as quarantine_reason,
-        i.image_type as artifact_type,
-        ar.artifact_deleted_at as artifact_deleted_at,
-        r.registry_type as registry_type`+suffix,
+		ar.artifact_uuid as uuid,
+		i.image_id as image_id,
+		ar.artifact_id,
+		ar.artifact_updated_at as modified_at,
+		i.image_labels as labels,
+		0 as download_count,
+		(qp.quarantined_path_id IS NOT NULL) AS is_quarantined,
+		qp.quarantined_path_reason as quarantine_reason,
+		i.image_type as artifact_type,
+		ar.artifact_deleted_at as artifact_deleted_at,
+		r.registry_type as registry_type`+suffix,
 	).
 		From("artifacts ar").
 		Join("images i ON i.image_id = ar.artifact_image_id").
 		Join("registries r ON i.image_registry_id = r.registry_id").
 		Where("r.registry_parent_id = ? AND r.registry_package_type NOT IN ('DOCKER', 'HELM')", parentID).
-		LeftJoin("quarantined_paths qp ON ((qp.quarantined_path_artifact_id = ar.artifact_id "+
-			"OR qp.quarantined_path_artifact_id IS NULL) "+
-			"AND qp.quarantined_path_image_id = i.image_id) AND qp.quarantined_path_registry_id = r.registry_id").
-		LeftJoin(
-			`( SELECT a.artifact_id, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
-			( SELECT a.artifact_id, COUNT(d.download_stat_id) as download_count 
-			FROM artifacts a JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id 
-			GROUP BY a.artifact_id ) as t1 
-            JOIN artifacts a ON a.artifact_id = t1.artifact_id 
-			JOIN images i ON i.image_id = a.artifact_image_id 
-			JOIN registries r ON r.registry_id = i.image_registry_id 
-			WHERE r.registry_parent_id = ? GROUP BY a.artifact_id) as t2 
-			ON ar.artifact_id = t2.artifact_id`, parentID,
-		)
+		LeftJoin("quarantined_paths qp ON ((qp.quarantined_path_artifact_id = ar.artifact_id " +
+			"OR qp.quarantined_path_artifact_id IS NULL) " +
+			"AND qp.quarantined_path_image_id = i.image_id) AND qp.quarantined_path_registry_id = r.registry_id")
 
 	if latestVersion {
 		baseSubquery := `(SELECT ar.artifact_id as id, ROW_NUMBER() OVER (PARTITION BY ar.artifact_image_id 
@@ -1057,65 +1018,24 @@ func (t tagDao) GetLatestTagMetadata(
 	imageName string,
 	opts ...types.QueryOption,
 ) (*types.ArtifactMetadata, error) {
-	// Precomputed download count subquery
-	downloadCountSubquery := `
-		SELECT 
-			i.image_name, 
-			i.image_registry_id,
-			SUM(COALESCE(dc.download_count, 0)) AS download_count
-		FROM 
-			images i
-		LEFT JOIN (
-			SELECT 
-				a.artifact_image_id, 
-				COUNT(d.download_stat_id) AS download_count
-			FROM 
-				artifacts a
-			JOIN 
-				download_stats d ON d.download_stat_artifact_id = a.artifact_id
-			GROUP BY 
-				a.artifact_image_id
-		) AS dc ON i.image_id = dc.artifact_image_id
-		GROUP BY 
-			i.image_name, i.image_registry_id
-	`
-	var q sq.SelectBuilder
-	if t.db.DriverName() == SQLITE3 {
-		q = databaseg.Builder.Select(
-			`r.registry_name AS repo_name, r.registry_package_type AS package_type,
-     t.tag_image_name AS name, t.tag_name AS latest_version,
-     t.tag_created_at AS created_at, t.tag_updated_at AS modified_at,
-     ar.image_labels AS labels, COALESCE(dc_subquery.download_count, 0) AS download_count`,
-		).
-			From("tags t").
-			Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
-			Join("images ar ON ar.image_registry_id = t.tag_registry_id AND ar.image_name = t.tag_image_name").
-			LeftJoin(fmt.Sprintf("(%s) AS dc_subquery ON dc_subquery.image_name = t.tag_image_name "+
-				"AND dc_subquery.image_registry_id = r.registry_id", downloadCountSubquery)).
-			Where(
-				"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
-				parentID, repoKey, imageName,
-			)
-	} else {
-		q = databaseg.Builder.Select(
-			`r.registry_name AS repo_name,
-         r.registry_package_type AS package_type,
-         t.tag_image_name AS name,
-         t.tag_name AS latest_version,
-         t.tag_created_at AS created_at,
-         t.tag_updated_at AS modified_at,
-         ar.image_labels AS labels,
-         COALESCE(t2.download_count, 0) AS download_count`,
-		).
-			From("tags t").
-			Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
-			Join("images ar ON ar.image_registry_id = t.tag_registry_id AND ar.image_name = t.tag_image_name").
-			LeftJoin(fmt.Sprintf("LATERAL (%s) AS t2 ON t.tag_image_name = t2.image_name", downloadCountSubquery)).
-			Where(
-				"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
-				parentID, repoKey, imageName,
-			)
-	}
+	q := databaseg.Builder.Select(
+		`r.registry_name AS repo_name,
+		r.registry_package_type AS package_type,
+		t.tag_image_name AS name,
+		t.tag_name AS latest_version,
+		t.tag_created_at AS created_at,
+		t.tag_updated_at AS modified_at,
+		ar.image_labels AS labels,
+		ar.image_id AS image_id,
+		0 AS download_count`,
+	).
+		From("tags t").
+		Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
+		Join("images ar ON ar.image_registry_id = t.tag_registry_id AND ar.image_name = t.tag_image_name").
+		Where(
+			"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
+			parentID, repoKey, imageName,
+		)
 
 	// Apply query options
 	queryOpts := types.MakeQueryOptions(opts...)
@@ -1145,6 +1065,14 @@ func (t tagDao) GetLatestTagMetadata(
 	dst := new(artifactMetadataDB)
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get tag detail")
+	}
+
+	if dst.ImageID > 0 {
+		dc, dcErr := t.downloadCountFinder.FindByImageID(ctx, dst.ImageID)
+		if dcErr != nil {
+			return nil, fmt.Errorf("failed to fetch download count for image %d: %w", dst.ImageID, dcErr)
+		}
+		dst.DownloadCount = dc
 	}
 
 	return t.mapToArtifactMetadata(dst)
@@ -1398,28 +1326,18 @@ func (t tagDao) GetAllArtifactsByRepo(
 	rowNumSubquery := baseSubquery + joinClause + whereClause + `) AS a`
 
 	q := databaseg.Builder.Select(
-		`r.registry_name as repo_name, t.tag_image_name as name, 
-		r.registry_package_type as package_type, t.tag_name as latest_version, 
-		t.tag_updated_at as modified_at, ar.image_labels as labels, 
-		COALESCE(t2.download_count, 0) as download_count`,
+		`r.registry_name as repo_name, t.tag_image_name as name,
+		r.registry_package_type as package_type, t.tag_name as latest_version,
+		t.tag_updated_at as modified_at, ar.image_labels as labels,
+		ar.image_id as image_id,
+		0 as download_count`,
 	).
 		From("tags t").
 		Join(rowNumSubquery+` ON t.tag_id = a.id`, parentID, repoKey).
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Join(
-			"images ar ON ar.image_registry_id = t.tag_registry_id"+
+			"images ar ON ar.image_registry_id = t.tag_registry_id" +
 				" AND ar.image_name = t.tag_image_name",
-		).
-		LeftJoin(
-			`( SELECT i.image_id, SUM(COALESCE(t1.download_count, 0)) as download_count FROM 
-			( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
-			FROM artifacts a 
-			JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id GROUP BY 
-			a.artifact_image_id ) as t1 
-			JOIN images i ON i.image_id = t1.artifact_image_id 
-			JOIN registries r ON r.registry_id = i.image_registry_id 
-			WHERE r.registry_parent_id = ? AND r.registry_name = ? GROUP BY i.image_id) as t2 
-			ON ar.image_id = t2.image_id`, parentID, repoKey,
 		).
 		Where("a.rank = 1 ")
 
@@ -1438,7 +1356,7 @@ func (t tagDao) GetAllArtifactsByRepo(
 
 	sortField := "t.tag_" + sortByField
 	if sortByField == downloadCount {
-		sortField = downloadCount
+		sortField = "t.tag_updated_at"
 	}
 	q = q.OrderBy(sortField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset)) //nolint:gosec
 
@@ -1453,6 +1371,11 @@ func (t tagDao) GetAllArtifactsByRepo(
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
+
+	if err = t.populateDownloadCounts(ctx, dst); err != nil {
+		return nil, err
+	}
+
 	return t.mapToArtifactMetadataList(dst)
 }
 
@@ -1803,6 +1726,18 @@ func (t tagDao) GetQuarantineInfoForArtifacts(
 	}
 
 	return quarantineMap, nil
+}
+
+// GetDownloadCountByImageID returns the cached download count for an image.
+func (t tagDao) GetDownloadCountByImageID(ctx context.Context, imageID int64) (int64, error) {
+	return t.downloadCountFinder.FindByImageID(ctx, imageID)
+}
+
+// GetDownloadCountByManifests returns cached download counts for manifests.
+func (t tagDao) GetDownloadCountByManifests(
+	ctx context.Context, digests []string, imageID int64,
+) (map[string]int64, error) {
+	return t.downloadCountFinder.FindByManifests(ctx, digests, imageID)
 }
 
 func (t tagDao) CountOciVersionByRepoAndImage(
@@ -2173,4 +2108,56 @@ func (t tagDao) mapToTagDetail(
 		CreatedAt: time.UnixMilli(dst.CreatedAt),
 		UpdatedAt: time.UnixMilli(dst.UpdatedAt),
 	}, nil
+}
+
+func (t tagDao) populateDownloadCounts(
+	ctx context.Context,
+	dst []*artifactMetadataDB,
+) error {
+	if len(dst) == 0 {
+		return nil
+	}
+
+	// Separate image IDs (OCI) and artifact IDs (non-OCI).
+	var imageIDs []int64
+	var artifactIDs []int64
+	for _, d := range dst {
+		if d.ID > 0 {
+			artifactIDs = append(artifactIDs, d.ID)
+		} else if d.ImageID > 0 {
+			imageIDs = append(imageIDs, d.ImageID)
+		}
+	}
+
+	var imageCountMap map[int64]int64
+	var artifactCountMap map[int64]int64
+	var err error
+
+	if len(imageIDs) > 0 {
+		imageCountMap, err = t.downloadCountFinder.FindByImageIDs(ctx, imageIDs)
+		if err != nil {
+			return fmt.Errorf("failed to fetch image download counts: %w", err)
+		}
+	}
+
+	if len(artifactIDs) > 0 {
+		artifactCountMap, err = t.downloadCountFinder.FindByArtifactIDs(ctx, artifactIDs)
+		if err != nil {
+			return fmt.Errorf("failed to fetch artifact download counts: %w", err)
+		}
+	}
+
+	for _, d := range dst {
+		if d.ID > 0 {
+			if count, ok := artifactCountMap[d.ID]; ok {
+				d.DownloadCount = count
+			}
+		} else if d.ImageID > 0 {
+			if count, ok := imageCountMap[d.ImageID]; ok {
+				d.DownloadCount = count
+			}
+		}
+	}
+
+	return nil
 }

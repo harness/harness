@@ -237,6 +237,72 @@ func (_c *MockDownloadStatRepository_GetTotalDownloadsForArtifactID_Call) RunAnd
 	return _c
 }
 
+// GetTotalDownloadsForRegistryID provides a mock function for the type MockDownloadStatRepository
+func (_mock *MockDownloadStatRepository) GetTotalDownloadsForRegistryID(ctx context.Context, registryID int64) (int64, error) {
+	ret := _mock.Called(ctx, registryID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTotalDownloadsForRegistryID")
+	}
+
+	var r0 int64
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) (int64, error)); ok {
+		return returnFunc(ctx, registryID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) int64); ok {
+		r0 = returnFunc(ctx, registryID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = returnFunc(ctx, registryID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTotalDownloadsForRegistryID'
+type MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call struct {
+	*mock.Call
+}
+
+// GetTotalDownloadsForRegistryID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - registryID int64
+func (_e *MockDownloadStatRepository_Expecter) GetTotalDownloadsForRegistryID(ctx interface{}, registryID interface{}) *MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call {
+	return &MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call{Call: _e.mock.On("GetTotalDownloadsForRegistryID", ctx, registryID)}
+}
+
+func (_c *MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call) Run(run func(ctx context.Context, registryID int64)) *MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call) Return(n int64, err error) *MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call {
+	_c.Call.Return(n, err)
+	return _c
+}
+
+func (_c *MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call) RunAndReturn(run func(ctx context.Context, registryID int64) (int64, error)) *MockDownloadStatRepository_GetTotalDownloadsForRegistryID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTotalDownloadsForImage provides a mock function for the type MockDownloadStatRepository
 func (_mock *MockDownloadStatRepository) GetTotalDownloadsForImage(ctx context.Context, imageID int64) (int64, error) {
 	ret := _mock.Called(ctx, imageID)
@@ -301,6 +367,84 @@ func (_c *MockDownloadStatRepository_GetTotalDownloadsForImage_Call) Return(n in
 func (_c *MockDownloadStatRepository_GetTotalDownloadsForImage_Call) RunAndReturn(run func(ctx context.Context, imageID int64) (int64, error)) *MockDownloadStatRepository_GetTotalDownloadsForImage_Call {
 	_c.Call.Return(run)
 	return _c
+}
+
+// GetTotalDownloadsForRegistryIDs provides a mock function for the type MockDownloadStatRepository
+func (_mock *MockDownloadStatRepository) GetTotalDownloadsForRegistryIDs(ctx context.Context, registryIDs []int64) ([]*types.DownloadCount, error) {
+	ret := _mock.Called(ctx, registryIDs)
+	if len(ret) == 0 {
+		panic("no return value specified for GetTotalDownloadsForRegistryIDs")
+	}
+	var r0 []*types.DownloadCount
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) ([]*types.DownloadCount, error)); ok {
+		return returnFunc(ctx, registryIDs)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) []*types.DownloadCount); ok {
+		r0 = returnFunc(ctx, registryIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*types.DownloadCount)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []int64) error); ok {
+		r1 = returnFunc(ctx, registryIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetTotalDownloadsForImageIDs provides a mock function for the type MockDownloadStatRepository
+func (_mock *MockDownloadStatRepository) GetTotalDownloadsForImageIDs(ctx context.Context, imageIDs []int64) ([]*types.DownloadCount, error) {
+	ret := _mock.Called(ctx, imageIDs)
+	if len(ret) == 0 {
+		panic("no return value specified for GetTotalDownloadsForImageIDs")
+	}
+	var r0 []*types.DownloadCount
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) ([]*types.DownloadCount, error)); ok {
+		return returnFunc(ctx, imageIDs)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) []*types.DownloadCount); ok {
+		r0 = returnFunc(ctx, imageIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*types.DownloadCount)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []int64) error); ok {
+		r1 = returnFunc(ctx, imageIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetTotalDownloadsForArtifactIDs provides a mock function for the type MockDownloadStatRepository
+func (_mock *MockDownloadStatRepository) GetTotalDownloadsForArtifactIDs(ctx context.Context, artifactIDs []int64) ([]*types.DownloadCount, error) {
+	ret := _mock.Called(ctx, artifactIDs)
+	if len(ret) == 0 {
+		panic("no return value specified for GetTotalDownloadsForArtifactIDs")
+	}
+	var r0 []*types.DownloadCount
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) ([]*types.DownloadCount, error)); ok {
+		return returnFunc(ctx, artifactIDs)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) []*types.DownloadCount); ok {
+		r0 = returnFunc(ctx, artifactIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*types.DownloadCount)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []int64) error); ok {
+		r1 = returnFunc(ctx, artifactIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // GetTotalDownloadsForManifests provides a mock function for the type MockDownloadStatRepository

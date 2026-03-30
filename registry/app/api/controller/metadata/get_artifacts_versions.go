@@ -150,7 +150,7 @@ func (c *APIController) GetAllArtifactVersions(
 			}
 		}
 
-		counts, err := c.DownloadStatRepository.GetTotalDownloadsForManifests(ctx, digests, img.ID)
+		counts, err := c.TagStore.GetDownloadCountByManifests(ctx, digests, img.ID)
 		if err != nil {
 			return throw500Error(err)
 		}

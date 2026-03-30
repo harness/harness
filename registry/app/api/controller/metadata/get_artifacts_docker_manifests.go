@@ -157,7 +157,7 @@ func (c *APIController) getManifestDetails(
 		CreatedAt: &createdAt,
 		Size:      &size,
 	}
-	downloadCountMap, err := c.DownloadStatRepository.GetTotalDownloadsForManifests(ctx, []string{string(dgst)},
+	downloadCountMap, err := c.TagStore.GetDownloadCountByManifests(ctx, []string{string(dgst)},
 		image.ID)
 	if err == nil && len(downloadCountMap) > 0 {
 		downloadCount := downloadCountMap[string(dgst)]

@@ -946,7 +946,67 @@ func (_m *ArtifactRepository) UpdateArtifactMetadata(ctx context.Context, metada
 	return r0
 }
 
+// FindPackageIdentifiersByRepositoryURL provides a mock function with given fields: ctx, registryID, repositoryURL
+func (_m *ArtifactRepository) FindPackageIdentifiersByRepositoryURL(
+	ctx context.Context, registryID int64, repositoryURL string,
+) ([]string, error) {
+	ret := _m.Called(ctx, registryID, repositoryURL)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindPackageIdentifiersByRepositoryURL")
+	}
+
+	var r0 []string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string) ([]string, error)); ok {
+		return rf(ctx, registryID, repositoryURL)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64, string) []string); ok {
+		r0 = rf(ctx, registryID, repositoryURL)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64, string) error); ok {
+		r1 = rf(ctx, registryID, repositoryURL)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewArtifactRepository creates a new instance of ArtifactRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// GetDownloadCountByID returns the cached download count for a single artifact.
+func (_m *ArtifactRepository) GetDownloadCountByID(ctx context.Context, artifactID int64) (int64, error) {
+	ret := _m.Called(ctx, artifactID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDownloadCountByID")
+	}
+
+	var r0 int64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (int64, error)); ok {
+		return rf(ctx, artifactID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) int64); ok {
+		r0 = rf(ctx, artifactID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, artifactID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // The first argument is typically a *testing.T value.
 func NewArtifactRepository(t interface {
 	mock.TestingT

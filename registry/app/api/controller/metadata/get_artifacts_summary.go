@@ -128,7 +128,7 @@ func (c *APIController) getImageMetadata(
 	if err != nil {
 		return nil, err
 	}
-	downloadCount, err := c.DownloadStatRepository.GetTotalDownloadsForImage(ctx, img.ID)
+	downloadCount, err := c.TagStore.GetDownloadCountByImageID(ctx, img.ID)
 	if err != nil {
 		return nil, err
 	}

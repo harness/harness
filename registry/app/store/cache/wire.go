@@ -23,12 +23,14 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/types"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
 const (
 	registryCacheDuration      = 15 * time.Minute
 	upstreamProxyCacheDuration = 15 * time.Minute
+	downloadCountCacheDuration = 10 * time.Minute
 )
 
 const (
@@ -77,6 +79,34 @@ func ProvideUpstreamProxyRegistryIDCache(
 	return NewUpstreamProxyRegistryIDCache(appCtx, upstreamProxySource, evictor, upstreamProxyCacheDuration)
 }
 
+func ProvideDownloadCountRegistryCache(
+	client redis.UniversalClient,
+	source store.DownloadStatRepository,
+) store.DownloadCountRegistryCache {
+	return NewDownloadCountRegistryCache(client, source, downloadCountCacheDuration)
+}
+
+func ProvideDownloadCountImageCache(
+	client redis.UniversalClient,
+	source store.DownloadStatRepository,
+) store.DownloadCountImageCache {
+	return NewDownloadCountImageCache(client, source, downloadCountCacheDuration)
+}
+
+func ProvideDownloadCountArtifactCache(
+	client redis.UniversalClient,
+	source store.DownloadStatRepository,
+) store.DownloadCountArtifactCache {
+	return NewDownloadCountArtifactCache(client, source, downloadCountCacheDuration)
+}
+
+func ProvideDownloadCountManifestCache(
+	client redis.UniversalClient,
+	source store.DownloadStatRepository,
+) store.DownloadCountManifestCache {
+	return NewDownloadCountManifestCache(client, source, downloadCountCacheDuration)
+}
+
 var WireSet = wire.NewSet(
 	ProvideEvictorRegistryCore,
 	ProvideEvictorUpstreamProxy,
@@ -84,4 +114,8 @@ var WireSet = wire.NewSet(
 	ProvideRegistryIDCache,
 	ProvideRegistryUUIDCache,
 	ProvideUpstreamProxyRegistryIDCache,
+	ProvideDownloadCountRegistryCache,
+	ProvideDownloadCountImageCache,
+	ProvideDownloadCountArtifactCache,
+	ProvideDownloadCountManifestCache,
 )

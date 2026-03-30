@@ -149,7 +149,6 @@ func (d DownloadStatDao) CreateByRegistryIDImageAndArtifactName(
 func (d DownloadStatDao) GetTotalDownloadsForImage(ctx context.Context, imageID int64) (int64, error) {
 	q := databaseg.Builder.Select(`count(*)`).
 		From("artifacts art").Where("art.artifact_image_id = ?", imageID).
-		Where("art.artifact_deleted_at IS NULL").
 		Join("download_stats ds ON ds.download_stat_artifact_id = art.artifact_id")
 
 	sql, args, err := q.ToSql()
@@ -203,7 +202,6 @@ func (d DownloadStatDao) GetTotalDownloadsForManifests(
 		sq.Eq{"artifact_image_id": imageID},
 		sq.Eq{"artifact_version": artifactVersions},
 	}, "art").
-		Where("art.artifact_deleted_at IS NULL").
 		GroupBy("art.artifact_version")
 
 	sql, args, err := q.ToSql()
@@ -228,6 +226,130 @@ func (d DownloadStatDao) GetTotalDownloadsForManifests(
 	}
 
 	return result, nil
+}
+
+func (d DownloadStatDao) GetTotalDownloadsForRegistryID(ctx context.Context, registryID int64) (int64, error) {
+	q := databaseg.Builder.Select(`count(*)`).
+		From("download_stats d").
+		Join("artifacts a ON d.download_stat_artifact_id = a.artifact_id").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Where("i.image_registry_id = ?", registryID)
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, d.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
+}
+
+func (d DownloadStatDao) GetTotalDownloadsForRegistryIDs(
+	ctx context.Context, registryIDs []int64,
+) ([]*types.DownloadCount, error) {
+	if len(registryIDs) == 0 {
+		return nil, nil
+	}
+	q := databaseg.Builder.Select("i.image_registry_id", "count(*) as count").
+		From("download_stats d").
+		Join("artifacts a ON d.download_stat_artifact_id = a.artifact_id").
+		Join("images i ON a.artifact_image_id = i.image_id").
+		Where(sq.Eq{"i.image_registry_id": registryIDs}).
+		GroupBy("i.image_registry_id")
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, d.db)
+	type result struct {
+		RegistryID int64 `db:"image_registry_id"`
+		Count      int64 `db:"count"`
+	}
+	var results []result
+	if err = db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing batch registry download count query")
+	}
+
+	dcs := make([]*types.DownloadCount, len(results))
+	for i, r := range results {
+		dcs[i] = &types.DownloadCount{EntityID: r.RegistryID, Count: r.Count}
+	}
+	return dcs, nil
+}
+
+func (d DownloadStatDao) GetTotalDownloadsForImageIDs(
+	ctx context.Context, imageIDs []int64,
+) ([]*types.DownloadCount, error) {
+	if len(imageIDs) == 0 {
+		return nil, nil
+	}
+	q := databaseg.Builder.Select("art.artifact_image_id", "count(*) as count").
+		From("artifacts art").
+		Join("download_stats ds ON ds.download_stat_artifact_id = art.artifact_id").
+		Where(sq.Eq{"art.artifact_image_id": imageIDs}).
+		GroupBy("art.artifact_image_id")
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, d.db)
+	type result struct {
+		ImageID int64 `db:"artifact_image_id"`
+		Count   int64 `db:"count"`
+	}
+	var results []result
+	if err = db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing batch image download count query")
+	}
+
+	dcs := make([]*types.DownloadCount, len(results))
+	for i, r := range results {
+		dcs[i] = &types.DownloadCount{EntityID: r.ImageID, Count: r.Count}
+	}
+	return dcs, nil
+}
+
+func (d DownloadStatDao) GetTotalDownloadsForArtifactIDs(
+	ctx context.Context, artifactIDs []int64,
+) ([]*types.DownloadCount, error) {
+	if len(artifactIDs) == 0 {
+		return nil, nil
+	}
+	q := databaseg.Builder.Select("ds.download_stat_artifact_id", "count(*) as count").
+		From("download_stats ds").
+		Where(sq.Eq{"ds.download_stat_artifact_id": artifactIDs}).
+		GroupBy("ds.download_stat_artifact_id")
+
+	sql, args, err := q.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, d.db)
+	type result struct {
+		ArtifactID int64 `db:"download_stat_artifact_id"`
+		Count      int64 `db:"count"`
+	}
+	var results []result
+	if err = db.SelectContext(ctx, &results, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing batch artifact download count query")
+	}
+
+	dcs := make([]*types.DownloadCount, len(results))
+	for i, r := range results {
+		dcs[i] = &types.DownloadCount{EntityID: r.ArtifactID, Count: r.Count}
+	}
+	return dcs, nil
 }
 
 func (d DownloadStatDao) mapToInternalDownloadStat(

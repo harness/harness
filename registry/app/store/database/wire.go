@@ -47,8 +47,8 @@ func ProvideImageDao(db *sqlx.DB) store.ImageRepository {
 	return NewImageDao(db)
 }
 
-func ProvideArtifactDao(db *sqlx.DB) store.ArtifactRepository {
-	return NewArtifactDao(db)
+func ProvideArtifactDao(db *sqlx.DB, downloadCountFinder store.DownloadCountFinder) store.ArtifactRepository {
+	return NewArtifactDao(db, downloadCountFinder)
 }
 
 func ProvideDownloadStatDao(db *sqlx.DB) store.DownloadStatRepository {
@@ -59,8 +59,8 @@ func ProvideBandwidthStatDao(db *sqlx.DB) store.BandwidthStatRepository {
 	return NewBandwidthStatDao(db)
 }
 
-func ProvideTagDao(db *sqlx.DB) store.TagRepository {
-	return NewTagDao(db)
+func ProvideTagDao(db *sqlx.DB, downloadCountFinder store.DownloadCountFinder) store.TagRepository {
+	return NewTagDao(db, downloadCountFinder)
 }
 
 func ProvideManifestDao(sqlDB *sqlx.DB, mtRepository store.MediaTypesRepository) store.ManifestRepository {
@@ -108,9 +108,9 @@ func ProvideGenericBlobDao(db *sqlx.DB) store.GenericBlobRepository {
 }
 
 func ProvideRegistryDao(
-	db *sqlx.DB, mtRepository store.MediaTypesRepository,
+	db *sqlx.DB, mtRepository store.MediaTypesRepository, downloadCountFinder store.DownloadCountFinder,
 ) store.RegistryRepository {
-	return NewRegistryDao(db, mtRepository)
+	return NewRegistryDao(db, mtRepository, downloadCountFinder)
 }
 func ProvideTaskRepository(db *sqlx.DB, tx dbtx.Transactor) store.TaskRepository {
 	return NewTaskStore(db, tx)
