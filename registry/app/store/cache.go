@@ -22,7 +22,7 @@ import (
 type (
 	RegistryIDCache              cache.Cache[int64, *types.Registry]
 	RegistryRootRefCache         cache.Cache[types.RegistryRootRefCacheKey, int64]
-	RegistryUUIDCache            cache.Cache[string, *types.Registry]
+	RegistryUUIDToIDCache        cache.Cache[string, int64]
 	UpstreamProxyRegistryIDCache cache.Cache[int64, *types.UpstreamProxy]
 
 	DownloadCountRegistryCache cache.ExtendedCache[int64, *types.DownloadCount]

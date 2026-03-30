@@ -26,7 +26,7 @@ import (
 func ProvideRegistryFinder(
 	registryRepository store.RegistryRepository,
 	regIDCache store.RegistryIDCache,
-	regUUIDCache store.RegistryUUIDCache,
+	regUUIDToIDCache store.RegistryUUIDToIDCache,
 	regRootRefCache store.RegistryRootRefCache,
 	evictor cache.Evictor[*types.Registry],
 	spaceFinder refcache.SpaceFinder,
@@ -35,7 +35,7 @@ func ProvideRegistryFinder(
 	return NewRegistryFinder(
 		registryRepository,
 		regIDCache,
-		regUUIDCache,
+		regUUIDToIDCache,
 		regRootRefCache,
 		evictor,
 		spaceFinder,

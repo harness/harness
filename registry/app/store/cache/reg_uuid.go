@@ -25,13 +25,13 @@ import (
 	"github.com/harness/gitness/registry/types"
 )
 
-func NewRegistryUUIDCache(
+func NewRegistryUUIDToIDCache(
 	appCtx context.Context,
 	regSource store.RegistryRepository,
 	evictorRepo cache2.Evictor[*types.Registry],
 	dur time.Duration,
-) store.RegistryUUIDCache {
-	c := cache.New[string, *types.Registry](registryUUIDCacheGetter{regSource: regSource}, dur)
+) store.RegistryUUIDToIDCache {
+	c := cache.New[string, int64](registryUUIDToIDCacheGetter{regSource: regSource}, dur)
 
 	evictorRepo.Subscribe(appCtx, func(repoCore *types.Registry) error {
 		c.Evict(appCtx, repoCore.UUID)
@@ -41,15 +41,15 @@ func NewRegistryUUIDCache(
 	return c
 }
 
-type registryUUIDCacheGetter struct {
+type registryUUIDToIDCacheGetter struct {
 	regSource store.RegistryRepository
 }
 
-func (c registryUUIDCacheGetter) Find(ctx context.Context, repoUUID string) (*types.Registry, error) {
+func (c registryUUIDToIDCacheGetter) Find(ctx context.Context, repoUUID string) (int64, error) {
 	repo, err := c.regSource.GetByUUID(ctx, repoUUID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find repo by UUID: %w", err)
+		return 0, fmt.Errorf("failed to find repo by UUID: %w", err)
 	}
 
-	return repo, nil
+	return repo.ID, nil
 }

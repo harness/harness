@@ -28,9 +28,10 @@ import (
 )
 
 const (
-	registryCacheDuration      = 15 * time.Minute
-	upstreamProxyCacheDuration = 15 * time.Minute
-	downloadCountCacheDuration = 10 * time.Minute
+	registryCacheDuration         = 15 * time.Minute
+	registryUUIDToIDCacheDuration = 60 * time.Minute
+	upstreamProxyCacheDuration    = 15 * time.Minute
+	downloadCountCacheDuration    = 10 * time.Minute
 )
 
 const (
@@ -63,12 +64,12 @@ func ProvideRegRootRefCache(
 	return NewRegistryRootRefCache(appCtx, regSource, evictorRepo, registryCacheDuration)
 }
 
-func ProvideRegistryUUIDCache(
+func ProvideRegistryUUIDToIDCache(
 	appCtx context.Context,
 	regSource store.RegistryRepository,
 	evictorRepo cache.Evictor[*types.Registry],
-) store.RegistryUUIDCache {
-	return NewRegistryUUIDCache(appCtx, regSource, evictorRepo, registryCacheDuration)
+) store.RegistryUUIDToIDCache {
+	return NewRegistryUUIDToIDCache(appCtx, regSource, evictorRepo, registryUUIDToIDCacheDuration)
 }
 
 func ProvideUpstreamProxyRegistryIDCache(
@@ -112,7 +113,7 @@ var WireSet = wire.NewSet(
 	ProvideEvictorUpstreamProxy,
 	ProvideRegRootRefCache,
 	ProvideRegistryIDCache,
-	ProvideRegistryUUIDCache,
+	ProvideRegistryUUIDToIDCache,
 	ProvideUpstreamProxyRegistryIDCache,
 	ProvideDownloadCountRegistryCache,
 	ProvideDownloadCountImageCache,

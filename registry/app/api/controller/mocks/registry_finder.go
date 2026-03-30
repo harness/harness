@@ -405,6 +405,65 @@ func (_c *RegistryFinder_Update_Call) RunAndReturn(run func(context.Context, *ty
 	return _c
 }
 
+// GetUpstreamProxyByRegistryUUIDs provides a mock function with given fields: ctx, registryUUIDs
+func (_m *RegistryFinder) GetUpstreamProxyByRegistryUUIDs(ctx context.Context, registryUUIDs []string) (map[string]*types.UpstreamProxy, error) {
+	ret := _m.Called(ctx, registryUUIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUpstreamProxyByRegistryUUIDs")
+	}
+
+	var r0 map[string]*types.UpstreamProxy
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []string) (map[string]*types.UpstreamProxy, error)); ok {
+		return rf(ctx, registryUUIDs)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []string) map[string]*types.UpstreamProxy); ok {
+		r0 = rf(ctx, registryUUIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]*types.UpstreamProxy)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []string) error); ok {
+		r1 = rf(ctx, registryUUIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUpstreamProxyByRegistryUUIDs'
+type RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call struct {
+	*mock.Call
+}
+
+// GetUpstreamProxyByRegistryUUIDs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - registryUUIDs []string
+func (_e *RegistryFinder_Expecter) GetUpstreamProxyByRegistryUUIDs(ctx interface{}, registryUUIDs interface{}) *RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call {
+	return &RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call{Call: _e.mock.On("GetUpstreamProxyByRegistryUUIDs", ctx, registryUUIDs)}
+}
+
+func (_c *RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call) Run(run func(ctx context.Context, registryUUIDs []string)) *RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]string))
+	})
+	return _c
+}
+
+func (_c *RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call) Return(_a0 map[string]*types.UpstreamProxy, _a1 error) *RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call) RunAndReturn(run func(context.Context, []string) (map[string]*types.UpstreamProxy, error)) *RegistryFinder_GetUpstreamProxyByRegistryUUIDs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewRegistryFinder creates a new instance of RegistryFinder. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewRegistryFinder(t interface {

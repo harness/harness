@@ -40,12 +40,13 @@ type RegistryFinder interface {
 	)
 	Update(ctx context.Context, registry *types.Registry) (err error)
 	Delete(ctx context.Context, parentID int64, name string) (err error)
+	GetUpstreamProxyByRegistryUUIDs(ctx context.Context, registryUUIDs []string) (map[string]*types.UpstreamProxy, error)
 }
 
 type registryFinder struct {
 	inner               store.RegistryRepository
 	regIDCache          store.RegistryIDCache
-	regUUIDCache        store.RegistryUUIDCache
+	regUUIDToIDCache    store.RegistryUUIDToIDCache
 	regRootRefCache     store.RegistryRootRefCache
 	spaceFinder         refcache.SpaceFinder
 	evictor             cache.Evictor[*types.Registry]
@@ -55,7 +56,7 @@ type registryFinder struct {
 func NewRegistryFinder(
 	registryRepository store.RegistryRepository,
 	regIDCache store.RegistryIDCache,
-	regUUIDCache store.RegistryUUIDCache,
+	regUUIDToIDCache store.RegistryUUIDToIDCache,
 	regRootRefCache store.RegistryRootRefCache,
 	evictor cache.Evictor[*types.Registry],
 	spaceFinder refcache.SpaceFinder,
@@ -64,7 +65,7 @@ func NewRegistryFinder(
 	return registryFinder{
 		inner:               registryRepository,
 		regIDCache:          regIDCache,
-		regUUIDCache:        regUUIDCache,
+		regUUIDToIDCache:    regUUIDToIDCache,
 		regRootRefCache:     regRootRefCache,
 		evictor:             evictor,
 		spaceFinder:         spaceFinder,
@@ -89,7 +90,11 @@ func (r registryFinder) FindByID(ctx context.Context, repoID int64) (*types.Regi
 }
 
 func (r registryFinder) FindByUUID(ctx context.Context, repoUUID uuid.UUID) (*types.Registry, error) {
-	return r.regUUIDCache.Get(ctx, repoUUID.String())
+	repoID, err := r.regUUIDToIDCache.Get(ctx, repoUUID.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to find registry ID by UUID: %w", err)
+	}
+	return r.regIDCache.Get(ctx, repoID)
 }
 
 func (r registryFinder) FindByRootRef(
@@ -149,6 +154,25 @@ func (r registryFinder) Update(ctx context.Context, registry *types.Registry) (e
 		r.MarkChanged(ctx, registry)
 	}
 	return err
+}
+
+func (r registryFinder) GetUpstreamProxyByRegistryUUIDs(
+	ctx context.Context, registryUUIDs []string,
+) (map[string]*types.UpstreamProxy, error) {
+	result := make(map[string]*types.UpstreamProxy, len(registryUUIDs))
+	for _, regUUID := range registryUUIDs {
+		regID, err := r.regUUIDToIDCache.Get(ctx, regUUID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find registry ID for UUID %s: %w", regUUID, err)
+		}
+		upstreamProxy, err := r.upstreamProxyFinder.Get(ctx, regID)
+		if err != nil {
+			result[regUUID] = nil
+			continue
+		}
+		result[regUUID] = upstreamProxy
+	}
+	return result, nil
 }
 
 func (r registryFinder) Delete(ctx context.Context, parentID int64, name string) (err error) {
