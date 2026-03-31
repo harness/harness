@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Expander } from '@blueprintjs/core'
 import { HarnessDocTooltip, Page, GridListToggle, Views } from '@harnessio/uicore'
 
@@ -37,7 +37,7 @@ import css from './RepositoryListPage.module.scss'
 
 function RepositoryListTreeViewPage(): JSX.Element {
   const { getString } = useStrings()
-  const { useQueryParams, useUpdateQueryParams } = useParentHooks()
+  const { useQueryParams, useUpdateQueryParams, useDocumentTitle } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams<Partial<TreeViewRepositoryQueryParams>>()
   const { setRepositoryListViewType } = useAppStore()
   const repositoryListViewType = useGetRepositoryListViewType()
@@ -45,6 +45,12 @@ function RepositoryListTreeViewPage(): JSX.Element {
   const queryParamOptions = useTreeViewRepositoriesQueryParamOptions()
   const queryParams = useQueryParams<TreeViewRepositoryQueryParams>(queryParamOptions)
   const { packageTypes, configType, compact } = queryParams
+
+  const registryListDocumentTitle = useMemo(
+    () => [getString('artifactList.table.columns.repository'), getString('artifactList.pageHeading')],
+    [getString]
+  )
+  useDocumentTitle(registryListDocumentTitle)
 
   return (
     <>

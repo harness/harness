@@ -21,7 +21,7 @@ import { Redirect, Switch, useHistory } from 'react-router-dom'
 import { Button, ButtonVariation, Layout, Tab, Tabs } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
-import type { RepositoryDetailsPathParams } from '@ar/routes/types'
+import type { RepositoryDetailsTabPathParams } from '@ar/routes/types'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
 import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
 import {
@@ -30,6 +30,7 @@ import {
   useFeatureFlags,
   useGetRepositoryListViewType,
   useParentComponents,
+  useParentHooks,
   useRoutes
 } from '@ar/hooks'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
@@ -45,7 +46,8 @@ export default function RepositoryDetails(): JSX.Element | null {
   const { RbacButton } = useParentComponents()
   const { getString } = useStrings()
   const featureFlags = useFeatureFlags()
-  const pathParams = useDecodedParams<RepositoryDetailsPathParams>()
+  const { useDocumentTitle } = useParentHooks()
+  const pathParams = useDecodedParams<RepositoryDetailsTabPathParams>()
   const { repositoryIdentifier } = pathParams
   const [activeTab, setActiveTab] = useState('')
   const stepRef = React.useRef<FormikProps<unknown> | null>(null)
@@ -75,6 +77,13 @@ export default function RepositoryDetails(): JSX.Element | null {
     () => repositoryTabs.find(each => each.value === activeTab),
     [repositoryTabs, activeTab]
   )
+
+  const repositoryDetailsDocumentTitle = useMemo(
+    () => [repositoryIdentifier, activeTab || ''],
+    [repositoryIdentifier, activeTab]
+  )
+
+  useDocumentTitle(repositoryDetailsDocumentTitle)
 
   const handleTabChange = (nextTab: RepositoryDetailsTab): void => {
     setActiveTab(nextTab)

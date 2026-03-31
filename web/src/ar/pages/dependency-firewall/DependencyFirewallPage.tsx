@@ -18,7 +18,7 @@ import React, { useState } from 'react'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
 import { HarnessDocTooltip, Page, Tab, Tabs } from '@harnessio/uicore'
 
-import { useRoutes } from '@ar/hooks'
+import { useParentHooks, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
@@ -31,10 +31,13 @@ import css from './DependencyFirewallPage.module.scss'
 
 const DependencyFirewallPage: React.FC = () => {
   const { getString } = useStrings()
+  const { useDocumentTitle } = useParentHooks()
   const [activeTab, setActiveTab] = useState<DependencyFirewallTab | undefined>()
   const history = useHistory()
   const routes = useRoutes()
   const routeDefinitions = useRoutes(true)
+
+  useDocumentTitle(getString('dependencyFirewall.pageHeading'))
 
   const handleTabChange = (nextTab: DependencyFirewallTab): void => {
     setActiveTab(nextTab)

@@ -60,7 +60,7 @@ import css from './RepositoryListPage.module.scss'
 function RepositoryListPage(): JSX.Element {
   const searchRef = useRef({} as ExpandingSearchInputHandle)
   const { getString } = useStrings()
-  const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
+  const { useQueryParams, useUpdateQueryParams, usePreferenceStore, useDocumentTitle } = useParentHooks()
   const { updateQueryParams, replaceQueryParams } =
     useUpdateQueryParams<Partial<ArtifactRepositoryListPageQueryParams>>()
   const { setRepositoryListViewType, parent } = useAppStore()
@@ -84,6 +84,9 @@ function RepositoryListPage(): JSX.Element {
     () => (sortingPreference ? JSON.parse(sortingPreference) : queryParams.sort),
     [queryParams.sort, sortingPreference]
   )
+
+  const registryListDocumentTitle = useMemo(() => [getString('artifactList.table.columns.repository')], [getString])
+  useDocumentTitle(registryListDocumentTitle)
 
   const [sortField, sortOrder] = sort || []
 

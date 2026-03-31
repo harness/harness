@@ -52,7 +52,7 @@ function ArtifactListPage(): JSX.Element {
   const { getString } = useStrings()
   const { parent } = useAppStore()
   const { HAR_CUSTOM_METADATA_ENABLED } = useFeatureFlags()
-  const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
+  const { useQueryParams, useUpdateQueryParams, usePreferenceStore, useDocumentTitle } = useParentHooks()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams<Partial<ArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<ArtifactListPageQueryParams>(useArtifactListQueryParamOptions())
   const { searchTerm, isDeployedArtifacts, repositoryKey, page, size, latestVersion, packageTypes, softDeleteFilter } =
@@ -73,6 +73,8 @@ function ArtifactListPage(): JSX.Element {
   )
 
   const [sortField, sortOrder] = sort || []
+
+  useDocumentTitle(getString('artifactList.pageHeading'))
 
   const {
     data,

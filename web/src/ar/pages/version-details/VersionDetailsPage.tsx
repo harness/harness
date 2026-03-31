@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 
-import type { VersionDetailsPathParams } from '@ar/routes/types'
-import { useDecodedParams } from '@ar/hooks'
+import type { VersionDetailsTabPathParams } from '@ar/routes/types'
+import { useDecodedParams, useParentHooks } from '@ar/hooks'
 import { VersionDetails } from './VersionDetails'
 import VersionProvider from './context/VersionProvider'
 
 import './VersionFactory'
 
 export default function VersionDetailsPage(): JSX.Element {
-  const pathParams = useDecodedParams<VersionDetailsPathParams>()
+  const pathParams = useDecodedParams<VersionDetailsTabPathParams>()
+  const { useDocumentTitle } = useParentHooks()
+
+  const versionDetailsDocumentTitle = useMemo(
+    () => [`${pathParams.artifactIdentifier}@(${pathParams.versionIdentifier})`, pathParams.versionTab || ''],
+    [pathParams.artifactIdentifier, pathParams.versionIdentifier, pathParams.versionTab]
+  )
+
+  useDocumentTitle(versionDetailsDocumentTitle)
+
   return (
     <VersionProvider
       repoKey={pathParams.repositoryIdentifier}

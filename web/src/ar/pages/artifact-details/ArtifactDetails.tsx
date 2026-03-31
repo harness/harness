@@ -30,7 +30,14 @@ import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import PropertiesFormContent from '@ar/components/PropertiesForm/PropertiesFormContent'
 import { artifactDetailsPathProps, versionDetailsPathParams } from '@ar/routes/RouteDestinations'
-import { useAppStore, useFeatureFlags, useGetRepositoryListViewType, useParentComponents, useRoutes } from '@ar/hooks'
+import {
+  useAppStore,
+  useFeatureFlags,
+  useGetRepositoryListViewType,
+  useParentComponents,
+  useParentHooks,
+  useRoutes
+} from '@ar/hooks'
 
 import VersionListPage from '../version-list/VersionListPage'
 import { ArtifactProviderContext } from './context/ArtifactProvider'
@@ -43,6 +50,7 @@ import formContent from '@ar/pages/repository-details/components/FormContent/For
 function ArtifactDetails(): JSX.Element {
   const [activeTab, setActiveTab] = useState(ArtifactDetailsTab.VERSIONS)
   const pathParams = useParams<ArtifactDetailsPathParams>()
+  const { useDocumentTitle } = useParentHooks()
   const { getString } = useStrings()
   const history = useHistory()
   const routeDefinitions = useRoutes(true)
@@ -65,6 +73,13 @@ function ArtifactDetails(): JSX.Element {
   }, [data, featureFlags, parent, repositoryListViewType])
 
   const activeTabConfig = useMemo(() => artifactTabs.find(each => each.value === activeTab), [artifactTabs, activeTab])
+
+  const artifactDetailsDocumentTitle = useMemo(
+    () => [pathParams.artifactIdentifier, activeTab || ''],
+    [pathParams.artifactIdentifier, activeTab]
+  )
+
+  useDocumentTitle(artifactDetailsDocumentTitle)
 
   const handleTabChange = (nextTab: ArtifactDetailsTab): void => {
     setActiveTab(nextTab)
