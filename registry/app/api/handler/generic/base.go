@@ -356,17 +356,12 @@ func (h *Handler) GetPackageArtifactInfo(r *http.Request) (pkg.PackageArtifactIn
 	path := r.URL.Path
 	path = strings.TrimPrefix(path, "/")
 	splits := strings.Split(path, "/")
-	if len(splits) >= 7 && splits[0] == "pkg" && splits[3] == "files" {
+	if len(splits) > 4 && splits[0] == "pkg" && splits[3] == "files" {
 		artifactInfo, err := h.GetGenericArtifactInfoV2(r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get generic artifact info: %w", err)
 		}
 		return artifactInfo, nil
-	} else if len(splits) >= 4 && splits[0] == "pkg" && splits[3] == "files" {
-		// Missing required path segments (version or filepath)
-		return nil, usererror.BadRequestf(
-			"Invalid request path: expected /pkg/{root}/{registry}/files/{package}/{version}/{filepath}, got: %s",
-			r.URL.Path)
 	}
 	info, e := h.GetArtifactInfo(r)
 
