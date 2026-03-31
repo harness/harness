@@ -46,6 +46,15 @@ function BasicInformationContent({ data }: BasicInformationContentProps) {
           linkTo={routes.toARRedirect({
             packageType: data.packageType as RepositoryPackageType,
             registryId: data.registryName,
+            artifactId: data.packageName
+          })}
+        />
+        <InformationMetrics.Link
+          label={getString('violationsList.violationDetailsModal.basicInformationSection.version')}
+          value={data.version}
+          linkTo={routes.toARRedirect({
+            packageType: data.packageType as RepositoryPackageType,
+            registryId: data.registryName,
             artifactId: data.packageName,
             versionId: data.version,
             versionDetailsTab: VersionDetailsTab.OVERVIEW

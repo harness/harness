@@ -1,6 +1,6 @@
 page: Violations List Page
 noViolationsFound: No Violations Found
-evaluatedAt: 'Evaluated At {{value}}'
+evaluatedAt: "Evaluated At {{value}}"
 cards:
   totalViolations: Total Violations
   blockedViolations: Blocked Violations
@@ -20,6 +20,7 @@ violationDetailsModal:
   basicInformationSection:
     title: Basic Information
     packageName: Package Name
+    version: Version
     upstreamProxy: Upstream Proxy
     status: Status
     policySetViolated: Policy Set Violated
@@ -27,7 +28,7 @@ violationDetailsModal:
     policySetViolated: Policy Set Violated
     policiesViolated: Policies Violated
     policyViolated: Policy Violated
-    policyName: 'Policy Name: {{{policyName}}}'
+    policyName: "Policy Name: {{{policyName}}}"
     category: Category
     title: Violated Policies
     ossRiskLevelViolation:

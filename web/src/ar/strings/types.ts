@@ -492,6 +492,7 @@ export interface StringsMap {
   'violationsList.violationDetailsModal.basicInformationSection.status': string
   'violationsList.violationDetailsModal.basicInformationSection.title': string
   'violationsList.violationDetailsModal.basicInformationSection.upstreamProxy': string
+  'violationsList.violationDetailsModal.basicInformationSection.version': string
   'violationsList.violationDetailsModal.evaluationDetailsSection.firstDetected': string
   'violationsList.violationDetailsModal.evaluationDetailsSection.lastDetected': string
   'violationsList.violationDetailsModal.evaluationDetailsSection.title': string
