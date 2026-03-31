@@ -249,7 +249,7 @@ func (s *Service) handleBuildRegistryIndex(ctx context.Context, task *types.Task
 			ctx, strconv.FormatInt(registry.ID, 10), registry.RootParentID, types.WithAllDeleted(),
 		)
 		if err2 != nil {
-			log.Ctx(ctx).Error().Msgf("failed to fetch registries whyle building registry "+
+			log.Ctx(ctx).Error().Msgf("failed to fetch registries while building registry "+
 				"files by upstream proxy ID for registry [%d]: %v", payload.RegistryID, err2)
 		}
 		if len(registryIDs) > 0 {
@@ -374,6 +374,10 @@ func (s *Service) finalStatusUpdate(
 				if err != nil {
 					return err
 				}
+				err = s.taskEventRepository.LogTaskEvent(ctx, task.Key, "failed", task.Payload)
+				if err != nil {
+					log.Ctx(ctx).Error().Msgf("failed to log task event for task %s: %v", task.Key, err)
+				}
 			} else {
 				err = s.taskSourceRepository.UpdateSourceStatus(ctx, e.ID, types.TaskStatusSuccess, "")
 				if err != nil {
@@ -382,6 +386,10 @@ func (s *Service) finalStatusUpdate(
 				runAgain, err = s.taskRepository.CompleteTask(ctx, task.Key, types.TaskStatusSuccess)
 				if err != nil {
 					return err
+				}
+				err = s.taskEventRepository.LogTaskEvent(ctx, task.Key, "success", task.Payload)
+				if err != nil {
+					log.Ctx(ctx).Error().Msgf("failed to log task event for task %s: %v", task.Key, err)
 				}
 			}
 			return err

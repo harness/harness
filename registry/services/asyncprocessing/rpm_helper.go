@@ -138,6 +138,7 @@ func (l *rpmHelper) BuildRegistryFiles(
 	registry types.Registry,
 	principalID int64,
 ) error {
+	log.Ctx(ctx).Info().Msgf("building registry files")
 	rootSpace, err := l.spaceFinder.FindByID(ctx, registry.RootParentID)
 	if err != nil {
 		return fmt.Errorf("failed to find root space by ID: %w", err)
@@ -150,8 +151,10 @@ func (l *rpmHelper) BuildRegistryFiles(
 		return l.buildForUpstream(ctx, registry.ID, registry.RootParentID, existingPackageInfos,
 			rootSpace.Identifier, principalID)
 	}
-	return l.buildForVirtual(ctx, registry.ID, registry.Name, registry.RootParentID, registry.ParentID,
+	err = l.buildForVirtual(ctx, registry.ID, registry.Name, registry.RootParentID, registry.ParentID,
 		rootSpace.Identifier, existingPackageInfos, principalID)
+	log.Ctx(ctx).Info().Msgf("done building virtual registry files")
+	return err
 }
 
 func (l *rpmHelper) buildForVirtual(
@@ -306,11 +309,15 @@ func (l *rpmHelper) getExistingArtifactInfos(
 ) ([]*rpmtypes.PackageInfo, error) {
 	lastArtifactID := int64(0)
 	var packageInfos []*rpmtypes.PackageInfo
+	log.Ctx(ctx).Info().Msgf("fetching existing artifacts info")
 	for {
 		artifacts, err := l.artifactDao.GetAllArtifactsByRepo(ctx, registryID, artifactBatchLimit, lastArtifactID)
 		if err != nil {
 			return nil, err
 		}
+		log.Ctx(ctx).Info().Msgf("fetched %d artifacts for registry with ID: %d artifacts info",
+			len(*artifacts), registryID,
+		)
 
 		for _, a := range *artifacts {
 			metadata := rpmmetadata.RpmMetadata{}
@@ -334,6 +341,7 @@ func (l *rpmHelper) getExistingArtifactInfos(
 			break
 		}
 	}
+	log.Ctx(ctx).Info().Msgf("done fetching existing artifacts info")
 	return packageInfos, nil
 }
 
