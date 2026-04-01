@@ -33,6 +33,7 @@ func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
 			SentinelAddrs: addrs,
 			MaxRetries:    config.Redis.MaxRetries,
 			MinIdleConns:  config.Redis.MinIdleConnections,
+			PoolSize:      config.Redis.MaxConnections,
 		}
 		if config.Redis.Password != "" {
 			failoverOptions.Password = config.Redis.Password
@@ -44,6 +45,7 @@ func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
 		Addr:         config.Redis.Endpoint,
 		MaxRetries:   config.Redis.MaxRetries,
 		MinIdleConns: config.Redis.MinIdleConnections,
+		PoolSize:     config.Redis.MaxConnections,
 	}
 
 	if config.Redis.Password != "" {
