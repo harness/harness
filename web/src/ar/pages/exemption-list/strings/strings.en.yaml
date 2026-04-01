@@ -1,0 +1,18 @@
+page: Exemption List Page
+cards:
+  totalExemptions: Total Exemptions
+  approvedExemptions: Approved Exemptions
+  rejectedExemptions: Rejected Exemptions
+  pendingExemptions: Pending Exemptions
+  expiredExemptions: Expired Exemptions
+noExemptionsFound: No exemptions found
+expireAfter: '{{ days }} days after approval'
+table:
+  columns:
+    packageName: Package Name
+    versions: Versions
+    upstreamRegistry: Upstream Registry
+    requestedAt: Requested At
+    updatedAt: Updated At
+    expiresAt: Expires At
+    status: Status

@@ -28,7 +28,7 @@ import ScanBadgeComponent from '@ar/components/Badge/ScanBadge'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
-import RepositoryActions from '../ViolationActions/ViolationActions'
+import ViolationActions from '../ViolationActions/ViolationActions'
 import { useViolationDetailsModal } from '../../hooks/useViolationDetailsModal/useViolationDetailsModal'
 
 import css from './TableCells.module.scss'
@@ -122,7 +122,7 @@ export const ViolationActionsCell: CellType = ({ row }) => {
       <Button variation={ButtonVariation.SECONDARY} size={ButtonSize.SMALL} onClick={showModal}>
         {getString('violationsList.table.columns.actions.violationDetails')}
       </Button>
-      {HAR_DEPENDENCY_FIREWALL_EXEMPTIONS && <RepositoryActions scanId={id} data={original} />}
+      {HAR_DEPENDENCY_FIREWALL_EXEMPTIONS && <ViolationActions scanId={id} data={original} />}
     </Layout.Horizontal>
   )
 }

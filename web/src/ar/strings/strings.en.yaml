@@ -152,6 +152,11 @@ badges:
   orgScope: Organization
   accountScope: Account
   quarantined: Quarantined
+exemptionBadges:
+  approved: Approved
+  rejected: Rejected
+  pending: Pending
+  expired: Expired
 validationMessages:
   required: Required
   repokeyRegExMessage: Registry name must start with letter and can only contain lowercase alphanumerics, _, . and -

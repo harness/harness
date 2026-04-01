@@ -18,21 +18,9 @@ import React, { useState } from 'react'
 
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
-import type { ViolationActionsProps } from './types'
-import RequestExemptionActionItem from './RequestExemptionActionItem'
+import type { ExemptionActionsProps } from './types'
 
-export default function ViolationActions({ scanId, data, onClose }: ViolationActionsProps): JSX.Element {
+export default function ExemptionActions(_props: ExemptionActionsProps): JSX.Element {
   const [open, setOpen] = useState(false)
-  return (
-    <ActionButton isOpen={open} setOpen={setOpen}>
-      <RequestExemptionActionItem
-        scanId={scanId}
-        data={data}
-        onClose={() => {
-          setOpen(false)
-          onClose?.()
-        }}
-      />
-    </ActionButton>
-  )
+  return <ActionButton isOpen={open} setOpen={setOpen}></ActionButton>
 }

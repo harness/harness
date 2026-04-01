@@ -34,6 +34,7 @@ import manageRegistries from '@ar/pages/manage-registries/strings/strings.en.yam
 import labelsList from '@ar/pages/labels-list/strings/strings.en.yaml'
 import dependencyFirewall from '@ar/pages/dependency-firewall/strings/strings.en.yaml'
 import violationsList from '@ar/pages/violations-list/strings/strings.en.yaml'
+import exemptionList from '@ar/pages/exemption-list/strings/strings.en.yaml'
 
 export default function languageLoader() {
   return {
@@ -51,6 +52,7 @@ export default function languageLoader() {
     webhookDetails,
     webhookExecutionList,
     dependencyFirewall,
-    violationsList
+    violationsList,
+    exemptionList
   }
 }

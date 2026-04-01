@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
 import { HarnessDocTooltip, Page, Tab, Tabs } from '@harnessio/uicore'
 
-import { useParentHooks, useRoutes } from '@ar/hooks'
+import { useFeatureFlags, useParentHooks, useRoutes } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import Breadcrumbs from '@ar/components/Breadcrumbs/Breadcrumbs'
 import TabsContainer from '@ar/components/TabsContainer/TabsContainer'
 import RouteProvider from '@ar/components/RouteProvider/RouteProvider'
 
+import ExemptionListPage from '../exemption-list/ExemptionListPage'
 import ViolationsListPage from '../violations-list/ViolationsListPage'
 import { DependencyFirewallTab, DependencyFirewallTabs } from './constants'
 
@@ -36,6 +37,7 @@ const DependencyFirewallPage: React.FC = () => {
   const history = useHistory()
   const routes = useRoutes()
   const routeDefinitions = useRoutes(true)
+  const featureFlags = useFeatureFlags()
 
   useDocumentTitle(getString('dependencyFirewall.pageHeading'))
 
@@ -51,6 +53,13 @@ const DependencyFirewallPage: React.FC = () => {
     }
   }
 
+  const filteredTabs = useMemo(() => {
+    return DependencyFirewallTabs.map(tab => ({
+      ...tab,
+      disabled: tab.featureFlag && !featureFlags[tab.featureFlag]
+    }))
+  }, [featureFlags])
+
   return (
     <>
       <Page.Header
@@ -65,7 +74,7 @@ const DependencyFirewallPage: React.FC = () => {
       />
       <TabsContainer className={css.tabsContainer}>
         <Tabs id="dependencyFirewallTabDetails" selectedTabId={activeTab} onChange={handleTabChange}>
-          {DependencyFirewallTabs.map(each => (
+          {filteredTabs.map(each => (
             <Tab key={each.value} id={each.value} title={getString(each.label)} disabled={each.disabled} />
           ))}
         </Tabs>
@@ -88,7 +97,7 @@ const DependencyFirewallPage: React.FC = () => {
           onLoad={() => {
             setActiveTab(DependencyFirewallTab.EXCEPTIONS)
           }}>
-          <div>Exceptions (Coming soon)</div>
+          <ExemptionListPage />
         </RouteProvider>
       </Switch>
     </>

@@ -82,6 +82,21 @@ export interface StringsMap {
   'digestList.table.columns.size': string
   'digestList.table.columns.uploadedBy': string
   'digestList.table.noDigestTitle': string
+  'exemptionList.cards.approvedExemptions': string
+  'exemptionList.cards.expiredExemptions': string
+  'exemptionList.cards.pendingExemptions': string
+  'exemptionList.cards.rejectedExemptions': string
+  'exemptionList.cards.totalExemptions': string
+  'exemptionList.expireAfter': string
+  'exemptionList.noExemptionsFound': string
+  'exemptionList.page': string
+  'exemptionList.table.columns.expiresAt': string
+  'exemptionList.table.columns.packageName': string
+  'exemptionList.table.columns.requestedAt': string
+  'exemptionList.table.columns.status': string
+  'exemptionList.table.columns.updatedAt': string
+  'exemptionList.table.columns.upstreamRegistry': string
+  'exemptionList.table.columns.versions': string
   'labelsList.canbeAddedByUsers': string
   'labelsList.createLabelModal.actions.cancel': string
   'labelsList.createLabelModal.actions.create': string
@@ -618,6 +633,10 @@ export interface StringsMap {
   download: string
   encrypted: string
   enterPlaceholder: string
+  'exemptionBadges.approved': string
+  'exemptionBadges.expired': string
+  'exemptionBadges.pending': string
+  'exemptionBadges.rejected': string
   failed: string
   failedToLoadData: string
   harLabel: string

@@ -16,7 +16,7 @@
 
 import type { Parent } from '@ar/common/types'
 import type { StringKeys } from '@ar/frameworks/strings'
-import type { FeatureFlags } from '@ar/MFEAppTypes'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 
 export enum DependencyFirewallTab {
   VIOLATIONS = 'violations',
@@ -40,6 +40,6 @@ export const DependencyFirewallTabs: DependencyFirewallTabSpec[] = [
   {
     label: 'dependencyFirewall.tabs.exceptions',
     value: DependencyFirewallTab.EXCEPTIONS,
-    disabled: true
+    featureFlag: FeatureFlags.HAR_DEPENDENCY_FIREWALL_EXEMPTIONS
   }
 ]
