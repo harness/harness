@@ -147,6 +147,14 @@ func (r *registryHelper) ReportBuildPackageIndexEvent(
 	}
 }
 
+func (r *registryHelper) ReportBuildPackageMetadataEvent(
+	ctx context.Context, registryID int64, artifactName string,
+) {
+	if r.PostProcessingReporter != nil {
+		r.PostProcessingReporter.BuildPackageMetadata(ctx, registryID, artifactName, "")
+	}
+}
+
 func (r *registryHelper) ReportBuildRegistryIndexEvent(
 	ctx context.Context, registryID int64, sources []types.SourceRef,
 ) {

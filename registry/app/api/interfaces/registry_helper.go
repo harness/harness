@@ -52,6 +52,9 @@ type RegistryHelper interface {
 	// ReportBuildPackageIndexEvent reports the build package index event
 	ReportBuildPackageIndexEvent(ctx context.Context, registryID int64, artifactName string)
 
+	// ReportBuildPackageMetadataEvent reports the build package metadata event (used by Composer)
+	ReportBuildPackageMetadataEvent(ctx context.Context, registryID int64, artifactName string)
+
 	// ReportBuildRegistryIndexEvent reports the build registry index event
 	ReportBuildRegistryIndexEvent(ctx context.Context, registryID int64, sources []types.SourceRef)
 

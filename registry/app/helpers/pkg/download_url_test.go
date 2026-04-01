@@ -73,6 +73,13 @@ func (m *mockRegistryHelper) ReportBuildPackageIndexEvent(
 ) {
 }
 
+func (m *mockRegistryHelper) ReportBuildPackageMetadataEvent(
+	_ context.Context,
+	_ int64,
+	_ string,
+) {
+}
+
 func (m *mockRegistryHelper) ReportBuildRegistryIndexEvent(
 	_ context.Context,
 	_ int64,
