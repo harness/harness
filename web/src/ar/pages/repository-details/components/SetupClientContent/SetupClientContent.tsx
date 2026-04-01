@@ -58,7 +58,6 @@ export default function SetupClientContent(props: SetupClientContentProps): JSX.
   })
 
   const responseData = data?.content.data
-
   return (
     <Page.Body className={css.pageBody} loading={loading} error={error?.message} retryOnError={() => refetch()}>
       {responseData && (

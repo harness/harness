@@ -134,8 +134,7 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         Header: getString('repositoryList.table.columns.downloads'),
         accessor: 'downloadsCount',
         Cell: RepositoryDownloadsCell,
-        serverSortProps: shouldUseV2Apis ? getServerSortProps('downloadsCount') : undefined,
-        disableSortBy: !shouldUseV2Apis
+        disableSortBy: true
       },
       {
         Header: getString(

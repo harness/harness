@@ -92,7 +92,7 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
         Header: getString('artifactList.table.columns.downloads'),
         accessor: 'downloadsCount',
         Cell: RegistryArtifactDownloadsCell,
-        serverSortProps: getServerSortProps('downloadsCount')
+        disableSortBy: true
       },
       {
         Header: getString('artifactList.table.columns.latestVersion'),

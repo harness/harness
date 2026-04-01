@@ -152,7 +152,7 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         Header: getString('artifactList.table.columns.downloads'),
         accessor: 'downloadsCount',
         Cell: ArtifactDownloadsCell,
-        serverSortProps: getServerSortProps('downloadsCount'),
+        disableSortBy: true,
         width: '100%'
       },
       {

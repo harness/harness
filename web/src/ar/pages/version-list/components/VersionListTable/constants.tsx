@@ -70,7 +70,8 @@ export const VERSION_LIST_TABLE_CELL_CONFIG: Record<VersionListColumnEnum, IVers
   [VersionListColumnEnum.DownloadCount]: {
     Header: 'versionList.table.columns.downloads',
     accessor: 'downloadsCount',
-    Cell: VersionDownloadsCell
+    Cell: VersionDownloadsCell,
+    disableSortBy: true
   },
   [VersionListColumnEnum.LastModified]: {
     Header: 'versionList.table.columns.publishedByAt',

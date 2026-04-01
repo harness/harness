@@ -273,28 +273,8 @@ describe('Test Artifact List Page', () => {
           reg_identifier: [],
           latest_version: false,
           deployed_artifact: false,
-          package_type: []
-        },
-        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
-      },
-      { enabled: true }
-    )
-
-    const downloadsSortIcon = getByText('artifactList.table.columns.downloads').nextSibling?.firstChild as HTMLElement
-    await userEvent.click(downloadsSortIcon)
-
-    expect(useGetAllHarnessArtifactsQuery).toHaveBeenLastCalledWith(
-      {
-        space_ref: 'undefined/+',
-        queryParams: {
-          page: 0,
-          size: 50,
-          sort_field: 'downloadsCount',
-          sort_order: 'DESC',
-          reg_identifier: [],
-          latest_version: false,
-          deployed_artifact: false,
-          package_type: []
+          package_type: [],
+          search_term: undefined
         },
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },
@@ -312,11 +292,12 @@ describe('Test Artifact List Page', () => {
           page: 0,
           size: 50,
           sort_field: 'lastModified',
-          sort_order: 'ASC',
+          sort_order: 'DESC',
           reg_identifier: [],
           latest_version: false,
           deployed_artifact: false,
-          package_type: []
+          package_type: [],
+          search_term: undefined
         },
         stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
       },

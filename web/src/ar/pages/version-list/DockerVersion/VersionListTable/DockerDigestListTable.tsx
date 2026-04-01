@@ -132,7 +132,8 @@ function DockerDigestListTable(props: DockerVersionListTableProps): JSX.Element 
         width: '100%',
         accessor: 'downloadsCount',
         Cell: VersionDownloadsCell,
-        serverSortProps: getServerSortProps('downloadsCount')
+        serverSortProps: getServerSortProps('downloadsCount'),
+        disableSortBy: true
       },
       {
         Header: getString('versionList.table.columns.deployments'),
