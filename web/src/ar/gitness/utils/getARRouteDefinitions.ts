@@ -85,6 +85,9 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
     toARDependencyFirewallViolationDetails: routeDefinitionWithMode(
       params => `/dependency-firewall/violations/${params.violationId}`
     ),
-    toARDependencyFirewallExceptions: routeDefinitionWithMode(() => '/dependency-firewall/exceptions')
+    toARDependencyFirewallExceptions: routeDefinitionWithMode(() => '/dependency-firewall/exceptions'),
+    toARDependencyFirewallExemptionDetails: routeDefinitionWithMode(
+      params => `/dependency-firewall/exceptions/${params.exemptionId}`
+    )
   }
 }

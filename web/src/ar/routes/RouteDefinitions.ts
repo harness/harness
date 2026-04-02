@@ -18,6 +18,7 @@ import { defaultTo, isEmpty } from 'lodash-es'
 
 import type {
   ArtifactDetailsPathParams,
+  DependencyFirewallExemptionDetailsPathParams,
   DependencyFirewallViolationDetailsPathParams,
   ManageRegistriesTabPathParams,
   RedirectPageQueryParams,
@@ -53,6 +54,10 @@ export interface ARRouteDefinitionsReturn {
   toARVersionDetailsTab: (params: VersionDetailsTabPathParams, options?: IRouteOptions) => string
   toARRepositoryWebhookDetails: (params: RepositoryWebhookDetailsPathParams, options?: IRouteOptions) => string
   toARRepositoryWebhookDetailsTab: (params: RepositoryWebhookDetailsTabPathParams, options?: IRouteOptions) => string
+  toARDependencyFirewallExemptionDetails: (
+    params: DependencyFirewallExemptionDetailsPathParams,
+    options?: IRouteOptions
+  ) => string
 }
 
 export const routeDefinitions: ARRouteDefinitionsReturn = {
@@ -127,5 +132,8 @@ export const routeDefinitions: ARRouteDefinitionsReturn = {
   toARDependencyFirewallViolationDetails: routeDefinitionWithMode(
     params => `/dependency-firewall/violations/${params.violationId}`
   ),
-  toARDependencyFirewallExceptions: routeDefinitionWithMode(() => '/dependency-firewall/exceptions')
+  toARDependencyFirewallExceptions: routeDefinitionWithMode(() => '/dependency-firewall/exemptions'),
+  toARDependencyFirewallExemptionDetails: routeDefinitionWithMode(
+    params => `/dependency-firewall/exemptions/${params.exemptionId}`
+  )
 }

@@ -1,0 +1,38 @@
+page: Exemption Details Page
+exemptionId: '(Exemption ID: #{{ exemptionId}})'
+actions:
+  approve: Approve
+  reject: Reject
+cards:
+  section1:
+    title: Dependency Information
+    packageName: Package name
+    versions: Versions
+    upstreamProxy: Upstream proxy
+  section2:
+    title: Exemption Details
+    requestedDate: Requested date
+    requestedBy: Requested by
+    duration: Exemption duration
+    expirationDate: Expiration date
+    businessJustification: Business justification
+    remediationPlan: Remediation plan
+    notes: Approval/Rejection Notes
+approveModal:
+  title: Approve dependency exemption
+  content: Description
+  inputLabel: Reason
+  placeholder: Type a reason here
+  submitButton: Approve
+  cancelButton: Cancel
+rejectModal:
+  title: Reject dependency exemption
+  content: Description
+  inputLabel: Reason
+  placeholder: Type a reason here
+  submitButton: Reject
+  cancelButton: Cancel
+toasters:
+  exemptionApproved: Exemption approved successfully
+  exemptionRejected: Exemption rejected successfully
+  failedToUpdateStatus: Failed to update status

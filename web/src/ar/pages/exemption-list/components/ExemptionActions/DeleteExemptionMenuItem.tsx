@@ -15,9 +15,10 @@
  */
 
 import React from 'react'
+import { useHistory } from 'react-router-dom'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { useParentComponents } from '@ar/hooks'
+import { useParentComponents, useRoutes } from '@ar/hooks'
 import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 
 import { queryClient } from '@ar/utils/queryClient'
@@ -27,10 +28,13 @@ import useDeleteExemptionModal from '../../hooks/useDeleteExemption'
 export default function DeleteExemptionMenuItem({ data, onClose }: ExemptionActionsProps): JSX.Element {
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
+  const history = useHistory()
+  const routes = useRoutes()
 
   const handleAfterDeleteExemption = (): void => {
     queryClient.invalidateQueries(['ListFirewallExceptionsV3'])
     onClose?.()
+    history.push(routes.toARDependencyFirewallExceptions())
   }
 
   const { triggerDelete } = useDeleteExemptionModal({

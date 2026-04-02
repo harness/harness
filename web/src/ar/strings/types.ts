@@ -82,6 +82,37 @@ export interface StringsMap {
   'digestList.table.columns.size': string
   'digestList.table.columns.uploadedBy': string
   'digestList.table.noDigestTitle': string
+  'exemptionDetails.actions.approve': string
+  'exemptionDetails.actions.reject': string
+  'exemptionDetails.approveModal.cancelButton': string
+  'exemptionDetails.approveModal.content': string
+  'exemptionDetails.approveModal.inputLabel': string
+  'exemptionDetails.approveModal.placeholder': string
+  'exemptionDetails.approveModal.submitButton': string
+  'exemptionDetails.approveModal.title': string
+  'exemptionDetails.cards.section1.packageName': string
+  'exemptionDetails.cards.section1.title': string
+  'exemptionDetails.cards.section1.upstreamProxy': string
+  'exemptionDetails.cards.section1.versions': string
+  'exemptionDetails.cards.section2.businessJustification': string
+  'exemptionDetails.cards.section2.duration': string
+  'exemptionDetails.cards.section2.expirationDate': string
+  'exemptionDetails.cards.section2.notes': string
+  'exemptionDetails.cards.section2.remediationPlan': string
+  'exemptionDetails.cards.section2.requestedBy': string
+  'exemptionDetails.cards.section2.requestedDate': string
+  'exemptionDetails.cards.section2.title': string
+  'exemptionDetails.exemptionId': string
+  'exemptionDetails.page': string
+  'exemptionDetails.rejectModal.cancelButton': string
+  'exemptionDetails.rejectModal.content': string
+  'exemptionDetails.rejectModal.inputLabel': string
+  'exemptionDetails.rejectModal.placeholder': string
+  'exemptionDetails.rejectModal.submitButton': string
+  'exemptionDetails.rejectModal.title': string
+  'exemptionDetails.toasters.exemptionApproved': string
+  'exemptionDetails.toasters.exemptionRejected': string
+  'exemptionDetails.toasters.failedToUpdateStatus': string
   'exemptionList.cards.approvedExemptions': string
   'exemptionList.cards.expiredExemptions': string
   'exemptionList.cards.pendingExemptions': string
@@ -617,6 +648,7 @@ export interface StringsMap {
   'badges.upstreamProxy': string
   beta: string
   'breadcrumbs.artifacts': string
+  'breadcrumbs.exemptions': string
   'breadcrumbs.repositories': string
   'breadcrumbs.upstreamProxies': string
   cancel: string

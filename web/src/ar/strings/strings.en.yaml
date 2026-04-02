@@ -82,6 +82,7 @@ breadcrumbs:
   repositories: '{{ $.repositoryList.pageHeading }}'
   artifacts: '{{ $.artifactList.pageHeading }}'
   upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+  exemptions: Exemptions
 actions:
   edit: Edit
   delete: '{{ $.delete }}'

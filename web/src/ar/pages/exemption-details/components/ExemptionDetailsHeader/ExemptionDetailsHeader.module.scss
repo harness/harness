@@ -14,26 +14,38 @@
  * limitations under the License.
  */
 
-.nameCellContainer {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: var(--spacing-small);
-  & .labelCellContainer {
+.header {
+  align-items: flex-start !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--har-repository-details-page-header-height) !important;
+  & > div {
+    width: 100% !important;
+  }
+  .serviceDetails {
+    flex-grow: 1;
+    max-width: 100%;
+    .textOverflow {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap !important;
+    }
+  }
+
+  .detailsSection {
+    max-width: 500px;
+  }
+
+  .detailsSectionForRemote {
+    width: 250px;
+  }
+
+  .cursor {
+    cursor: pointer;
+  }
+
+  .nameContainer {
     flex-shrink: 1;
   }
-}
-
-.actionButton {
-  text-decoration: none !important;
-  color: var(--primary-7) !important;
-  background-color: var(--white) !important;
-  font-weight: 500 !important;
-  border-radius: 4px;
-  box-shadow: none !important;
-  padding-left: 12px;
-  padding-right: 12px;
-  border: 1px solid var(--primary-7) !important;
-  letter-spacing: 0.5px;
-  background-image: none;
 }

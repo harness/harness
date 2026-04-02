@@ -83,3 +83,7 @@ export interface RepositoryWebhookDetailsTabPathParams extends RepositoryWebhook
 export interface DependencyFirewallViolationDetailsPathParams {
   violationId: string
 }
+
+export interface DependencyFirewallExemptionDetailsPathParams {
+  exemptionId: string
+}

@@ -24,9 +24,10 @@ import DeleteExemptionMenuItem from './DeleteExemptionMenuItem'
 
 export default function ExemptionActions(props: ExemptionActionsProps): JSX.Element {
   const [open, setOpen] = useState(false)
+  const allowEdit = props.data.status === 'PENDING'
   return (
     <ActionButton isOpen={open} setOpen={setOpen}>
-      {!props.data.expirationAt && (
+      {allowEdit && (
         <EditExemptionMenuItem
           {...props}
           onClose={() => {

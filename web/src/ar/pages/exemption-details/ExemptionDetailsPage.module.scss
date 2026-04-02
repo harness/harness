@@ -14,26 +14,14 @@
  * limitations under the License.
  */
 
-.nameCellContainer {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: var(--spacing-small);
-  & .labelCellContainer {
-    flex-shrink: 1;
-  }
+.cardContainer {
+  width: 80%;
+  min-width: 900px;
+  max-width: 1024px;
+  padding: var(--spacing-7) !important;
+  background-color: var(--white);
 }
 
-.actionButton {
-  text-decoration: none !important;
-  color: var(--primary-7) !important;
-  background-color: var(--white) !important;
-  font-weight: 500 !important;
-  border-radius: 4px;
-  box-shadow: none !important;
-  padding-left: 12px;
-  padding-right: 12px;
-  border: 1px solid var(--primary-7) !important;
-  letter-spacing: 0.5px;
-  background-image: none;
+.cardHeading {
+  --typography-size: 16px !important;
 }

@@ -27,6 +27,7 @@ import type { ManageRegistriesDetailsTab } from '@ar/pages/manage-registries/con
 
 import type {
   ArtifactDetailsPathParams,
+  DependencyFirewallExemptionDetailsPathParams,
   ManageRegistriesTabPathParams,
   RepositoryDetailsPathParams,
   RepositoryDetailsTabPathParams,
@@ -45,6 +46,7 @@ const VersionDetailsPage = React.lazy(() => import('@ar/pages/version-details/Ve
 const RouteProvider = React.lazy(() => import('@ar/components/RouteProvider/RouteProvider'))
 const WebhookDetailsPage = React.lazy(() => import('@ar/pages/webhook-details/WebhookDetailsPage'))
 const DependencyFirewallPage = React.lazy(() => import('@ar/pages/dependency-firewall/DependencyFirewallPage'))
+const ExemptionDetailsPage = React.lazy(() => import('@ar/pages/exemption-details/ExemptionDetailsPage'))
 
 export const manageRegistriesTabPathProps: ManageRegistriesTabPathParams = {
   tab: ':tab' as ManageRegistriesDetailsTab
@@ -108,11 +110,15 @@ export const repositoryWebhookDetailsTabPathParams: RepositoryWebhookDetailsTabP
   tab: ':tab' as WebhookDetailsTab
 }
 
+export const dependencyFirewallExemptionDetailsPathParams: DependencyFirewallExemptionDetailsPathParams = {
+  exemptionId: ':exemptionId'
+}
+
 const RouteDestinations = (): JSX.Element => {
   const routes = useRoutes(true)
   const { parent } = useAppStore()
   const repositoryListViewType = useGetRepositoryListViewType()
-  const { HAR_DEPENDENCY_FIREWALL } = useFeatureFlags()
+  const { HAR_DEPENDENCY_FIREWALL, HAR_DEPENDENCY_FIREWALL_EXEMPTIONS } = useFeatureFlags()
   const shouldUseSeperateVersionDetailsRoute =
     parent === Parent.Enterprise || repositoryListViewType === RepositoryListViewTypeEnum.DIRECTORY
   return (
@@ -134,6 +140,13 @@ const RouteDestinations = (): JSX.Element => {
       {repositoryListViewType === RepositoryListViewTypeEnum.LIST && (
         <RouteProvider exact path={routes.toARRepositories()}>
           <RepositoryListPage />
+        </RouteProvider>
+      )}
+      {!!HAR_DEPENDENCY_FIREWALL_EXEMPTIONS && (
+        <RouteProvider
+          exact
+          path={routes.toARDependencyFirewallExemptionDetails({ ...dependencyFirewallExemptionDetailsPathParams })}>
+          <ExemptionDetailsPage />
         </RouteProvider>
       )}
       {!!HAR_DEPENDENCY_FIREWALL && (

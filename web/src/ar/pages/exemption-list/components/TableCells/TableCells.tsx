@@ -15,8 +15,9 @@
  */
 
 import React from 'react'
+import { Link } from 'react-router-dom'
+import { Layout } from '@harnessio/uicore'
 import type { FirewallExceptionResponseV3 } from '@harnessio/react-har-service-client'
-import { Button, ButtonSize, ButtonVariation, Layout } from '@harnessio/uicore'
 import type { TableInstance, ColumnInstance, Row, Cell, CellValue, Renderer } from 'react-table'
 
 import { useRoutes } from '@ar/hooks'
@@ -82,8 +83,8 @@ export const RepositoryNameCell: CellType = ({ row }) => {
 
 export const StatusCell: CellType = ({ row }) => {
   const { original } = row
-  const { status } = original
-  return <ExemptionStatusBadge status={status} />
+  const { status, notes } = original
+  return <ExemptionStatusBadge status={status} helperText={notes || ''} />
 }
 
 export const RequestedAtCell: CellType = ({ row }) => {
@@ -118,11 +119,15 @@ export const ExpireAtCell: CellType = ({ row }) => {
 export const ExemptionActionsCell: CellType = ({ row }) => {
   const { original } = row
   const { getString } = useStrings()
+  const routes = useRoutes()
+
   return (
     <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
-      <Button className={css.actionButton} variation={ButtonVariation.LINK} size={ButtonSize.SMALL}>
+      <Link
+        to={routes.toARDependencyFirewallExemptionDetails({ exemptionId: original.exceptionId })}
+        className={css.actionButton}>
         {getString('details')}
-      </Button>
+      </Link>
       <ExemptionActions exemptionId={original.exceptionId} data={original} />
     </Layout.Horizontal>
   )
