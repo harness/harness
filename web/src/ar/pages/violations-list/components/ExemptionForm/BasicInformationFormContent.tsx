@@ -17,7 +17,7 @@
 import React, { useMemo } from 'react'
 import { useFormikContext } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
-import { useListFirewallExceptionVersionsV3Query, type ArtifactScanV3 } from '@harnessio/react-har-service-client'
+import { useListFirewallExceptionVersionsV3Query } from '@harnessio/react-har-service-client'
 import { Container, FormInput, Layout, MultiSelectOption, Text } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -25,7 +25,8 @@ import { useAppStore } from '@ar/hooks'
 import type { ExemptionFormSpec } from './types'
 
 interface BasicInformationFormContentProps {
-  data: ArtifactScanV3
+  registryId: string
+  packageName: string
   isEdit?: boolean
 }
 
@@ -37,8 +38,8 @@ export default function BasicInformationFormContent(props: BasicInformationFormC
   const { data, isFetching, error } = useListFirewallExceptionVersionsV3Query({
     queryParams: {
       account_identifier: scope.accountId || '',
-      registry_id: props.data.registryId,
-      package_name: props.data.packageName,
+      registry_id: props.registryId,
+      package_name: props.packageName,
       page: 0,
       size: 100
     }

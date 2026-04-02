@@ -18,52 +18,51 @@ import React, { useMemo, useState } from 'react'
 import type { FormikProps } from 'formik'
 import { Button, ButtonVariation, Layout, useToaster } from '@harnessio/uicore'
 import { Drawer, Position } from '@blueprintjs/core'
-import { useCreateFirewallExceptionV3Mutation, type ArtifactScanV3 } from '@harnessio/react-har-service-client'
+import { FirewallExceptionResponseV3, useUpdateFirewallExceptionV3Mutation } from '@harnessio/react-har-service-client'
 
 import { useAppStore } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 
 import type { ExemptionFormSpec } from '../ExemptionForm/types'
 import ExemptionForm from '../ExemptionForm/ExemptionForm'
-import { DEFAULT_EXEMPTION_DURATION } from '../ExemptionForm/constants'
 
-import css from './CreateExemptionForm.module.scss'
+import css from './EditExemptionForm.module.scss'
 
-interface CreateExemptionFormModalProps {
-  data: ArtifactScanV3
+interface EditExemptionFormModalProps {
+  data: FirewallExceptionResponseV3
   onClose: () => void
 }
 
-export default function CreateExemptionFormModal({ data, onClose }: CreateExemptionFormModalProps) {
+export default function EditExemptionFormModal({ data, onClose }: EditExemptionFormModalProps) {
   const { getString } = useStrings()
   const [submitting, setSubmitting] = useState(false)
   const { scope } = useAppStore()
   const { showSuccess, showError, clear } = useToaster()
   const formRef = React.useRef<FormikProps<unknown> | null>(null)
 
-  const { mutateAsync: createExemption } = useCreateFirewallExceptionV3Mutation()
+  const { mutateAsync: updateExemption } = useUpdateFirewallExceptionV3Mutation()
 
   const handleSubmitForm = (): void => {
     formRef.current?.submitForm()
   }
 
-  const initialValues: ExemptionFormSpec = useMemo(() => {
-    return {
-      registryId: data.registryId,
-      packageName: data.packageName,
-      versionList: [{ label: data.version, value: data.version }],
-      businessJustification: '',
-      remediationPlan: '',
-      expireAfter: DEFAULT_EXEMPTION_DURATION
-    }
-  }, [data])
+  const initialValues: ExemptionFormSpec = useMemo(
+    () => ({
+      packageName: data.packageName || '',
+      registryId: data.registryId || '',
+      versionList: data.versionList?.map(version => ({ label: version, value: version })) || [],
+      expireAfter: data.expireAfter || 0,
+      businessJustification: data.businessJustification || '',
+      remediationPlan: data.remediationPlan || ''
+    }),
+    [data]
+  )
 
   const handleSubmit = async (values: ExemptionFormSpec) => {
     setSubmitting(true)
-    return createExemption({
+    return updateExemption({
+      id: data.exceptionId,
       body: {
-        registryId: values.registryId,
-        packageName: values.packageName,
         versionList: values.versionList.map(version => version.value as string),
         expireAfter: Number(values.expireAfter) || 0,
         businessJustification: values.businessJustification,
@@ -75,13 +74,13 @@ export default function CreateExemptionFormModal({ data, onClose }: CreateExempt
     })
       .then(() => {
         clear()
-        showSuccess(getString('violationsList.createExemptionForm.toasters.success'))
+        showSuccess(getString('violationsList.editExemptionForm.toasters.success'))
         onClose()
       })
       .catch(error => {
         clear()
         showError(
-          error?.message || error?.error?.message || getString('violationsList.createExemptionForm.toasters.error')
+          error?.message || error?.error?.message || getString('violationsList.editExemptionForm.toasters.error')
         )
       })
       .finally(() => {
@@ -105,21 +104,21 @@ export default function CreateExemptionFormModal({ data, onClose }: CreateExempt
           packageName={data.packageName}
           ref={formRef}
           onSubmit={handleSubmit}
-          title={getString('violationsList.createExemptionForm.title')}
-          subTitle={getString('violationsList.createExemptionForm.subTitle')}
+          title={getString('violationsList.editExemptionForm.title')}
+          subTitle={getString('violationsList.editExemptionForm.subTitle')}
         />
         <Layout.Horizontal spacing="small">
           <Button
             variation={ButtonVariation.PRIMARY}
             type={'submit'}
-            text={getString('violationsList.createExemptionForm.actions.submit')}
+            text={getString('violationsList.editExemptionForm.actions.submit')}
             data-id="service-save"
             onClick={handleSubmitForm}
             disabled={submitting}
           />
           <Button
             variation={ButtonVariation.TERTIARY}
-            text={getString('violationsList.createExemptionForm.actions.cancel')}
+            text={getString('violationsList.editExemptionForm.actions.cancel')}
             onClick={onClose}
           />
         </Layout.Horizontal>

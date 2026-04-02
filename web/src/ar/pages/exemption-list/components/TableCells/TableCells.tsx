@@ -15,9 +15,8 @@
  */
 
 import React from 'react'
-import { Color } from '@harnessio/design-system'
 import type { FirewallExceptionResponseV3 } from '@harnessio/react-har-service-client'
-import { Button, ButtonSize, ButtonVariation, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonSize, ButtonVariation, Layout } from '@harnessio/uicore'
 import type { TableInstance, ColumnInstance, Row, Cell, CellValue, Renderer } from 'react-table'
 
 import { useRoutes } from '@ar/hooks'
@@ -27,7 +26,7 @@ import type { RepositoryPackageType } from '@ar/common/types'
 import ExemptionStatusBadge from '@ar/components/Badge/ExemptionStatusBadge'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 
-import ExemptionActions from '../../ExemptionActions/ExemptionActions'
+import ExemptionActions from '../ExemptionActions/ExemptionActions'
 
 import css from './TableCells.module.scss'
 
@@ -42,16 +41,18 @@ type CellType = Renderer<CellTypeWithActions<FirewallExceptionResponseV3>>
 
 export const PackageNameCell: CellType = ({ row }) => {
   const { original } = row
-  const { packageType, packageName } = original
+  const { packageType, packageName, registryName } = original
+  const routes = useRoutes()
   return (
-    <Layout.Vertical spacing="xsmall">
-      <Layout.Horizontal className={css.nameCellContainer} spacing="small">
-        <RepositoryIcon packageType={packageType as RepositoryPackageType} />
-        <Text lineClamp={1} color={Color.GREY_900} font={{ size: 'small' }}>
-          {packageName}
-        </Text>
-      </Layout.Horizontal>
-    </Layout.Vertical>
+    <TableCells.LinkCell
+      prefix={<RepositoryIcon packageType={packageType as RepositoryPackageType} />}
+      linkTo={routes.toARRedirect({
+        packageType: packageType as RepositoryPackageType,
+        registryId: registryName || '',
+        artifactId: packageName
+      })}
+      label={packageName}
+    />
   )
 }
 

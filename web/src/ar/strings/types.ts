@@ -87,6 +87,10 @@ export interface StringsMap {
   'exemptionList.cards.pendingExemptions': string
   'exemptionList.cards.rejectedExemptions': string
   'exemptionList.cards.totalExemptions': string
+  'exemptionList.deleteModal.contentText': string
+  'exemptionList.deleteModal.inputLabel': string
+  'exemptionList.deleteModal.inputPlaceholder': string
+  'exemptionList.deleteModal.title': string
   'exemptionList.expireAfter': string
   'exemptionList.noExemptionsFound': string
   'exemptionList.page': string
@@ -97,6 +101,8 @@ export interface StringsMap {
   'exemptionList.table.columns.updatedAt': string
   'exemptionList.table.columns.upstreamRegistry': string
   'exemptionList.table.columns.versions': string
+  'exemptionList.table.toasters.exemptionDeleteError': string
+  'exemptionList.table.toasters.exemptionDeleted': string
   'labelsList.canbeAddedByUsers': string
   'labelsList.createLabelModal.actions.cancel': string
   'labelsList.createLabelModal.actions.create': string
@@ -491,6 +497,12 @@ export interface StringsMap {
   'violationsList.createExemptionForm.title': string
   'violationsList.createExemptionForm.toasters.error': string
   'violationsList.createExemptionForm.toasters.success': string
+  'violationsList.editExemptionForm.actions.cancel': string
+  'violationsList.editExemptionForm.actions.submit': string
+  'violationsList.editExemptionForm.subTitle': string
+  'violationsList.editExemptionForm.title': string
+  'violationsList.editExemptionForm.toasters.error': string
+  'violationsList.editExemptionForm.toasters.success': string
   'violationsList.evaluatedAt': string
   'violationsList.noViolationsFound': string
   'violationsList.page': string
@@ -582,6 +594,7 @@ export interface StringsMap {
   'actions.delete': string
   'actions.deleteForce': string
   'actions.edit': string
+  'actions.editExemption': string
   'actions.executions': string
   'actions.quarantine': string
   'actions.requestExemption': string

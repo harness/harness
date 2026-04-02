@@ -17,7 +17,6 @@
 import React from 'react'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { ArtifactScanV3 } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { Separator } from '@ar/components/Separator/Separator'
@@ -25,7 +24,8 @@ import BasicInformationFormContent from './BasicInformationFormContent'
 import ExemptionDetailsAndJustificationFormContent from './ExemptionDetailsAndJustificationFormContent'
 
 interface CreateExemptionFormContentProps {
-  data: ArtifactScanV3
+  registryId: string
+  packageName: string
   isEdit?: boolean
   title?: string
   subTitle?: string
@@ -44,7 +44,11 @@ function CreateExemptionFormContent(props: CreateExemptionFormContentProps) {
         </Text>
       </Layout.Vertical>
       <Separator />
-      <BasicInformationFormContent data={props.data} isEdit={props.isEdit} />
+      <BasicInformationFormContent
+        registryId={props.registryId}
+        packageName={props.packageName}
+        isEdit={props.isEdit}
+      />
       <ExemptionDetailsAndJustificationFormContent isEdit={props.isEdit} />
     </Container>
   )

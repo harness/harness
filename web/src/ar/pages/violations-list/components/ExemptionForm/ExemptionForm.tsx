@@ -16,7 +16,6 @@
 
 import React, { forwardRef } from 'react'
 import * as Yup from 'yup'
-import type { ArtifactScanV3 } from '@harnessio/react-har-service-client'
 import { Formik, FormikForm } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -24,13 +23,14 @@ import { setFormikRef } from '@ar/common/utils'
 import type { FormikFowardRef } from '@ar/common/types'
 
 import type { ExemptionFormSpec } from './types'
-import { DEFAULT_EXEMPTION_DURATION } from './constants'
 import CreateExemptionFormContent from './ExemptionFormContent'
 
 import css from './ExemptionForm.module.scss'
 
 interface ExemptionFormProps {
-  data: ArtifactScanV3
+  packageName: string
+  registryId: string
+  initialValues: ExemptionFormSpec
   onSubmit: (data: ExemptionFormSpec) => void
   isEdit?: boolean
   title?: string
@@ -38,19 +38,8 @@ interface ExemptionFormProps {
 }
 
 function ExemptionForm(props: ExemptionFormProps, formikRef: FormikFowardRef): JSX.Element {
-  const { data, onSubmit, isEdit = false, title, subTitle } = props
+  const { initialValues, onSubmit, isEdit = false, title, subTitle } = props
   const { getString } = useStrings()
-
-  const getInitialValues = () => {
-    return {
-      registryId: data.registryId,
-      packageName: data.packageName,
-      versionList: [{ label: data.version, value: data.version }],
-      businessJustification: '',
-      remediationPlan: '',
-      expireAfter: DEFAULT_EXEMPTION_DURATION
-    }
-  }
 
   return (
     <Formik<ExemptionFormSpec>
@@ -61,13 +50,19 @@ function ExemptionForm(props: ExemptionFormProps, formikRef: FormikFowardRef): J
         remediationPlan: Yup.string().trim().required(getString('validationMessages.required'))
       })}
       formName="exemption-form"
-      initialValues={getInitialValues()}
+      initialValues={initialValues}
       onSubmit={onSubmit}>
       {formik => {
         setFormikRef(formikRef, formik)
         return (
           <FormikForm className={css.formContainer}>
-            <CreateExemptionFormContent data={props.data} isEdit={isEdit} title={title} subTitle={subTitle} />
+            <CreateExemptionFormContent
+              registryId={props.registryId}
+              packageName={props.packageName}
+              isEdit={isEdit}
+              title={title}
+              subTitle={subTitle}
+            />
           </FormikForm>
         )
       }}

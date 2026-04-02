@@ -1,6 +1,6 @@
 page: Violations List Page
 noViolationsFound: No Violations Found
-evaluatedAt: "Evaluated At {{value}}"
+evaluatedAt: 'Evaluated At {{value}}'
 cards:
   totalViolations: Total Violations
   blockedViolations: Blocked Violations
@@ -28,7 +28,7 @@ violationDetailsModal:
     policySetViolated: Policy Set Violated
     policiesViolated: Policies Violated
     policyViolated: Policy Violated
-    policyName: "Policy Name: {{{policyName}}}"
+    policyName: 'Policy Name: {{{policyName}}}'
     category: Category
     title: Violated Policies
     ossRiskLevelViolation:
@@ -54,20 +54,29 @@ violationDetailsModal:
     firstDetected: First Detected
     lastDetected: Last Detected
   actions:
-    requestException: Request Exception
+    requestException: Request Exemption
     reEvaluate: Re-Evaluate
+editExemptionForm:
+  title: Edit dependency exemption
+  subTitle: Exemption allow temporary use of blocked dependencies when business-critical. When you submit a request, all users with the "Exemption Approver" role will be notified. Any approver can review and act on your request.
+  actions:
+    submit: Save Changes
+    cancel: Cancel
+  toasters:
+    success: Exemption request updated successfully
+    error: Failed to update exemption request
 createExemptionForm:
-  title: Request dependency exception
-  subTitle: Exceptions allow temporary use of blocked dependencies when business-critical. When you submit a request, all users with the "Exception Approver" role will be notified. Any approver can review and act on your request.
+  title: Request dependency exemption
+  subTitle: Exemption allow temporary use of blocked dependencies when business-critical. When you submit a request, all users with the "Exemption Approver" role will be notified. Any approver can review and act on your request.
   basicInformationSection:
     title: Basic Information
     packageName: Package Name
     version: Version
   exemptionDetailsAndJustificationSection:
-    title: Exception details and justification
-    exemptionDuration: Exception duration (in days)
+    title: Exemption details and justification
+    exemptionDuration: Exemption duration (in days)
     businessJustification: Business justification
-    businessJustificationPlaceholder: Explain why this exception is necessary for your operation
+    businessJustificationPlaceholder: Explain why this exemption is necessary for your operation
     remediationPlan: Remediation plan
     remediationPlanPlaceholder: Describe your plan to upgrade or replace the dependency
   actions:

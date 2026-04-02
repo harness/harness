@@ -19,8 +19,29 @@ import React, { useState } from 'react'
 import ActionButton from '@ar/components/ActionButton/ActionButton'
 
 import type { ExemptionActionsProps } from './types'
+import EditExemptionMenuItem from './EditExemptionMenuItem'
+import DeleteExemptionMenuItem from './DeleteExemptionMenuItem'
 
-export default function ExemptionActions(_props: ExemptionActionsProps): JSX.Element {
+export default function ExemptionActions(props: ExemptionActionsProps): JSX.Element {
   const [open, setOpen] = useState(false)
-  return <ActionButton isOpen={open} setOpen={setOpen}></ActionButton>
+  return (
+    <ActionButton isOpen={open} setOpen={setOpen}>
+      {!props.data.expirationAt && (
+        <EditExemptionMenuItem
+          {...props}
+          onClose={() => {
+            setOpen(false)
+            props.onClose?.()
+          }}
+        />
+      )}
+      <DeleteExemptionMenuItem
+        {...props}
+        onClose={() => {
+          setOpen(false)
+          props.onClose?.()
+        }}
+      />
+    </ActionButton>
+  )
 }

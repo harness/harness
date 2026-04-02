@@ -16,3 +16,11 @@ table:
     updatedAt: Updated At
     expiresAt: Expires At
     status: Status
+  toasters:
+    exemptionDeleted: Exemption deleted successfully
+    exemptionDeleteError: Failed to delete exemption
+deleteModal:
+  title: Delete Exemption
+  contentText: Are you sure you want to delete this exemption?
+  inputPlaceholder: Type the package name to confirm
+  inputLabel: Package Name
