@@ -14,11 +14,33 @@
 
 package usererror
 
-import "testing"
+import (
+	"context"
+	"net/http"
+	"testing"
+
+	"github.com/harness/gitness/errors"
+)
 
 func TestError(t *testing.T) {
 	got, want := ErrNotFound.Message, ErrNotFound.Message
 	if got != want {
 		t.Errorf("Want error string %q, got %q", got, want)
+	}
+}
+
+func TestTranslateUnprocessableEntity(t *testing.T) {
+	err := errors.UnprocessableEntityf("pre-receive hook blocked reference update: %q", "blocked by protection rules")
+	ctx := context.Background()
+
+	result := Translate(ctx, err)
+
+	if result.Status != http.StatusUnprocessableEntity {
+		t.Errorf("Expected status %d, got %d", http.StatusUnprocessableEntity, result.Status)
+	}
+
+	expectedMsg := `pre-receive hook blocked reference update: "blocked by protection rules"`
+	if result.Message != expectedMsg {
+		t.Errorf("Expected message %q, got %q", expectedMsg, result.Message)
 	}
 }

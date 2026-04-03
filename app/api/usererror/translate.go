@@ -164,14 +164,15 @@ func errorFromLockError(err *lock.Error) *Error {
 
 // lookup of git error codes to HTTP status codes.
 var codes = map[errors.Status]int{
-	errors.StatusConflict:           http.StatusConflict,
-	errors.StatusInvalidArgument:    http.StatusBadRequest,
-	errors.StatusNotFound:           http.StatusNotFound,
-	errors.StatusNotImplemented:     http.StatusNotImplemented,
-	errors.StatusPreconditionFailed: http.StatusPreconditionFailed,
-	errors.StatusUnauthorized:       http.StatusUnauthorized,
-	errors.StatusForbidden:          http.StatusForbidden,
-	errors.StatusInternal:           http.StatusInternalServerError,
+	errors.StatusConflict:            http.StatusConflict,
+	errors.StatusInvalidArgument:     http.StatusBadRequest,
+	errors.StatusNotFound:            http.StatusNotFound,
+	errors.StatusNotImplemented:      http.StatusNotImplemented,
+	errors.StatusPreconditionFailed:  http.StatusPreconditionFailed,
+	errors.StatusUnauthorized:        http.StatusUnauthorized,
+	errors.StatusForbidden:           http.StatusForbidden,
+	errors.StatusInternal:            http.StatusInternalServerError,
+	errors.StatusUnprocessableEntity: http.StatusUnprocessableEntity,
 }
 
 // httpStatusCode returns the associated HTTP status code for a git error code.

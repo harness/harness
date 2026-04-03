@@ -22,16 +22,17 @@ import (
 type Status string
 
 const (
-	StatusConflict           Status = "conflict"
-	StatusInternal           Status = "internal"
-	StatusInvalidArgument    Status = "invalid"
-	StatusNotFound           Status = "not_found"
-	StatusNotImplemented     Status = "not_implemented"
-	StatusUnauthorized       Status = "unauthorized"
-	StatusForbidden          Status = "forbidden"
-	StatusFailed             Status = "failed"
-	StatusPreconditionFailed Status = "precondition_failed"
-	StatusAborted            Status = "aborted"
+	StatusConflict            Status = "conflict"
+	StatusInternal            Status = "internal"
+	StatusInvalidArgument     Status = "invalid"
+	StatusNotFound            Status = "not_found"
+	StatusNotImplemented      Status = "not_implemented"
+	StatusUnauthorized        Status = "unauthorized"
+	StatusForbidden           Status = "forbidden"
+	StatusFailed              Status = "failed"
+	StatusPreconditionFailed  Status = "precondition_failed"
+	StatusAborted             Status = "aborted"
+	StatusUnprocessableEntity Status = "unprocessable_entity"
 )
 
 type Error struct {
@@ -251,6 +252,19 @@ func Abortedf(format string, args ...any) *Error {
 	return Format(StatusAborted, format, args...)
 }
 
+// UnprocessableEntity is a helper function to return an unprocessable entity error.
+func UnprocessableEntity(msg string) *Error {
+	return &Error{
+		Status:  StatusUnprocessableEntity,
+		Message: msg,
+	}
+}
+
+// UnprocessableEntityf is a helper function to return an unprocessable entity error.
+func UnprocessableEntityf(format string, args ...any) *Error {
+	return Format(StatusUnprocessableEntity, format, args...)
+}
+
 // IsNotFound checks if err is not found error.
 func IsNotFound(err error) bool {
 	return AsStatus(err) == StatusNotFound
@@ -279,4 +293,9 @@ func IsPreconditionFailed(err error) bool {
 // IsAborted checks if err is aborted error.
 func IsAborted(err error) bool {
 	return AsStatus(err) == StatusAborted
+}
+
+// IsUnprocessableEntity checks if err is unprocessable entity error.
+func IsUnprocessableEntity(err error) bool {
+	return AsStatus(err) == StatusUnprocessableEntity
 }

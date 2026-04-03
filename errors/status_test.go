@@ -36,6 +36,7 @@ func TestStatusConstants(t *testing.T) {
 		{"StatusFailed", StatusFailed, "failed"},
 		{"StatusPreconditionFailed", StatusPreconditionFailed, "precondition_failed"},
 		{"StatusAborted", StatusAborted, "aborted"},
+		{"StatusUnprocessableEntity", StatusUnprocessableEntity, "unprocessable_entity"},
 	}
 
 	for _, tt := range tests {
@@ -360,6 +361,8 @@ func TestHelperFunctions(t *testing.T) {
 		{"Forbidden", Forbiddenf, StatusForbidden, "access denied", nil, "access denied"},
 		{"Failed", Failedf, StatusFailed, "operation failed", nil, "operation failed"},
 		{"Aborted", Abortedf, StatusAborted, "operation aborted", nil, "operation aborted"},
+		{"UnprocessableEntity", UnprocessableEntityf, StatusUnprocessableEntity,
+			"rule violation: %s", []any{"blocked"}, "rule violation: blocked"},
 	}
 
 	for _, tt := range tests {
@@ -418,6 +421,8 @@ func TestStatusCheckFunctions(t *testing.T) {
 		{"IsPreconditionFailed with Aborted", IsPreconditionFailed, StatusAborted, false},
 		{"IsAborted with Aborted", IsAborted, StatusAborted, true},
 		{"IsAborted with Failed", IsAborted, StatusFailed, false},
+		{"IsUnprocessableEntity with UnprocessableEntity", IsUnprocessableEntity, StatusUnprocessableEntity, true},
+		{"IsUnprocessableEntity with NotFound", IsUnprocessableEntity, StatusNotFound, false},
 	}
 
 	for _, tt := range tests {
@@ -447,6 +452,7 @@ func TestStatusCheckFunctionsWithStandardError(t *testing.T) {
 		{"IsInternal", IsInternal, true}, // Standard errors are treated as internal
 		{"IsPreconditionFailed", IsPreconditionFailed, false},
 		{"IsAborted", IsAborted, false},
+		{"IsUnprocessableEntity", IsUnprocessableEntity, false},
 	}
 
 	for _, tt := range tests {
@@ -471,6 +477,7 @@ func TestStatusCheckFunctionsWithNil(t *testing.T) {
 		{"IsInternal", IsInternal},
 		{"IsPreconditionFailed", IsPreconditionFailed},
 		{"IsAborted", IsAborted},
+		{"IsUnprocessableEntity", IsUnprocessableEntity},
 	}
 
 	for _, tt := range tests {
