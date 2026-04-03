@@ -50,7 +50,13 @@ func (s *Service) sanitizeUpdateInput(in *types.WebhookUpdateInput) error {
 	}
 	if in.URL != nil {
 		// internal is set to false as internal webhooks cannot be updated
-		if err := CheckURL(*in.URL, s.config.AllowLoopback, s.config.AllowPrivateNetwork, false); err != nil {
+		if err := CheckURL(
+			*in.URL,
+			s.config.AllowLoopback,
+			s.config.AllowPrivateNetwork,
+			s.config.AllowLinkLocal,
+			false,
+		); err != nil {
 			return err
 		}
 	}
@@ -105,9 +111,6 @@ func (s *Service) Update(
 	if in.Description != nil {
 		hook.Description = *in.Description
 	}
-	if in.URL != nil {
-		hook.URL = *in.URL
-	}
 	if in.Secret != nil {
 		encryptedSecret, err := s.encrypter.Encrypt(*in.Secret)
 		if err != nil {
@@ -120,6 +123,9 @@ func (s *Service) Update(
 	}
 	if in.Insecure != nil {
 		hook.Insecure = *in.Insecure
+	}
+	if in.URL != nil {
+		hook.URL = *in.URL
 	}
 	if in.Triggers != nil {
 		hook.Triggers = DeduplicateTriggers(in.Triggers)

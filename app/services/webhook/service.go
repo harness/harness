@@ -52,6 +52,7 @@ type Config struct {
 	MaxRetries          int
 	AllowPrivateNetwork bool
 	AllowLoopback       bool
+	AllowLinkLocal      bool
 	InternalSecret      string
 }
 
@@ -133,18 +134,38 @@ func NewWebhookExecutor(
 	source string,
 ) *WebhookExecutor {
 	return &WebhookExecutor{
-		webhookExecutorStore:       webhookExecutorStore,
-		secureHTTPClient:           newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
-		insecureHTTPClient:         newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
-		secureHTTPClientInternal:   newHTTPClient(config.AllowLoopback, true, false),
-		insecureHTTPClientInternal: newHTTPClient(config.AllowLoopback, true, true),
-		config:                     config,
-		webhookURLProvider:         webhookURLProvider,
-		encrypter:                  encrypter,
-		spacePathStore:             spacePathStore,
-		secretService:              secretService,
-		principalStore:             principalStore,
-		source:                     source,
+		webhookExecutorStore: webhookExecutorStore,
+		secureHTTPClient: newHTTPClient(
+			config.AllowLoopback,
+			config.AllowPrivateNetwork,
+			config.AllowLinkLocal,
+			false,
+		),
+		insecureHTTPClient: newHTTPClient(
+			config.AllowLoopback,
+			config.AllowPrivateNetwork,
+			config.AllowLinkLocal,
+			true,
+		),
+		secureHTTPClientInternal: newHTTPClient(
+			config.AllowLoopback,
+			true,
+			config.AllowLinkLocal,
+			false,
+		),
+		insecureHTTPClientInternal: newHTTPClient(
+			config.AllowLoopback,
+			true,
+			config.AllowLinkLocal,
+			true,
+		),
+		config:             config,
+		webhookURLProvider: webhookURLProvider,
+		encrypter:          encrypter,
+		spacePathStore:     spacePathStore,
+		secretService:      secretService,
+		principalStore:     principalStore,
+		source:             source,
 	}
 }
 

@@ -27,10 +27,16 @@ import (
 
 var (
 	errLoopbackNotAllowed       = errors.New("loopback not allowed")
+	errLinkLocalNotAllowed      = errors.New("link-local address not allowed")
 	errPrivateNetworkNotAllowed = errors.New("private network not allowed")
 )
 
-func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerification bool) *http.Client {
+func newHTTPClient(
+	allowLoopback bool,
+	allowPrivateNetwork bool,
+	allowLinkLocal bool,
+	disableSSLVerification bool,
+) *http.Client {
 	// Clone http.DefaultTransport (used by http.DefaultClient)
 	tr := http.DefaultTransport.(*http.Transport).Clone() //nolint:errcheck
 
@@ -77,11 +83,23 @@ func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerif
 				addr, con.RemoteAddr())
 		}
 
-		if !allowLoopback && tcpAddr.IP.IsLoopback() {
-			return nil, errLoopbackNotAllowed
-		}
-
-		if !allowPrivateNetwork && tcpAddr.IP.IsPrivate() {
+		switch {
+		case tcpAddr.IP.IsLoopback():
+			if !allowLoopback {
+				return nil, errLoopbackNotAllowed
+			}
+		case tcpAddr.IP.IsLinkLocalUnicast(), tcpAddr.IP.IsLinkLocalMulticast():
+			if !allowLinkLocal {
+				return nil, errLinkLocalNotAllowed
+			}
+		case tcpAddr.IP.IsPrivate():
+			if !allowPrivateNetwork {
+				return nil, errPrivateNetworkNotAllowed
+			}
+		case tcpAddr.IP.IsGlobalUnicast():
+			// allowed
+		default:
+			// unspecified, broadcast, other multicast ranges
 			return nil, errPrivateNetworkNotAllowed
 		}
 

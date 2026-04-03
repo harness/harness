@@ -60,7 +60,13 @@ func (s *Service) sanitizeCreateInput(in *types.WebhookCreateInput, internal boo
 	if err := check.Description(in.Description); err != nil {
 		return err
 	}
-	if err := CheckURL(in.URL, s.config.AllowLoopback, s.config.AllowPrivateNetwork, internal); err != nil {
+	if err := CheckURL(
+		in.URL,
+		s.config.AllowLoopback,
+		s.config.AllowPrivateNetwork,
+		s.config.AllowLinkLocal,
+		internal,
+	); err != nil {
 		return err
 	}
 	if err := CheckSecret(in.Secret); err != nil {

@@ -41,7 +41,13 @@ const (
 var ErrInternalWebhookOperationNotAllowed = errors.Forbidden("changes to internal webhooks are not allowed")
 
 // CheckURL validates the url of a webhook.
-func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, internal bool) error {
+func CheckURL(
+	rawURL string,
+	allowLoopback bool,
+	allowPrivateNetwork bool,
+	allowLinkLocal bool,
+	internal bool,
+) error {
 	// for internal webhooks skip URL validation as it is not used
 	if internal {
 		return nil
@@ -71,12 +77,24 @@ func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, inter
 	}
 
 	if ip := net.ParseIP(host); ip != nil {
-		if !allowLoopback && ip.IsLoopback() {
-			return check.NewValidationError("Loopback IP addresses are not allowed.")
-		}
-
-		if !allowPrivateNetwork && ip.IsPrivate() {
-			return check.NewValidationError("Private IP addresses are not allowed.")
+		switch {
+		case ip.IsLoopback():
+			if !allowLoopback {
+				return check.NewValidationError("Loopback IP addresses are not allowed.")
+			}
+		case ip.IsLinkLocalUnicast(), ip.IsLinkLocalMulticast():
+			if !allowLinkLocal {
+				return check.NewValidationError("Link-local IP addresses are not allowed.")
+			}
+		case ip.IsPrivate():
+			if !allowPrivateNetwork {
+				return check.NewValidationError("Private IP addresses are not allowed.")
+			}
+		case ip.IsGlobalUnicast():
+			// allowed
+		default:
+			// unspecified (0.0.0.0/::), broadcast, other multicast ranges
+			return check.NewValidationError("IP address is not allowed.")
 		}
 	}
 
