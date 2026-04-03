@@ -70,7 +70,8 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, fmt.Errorf("failed to resolve head revision %s: %w", dotRange.HeadRef, err)
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIRefsOnly for merge check.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
 	}

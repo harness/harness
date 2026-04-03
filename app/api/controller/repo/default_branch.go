@@ -64,7 +64,8 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 	defer unlock()
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIRefsOnly for default branch update.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

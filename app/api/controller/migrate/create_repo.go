@@ -64,13 +64,13 @@ func (c *Controller) CreateRepo(
 	}
 
 	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		c.urlProvider.GetInternalAPIURL(ctx),
 		0,
 		session.Principal.ID,
 		true,
-		true,
+		enum.GitOpTypeManageRepo,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)

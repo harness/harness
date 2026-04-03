@@ -186,8 +186,18 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		}
 	}
 
-	// Create internal write params. Note: This will skip the pre-commit protection rules check.
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Create API write params based on bypass_rules.
+	// If bypass_rules is true, use APIContentBypassRules operation type.
+	var writeParams git.WriteParams
+	if in.BypassRules {
+		writeParams, err = controller.CreateRPCAPIContentBypassRulesWriteParams(
+			ctx, c.urlProvider, session, repo,
+		)
+	} else {
+		writeParams, err = controller.CreateRPCAPIContentWriteParams(
+			ctx, c.urlProvider, session, repo,
+		)
+	}
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

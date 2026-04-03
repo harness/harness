@@ -32,6 +32,7 @@ type (
 		ResolveUserGroupID func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
 		Actor              *types.Principal
 		IsRepoOwner        bool
+		AllowBypass        bool
 		RepoID             int64
 		RepoIdentifier     string
 	}
@@ -40,6 +41,7 @@ type (
 		ResolveUserGroupID      func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
 		Actor                   *types.Principal
 		IsRepoOwner             bool
+		AllowBypass             bool
 		Protections             map[int64]PushProtection
 		FileSizeLimits          []int64
 		FindOversizeFilesOutput *git.FindOversizeFilesOutput

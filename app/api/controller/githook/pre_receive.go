@@ -49,25 +49,44 @@ func (c *Controller) PreReceive(
 		logOutputFor(ctx, "pre-receive", output)
 	}()
 
+	if in.OperationType == enum.GitOpTypeManageRepo {
+		output.Error = ptr.String("Push not allowed for repository management operations")
+		return output, nil
+	}
+
 	repo, err := c.getRepoCheckAccess(ctx, session, in.RepoID, enum.PermissionRepoPush)
 	if err != nil {
 		return hook.Output{}, err
 	}
 
-	if !in.Internal && repo.Type == enum.RepoTypeLinked {
-		output.Error = ptr.String("Push not allowed to a linked repository")
-		return output, nil
-	}
+	if repo.Type == enum.RepoTypeLinked {
+		// Only linked-repository synchronization is allowed to write to linked repositories.
+		if in.OperationType != enum.GitOpTypeAPILinkedSync {
+			output.Error = ptr.String("Push not allowed to a linked repository")
+			return output, nil
+		}
 
-	if !in.Internal && !slices.Contains(allowedRepoStatesForPush, repo.State) {
-		output.Error = ptr.String(fmt.Sprintf("Push not allowed when repository is in '%s' state", repo.State))
-		return output, nil
+		// For linked repositories, we don't check repo settings and protection rules
+		return hook.Output{}, nil
 	}
 
 	if err := c.limiter.RepoSize(ctx, in.RepoID); err != nil {
 		return hook.Output{}, fmt.Errorf(
 			"resource limit exceeded: %w", limiter.ErrMaxRepoSizeReached,
 		)
+	}
+
+	// For API ops that only modify references (branch and tags) without pushing commits
+	// controller verifies branch and tag rules.
+	// Repository setting and push rules are not applicable for api_refs_only ops.
+	if in.OperationType == enum.GitOpTypeAPIRefsOnly {
+		return hook.Output{}, nil
+	}
+
+	// Git push operations cannot push when repository is not in allowed states
+	if in.OperationType == enum.GitOpTypeGitPush && !slices.Contains(allowedRepoStatesForPush, repo.State) {
+		output.Error = ptr.String(fmt.Sprintf("Push not allowed when repository is in '%s' state", repo.State))
+		return output, nil
 	}
 
 	forced := make([]bool, len(in.RefUpdates))
@@ -88,8 +107,8 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
-	// For external calls (git pushes) block modification of pullreq references.
-	if !in.Internal && c.blockPullReqRefUpdate(refUpdates, repo.State) {
+	// For git push operations, block modification of pullreq references.
+	if in.OperationType == enum.GitOpTypeGitPush && c.blockPullReqRefUpdate(refUpdates, repo.State) {
 		output.Error = ptr.String(usererror.ErrPullReqRefsCantBeModified.Error())
 		return output, nil
 	}
@@ -131,8 +150,9 @@ func (c *Controller) PreReceive(
 	}
 
 	var rulesViolations []types.RuleViolations
-	// For internal calls - through the application interface (API) - no need to verify protection rules.
-	if !in.Internal {
+	// Verify branch and tag rules in pre-receive only for direct git pushes.
+	// API-originated operations are handled at the controller layer.
+	if in.OperationType == enum.GitOpTypeGitPush {
 		// check branch and tag protection rules
 		refRulesViolations, err := c.checkRefRules(
 			ctx, dummySession, repo, refUpdates, protectionRules, isRepoOwner,
@@ -253,12 +273,15 @@ func (c *Controller) checkPushProtection(
 	output *hook.Output,
 ) ([]types.RuleViolations, *repoSettingsViolations, error) {
 	pushProtection := c.protectionManager.FilterCreatePushProtection(protectionRules)
+	allowBypass := in.OperationType == enum.GitOpTypeAPIContentBypassRules ||
+		in.OperationType == enum.GitOpTypeGitPush
 	pushVerifyOut, _, err := pushProtection.PushVerify(
 		ctx,
 		protection.PushVerifyInput{
 			ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
 			Actor:              principal,
 			IsRepoOwner:        isRepoOwner,
+			AllowBypass:        allowBypass,
 			RepoID:             repo.ID,
 			RepoIdentifier:     repo.Identifier,
 		},
@@ -290,6 +313,7 @@ func (c *Controller) checkPushProtection(
 		ResolveUserGroupID:      c.userGroupService.ListUserIDsByGroupIDs,
 		Actor:                   principal,
 		IsRepoOwner:             isRepoOwner,
+		AllowBypass:             allowBypass,
 		Protections:             pushVerifyOut.Protections,
 		FileSizeLimits:          pushVerifyOut.FileSizeLimits,
 		PrincipalCommitterMatch: pushVerifyOut.PrincipalCommitterMatch,

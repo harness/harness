@@ -89,7 +89,8 @@ func (c *Controller) RestoreBranch(ctx context.Context,
 		return types.CreateBranchOutput{}, violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIRefsOnly for PR branch restoration.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

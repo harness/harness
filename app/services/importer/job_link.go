@@ -182,13 +182,13 @@ func (r *JobRepositoryLink) Handle(ctx context.Context, data string, _ job.Progr
 		return "", fmt.Errorf("failed to parse git clone URL: %w", err)
 	}
 
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		r.urlProvider.GetInternalAPIURL(ctx),
 		repo.ID,
 		systemPrincipal.ID,
 		true,
-		true,
+		enum.GitOpTypeManageRepo,
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to create environment variables: %w", err)

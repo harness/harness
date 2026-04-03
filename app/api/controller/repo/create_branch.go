@@ -91,7 +91,8 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		return types.CreateBranchOutput{}, violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIRefsOnly for branch creation - branch rules are verified at the controller layer.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

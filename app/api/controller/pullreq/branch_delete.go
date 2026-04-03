@@ -87,7 +87,8 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return types.DeleteBranchOutput{}, violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIRefsOnly for PR branch deletion.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

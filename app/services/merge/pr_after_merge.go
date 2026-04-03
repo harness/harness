@@ -341,13 +341,13 @@ func (s *Service) createRPCWriteParams(
 		return git.WriteParams{}, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		baseURL,
 		repoID,
 		principal.ID,
 		false,
-		true,
+		enum.GitOpTypeAPIRefsOnly,
 	)
 	if err != nil {
 		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)

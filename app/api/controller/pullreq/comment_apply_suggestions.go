@@ -284,8 +284,9 @@ func (c *Controller) CommentApplySuggestions(
 	ctx, cancel := contextutil.WithNewTimeout(ctx, timeout)
 	defer cancel()
 
-	// Create internal write params. Note: This will skip the pre-commit protection rules check.
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Create API write params. Note: This will skip the pre-commit protection rules check.
+	// Use APIContent for applying code suggestions - this creates new commits.
+	writeParams, err := controller.CreateRPCAPIContentWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return CommentApplySuggestionsOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

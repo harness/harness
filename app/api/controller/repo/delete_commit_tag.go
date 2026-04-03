@@ -75,7 +75,8 @@ func (c *Controller) DeleteCommitTag(ctx context.Context,
 		return types.DeleteCommitTagOutput{}, violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIRefsOnly for tag deletion - tag rules are verified at the controller layer.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return types.DeleteCommitTagOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

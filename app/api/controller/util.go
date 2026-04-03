@@ -16,7 +16,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
@@ -24,61 +23,58 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-// createRPCWriteParams creates base write parameters for git write operations.
-// TODO: this function should be in git package and should accept params as interface (contract).
-func createRPCWriteParams(
+// CreateRPCGitPushWriteParams creates base write parameters for git push operations from git clients.
+func CreateRPCGitPushWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
 	repo *types.RepositoryCore,
-	disabled bool,
-	isInternal bool,
 ) (git.WriteParams, error) {
-	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(
-		ctx,
-		urlProvider.GetInternalAPIURL(ctx),
-		repo.ID,
-		session.Principal.ID,
-		disabled,
-		isInternal,
+	return createRPCWriteParamsWithOperationType(
+		ctx, urlProvider, session, repo, false, enum.GitOpTypeGitPush,
 	)
-	if err != nil {
-		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
-	}
-
-	return git.WriteParams{
-		Actor: git.Identity{
-			Name:  session.Principal.DisplayName,
-			Email: session.Principal.Email,
-		},
-		RepoUID: repo.GitUID,
-		EnvVars: envVars,
-	}, nil
 }
 
-// CreateRPCExternalWriteParams creates base write parameters for git external write operations.
-// External write operations are direct git pushes.
-func CreateRPCExternalWriteParams(
+// CreateRPCAPIContentWriteParams creates base write parameters for API content operations:
+// commit API calls and apply comment suggestions.
+func CreateRPCAPIContentWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
 	repo *types.RepositoryCore,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, session, repo, false, false)
+	return createRPCWriteParamsWithOperationType(
+		ctx, urlProvider, session, repo, false, enum.GitOpTypeAPIContent,
+	)
 }
 
-// CreateRPCInternalWriteParams creates base write parameters for git internal write operations.
-// Internal write operations are git pushes that originate from the Harness server.
-func CreateRPCInternalWriteParams(
+// CreateRPCAPIContentBypassRulesWriteParams creates base write parameters for API content
+// operations with rule bypass. Used for commit API calls with push rules bypass.
+func CreateRPCAPIContentBypassRulesWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
 	repo *types.RepositoryCore,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, session, repo, false, true)
+	return createRPCWriteParamsWithOperationType(
+		ctx, urlProvider, session, repo, false, enum.GitOpTypeAPIContentBypassRules,
+	)
+}
+
+// CreateRPCAPIRefsWriteParams creates base write parameters for API reference operations:
+// branch/tag management and PR merge operations.
+func CreateRPCAPIRefsWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+) (git.WriteParams, error) {
+	return createRPCWriteParamsWithOperationType(
+		ctx, urlProvider, session, repo, false, enum.GitOpTypeAPIRefsOnly,
+	)
 }
 
 // CreateRPCSystemReferencesWriteParams creates base write parameters for write operations
@@ -89,7 +85,47 @@ func CreateRPCSystemReferencesWriteParams(
 	session *auth.Session,
 	repo *types.RepositoryCore,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, session, repo, true, true)
+	// System references are disabled from hooks
+	return createRPCWriteParamsWithOperationType(
+		ctx, urlProvider, session, repo, true, enum.GitOpTypeAPISystemRefs,
+	)
+}
+
+// CreateRPCAPILinkedSyncWriteParams creates base write parameters for linked repository
+// synchronization operations.
+func CreateRPCAPILinkedSyncWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+) (git.WriteParams, error) {
+	return createRPCWriteParamsWithOperationType(
+		ctx, urlProvider, session, repo, false, enum.GitOpTypeAPILinkedSync,
+	)
+}
+
+// createRPCWriteParamsWithOperationType creates base write parameters for git write operations.
+func createRPCWriteParamsWithOperationType(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+	disabled bool,
+	operationType enum.GitOpType,
+) (git.WriteParams, error) {
+	return githook.CreateWriteParamsForOperation(
+		ctx,
+		urlProvider.GetInternalAPIURL(ctx),
+		git.Identity{
+			Name:  session.Principal.DisplayName,
+			Email: session.Principal.Email,
+		},
+		repo.ID,
+		repo.GitUID,
+		session.Principal.ID,
+		disabled,
+		operationType,
+	)
 }
 
 func MapBranch(b git.Branch) (types.Branch, error) {

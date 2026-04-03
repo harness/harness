@@ -243,13 +243,13 @@ func (r *JobReferenceSync) createRPCWriteParams(
 	repoID int64,
 	repoGitUID string,
 ) (git.WriteParams, error) {
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		r.urlProvider.GetInternalAPIURL(ctx),
 		repoID,
 		principal.ID,
 		true,
-		true,
+		enum.GitOpTypeManageRepo,
 	)
 	if err != nil {
 		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)

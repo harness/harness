@@ -120,13 +120,13 @@ func (c *Controller) DeleteGitRepository(
 	gitUID string,
 ) error {
 	// create custom write params for delete as repo might or might not exist in db (similar to create).
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		c.urlProvider.GetInternalAPIURL(ctx),
 		0, // no repoID
 		session.Principal.ID,
 		true,
-		true,
+		enum.GitOpTypeManageRepo,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to generate git hook environment variables: %w", err)

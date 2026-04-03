@@ -200,7 +200,8 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to load list of reviwers: %w", err)
 	}
 
-	targetWriteParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, targetRepo)
+	// Use APIRefsOnly for PR merge - this updates the target branch reference.
+	targetWriteParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, targetRepo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -213,13 +214,13 @@ func (r *JobSyncLinkedRepositories) createRPCWriteParams(
 	repoID int64,
 	repoGitUID string,
 ) (git.WriteParams, error) {
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		r.urlProvider.GetInternalAPIURL(ctx),
 		repoID,
 		principal.ID,
 		true,
-		true,
+		enum.GitOpTypeAPILinkedSync,
 	)
 	if err != nil {
 		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)

@@ -16,13 +16,15 @@ package types
 
 import (
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/types/enum"
 )
 
 // GithookInputBase contains the base input of the githook apis.
 type GithookInputBase struct {
-	RepoID      int64
-	PrincipalID int64
-	Internal    bool // Internal calls originate from Gitness, and external calls are direct git pushes.
+	RepoID        int64
+	PrincipalID   int64
+	Internal      bool // Deprecated: Use OperationType instead
+	OperationType enum.GitOpType
 }
 
 // GithookPreReceiveInput is the input for the pre-receive githook api call.

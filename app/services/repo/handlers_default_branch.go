@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -60,13 +61,13 @@ func (s *Service) handleUpdateDefaultBranch(
 	defer cancel()
 
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		s.urlProvider.GetInternalAPIURL(ctx),
 		repo.ID,
 		systemPrincipal.ID,
 		true,
-		true,
+		enum.GitOpTypeAPIRefsOnly,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to generate git hook env variables: %w", err)

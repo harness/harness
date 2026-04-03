@@ -153,7 +153,8 @@ func (c *Controller) Squash(
 		baseCommitSHA = baseBranch.Branch.SHA
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIRefsOnly for squash - branch rules are verified at the controller layer.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

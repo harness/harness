@@ -195,13 +195,13 @@ func (c *Controller) verifyConnectorAccess(ctx context.Context, connector import
 		return "", fmt.Errorf("failed to get repository URL: %w", err)
 	}
 
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		c.urlProvider.GetInternalAPIURL(ctx),
 		0,
 		systemPrincipal.ID,
 		true,
-		true,
+		enum.GitOpTypeManageRepo,
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate git hook environment variables: %w", err)

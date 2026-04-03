@@ -254,7 +254,9 @@ func (r *Importer) Import(ctx context.Context, input Input) error {
 		}
 
 		const convertPipelinesCommitMessage = "autoconvert pipeline"
-		err = r.processPipelines(ctx, &systemPrincipal, repo, convertPipelinesCommitMessage)
+		err = r.processPipelines(
+			ctx, &systemPrincipal, repo, convertPipelinesCommitMessage, enum.GitOpTypeAPIContent,
+		)
 		if err != nil {
 			log.Warn().Err(err).Msg("failed to convert pipelines")
 		}
@@ -302,7 +304,7 @@ func (r *Importer) createGitRepository(
 ) (string, error) {
 	now := time.Now()
 
-	envVars, err := r.createEnvVars(ctx, principal, repoID)
+	envVars, err := r.createEnvVars(ctx, principal, repoID, enum.GitOpTypeManageRepo)
 	if err != nil {
 		return "", err
 	}
@@ -339,7 +341,7 @@ func (r *Importer) syncGitRepository(
 	repo *types.Repository,
 	sourceCloneURL string,
 ) error {
-	writeParams, err := r.createRPCWriteParams(ctx, principal, repo)
+	writeParams, err := r.createRPCWriteParams(ctx, principal, repo, enum.GitOpTypeManageRepo)
 	if err != nil {
 		return err
 	}
@@ -363,7 +365,7 @@ func (r *Importer) deleteGitRepository(
 	principal *types.Principal,
 	repo *types.Repository,
 ) error {
-	writeParams, err := r.createRPCWriteParams(ctx, principal, repo)
+	writeParams, err := r.createRPCWriteParams(ctx, principal, repo, enum.GitOpTypeManageRepo)
 	if err != nil {
 		return err
 	}
@@ -414,8 +416,9 @@ func (r *Importer) createRPCWriteParams(
 	ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
+	gitOpType enum.GitOpType,
 ) (git.WriteParams, error) {
-	envVars, err := r.createEnvVars(ctx, principal, repo.ID)
+	envVars, err := r.createEnvVars(ctx, principal, repo.ID, gitOpType)
 	if err != nil {
 		return git.WriteParams{}, err
 	}
@@ -434,14 +437,15 @@ func (r *Importer) createEnvVars(
 	ctx context.Context,
 	principal *types.Principal,
 	repoID int64,
+	gitOpType enum.GitOpType,
 ) (map[string]string, error) {
-	envVars, err := githook.GenerateEnvironmentVariables(
+	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
 		ctx,
 		r.urlProvider.GetInternalAPIURL(ctx),
 		repoID,
 		principal.ID,
 		true,
-		true,
+		gitOpType,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)
@@ -461,8 +465,9 @@ func (r *Importer) processPipelines(ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
 	commitMessage string,
+	gitOpType enum.GitOpType,
 ) error {
-	writeParams, err := r.createRPCWriteParams(ctx, principal, repo)
+	writeParams, err := r.createRPCWriteParams(ctx, principal, repo, gitOpType)
 	if err != nil {
 		return err
 	}

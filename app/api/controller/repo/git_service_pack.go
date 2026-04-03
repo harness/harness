@@ -53,7 +53,7 @@ func (c *Controller) GitServicePack(
 	// setup read/writeparams depending on whether it's a write operation
 	if isWriteOperation {
 		var writeParams git.WriteParams
-		writeParams, err = controller.CreateRPCExternalWriteParams(ctx, c.urlProvider, session, repo)
+		writeParams, err = controller.CreateRPCGitPushWriteParams(ctx, c.urlProvider, session, repo)
 		if err != nil {
 			return fmt.Errorf("failed to create RPC write params: %w", err)
 		}

@@ -70,7 +70,8 @@ func (c *Controller) Revert(
 	}
 
 	readParams := git.CreateReadParams(repo)
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use APIContent for PR revert - this creates new commits.
+	writeParams, err := controller.CreateRPCAPIContentWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

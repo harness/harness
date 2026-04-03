@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/gotidy/ptr"
 )
@@ -75,7 +76,7 @@ func (c *Controller) processObjects(
 	}
 
 	if (settingsChecks.PrincipalCommitterMatch || violationsInput.PrincipalCommitterMatch) &&
-		!in.Internal {
+		in.OperationType == enum.GitOpTypeGitPush {
 		preReceiveObjsIn.FindCommitterMismatchParams = &git.FindCommitterMismatchParams{
 			PrincipalEmail: principal.Email,
 		}

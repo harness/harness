@@ -18,16 +18,18 @@ import (
 	"errors"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // Payload defines the payload that's send to git via environment variables.
 type Payload struct {
-	BaseURL     string
-	RepoID      int64
-	PrincipalID int64
-	RequestID   string
-	Disabled    bool
-	Internal    bool // Internal calls originate from Harness, and external calls are direct git pushes.
+	BaseURL       string
+	RepoID        int64
+	PrincipalID   int64
+	RequestID     string
+	Disabled      bool
+	Internal      bool // Deprecated: Use OperationType instead
+	OperationType enum.GitOpType
 }
 
 func (p Payload) Validate() error {
@@ -50,9 +52,20 @@ func (p Payload) Validate() error {
 }
 
 func GetInputBaseFromPayload(p Payload) types.GithookInputBase {
+	// For backward compatibility: if OperationType is not set, infer from Internal field
+	opType := p.OperationType
+	if opType == "" {
+		if p.Internal {
+			opType = enum.GitOpTypeAPIContent
+		} else {
+			opType = enum.GitOpTypeGitPush
+		}
+	}
+
 	return types.GithookInputBase{
-		RepoID:      p.RepoID,
-		PrincipalID: p.PrincipalID,
-		Internal:    p.Internal,
+		RepoID:        p.RepoID,
+		PrincipalID:   p.PrincipalID,
+		Internal:      opType != enum.GitOpTypeGitPush, // Maintain backward compatibility
+		OperationType: opType,
 	}
 }

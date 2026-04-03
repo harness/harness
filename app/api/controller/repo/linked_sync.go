@@ -97,7 +97,8 @@ func (c *Controller) LinkedSync(
 		Identifier: linkedRepo.ConnectorIdentifier,
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// Use dedicated linked-sync operation type.
+	writeParams, err := controller.CreateRPCAPILinkedSyncWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rpc internal write params: %w", err)
 	}

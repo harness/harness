@@ -16,7 +16,6 @@ package pullreq
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -34,6 +33,7 @@ import (
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type Service struct {
@@ -236,25 +236,17 @@ func createRPCSystemReferencesWriteParams(
 ) (git.WriteParams, error) {
 	principal := bootstrap.NewSystemServiceSession().Principal
 
-	// generate envars - skip githook execution since it's system references only
-	envVars, err := githook.GenerateEnvironmentVariables(
+	return githook.CreateWriteParamsForOperation(
 		ctx,
 		urlProvider.GetInternalAPIURL(ctx),
-		repoID,
-		principal.ID,
-		true,
-		true,
-	)
-	if err != nil {
-		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
-	}
-
-	return git.WriteParams{
-		Actor: git.Identity{
+		git.Identity{
 			Name:  principal.DisplayName,
 			Email: principal.Email,
 		},
-		RepoUID: repoGITUID,
-		EnvVars: envVars,
-	}, nil
+		repoID,
+		repoGITUID,
+		principal.ID,
+		true,
+		enum.GitOpTypeAPISystemRefs,
+	)
 }

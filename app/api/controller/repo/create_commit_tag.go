@@ -95,7 +95,11 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		return types.CreateCommitTagOutput{}, violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// CreateRPCAPIContentWriteParams is technically more exact,
+	// but CreateRPCAPIRefsWriteParams is the better system-level choice
+	// because annotated tag creation does not introduce new blobs or commits,
+	// and the content checks would be mostly irrelevant.
+	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return types.CreateCommitTagOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

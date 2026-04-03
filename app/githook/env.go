@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -31,17 +32,15 @@ var (
 	ExecutionTimeout = 3 * time.Minute
 )
 
-// GenerateEnvironmentVariables generates the required environment variables for a payload
+// GenerateEnvironmentVariablesForOperation generates the required environment variables for a payload
 // constructed from the provided parameters.
-// The parameter `internal` should be true if the call is coming from the Harness
-// and therefore protection from rules shouldn't be verified.
-func GenerateEnvironmentVariables(
+func GenerateEnvironmentVariablesForOperation(
 	ctx context.Context,
 	apiBaseURL string,
 	repoID int64,
 	principalID int64,
 	disabled bool,
-	internal bool,
+	operationType enum.GitOpType,
 ) (map[string]string, error) {
 	// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
 	requestID, ok := request.RequestIDFrom(ctx)
@@ -53,12 +52,13 @@ func GenerateEnvironmentVariables(
 	baseURL := strings.TrimLeft(apiBaseURL, "/") + "/v1/internal/git-hooks"
 
 	payload := Payload{
-		BaseURL:     baseURL,
-		RepoID:      repoID,
-		PrincipalID: principalID,
-		RequestID:   requestID,
-		Disabled:    disabled,
-		Internal:    internal,
+		BaseURL:       baseURL,
+		RepoID:        repoID,
+		PrincipalID:   principalID,
+		RequestID:     requestID,
+		Disabled:      disabled,
+		Internal:      operationType != enum.GitOpTypeGitPush, // For backward compatibility
+		OperationType: operationType,
 	}
 
 	if err := payload.Validate(); err != nil {
