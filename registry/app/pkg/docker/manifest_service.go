@@ -467,28 +467,16 @@ func (l *manifestService) dbPutManifest(
 	switch reqManifest := manifest.(type) {
 	case *schema2.DeserializedManifest:
 		log.Ctx(ctx).Debug().Msgf("Putting schema2 manifest %s to database", d.String())
-		if err := l.dbPutManifestSchema2(ctx, reqManifest, payload, d, headers, info); err != nil {
-			return err
-		}
-		return l.upsertImageAndArtifact(ctx, d, info)
+		return l.dbPutManifestSchema2(ctx, reqManifest, payload, d, headers, info)
 	case *ocischema.DeserializedManifest:
 		log.Ctx(ctx).Debug().Msgf("Putting ocischema manifest %s to database", d.String())
-		if err := l.dbPutManifestOCI(ctx, reqManifest, payload, d, headers, info); err != nil {
-			return err
-		}
-		return l.upsertImageAndArtifact(ctx, d, info)
+		return l.dbPutManifestOCI(ctx, reqManifest, payload, d, headers, info)
 	case *manifestlist.DeserializedManifestList:
 		log.Ctx(ctx).Debug().Msgf("Putting manifestlist manifest %s to database", d.String())
-		if err := l.dbPutManifestList(ctx, reqManifest, payload, d, headers, info); err != nil {
-			return err
-		}
-		return l.upsertImageAndArtifact(ctx, d, info)
+		return l.dbPutManifestList(ctx, reqManifest, payload, d, headers, info)
 	case *ocischema.DeserializedImageIndex:
 		log.Ctx(ctx).Debug().Msgf("Putting ocischema image index %s to database", d.String())
-		if err := l.dbPutImageIndex(ctx, reqManifest, payload, d, headers, info); err != nil {
-			return err
-		}
-		return l.upsertImageAndArtifact(ctx, d, info)
+		return l.dbPutImageIndex(ctx, reqManifest, payload, d, headers, info)
 	default:
 		log.Ctx(ctx).Info().Msgf("Invalid manifest type: %T", reqManifest)
 		return errcode.ErrorCodeManifestInvalid.WithDetail("manifest type unsupported")
@@ -655,34 +643,46 @@ func (l *manifestService) dbPutManifestV2(
 	// check if the manifest references non-distributable layers and mark it as such on the DB
 	ll := mfst.DistributableLayers()
 	m.NonDistributableLayers = len(ll) < len(mfst.Layers())
+	txErr := l.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			// Use CreateOrFind to prevent race conditions while pushing the same manifest with digest for different tags
+			if err := l.manifestDao.CreateOrFind(ctx, m); err != nil {
+				return err
+			}
+			if err := l.upsertImageAndArtifact(ctx, digest, info); err != nil {
+				return err
+			}
 
-	// Use CreateOrFind to prevent race conditions while pushing the same manifest with digest for different tags
-	if err := l.manifestDao.CreateOrFind(ctx, m); err != nil {
-		return err
-	}
+			dbManifest = m
 
-	dbManifest = m
+			// find and associate distributable manifest layer blobs
+			for _, reqLayer := range ll {
+				log.Ctx(ctx).Debug().Msgf("associating layer %s with manifest %s",
+					reqLayer.Digest.String(), digest.String())
+				dbBlob, err := l.DBFindRepositoryBlob(ctx, reqLayer, dbRepo.ID, info.Image)
+				if err != nil {
+					return err
+				}
 
-	// find and associate distributable manifest layer blobs
-	for _, reqLayer := range mfst.DistributableLayers() {
-		log.Ctx(ctx).Debug().Msgf("associating layer %s with manifest %s", reqLayer.Digest.String(), digest.String())
-		dbBlob, err := l.DBFindRepositoryBlob(ctx, reqLayer, dbRepo.ID, info.Image)
-		if err != nil {
-			return err
-		}
+				// Overwrite the media type from common blob storage with the one
+				// specified in the manifest json for the layer entity. The layer entity
+				// has a 1-1 relationship with with the manifest, so we want to reflect
+				// the manifest's description of the layer. Multiple manifest can reference
+				// the same blob, so the common blob storage should remain generic.
+				if ok2 := l.layerMediaTypeExists(ctx, reqLayer.MediaType); ok2 {
+					dbBlob.MediaType = reqLayer.MediaType
+				}
 
-		// Overwrite the media type from common blob storage with the one
-		// specified in the manifest json for the layer entity. The layer entity
-		// has a 1-1 relationship with with the manifest, so we want to reflect
-		// the manifest's description of the layer. Multiple manifest can reference
-		// the same blob, so the common blob storage should remain generic.
-		if ok2 := l.layerMediaTypeExists(ctx, reqLayer.MediaType); ok2 {
-			dbBlob.MediaType = reqLayer.MediaType
-		}
-
-		if err2 := l.layerDao.AssociateLayerBlob(ctx, dbManifest, dbBlob); err2 != nil {
-			return err2
-		}
+				if err2 := l.layerDao.AssociateLayerBlob(ctx, dbManifest, dbBlob); err2 != nil {
+					return err2
+				}
+			}
+			return nil
+		},
+	)
+	if txErr != nil {
+		log.Ctx(ctx).Error().Err(txErr).Msgf("failed to create manifest and artifact in database: %v", txErr)
+		return fmt.Errorf("failed to create manifest and artifact in database: %w", txErr)
 	}
 
 	return nil
@@ -868,6 +868,9 @@ func (l *manifestService) dbPutManifestList(
 			// use CreateOrFind to prevent race conditions when the same digest is used by different tags
 			// and pushed at the same time
 			if err := l.manifestDao.CreateOrFind(ctx, ml); err != nil {
+				return err
+			}
+			if err := l.upsertImageAndArtifact(ctx, digest, info); err != nil {
 				return err
 			}
 
@@ -1070,7 +1073,9 @@ func (l *manifestService) dbPutImageIndex(
 			if err := l.manifestDao.CreateOrFind(ctx, mi); err != nil {
 				return err
 			}
-
+			if err := l.upsertImageAndArtifact(ctx, digest, info); err != nil {
+				return err
+			}
 			// Associate manifests to the manifest list.
 			for _, m := range mm {
 				if err := l.manifestRefDao.AssociateManifest(ctx, mi, m); err != nil {

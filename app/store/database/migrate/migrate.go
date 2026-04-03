@@ -153,11 +153,13 @@ func getMigrator(db *sqlx.DB) (migrate.Options, error) {
 		case "0042_alter_table_rules":
 			return migrateAfter_0042_alter_table_rules(ctx, dbtx)
 		case "0153_migrate_artifacts":
-			return MigrateAfter_0153_migrate_artifacts(ctx, dbtx)
+			return MigrateAfter_0153_migrate_artifacts(ctx, dbtx, db.DriverName())
 		case "0155_migrate_rpm_artifacts":
 			return MigrateAfter_0155_migrate_rpm_artifacts(ctx, dbtx, db.DriverName())
 		case "0160":
 			return MigrateAfter_0160(ctx, dbtx)
+		case "0173":
+			return MigrateAfter_0153_migrate_artifacts(ctx, dbtx, db.DriverName())
 
 		default:
 			return nil
