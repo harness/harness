@@ -46,6 +46,7 @@ export default function SoftDeleteVersionMenuItem(props: VersionActionProps): JS
   const { triggerSoftDelete } = useSoftDeleteVersionModal({
     versionKey,
     uuid: data.uuid,
+    artifactKey,
     onSuccess: handleAfterDeleteVersion
   })
 

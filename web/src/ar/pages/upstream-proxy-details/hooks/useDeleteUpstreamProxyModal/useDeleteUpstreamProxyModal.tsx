@@ -65,7 +65,7 @@ export default function useDeleteUpstreamProxyModal(props: useDeleteUpstreamProx
         onSubmit={handleDeleteRepository}
         onClose={handleCloseDialog}
         content={getString('upstreamProxyDetails.actions.delete.contentText')}
-        placeholder={getString('upstreamProxyDetails.actions.delete.inputPlaceholder')}
+        placeholder={repoKey}
         inputLabel={getString('upstreamProxyDetails.actions.delete.inputLabel')}
       />
     ),

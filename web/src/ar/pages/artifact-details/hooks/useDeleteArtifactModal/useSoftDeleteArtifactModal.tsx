@@ -68,7 +68,7 @@ export default function useSoftDeleteArtifactModal(props: useSoftDeleteArtifactM
         onSubmit={handleSoftDeleteArtifact}
         onClose={handleCloseDialog}
         content={getString('artifactDetails.softDeleteModal.contentText')}
-        placeholder={getString('artifactDetails.softDeleteModal.inputPlaceholder')}
+        placeholder={artifactKey}
         inputLabel={getString('artifactDetails.softDeleteModal.inputLabel')}
         forceLabel={getString('artifactDetails.softDeleteModal.forceLabel')}
         forceSubText={getString('artifactDetails.softDeleteModal.forceSubText')}

@@ -73,7 +73,7 @@ export default function useDeleteVersionModal(props: useDeleteVersionModalProps)
         onSubmit={handleDeleteVersion}
         onClose={handleCloseDialog}
         content={getString('versionDetails.deleteVersionModal.contentText')}
-        placeholder={getString('versionDetails.deleteVersionModal.inputPlaceholder')}
+        placeholder={`${artifactKey}@${versionKey}`}
         inputLabel={getString('versionDetails.deleteVersionModal.inputLabel')}
         forceDelete
       />

@@ -68,7 +68,7 @@ export default function useSoftDeleteRepositoryModal(props: useSoftDeleteReposit
         onSubmit={handleDeleteRepository}
         onClose={handleCloseDialog}
         content={getString('repositoryList.softDeleteModal.contentText')}
-        placeholder={getString('repositoryList.softDeleteModal.inputPlaceholder')}
+        placeholder={repoKey}
         inputLabel={getString('repositoryList.softDeleteModal.inputLabel')}
         forceLabel={getString('repositoryList.softDeleteModal.forceLabel')}
         forceSubText={getString('repositoryList.softDeleteModal.forceSubText')}

@@ -64,7 +64,7 @@ export default function useDeleteRepositoryModal(props: useDeleteRepositoryModal
         onSubmit={handleDeleteRepository}
         onClose={handleCloseDialog}
         content={getString('repositoryList.deleteModal.contentText')}
-        placeholder={getString('repositoryList.deleteModal.inputPlaceholder')}
+        placeholder={repoKey}
         inputLabel={getString('repositoryList.deleteModal.inputLabel')}
         forceDelete
       />

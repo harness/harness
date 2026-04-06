@@ -26,15 +26,15 @@ import DeleteModalContent, { DeleteFormValues } from '@ar/components/Form/Delete
 interface useSoftDeleteVersionModalProps {
   versionKey: string
   uuid: string
+  artifactKey: string
   onSuccess: (isForceDeleted: boolean) => void
 }
 export default function useSoftDeleteVersionModal(props: useSoftDeleteVersionModalProps) {
-  const { onSuccess, versionKey, uuid } = props
+  const { onSuccess, versionKey, uuid, artifactKey } = props
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
   const { scope } = useAppStore()
   const { accountId } = scope
-
   const { mutateAsync: softDeleteVersion } = useDeleteVersionV3Mutation()
 
   const handleSoftDeleteVersion = async (values: DeleteFormValues): Promise<void> => {
@@ -64,11 +64,11 @@ export default function useSoftDeleteVersionModal(props: useSoftDeleteVersionMod
     contentText: (
       <DeleteModalContent
         entity="version"
-        value={versionKey}
+        value={`${artifactKey}@${versionKey}`}
         onSubmit={handleSoftDeleteVersion}
         onClose={handleCloseDialog}
         content={getString('versionDetails.softDeleteModal.contentText')}
-        placeholder={getString('versionDetails.softDeleteModal.inputPlaceholder')}
+        placeholder={`${artifactKey}@${versionKey}`}
         inputLabel={getString('versionDetails.softDeleteModal.inputLabel')}
         forceLabel={getString('versionDetails.softDeleteModal.forceLabel')}
         forceSubText={getString('versionDetails.softDeleteModal.forceSubText')}

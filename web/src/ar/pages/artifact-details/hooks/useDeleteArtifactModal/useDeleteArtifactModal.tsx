@@ -71,7 +71,7 @@ export default function useDeleteArtifactModal(props: useDeleteArtifactModalProp
         onSubmit={handleDeleteArtifact}
         onClose={handleCloseDialog}
         content={getString('artifactDetails.deleteModal.contentText')}
-        placeholder={getString('artifactDetails.deleteModal.inputPlaceholder')}
+        placeholder={artifactKey}
         inputLabel={getString('artifactDetails.deleteModal.inputLabel')}
         forceDelete
       />
