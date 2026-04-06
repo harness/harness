@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/registry/app/api/interfaces"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/registry/types"
 
 	"github.com/rs/zerolog/log"
@@ -110,13 +111,21 @@ func (c *mavenPackageType) DeleteVersion(ctx context.Context,
 	return fmt.Errorf("not implemented")
 }
 
-func (c *mavenPackageType) ReportDeleteVersionEvent(ctx context.Context,
-	_ int64,
-	_ int64,
-	_ string,
-	_ string,
+func (c *mavenPackageType) ReportDeleteVersionEvent(
+	ctx context.Context,
+	principalID int64,
+	registryID int64,
+	artifactName string,
+	version string,
 ) {
-	log.Error().Ctx(ctx).Msg("Not implemented")
+	payload := webhook.GetArtifactDeletedPayloadForCommonArtifacts(
+		principalID,
+		registryID,
+		artifact.PackageTypeMAVEN,
+		artifactName,
+		version,
+	)
+	c.registryHelper.ReportDeleteVersionEvent(ctx, &payload)
 }
 
 func (c *mavenPackageType) ReportBuildPackageIndexEvent(ctx context.Context, _ int64, _ string) {

@@ -53,7 +53,7 @@ export class NuGetRepositoryType extends RepositoryStep<VirtualRegistryRequest> 
   protected repositoryIcon: IconName = 'nuget-repository-type'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
-  protected isWebhookSupported = false
+  protected isWebhookSupported = true
   protected isDependencyFirewallSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.NugetOrg,

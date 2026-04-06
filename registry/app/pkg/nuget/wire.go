@@ -17,6 +17,7 @@ package nuget
 import (
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
@@ -35,9 +36,10 @@ func LocalRegistryProvider(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
+	artifactEventReporter *registryevents.Reporter,
 ) LocalRegistry {
 	registry := NewLocalRegistry(localBase, fileManager, proxyStore, tx, registryDao, imageDao, artifactDao,
-		urlProvider)
+		urlProvider, artifactEventReporter)
 	base.Register(registry)
 	return registry
 }

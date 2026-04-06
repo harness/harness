@@ -17,6 +17,7 @@ package npm
 import (
 	"github.com/harness/gitness/app/services/refcache"
 	urlprovider "github.com/harness/gitness/app/url"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/store"
@@ -37,10 +38,11 @@ func LocalRegistryProvider(
 	artifactDao store.ArtifactRepository,
 	nodesDao store.NodesRepository,
 	urlProvider urlprovider.Provider,
+	artifactEventReporter *registryevents.Reporter,
 ) LocalRegistry {
 	registry := NewLocalRegistry(localBase, fileManager,
 		proxyStore, tx, registryDao, tagDao, imageDao, artifactDao, nodesDao,
-		urlProvider)
+		urlProvider, artifactEventReporter)
 	base.Register(registry)
 	return registry
 }

@@ -26,7 +26,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/metadata"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -34,6 +36,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/maven/utils"
 	"github.com/harness/gitness/registry/app/storage"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/registry/types"
 	gitnessstore "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -50,20 +53,23 @@ func NewLocalRegistry(
 	dBStore *DBStore,
 	tx dbtx.Transactor,
 	fileManager filemanager.FileManager,
+	artifactEventReporter *registryevents.Reporter,
 ) Registry {
 	return &LocalRegistry{
-		localBase:   localBase,
-		DBStore:     dBStore,
-		tx:          tx,
-		fileManager: fileManager,
+		localBase:             localBase,
+		DBStore:               dBStore,
+		tx:                    tx,
+		fileManager:           fileManager,
+		artifactEventReporter: artifactEventReporter,
 	}
 }
 
 type LocalRegistry struct {
-	localBase   base.LocalBase
-	DBStore     *DBStore
-	tx          dbtx.Transactor
-	fileManager filemanager.FileManager
+	localBase             base.LocalBase
+	DBStore               *DBStore
+	tx                    dbtx.Transactor
+	fileManager           filemanager.FileManager
+	artifactEventReporter *registryevents.Reporter
 }
 
 func (r *LocalRegistry) GetMavenArtifactType() string {
@@ -225,6 +231,9 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 	// Audit log for Maven artifact push
 	if utils.IsMainArtifactFile(info) && info.Version != "" && artifactUUID != "" {
 		r.localBase.AuditPush(ctx, *info.ArtifactInfo, info.Version, imageUUID, artifactUUID)
+
+		// publish artifact created event
+		r.publishArtifactCreatedEvent(ctx, info)
 	}
 
 	responseHeaders = &commons.ResponseHeaders{
@@ -232,6 +241,21 @@ func (r *LocalRegistry) PutArtifact(ctx context.Context, info pkg.MavenArtifactI
 		Code:    http.StatusCreated,
 	}
 	return responseHeaders, nil
+}
+
+func (r *LocalRegistry) publishArtifactCreatedEvent(
+	ctx context.Context, info pkg.MavenArtifactInfo,
+) {
+	session, _ := request.AuthSessionFrom(ctx)
+	artifactName := info.GroupID + ":" + info.ArtifactID
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		artifact.PackageTypeMAVEN,
+		artifactName,
+		info.Version,
+	)
+	r.artifactEventReporter.ArtifactCreated(ctx, &payload)
 }
 
 func (r *LocalRegistry) updateArtifactMetadata(

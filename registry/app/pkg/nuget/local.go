@@ -26,9 +26,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	urlprovider "github.com/harness/gitness/app/url"
 	apicontract "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	nugetmetadata "github.com/harness/gitness/registry/app/metadata/nuget"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -38,6 +40,7 @@ import (
 	nugettype "github.com/harness/gitness/registry/app/pkg/types/nuget"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/uuid"
@@ -62,14 +65,15 @@ const (
 )
 
 type localRegistry struct {
-	localBase   base.LocalBase
-	fileManager filemanager.FileManager
-	proxyStore  store.UpstreamProxyConfigRepository
-	tx          dbtx.Transactor
-	registryDao store.RegistryRepository
-	imageDao    store.ImageRepository
-	artifactDao store.ArtifactRepository
-	urlProvider urlprovider.Provider
+	localBase             base.LocalBase
+	fileManager           filemanager.FileManager
+	proxyStore            store.UpstreamProxyConfigRepository
+	tx                    dbtx.Transactor
+	registryDao           store.RegistryRepository
+	imageDao              store.ImageRepository
+	artifactDao           store.ArtifactRepository
+	urlProvider           urlprovider.Provider
+	artifactEventReporter *registryevents.Reporter
 }
 
 func (c *localRegistry) GetServiceEndpoint(
@@ -419,7 +423,27 @@ func (c *localRegistry) UploadPackage(
 	log.Ctx(ctx).Info().
 		Msgf("successfully uploaded package: %s, version: %s for registry: %d with checksum: %s",
 			info.Image, info.Version, info.RegistryID, checkSum)
+
+	// publish artifact created event (only for dependency packages, not symbols)
+	if fileBundleType == DependencyFile {
+		c.publishArtifactCreatedEvent(ctx, info)
+	}
+
 	return h, checkSum, err
+}
+
+func (c *localRegistry) publishArtifactCreatedEvent(
+	ctx context.Context, info nugettype.ArtifactInfo,
+) {
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		apicontract.PackageTypeNUGET,
+		info.Image,
+		info.Version,
+	)
+	c.artifactEventReporter.ArtifactCreated(ctx, &payload)
 }
 
 func (c *localRegistry) buildMetadata(fileReader io.Reader) (metadata nugetmetadata.Metadata, err error) {
@@ -574,16 +598,18 @@ func NewLocalRegistry(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
+	artifactEventReporter *registryevents.Reporter,
 ) LocalRegistry {
 	return &localRegistry{
-		localBase:   localBase,
-		fileManager: fileManager,
-		proxyStore:  proxyStore,
-		tx:          tx,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		urlProvider: urlProvider,
+		localBase:             localBase,
+		fileManager:           fileManager,
+		proxyStore:            proxyStore,
+		tx:                    tx,
+		registryDao:           registryDao,
+		imageDao:              imageDao,
+		artifactDao:           artifactDao,
+		urlProvider:           urlProvider,
+		artifactEventReporter: artifactEventReporter,
 	}
 }
 

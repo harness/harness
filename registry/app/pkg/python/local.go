@@ -23,9 +23,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/harness/gitness/app/api/request"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	pythonmetadata "github.com/harness/gitness/registry/app/metadata/python"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -36,6 +38,7 @@ import (
 	registryrefcache "github.com/harness/gitness/registry/app/services/refcache"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/rs/zerolog/log"
@@ -45,15 +48,16 @@ var _ pkg.Artifact = (*localRegistry)(nil)
 var _ Registry = (*localRegistry)(nil)
 
 type localRegistry struct {
-	localBase      base.LocalBase
-	fileManager    filemanager.FileManager
-	proxyStore     store.UpstreamProxyConfigRepository
-	tx             dbtx.Transactor
-	registryDao    store.RegistryRepository
-	registryFinder registryrefcache.RegistryFinder
-	imageDao       store.ImageRepository
-	artifactDao    store.ArtifactRepository
-	urlProvider    urlprovider.Provider
+	localBase             base.LocalBase
+	fileManager           filemanager.FileManager
+	proxyStore            store.UpstreamProxyConfigRepository
+	tx                    dbtx.Transactor
+	registryDao           store.RegistryRepository
+	registryFinder        registryrefcache.RegistryFinder
+	imageDao              store.ImageRepository
+	artifactDao           store.ArtifactRepository
+	urlProvider           urlprovider.Provider
+	artifactEventReporter *registryevents.Reporter
 }
 
 type LocalRegistry interface {
@@ -70,17 +74,19 @@ func NewLocalRegistry(
 	imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository,
 	urlProvider urlprovider.Provider,
+	artifactEventReporter *registryevents.Reporter,
 ) LocalRegistry {
 	return &localRegistry{
-		localBase:      localBase,
-		fileManager:    fileManager,
-		proxyStore:     proxyStore,
-		tx:             tx,
-		registryDao:    registryDao,
-		registryFinder: registryFinder,
-		imageDao:       imageDao,
-		artifactDao:    artifactDao,
-		urlProvider:    urlProvider,
+		localBase:             localBase,
+		fileManager:           fileManager,
+		proxyStore:            proxyStore,
+		tx:                    tx,
+		registryDao:           registryDao,
+		registryFinder:        registryFinder,
+		imageDao:              imageDao,
+		artifactDao:           artifactDao,
+		urlProvider:           urlProvider,
+		artifactEventReporter: artifactEventReporter,
 	}
 }
 
@@ -208,10 +214,18 @@ func (c *localRegistry) UploadPackageFile(
 	filename string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
 	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
-	return c.localBase.UploadFile(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
+	headers, sha256, err = c.localBase.UploadFile(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
 		&pythonmetadata.PythonMetadata{
 			Metadata: info.Metadata,
 		})
+	if err != nil {
+		return headers, sha256, err
+	}
+
+	// publish artifact created event
+	c.publishArtifactCreatedEvent(ctx, info)
+
+	return headers, sha256, nil
 }
 
 func (c *localRegistry) UploadPackageFileReader(
@@ -221,8 +235,30 @@ func (c *localRegistry) UploadPackageFileReader(
 	filename string,
 ) (headers *commons.ResponseHeaders, sha256 string, err error) {
 	path := pkg.JoinWithSeparator("/", info.Image, info.Metadata.Version, filename)
-	return c.localBase.Upload(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
+	headers, sha256, err = c.localBase.Upload(ctx, info.ArtifactInfo, filename, info.Metadata.Version, path, file,
 		&pythonmetadata.PythonMetadata{
 			Metadata: info.Metadata,
 		})
+	if err != nil {
+		return headers, sha256, err
+	}
+
+	// publish artifact created event
+	c.publishArtifactCreatedEvent(ctx, info)
+
+	return headers, sha256, nil
+}
+
+func (c *localRegistry) publishArtifactCreatedEvent(
+	ctx context.Context, info pythontype.ArtifactInfo,
+) {
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		artifact.PackageTypePYTHON,
+		info.Image,
+		info.Metadata.Version,
+	)
+	c.artifactEventReporter.ArtifactCreated(ctx, &payload)
 }

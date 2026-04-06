@@ -53,7 +53,7 @@ export class NpmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected repositoryIcon: IconName = 'npm-repository-type'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
-  protected isWebhookSupported = false
+  protected isWebhookSupported = true
   protected isDependencyFirewallSupported = true
   protected supportedUpstreamURLSources = [
     UpstreamRepositoryURLInputSource.NpmJS,

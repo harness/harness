@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/api/interfaces"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	"github.com/harness/gitness/registry/app/pkg/base"
 	"github.com/harness/gitness/registry/app/pkg/filemanager"
 	"github.com/harness/gitness/registry/app/pkg/quarantine"
@@ -35,12 +36,14 @@ func LocalRegistryProvider(
 	dBStore *DBStore,
 	tx dbtx.Transactor,
 	fileManager filemanager.FileManager,
+	artifactEventReporter *registryevents.Reporter,
 ) *LocalRegistry {
 	//nolint:errcheck
 	return NewLocalRegistry(localBase,
 		dBStore,
 		tx,
 		fileManager,
+		artifactEventReporter,
 	).(*LocalRegistry)
 }
 

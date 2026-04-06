@@ -26,9 +26,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	registryevents "github.com/harness/gitness/registry/app/events/artifact"
 	npm2 "github.com/harness/gitness/registry/app/metadata/npm"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/base"
@@ -37,6 +39,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/types/npm"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/registry/services/webhook"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -48,16 +51,17 @@ var _ pkg.Artifact = (*localRegistry)(nil)
 var _ Registry = (*localRegistry)(nil)
 
 type localRegistry struct {
-	localBase   base.LocalBase
-	fileManager filemanager.FileManager
-	proxyStore  store.UpstreamProxyConfigRepository
-	tx          dbtx.Transactor
-	registryDao store.RegistryRepository
-	imageDao    store.ImageRepository
-	tagsDao     store.PackageTagRepository
-	nodesDao    store.NodesRepository
-	artifactDao store.ArtifactRepository
-	urlProvider urlprovider.Provider
+	localBase             base.LocalBase
+	fileManager           filemanager.FileManager
+	proxyStore            store.UpstreamProxyConfigRepository
+	tx                    dbtx.Transactor
+	registryDao           store.RegistryRepository
+	imageDao              store.ImageRepository
+	tagsDao               store.PackageTagRepository
+	nodesDao              store.NodesRepository
+	artifactDao           store.ArtifactRepository
+	urlProvider           urlprovider.Provider
+	artifactEventReporter *registryevents.Reporter
 }
 
 func (c *localRegistry) HeadPackageMetadata(ctx context.Context, info npm.ArtifactInfo) (bool, error) {
@@ -99,18 +103,20 @@ func NewLocalRegistry(
 	artifactDao store.ArtifactRepository,
 	nodesDao store.NodesRepository,
 	urlProvider urlprovider.Provider,
+	artifactEventReporter *registryevents.Reporter,
 ) LocalRegistry {
 	return &localRegistry{
-		localBase:   localBase,
-		fileManager: fileManager,
-		proxyStore:  proxyStore,
-		tx:          tx,
-		tagsDao:     tagDao,
-		registryDao: registryDao,
-		imageDao:    imageDao,
-		artifactDao: artifactDao,
-		nodesDao:    nodesDao,
-		urlProvider: urlProvider,
+		localBase:             localBase,
+		fileManager:           fileManager,
+		proxyStore:            proxyStore,
+		tx:                    tx,
+		tagsDao:               tagDao,
+		registryDao:           registryDao,
+		imageDao:              imageDao,
+		artifactDao:           artifactDao,
+		nodesDao:              nodesDao,
+		urlProvider:           urlProvider,
+		artifactEventReporter: artifactEventReporter,
 	}
 }
 
@@ -163,6 +169,9 @@ func (c *localRegistry) UploadPackageFile(
 	}
 	log.Ctx(ctx).Info().
 		Msgf("Successfully uploaded npm package: %s, version: %s", info.Image, info.Version)
+
+	// publish artifact created event
+	c.publishArtifactCreatedEvent(ctx, info)
 
 	return nil, sha256, nil
 }
@@ -770,5 +779,23 @@ func (c *localRegistry) UploadPackageFileWithoutParsing(
 	if err != nil {
 		return nil, "", err
 	}
+
+	// publish artifact created event
+	c.publishArtifactCreatedEvent(ctx, info)
+
 	return response, sha, nil
+}
+
+func (c *localRegistry) publishArtifactCreatedEvent(
+	ctx context.Context, info npm.ArtifactInfo,
+) {
+	session, _ := request.AuthSessionFrom(ctx)
+	payload := webhook.GetArtifactCreatedPayloadForCommonArtifacts(
+		session.Principal.ID,
+		info.RegistryID,
+		artifact.PackageTypeNPM,
+		info.Image,
+		info.Version,
+	)
+	c.artifactEventReporter.ArtifactCreated(ctx, &payload)
 }

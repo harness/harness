@@ -53,7 +53,7 @@ export class PythonRepositoryType extends RepositoryStep<VirtualRegistryRequest>
   protected repositoryIcon: IconName = 'python'
   protected supportedScanners = []
   protected supportsUpstreamProxy = true
-  protected isWebhookSupported = false
+  protected isWebhookSupported = true
   isSupportCustomRegistrySuffix = true
   protected isDependencyFirewallSupported = true
   protected supportedUpstreamURLSources = [

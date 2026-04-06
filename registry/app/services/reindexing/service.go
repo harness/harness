@@ -83,9 +83,20 @@ func (s *Service) TriggerArtifactVersionReindexing(
 		// Trigger package index rebuild
 		s.postProcessingReporter.BuildPackageIndex(ctx, registryID, imageName)
 		return nil
-	case artifact.PackageTypeDOCKER, artifact.PackageTypeHELM, artifact.PackageTypeNPM,
-		artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON, artifact.PackageTypeGENERIC,
-		artifact.PackageTypeNUGET:
+	case artifact.PackageTypeNPM, artifact.PackageTypeMAVEN, artifact.PackageTypePYTHON, artifact.PackageTypeNUGET:
+		// Send webhook event for artifact deletion
+		if principalID > 0 {
+			payload := webhook.GetArtifactDeletedPayloadForCommonArtifacts(
+				principalID,
+				registryID,
+				packageType,
+				imageName,
+				versionName,
+			)
+			s.artifactEventReporter.ArtifactDeleted(ctx, &payload)
+		}
+		return nil
+	case artifact.PackageTypeDOCKER, artifact.PackageTypeHELM, artifact.PackageTypeGENERIC:
 		// No reindexing needed for these package types
 		return nil
 		// Cargo/Composer/Conda/Dart/Swift/HuggingFace: Use package wrapper for reindexing
