@@ -119,6 +119,7 @@ func (a *authorizer) fetchToken(ctx context.Context, scopes []*scope) (*token, e
 		}
 	}
 
+	req.Header.Set("User-Agent", "gitness-registry-client")
 	resp, err := a.client.Do(req)
 	if err != nil {
 		return nil, err
