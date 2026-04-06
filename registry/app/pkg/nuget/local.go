@@ -395,7 +395,7 @@ func (c *localRegistry) UploadPackage(
 		fileExtension = DependencyPackageExtension
 	}
 	fileName := strings.ToLower(fmt.Sprintf("%s.%s%s",
-		metadata.PackageMetadata.ID, metadata.PackageMetadata.Version, fileExtension))
+		metadata.PackageMetadata.ID, info.Version, fileExtension))
 	info.Filename = fileName
 	fileInfo.Filename = fileName
 	var path string
@@ -426,26 +426,38 @@ func (c *localRegistry) buildMetadata(fileReader io.Reader) (metadata nugetmetad
 	var readme string
 	zr := zs.NewReader(fileReader)
 
+	entryIndex := 0
+	var prevEntryName string
+	var prevEntrySize uint64
 	for {
 		header, err2 := zr.Next()
 		if errors.Is(err2, io.EOF) {
 			break
 		}
 		if err2 != nil {
-			return metadata, fmt.Errorf("failed to read zip file with error: %w", err2)
+			return metadata, fmt.Errorf(
+				"failed to read zip entry at index %d (prev entry: %q, prev size: %d): %w",
+				entryIndex, prevEntryName, prevEntrySize, err2)
 		}
 
 		if strings.HasSuffix(header.Name, ".nuspec") {
 			metadata, err = c.parseMetadata(zr)
 			if err != nil {
-				return metadata, fmt.Errorf("failed to parse metadata from .nuspec file: %w", err2)
+				return metadata, fmt.Errorf(
+					"failed to parse metadata from .nuspec file %q (entry index %d, size %d, prev entry: %q, prev size: %d): %w",
+					header.Name, entryIndex, header.UncompressedSize64, prevEntryName, prevEntrySize, err)
 			}
 		} else if strings.HasSuffix(strings.ToLower(header.Name), "readme.md") {
 			readme, err2 = c.parseReadme(zr)
 			if err2 != nil {
-				return metadata, fmt.Errorf("failed to parse metadata from README.md file: %w", err2)
+				return metadata, fmt.Errorf(
+					"failed to parse metadata from README.md file %q (entry index %d, size %d, prev entry: %q, prev size: %d): %w",
+					header.Name, entryIndex, header.UncompressedSize64, prevEntryName, prevEntrySize, err2)
 			}
 		}
+		prevEntryName = header.Name
+		prevEntrySize = header.UncompressedSize64
+		entryIndex++
 	}
 	if readme != "" {
 		metadata.PackageMetadata.Readme = readme
