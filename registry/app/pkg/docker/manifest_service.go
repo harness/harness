@@ -1353,6 +1353,10 @@ func (l *manifestService) DeleteManifest(
 				if err != nil {
 					return fmt.Errorf("failed to delete image: %s, err: %w", imageName, err)
 				}
+				_, err = l.registryBlobStore.UnlinkBlobByImageName(ctx, registry.ID, imageName)
+				if err != nil {
+					return fmt.Errorf("failed to unlink registry blobs: %w", err)
+				}
 			}
 
 			return nil
