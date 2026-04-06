@@ -43,7 +43,7 @@ function ExemptionDetailsSection({ data }: ExemptionDetailsSectionProps) {
       {data.notes && (
         <>
           <Label>{getString('exemptionDetails.cards.section2.notes')}</Label>
-          <Value>{data.notes}</Value>
+          <Value className={css.preWrap}>{data.notes}</Value>
         </>
       )}
       {/* Expiration Date */}
@@ -55,10 +55,10 @@ function ExemptionDetailsSection({ data }: ExemptionDetailsSectionProps) {
       )}
       {/* Business Justification */}
       <Label>{getString('exemptionDetails.cards.section2.businessJustification')}</Label>
-      <Value>{data.businessJustification}</Value>
+      <Value className={css.preWrap}>{data.businessJustification}</Value>
       {/* Remediation Plan */}
       <Label>{getString('exemptionDetails.cards.section2.remediationPlan')}</Label>
-      <Value>{data.remediationPlan}</Value>
+      <Value className={css.preWrap}>{data.remediationPlan}</Value>
     </Container>
   )
 }

@@ -17,4 +17,5 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const gridContainer: string
+export declare const preWrap: string
 export declare const versionBtn: string

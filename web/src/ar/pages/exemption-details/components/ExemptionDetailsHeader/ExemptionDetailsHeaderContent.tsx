@@ -18,10 +18,10 @@ import React from 'react'
 import { Expander } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
 import { Color } from '@harnessio/design-system'
-import { Button, ButtonVariation, Container, Layout, Text } from '@harnessio/uicore'
+import { ButtonVariation, Container, Layout, Text } from '@harnessio/uicore'
 import type { FirewallExceptionResponseV3 } from '@harnessio/react-har-service-client'
 
-import { useRoutes } from '@ar/hooks'
+import { useParentComponents, useRoutes } from '@ar/hooks'
 import { queryClient } from '@ar/utils/queryClient'
 import { useStrings } from '@ar/frameworks/strings'
 import HeaderTitle from '@ar/components/Header/Title'
@@ -30,6 +30,7 @@ import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { RepositoryPackageType } from '@ar/common/types'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import ExemptionStatusBadge from '@ar/components/Badge/ExemptionStatusBadge'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import ExemptionActions from '@ar/pages/exemption-list/components/ExemptionActions/ExemptionActions'
 
 import useApproveExemption from '../../hooks/useApproveExemption'
@@ -47,6 +48,7 @@ export default function ExemptionDetailsHeaderContent(props: ExemptionDetailsHea
   const { getString } = useStrings()
   const history = useHistory()
   const routes = useRoutes()
+  const { RbacButton } = useParentComponents()
 
   const handleAfterStatusChange = () => {
     queryClient.invalidateQueries(['ListFirewallExceptionsV3'])
@@ -83,19 +85,31 @@ export default function ExemptionDetailsHeaderContent(props: ExemptionDetailsHea
         <Layout.Horizontal spacing="small">
           {showActions && (
             <>
-              <Button
+              <RbacButton
                 icon="main-tick"
-                variation={ButtonVariation.PRIMARY}
                 text={getString('exemptionDetails.actions.approve')}
+                variation={ButtonVariation.PRIMARY}
                 intent="success"
                 onClick={triggerApprove}
+                permission={{
+                  permission: PermissionIdentifier.ARTIFACT_FIREWALL_EXCEPTIONS_APPROVE,
+                  resource: {
+                    resourceType: ResourceType.ARTIFACT_FIREWALL_EXCEPTIONS
+                  }
+                }}
               />
-              <Button
+              <RbacButton
                 icon="cross"
-                variation={ButtonVariation.PRIMARY}
                 text={getString('exemptionDetails.actions.reject')}
+                variation={ButtonVariation.PRIMARY}
                 intent="danger"
                 onClick={triggerReject}
+                permission={{
+                  permission: PermissionIdentifier.ARTIFACT_FIREWALL_EXCEPTIONS_APPROVE,
+                  resource: {
+                    resourceType: ResourceType.ARTIFACT_FIREWALL_EXCEPTIONS
+                  }
+                }}
               />
             </>
           )}

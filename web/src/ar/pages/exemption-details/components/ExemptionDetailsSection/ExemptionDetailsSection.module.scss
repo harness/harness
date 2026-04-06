@@ -27,3 +27,7 @@
   grid-template-columns: 200px 1fr;
   gap: var(--spacing-7);
 }
+
+.preWrap {
+  white-space: pre-wrap !important;
+}

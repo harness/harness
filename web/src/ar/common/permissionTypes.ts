@@ -20,9 +20,12 @@ export enum PermissionIdentifier {
   DELETE_ARTIFACT_REGISTRY = 'artifact_artregistry_delete',
   DOWNLOAD_ARTIFACT = 'artifact_artregistry_downloadartifact',
   UPLOAD_ARTIFACT = 'artifact_artregistry_uploadartifact',
-  DELETE_ARTIFACT = 'artifact_artregistry_deleteartifact'
+  DELETE_ARTIFACT = 'artifact_artregistry_deleteartifact',
+  ARTIFACT_FIREWALL_EXCEPTIONS_APPROVE = 'artifact_firewallexceptions_approve',
+  ARTIFACT_FIREWALL_EXCEPTIONS_CREATE = 'artifact_firewallexceptions_create'
 }
 
 export enum ResourceType {
-  ARTIFACT_REGISTRY = 'ARTIFACT_REGISTRY'
+  ARTIFACT_REGISTRY = 'ARTIFACT_REGISTRY',
+  ARTIFACT_FIREWALL_EXCEPTIONS = 'ARTIFACT_FIREWALL_EXCEPTIONS'
 }

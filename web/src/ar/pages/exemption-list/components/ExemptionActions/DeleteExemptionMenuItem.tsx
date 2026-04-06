@@ -54,10 +54,10 @@ export default function DeleteExemptionMenuItem({ data, onClose }: ExemptionActi
       onClick={handleDeleteService}
       permission={{
         resource: {
-          resourceType: ResourceType.ARTIFACT_REGISTRY,
-          resourceIdentifier: data.registryName
+          resourceType: ResourceType.ARTIFACT_FIREWALL_EXCEPTIONS,
+          resourceIdentifier: data.exceptionId
         },
-        permission: PermissionIdentifier.DELETE_ARTIFACT_REGISTRY
+        permission: PermissionIdentifier.ARTIFACT_FIREWALL_EXCEPTIONS_CREATE
       }}
     />
   )

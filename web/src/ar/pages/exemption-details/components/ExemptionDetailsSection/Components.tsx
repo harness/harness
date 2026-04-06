@@ -16,7 +16,7 @@
 
 import React, { PropsWithChildren } from 'react'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { Button, ButtonVariation, Text } from '@harnessio/uicore'
+import { Button, ButtonVariation, Text, TextProps } from '@harnessio/uicore'
 import { useViolationDetailsModal } from '@ar/pages/violations-list/hooks/useViolationDetailsModal/useViolationDetailsModal'
 
 import css from './ExemptionDetailsSection.module.scss'
@@ -29,9 +29,9 @@ export function Label(props: PropsWithChildren<unknown>) {
   )
 }
 
-export function Value(props: PropsWithChildren<unknown>) {
+export function Value(props: PropsWithChildren<TextProps>) {
   return (
-    <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_800}>
+    <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_800} {...props}>
       {props.children}
     </Text>
   )
