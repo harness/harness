@@ -38,10 +38,10 @@ function EditExemptionMenuItem(props: ExemptionActionsProps) {
         }}
         permission={{
           resource: {
-            resourceType: ResourceType.ARTIFACT_FIREWALL_EXCEPTIONS,
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
             resourceIdentifier: props.data.exceptionId
           },
-          permission: PermissionIdentifier.ARTIFACT_FIREWALL_EXCEPTIONS_CREATE
+          permission: PermissionIdentifier.DOWNLOAD_ARTIFACT
         }}
       />
       {open && (

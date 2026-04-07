@@ -21,8 +21,7 @@ export enum PermissionIdentifier {
   DOWNLOAD_ARTIFACT = 'artifact_artregistry_downloadartifact',
   UPLOAD_ARTIFACT = 'artifact_artregistry_uploadartifact',
   DELETE_ARTIFACT = 'artifact_artregistry_deleteartifact',
-  ARTIFACT_FIREWALL_EXCEPTIONS_APPROVE = 'artifact_firewallexceptions_approve',
-  ARTIFACT_FIREWALL_EXCEPTIONS_CREATE = 'artifact_firewallexceptions_create'
+  ARTIFACT_FIREWALL_EXCEPTIONS_APPROVE = 'artifact_firewallexceptions_approve'
 }
 
 export enum ResourceType {
