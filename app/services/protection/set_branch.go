@@ -16,13 +16,11 @@ package protection
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/slices"
 )
@@ -32,7 +30,7 @@ type branchRuleSet struct {
 	manager *Manager
 }
 
-var _ Protection = branchRuleSet{} // ensure that ruleSet implements the Protection interface.
+var _ UserIDGetter = branchRuleSet{} // ensure that ruleSet implements the UserIDGetter interface.
 
 func (s branchRuleSet) MergeVerify(
 	ctx context.Context,
@@ -118,6 +116,77 @@ func (s branchRuleSet) RequiredChecks(
 	}, nil
 }
 
+func (s branchRuleSet) MergeQueueDefinition(in MergeQueueInput) (MergeQueueSetup, error) {
+	requiredIDMap := map[string]struct{}{}
+	var out MergeQueueSetup
+
+	err := s.forEachRuleMatchBranch(
+		in.Repo.ID,
+		in.Repo.Identifier,
+		in.Repo.DefaultBranch,
+		in.TargetBranch,
+		func(_ *types.RuleInfoInternal, p BranchProtection) error {
+			setup, err := p.MergeQueueDefinition(in)
+			if err != nil {
+				return err
+			}
+
+			for _, id := range setup.RequiredChecks {
+				requiredIDMap[id] = struct{}{}
+			}
+
+			if out.GroupSize == 0 || setup.GroupSize < out.GroupSize {
+				out.GroupSize = setup.GroupSize
+			}
+			if out.ChecksConcurrency == 0 || setup.ChecksConcurrency < out.ChecksConcurrency {
+				out.ChecksConcurrency = setup.ChecksConcurrency
+			}
+			if out.MaxCheckDurationSeconds == 0 || setup.MaxCheckDurationSeconds < out.MaxCheckDurationSeconds {
+				out.MaxCheckDurationSeconds = setup.MaxCheckDurationSeconds
+			}
+
+			return nil
+		})
+	if err != nil {
+		return MergeQueueSetup{}, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
+	}
+
+	// At least one required check is necessary for the merge queue setup to be valid.
+	if len(requiredIDMap) == 0 {
+		return MergeQueueSetup{}, nil
+	}
+
+	out.RequiredChecks = make([]string, 0, len(requiredIDMap))
+	for id := range requiredIDMap {
+		out.RequiredChecks = append(out.RequiredChecks, id)
+	}
+
+	return out, nil
+}
+
+func (s branchRuleSet) MergeQueueBranchUpdateVerify(in MergeQueueInput) ([]types.RuleViolations, error) {
+	var violations []types.RuleViolations
+
+	err := s.forEachRuleMatchBranch(
+		in.Repo.ID,
+		in.Repo.Identifier,
+		in.Repo.DefaultBranch,
+		in.TargetBranch,
+		func(r *types.RuleInfoInternal, p BranchProtection) error {
+			rVs, err := p.MergeQueueBranchUpdateVerify(in)
+			if err != nil {
+				return err
+			}
+			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
+	}
+
+	return violations, nil
+}
+
 func (s branchRuleSet) CreatePullReqVerify(
 	ctx context.Context,
 	in CreatePullReqVerifyInput,
@@ -174,11 +243,11 @@ func (s branchRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyIn
 }
 
 func (s branchRuleSet) UserIDs() ([]int64, error) {
-	return collectIDs(s.manager, s.rules, Protection.UserIDs)
+	return collectIDs(s.manager, s.rules, UserIDGetter.UserIDs)
 }
 
 func (s branchRuleSet) UserGroupIDs() ([]int64, error) {
-	return collectIDs(s.manager, s.rules, Protection.UserGroupIDs)
+	return collectIDs(s.manager, s.rules, UserIDGetter.UserGroupIDs)
 }
 
 func (s branchRuleSet) forEachRuleMatchBranch(
@@ -207,16 +276,18 @@ func (s branchRuleSet) forEachRuleMatchBranch(
 			continue
 		}
 
-		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
+		ruleDefinition, err := s.manager.FromJSON(r.Type, r.Definition, SanitizeLoose())
 		if err != nil {
-			return fmt.Errorf("forEachRuleMatchBranch: failed to parse protection definition ID=%d Type=%s: %w",
+			return fmt.Errorf("forEachRuleMatchBranch: failed to parse ruleDefinition ID=%d Type=%s: %w",
 				r.ID, r.Type, err)
 		}
 
-		branchProtection, ok := protection.(BranchProtection)
+		branchProtection, ok := ruleDefinition.(BranchProtection)
 		if !ok { // theoretically, should never happen
-			log.Warn().Err(errors.New("failed to type assert Protection to BranchProtection"))
-			return nil
+			return fmt.Errorf(
+				"unexpected type for ruleDefinition: got %T, expected BranchProtection",
+				ruleDefinition,
+			)
 		}
 
 		err = fn(&r, branchProtection)

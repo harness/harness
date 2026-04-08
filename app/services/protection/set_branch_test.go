@@ -17,6 +17,7 @@ package protection
 import (
 	"context"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/harness/gitness/app/services/codeowners"
@@ -205,7 +206,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 								"delete_branch": true,
 								"strategies_allowed": ["merge","rebase"]
 							}
-						}
+						}}
 					}`),
 					RepoTarget: emptyRepoTarget,
 				},
@@ -234,7 +235,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 								"delete_branch": true,
 								"strategies_allowed": ["rebase","squash"]
 							}
-						}
+						}}
 					}`),
 					RepoTarget: emptyRepoTarget,
 				},
@@ -468,6 +469,410 @@ func TestRuleSet_RequiredChecks(t *testing.T) {
 
 			if want, got := test.expOut, out; !reflect.DeepEqual(want, got) {
 				t.Errorf("output: want=%+v got=%+v", want, got)
+			}
+		})
+	}
+}
+
+func TestRuleSet_MergeQueueDefinition(t *testing.T) {
+	tests := []struct {
+		name  string
+		rules []types.RuleInfoInternal
+		exp   MergeQueueSetup
+	}{
+		{
+			name:  "empty",
+			rules: []types.RuleInfoInternal{},
+			exp:   MergeQueueSetup{},
+		},
+		{
+			name: "single-rule",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["ci","lint"]},
+							"group_size":5,
+							"checks_concurrency":3,
+							"max_check_duration_seconds":600
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			exp: MergeQueueSetup{
+				RequiredChecks:          []string{"ci", "lint"},
+				GroupSize:               5,
+				ChecksConcurrency:       3,
+				MaxCheckDurationSeconds: 600,
+			},
+		},
+		{
+			name: "two-rules-union-identifiers-min-values",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["ci","lint"]},
+							"group_size":5,
+							"checks_concurrency":4,
+							"max_check_duration_seconds":900
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         2,
+						Identifier: "rule2",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["lint","security"]},
+							"group_size":3,
+							"checks_concurrency":6,
+							"max_check_duration_seconds":300
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			exp: MergeQueueSetup{
+				RequiredChecks:          []string{"ci", "lint", "security"},
+				GroupSize:               3,
+				ChecksConcurrency:       4,
+				MaxCheckDurationSeconds: 300,
+			},
+		},
+		{
+			name: "three-rules-minimum-across-all",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["a"]},
+							"group_size":8,
+							"checks_concurrency":7,
+							"max_check_duration_seconds":1200
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         2,
+						Identifier: "rule2",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["b"]},
+							"group_size":2,
+							"checks_concurrency":5,
+							"max_check_duration_seconds":600
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         3,
+						Identifier: "rule3",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["c"]},
+							"group_size":4,
+							"checks_concurrency":1,
+							"max_check_duration_seconds":180
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			exp: MergeQueueSetup{
+				RequiredChecks:          []string{"a", "b", "c"},
+				GroupSize:               2,
+				ChecksConcurrency:       1,
+				MaxCheckDurationSeconds: 180,
+			},
+		},
+		{
+			name: "rule-without-merge-queue",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern:    []byte(`{"default":true}`),
+					Definition: []byte(`{"pullreq":{"merge":{"delete_branch":true}}}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			exp: MergeQueueSetup{},
+		},
+		{
+			name: "rule-non-matching-branch",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"include":["feature/**"]}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["ci"]},
+							"group_size":5,
+							"checks_concurrency":3,
+							"max_check_duration_seconds":600
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			exp: MergeQueueSetup{},
+		},
+		{
+			name: "rules-with-mixed-branch-patterns",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["ci","lint"]},
+							"group_size":4,
+							"checks_concurrency":2,
+							"max_check_duration_seconds":300
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+				{
+					RuleInfo: types.RuleInfo{
+						ID:         2,
+						Identifier: "rule2",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"include":["feature/**"]}`),
+					Definition: []byte(`{
+						"pullreq":{"merge_queue":{
+							"status_checks":{"require_identifiers":["security"]},
+							"group_size":8,
+							"checks_concurrency":8,
+							"max_check_duration_seconds":900
+						}}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			exp: MergeQueueSetup{
+				RequiredChecks:          []string{"ci", "lint"},
+				GroupSize:               4,
+				ChecksConcurrency:       2,
+				MaxCheckDurationSeconds: 300,
+			},
+		},
+	}
+
+	m := NewManager(nil)
+	_ = m.Register(TypeBranch, func() Definition {
+		return &Branch{}
+	})
+
+	in := MergeQueueInput{
+		Repo:         &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
+		TargetBranch: "main",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			set := branchRuleSet{
+				rules:   tt.rules,
+				manager: m,
+			}
+
+			got, err := set.MergeQueueDefinition(in)
+			if err != nil {
+				t.Errorf("got error: %s", err.Error())
+				return
+			}
+
+			// sort identifiers for stable comparison
+			slices.Sort(got.RequiredChecks)
+			exp := tt.exp
+			slices.Sort(exp.RequiredChecks)
+
+			if !reflect.DeepEqual(exp, got) {
+				t.Errorf("MergeQueueSetup: want=%+v got=%+v", exp, got)
+			}
+		})
+	}
+}
+
+func TestRuleSet_MergeQueueBranchUpdateVerify(t *testing.T) {
+	mergeQueueDef := func(id int, identifier, pattern string) types.RuleInfoInternal {
+		return types.RuleInfoInternal{
+			RuleInfo: types.RuleInfo{
+				ID:         int64(id),
+				Identifier: identifier,
+				Type:       TypeBranch,
+				State:      enum.RuleStateActive,
+			},
+			Pattern: []byte(pattern),
+			Definition: []byte(`{
+				"pullreq":{"merge_queue":{
+					"status_checks":{"require_identifiers":["ci"]},
+					"group_size":5,
+					"checks_concurrency":3,
+					"max_check_duration_seconds":600
+				}}
+			}`),
+			RepoTarget: emptyRepoTarget,
+		}
+	}
+
+	noMergeQueueDef := func(id int, identifier, pattern string) types.RuleInfoInternal {
+		return types.RuleInfoInternal{
+			RuleInfo: types.RuleInfo{
+				ID:         int64(id),
+				Identifier: identifier,
+				Type:       TypeBranch,
+				State:      enum.RuleStateActive,
+			},
+			Pattern:    []byte(pattern),
+			Definition: []byte(`{"pullreq":{"merge":{"delete_branch":true}}}`),
+			RepoTarget: emptyRepoTarget,
+		}
+	}
+
+	tests := []struct {
+		name         string
+		rules        []types.RuleInfoInternal
+		expViolCount int
+		expRuleIDs   []int64
+	}{
+		{
+			name:         "empty-rules",
+			rules:        []types.RuleInfoInternal{},
+			expViolCount: 0,
+		},
+		{
+			name:         "rule-without-merge-queue",
+			rules:        []types.RuleInfoInternal{noMergeQueueDef(1, "rule1", `{"default":true}`)},
+			expViolCount: 0,
+		},
+		{
+			name:         "rule-with-merge-queue",
+			rules:        []types.RuleInfoInternal{mergeQueueDef(1, "rule1", `{"default":true}`)},
+			expViolCount: 1,
+			expRuleIDs:   []int64{1},
+		},
+		{
+			name: "two-rules-both-with-merge-queue",
+			rules: []types.RuleInfoInternal{
+				mergeQueueDef(1, "rule1", `{"default":true}`),
+				mergeQueueDef(2, "rule2", `{"default":true}`),
+			},
+			expViolCount: 2,
+			expRuleIDs:   []int64{1, 2},
+		},
+		{
+			name: "two-rules-one-with-merge-queue",
+			rules: []types.RuleInfoInternal{
+				mergeQueueDef(1, "rule1", `{"default":true}`),
+				noMergeQueueDef(2, "rule2", `{"default":true}`),
+			},
+			expViolCount: 1,
+			expRuleIDs:   []int64{1},
+		},
+		{
+			name:         "rule-non-matching-branch",
+			rules:        []types.RuleInfoInternal{mergeQueueDef(1, "rule1", `{"include":["feature/**"]}`)},
+			expViolCount: 0,
+		},
+	}
+
+	m := NewManager(nil)
+	_ = m.Register(TypeBranch, func() Definition {
+		return &Branch{}
+	})
+
+	in := MergeQueueInput{
+		Repo:         &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
+		TargetBranch: "main",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			set := branchRuleSet{
+				rules:   tt.rules,
+				manager: m,
+			}
+
+			violations, err := set.MergeQueueBranchUpdateVerify(in)
+			if err != nil {
+				t.Errorf("got error: %s", err.Error())
+				return
+			}
+
+			if want, got := tt.expViolCount, len(violations); want != got {
+				t.Errorf("violation count: want=%d got=%d", want, got)
+				return
+			}
+
+			for i, ruleID := range tt.expRuleIDs {
+				if got := violations[i].Rule.ID; got != ruleID {
+					t.Errorf("violation %d rule ID: want=%d got=%d", i, ruleID, got)
+				}
+				if want, got := 1, len(violations[i].Violations); want != got {
+					t.Errorf("violation %d entry count: want=%d got=%d", i, want, got)
+					continue
+				}
+				if got := violations[i].Violations[0].Code; got != codeMergeQueueBranchUpdateVerify {
+					t.Errorf("violation %d code: want=%s got=%s", i, codeMergeQueueBranchUpdateVerify, got)
+				}
 			}
 		})
 	}

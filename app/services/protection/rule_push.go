@@ -113,3 +113,9 @@ func (p *Push) Sanitize() error {
 
 	return nil
 }
+
+// SupportsParent checks if the push rule can be defined on the specific parent level.
+func (*Push) SupportsParent(enum.RuleParent) error {
+	// Push rules can be defined on any level.
+	return nil
+}

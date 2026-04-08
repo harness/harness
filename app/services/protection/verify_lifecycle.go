@@ -69,9 +69,8 @@ const (
 	RefActionUpdateForce
 )
 
-// ensures that the DefLifecycle type implements Sanitizer and RefChangeVerifier interfaces.
+// ensures that the DefLifecycle type implements RefChangeVerifier interfaces.
 var (
-	_ Sanitizer         = (*DefBranchLifecycle)(nil)
 	_ RefChangeVerifier = (*DefBranchLifecycle)(nil)
 )
 

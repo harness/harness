@@ -135,7 +135,14 @@ func (s *Service) Update(ctx context.Context,
 		rule.RepoTarget = in.RepoTarget.JSON()
 	}
 	if in.Definition != nil {
-		rule.Definition, err = s.protectionManager.SanitizeJSON(rule.Type, *in.Definition)
+		rule.Definition, err = s.protectionManager.SanitizeJSON(
+			rule.Type,
+			*in.Definition,
+			protection.SanitizeStrictForParent(parentType),
+		)
+		if errStatus := errors.AsError(err); errStatus != nil {
+			return nil, errStatus
+		}
 		if err != nil {
 			return nil, errors.InvalidArgument("Invalid rule definition.")
 		}

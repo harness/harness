@@ -26,18 +26,18 @@ import (
 func forEachRule(
 	manager *Manager,
 	rules []types.RuleInfoInternal,
-	fn func(r *types.RuleInfoInternal, p Protection) error,
+	fn func(r *types.RuleInfoInternal, p UserIDGetter) error,
 ) error {
 	for i := range rules {
 		r := rules[i]
 
-		protection, err := manager.FromJSON(r.Type, r.Definition, false)
+		ruleDefinition, err := manager.FromJSON(r.Type, r.Definition, SanitizeLoose())
 		if err != nil {
-			return fmt.Errorf("forEachRule: failed to parse protection definition ID=%d Type=%s: %w",
+			return fmt.Errorf("forEachRule: failed to parse rule definition ID=%d Type=%s: %w",
 				r.ID, r.Type, err)
 		}
 
-		err = fn(&r, protection)
+		err = fn(&r, ruleDefinition)
 		if err != nil {
 			return fmt.Errorf("forEachRule: failed to process rule ID=%d Type=%s: %w",
 				r.ID, r.Type, err)
@@ -50,11 +50,11 @@ func forEachRule(
 func collectIDs(
 	manager *Manager,
 	rules []types.RuleInfoInternal,
-	extract func(Protection) ([]int64, error),
+	extract func(UserIDGetter) ([]int64, error),
 ) ([]int64, error) {
 	mapIDs := make(map[int64]bool)
 
-	err := forEachRule(manager, rules, func(_ *types.RuleInfoInternal, p Protection) error {
+	err := forEachRule(manager, rules, func(_ *types.RuleInfoInternal, p UserIDGetter) error {
 		ids, err := extract(p)
 		if err != nil {
 			return fmt.Errorf("failed to extract IDs: %w", err)
@@ -119,17 +119,20 @@ func forEachRuleMatchRefs(
 			continue
 		}
 
-		protection, err := manager.FromJSON(r.Type, r.Definition, false)
+		ruleDefinition, err := manager.FromJSON(r.Type, r.Definition, SanitizeLoose())
 		if err != nil {
 			return fmt.Errorf(
-				"forEachRuleMatchRefs: failed to parse protection definition ID=%d Type=%s: %w",
+				"forEachRuleMatchRefs: failed to parse rule definition ID=%d Type=%s: %w",
 				r.ID, r.Type, err,
 			)
 		}
 
-		refProtection, ok := protection.(RefProtection)
+		refProtection, ok := ruleDefinition.(RefProtection)
 		if !ok { // theoretically, should never happen
-			return fmt.Errorf("unexpected type for protection: got %T, expected RefProtection", protection)
+			return fmt.Errorf(
+				"unexpected type for ruleDefinition: got %T, expected RefProtection",
+				ruleDefinition,
+			)
 		}
 
 		err = fn(&r, refProtection, matchedRefs)

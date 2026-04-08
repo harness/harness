@@ -31,7 +31,7 @@ type Tag struct {
 }
 
 var (
-	// ensures that the Branch type implements Definition interface.
+	// ensures that the Tag type implements Definition interface.
 	_ Definition    = (*Tag)(nil)
 	_ TagProtection = (*Tag)(nil)
 )
@@ -76,5 +76,11 @@ func (t *Tag) Sanitize() error {
 		return fmt.Errorf("lifecycle: %w", err)
 	}
 
+	return nil
+}
+
+// SupportsParent checks if the tag rule can be defined on the specific parent level.
+func (*Tag) SupportsParent(enum.RuleParent) error {
+	// Tag rules can be defined on any level.
 	return nil
 }

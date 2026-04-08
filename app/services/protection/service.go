@@ -27,12 +27,7 @@ import (
 )
 
 type (
-	Sanitizer interface {
-		// Sanitize validates if the definition is valid and automatically corrects minor issues.
-		Sanitize() error
-	}
-
-	Protection interface {
+	UserIDGetter interface {
 		UserIDs() ([]int64, error)
 		UserGroupIDs() ([]int64, error)
 	}
@@ -44,23 +39,29 @@ type (
 	BranchProtection interface {
 		RefProtection
 		MergeVerifier
+		MergeQueueVerifier
 		CreatePullReqVerifier
-		Protection
+		UserIDGetter
 	}
 
 	TagProtection interface {
 		RefProtection
-		Protection
+		UserIDGetter
 	}
 
 	PushProtection interface {
 		PushVerifier
-		Protection
+		UserIDGetter
 	}
 
 	Definition interface {
-		Sanitizer
-		Protection
+		UserIDGetter
+
+		// Sanitize validates if the definition is valid and automatically corrects minor issues.
+		Sanitize() error
+
+		// SupportsParent checks if the rule can be defined on the specific parent level.
+		SupportsParent(enum.RuleParent) error
 	}
 
 	// DefinitionGenerator is the function that creates blank rules.
@@ -119,8 +120,8 @@ func (m *Manager) Register(ruleType enum.RuleType, gen DefinitionGenerator) erro
 }
 
 func (m *Manager) FromJSON(
-	ruleType enum.RuleType, message json.RawMessage, strict bool,
-) (Protection, error) {
+	ruleType enum.RuleType, message json.RawMessage, params sanitizeParams,
+) (Definition, error) {
 	gen := m.defGenMap[ruleType]
 	if gen == nil {
 		return nil, ErrUnrecognizedType
@@ -128,7 +129,7 @@ func (m *Manager) FromJSON(
 
 	decoder := json.NewDecoder(bytes.NewReader(message))
 
-	if strict {
+	if params.strictJSON {
 		decoder.DisallowUnknownFields()
 	}
 
@@ -142,14 +143,40 @@ func (m *Manager) FromJSON(
 		return nil, err
 	}
 
+	if params.requireParent != "" {
+		if err := r.SupportsParent(params.requireParent); err != nil {
+			return nil, err
+		}
+	}
+
 	return r, nil
+}
+
+type sanitizeParams struct {
+	strictJSON    bool
+	requireParent enum.RuleParent
+}
+
+func SanitizeLoose() sanitizeParams {
+	return sanitizeParams{
+		strictJSON:    false,
+		requireParent: "",
+	}
+}
+
+func SanitizeStrictForParent(parent enum.RuleParent) sanitizeParams {
+	return sanitizeParams{
+		strictJSON:    true,
+		requireParent: parent,
+	}
 }
 
 func (m *Manager) SanitizeJSON(
 	ruleType enum.RuleType,
 	message json.RawMessage,
+	params sanitizeParams,
 ) (json.RawMessage, error) {
-	r, err := m.FromJSON(ruleType, message, true)
+	r, err := m.FromJSON(ruleType, message, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rule protection from JSON: %w", err)
 	}
@@ -220,7 +247,7 @@ func (m *Manager) ListRepoPushRules(
 	}, nil
 }
 
-func (m *Manager) FilterCreateBranchProtection(rules []types.RuleInfoInternal) BranchProtection {
+func (m *Manager) FilterBranchProtection(rules []types.RuleInfoInternal) BranchProtection {
 	var branchRules []types.RuleInfoInternal
 
 	for _, rule := range rules {
@@ -235,7 +262,7 @@ func (m *Manager) FilterCreateBranchProtection(rules []types.RuleInfoInternal) B
 	}
 }
 
-func (m *Manager) FilterCreateTagProtection(rules []types.RuleInfoInternal) TagProtection {
+func (m *Manager) FilterTagProtection(rules []types.RuleInfoInternal) TagProtection {
 	var tagRules []types.RuleInfoInternal
 
 	for _, rule := range rules {
@@ -250,7 +277,7 @@ func (m *Manager) FilterCreateTagProtection(rules []types.RuleInfoInternal) TagP
 	}
 }
 
-func (m *Manager) FilterCreatePushProtection(rules []types.RuleInfoInternal) PushProtection {
+func (m *Manager) FilterPushProtection(rules []types.RuleInfoInternal) PushProtection {
 	var pushRules []types.RuleInfoInternal
 
 	for _, rule := range rules {

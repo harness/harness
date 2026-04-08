@@ -807,3 +807,213 @@ func sortEvaluations(approvals []*types.DefaultReviewerApprovalsResponse) {
 		})
 	}
 }
+
+//nolint:nestif
+func TestDefPullReq_MergeQueueBranchUpdateVerify(t *testing.T) {
+	tests := []struct {
+		name         string
+		def          DefPullReq
+		wantViolated bool
+	}{
+		{
+			name:         "no-merge-queue",
+			def:          DefPullReq{},
+			wantViolated: false,
+		},
+		{
+			name: "with-merge-queue",
+			def: DefPullReq{
+				MergeQueue: &DefMergeQueue{
+					StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+					GroupSize:               5,
+					ChecksConcurrency:       3,
+					MaxCheckDurationSeconds: 600,
+				},
+			},
+			wantViolated: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			violations, err := tt.def.MergeQueueBranchUpdateVerify(MergeQueueInput{})
+			if err != nil {
+				t.Errorf("got error: %s", err.Error())
+				return
+			}
+
+			if tt.wantViolated {
+				if len(violations) != 1 {
+					t.Errorf("want 1 violation, got %d", len(violations))
+					return
+				}
+				if len(violations[0].Violations) != 1 {
+					t.Errorf("want 1 violation entry, got %d", len(violations[0].Violations))
+					return
+				}
+				if got := violations[0].Violations[0].Code; got != codeMergeQueueBranchUpdateVerify {
+					t.Errorf("violation code: want=%s got=%s", codeMergeQueueBranchUpdateVerify, got)
+				}
+			} else if len(violations) != 0 {
+				t.Errorf("want no violations, got %d", len(violations))
+			}
+		})
+	}
+}
+
+func TestDefMergeQueue_Sanitize(t *testing.T) {
+	tests := []struct {
+		name    string
+		def     DefMergeQueue
+		wantErr bool
+	}{
+		{
+			name:    "zero-value-fails",
+			def:     DefMergeQueue{},
+			wantErr: true,
+		},
+		{
+			name: "valid",
+			def: DefMergeQueue{
+				StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:               5,
+				ChecksConcurrency:       3,
+				MaxCheckDurationSeconds: 600,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid-boundary-values",
+			def: DefMergeQueue{
+				StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"a"}},
+				GroupSize:               MaxGroupSize - 1,
+				ChecksConcurrency:       1,
+				MaxCheckDurationSeconds: 1,
+			},
+			wantErr: false,
+		},
+		{
+			name: "group-size-zero-with-status-checks",
+			def: DefMergeQueue{
+				StatusChecks:      DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:         0,
+				ChecksConcurrency: 3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "group-size-equals-max",
+			def: DefMergeQueue{
+				StatusChecks:      DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:         MaxGroupSize,
+				ChecksConcurrency: 3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "group-size-exceeds-max",
+			def: DefMergeQueue{
+				StatusChecks:      DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:         MaxGroupSize + 1,
+				ChecksConcurrency: 3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "group-size-negative",
+			def: DefMergeQueue{
+				StatusChecks:      DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:         -1,
+				ChecksConcurrency: 3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "checks-concurrency-zero-with-status-checks",
+			def: DefMergeQueue{
+				StatusChecks:      DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:         3,
+				ChecksConcurrency: 0,
+			},
+			wantErr: true,
+		},
+		{
+			name: "checks-concurrency-equals-max",
+			def: DefMergeQueue{
+				StatusChecks:      DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:         3,
+				ChecksConcurrency: MaxGroupSize,
+			},
+			wantErr: true,
+		},
+		{
+			name: "checks-concurrency-negative",
+			def: DefMergeQueue{
+				StatusChecks:      DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:         3,
+				ChecksConcurrency: -1,
+			},
+			wantErr: true,
+		},
+		{
+			name: "only-group-size-set-nonzero",
+			def: DefMergeQueue{
+				GroupSize: 3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "only-checks-concurrency-set-nonzero",
+			def: DefMergeQueue{
+				ChecksConcurrency: 3,
+			},
+			wantErr: true,
+		},
+		{
+			name: "max-check-duration-zero-with-config",
+			def: DefMergeQueue{
+				StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:               3,
+				ChecksConcurrency:       3,
+				MaxCheckDurationSeconds: 0,
+			},
+			wantErr: true,
+		},
+		{
+			name: "max-check-duration-negative",
+			def: DefMergeQueue{
+				StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:               3,
+				ChecksConcurrency:       3,
+				MaxCheckDurationSeconds: -1,
+			},
+			wantErr: true,
+		},
+		{
+			name: "only-max-check-duration-set-nonzero",
+			def: DefMergeQueue{
+				MaxCheckDurationSeconds: 600,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid-status-check-identifier",
+			def: DefMergeQueue{
+				StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{""}},
+				GroupSize:               3,
+				ChecksConcurrency:       3,
+				MaxCheckDurationSeconds: 600,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.def.Sanitize()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("wantErr=%t, got err=%v", tt.wantErr, err)
+			}
+		})
+	}
+}

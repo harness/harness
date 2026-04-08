@@ -150,18 +150,15 @@ func (c *Controller) PreReceive(
 	}
 
 	var rulesViolations []types.RuleViolations
-	// Verify branch and tag rules in pre-receive only for direct git pushes.
-	// API-originated operations are handled at the controller layer.
-	if in.OperationType == enum.GitOpTypeGitPush {
-		// check branch and tag protection rules
-		refRulesViolations, err := c.checkRefRules(
-			ctx, dummySession, repo, refUpdates, protectionRules, isRepoOwner,
-		)
-		if err != nil {
-			return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
-		}
-		rulesViolations = append(rulesViolations, refRulesViolations...)
+
+	// check branch and tag protection rules
+	refRulesViolations, err := c.checkRefRules(
+		ctx, dummySession, repo, refUpdates, protectionRules, isRepoOwner, in.OperationType,
+	)
+	if err != nil {
+		return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
 	}
+	rulesViolations = append(rulesViolations, refRulesViolations...)
 
 	// check push protection rules and repository settings
 	pushRulesViolations, settingsViolations, err := c.checkPushProtection(
@@ -272,7 +269,7 @@ func (c *Controller) checkPushProtection(
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) ([]types.RuleViolations, *repoSettingsViolations, error) {
-	pushProtection := c.protectionManager.FilterCreatePushProtection(protectionRules)
+	pushProtection := c.protectionManager.FilterPushProtection(protectionRules)
 	allowBypass := in.OperationType == enum.GitOpTypeAPIContentBypassRules ||
 		in.OperationType == enum.GitOpTypeGitPush
 	pushVerifyOut, _, err := pushProtection.PushVerify(
@@ -371,10 +368,54 @@ func (c *Controller) checkRefRules(
 	refUpdates changedRefs,
 	protectionRules []types.RuleInfoInternal,
 	isRepoOwner bool,
+	opType enum.GitOpType,
 ) ([]types.RuleViolations, error) {
-	branchProtection := c.protectionManager.FilterCreateBranchProtection(protectionRules)
-	tagProtection := c.protectionManager.FilterCreateTagProtection(protectionRules)
+	branchProtection := c.protectionManager.FilterBranchProtection(protectionRules)
+	tagProtection := c.protectionManager.FilterTagProtection(protectionRules)
 
+	var ruleViolations []types.RuleViolations
+
+	// Verify branch and tag rules in pre-receive only for direct git pushes.
+	// API-originated operations are handled at the controller layer.
+	if opType == enum.GitOpTypeGitPush {
+		violations, err := c.checkRefUpdatesRules(
+			ctx,
+			session,
+			repo,
+			refUpdates,
+			isRepoOwner,
+			branchProtection,
+			tagProtection,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify ref update rules for git push: %w", err)
+		}
+
+		ruleViolations = append(ruleViolations, violations...)
+	}
+
+	if opType == enum.GitOpTypeGitPush || opType == enum.GitOpTypeAPIRefsOnly ||
+		opType == enum.GitOpTypeAPIContent || opType == enum.GitOpTypeAPIContentBypassRules {
+		violations, err := c.checkMergeQueueBranchUpdates(repo, refUpdates, branchProtection)
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify if branch with merge queue is updated: %w", err)
+		}
+
+		ruleViolations = append(ruleViolations, violations...)
+	}
+
+	return ruleViolations, nil
+}
+
+func (c *Controller) checkRefUpdatesRules(
+	ctx context.Context,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+	refUpdates changedRefs,
+	isRepoOwner bool,
+	branchProtection protection.BranchProtection,
+	tagProtection protection.TagProtection,
+) ([]types.RuleViolations, error) {
 	var ruleViolations []types.RuleViolations
 	var errCheckAction error
 
@@ -442,6 +483,27 @@ func (c *Controller) checkRefRules(
 	}
 
 	return ruleViolations, nil
+}
+
+func (c *Controller) checkMergeQueueBranchUpdates(
+	repo *types.RepositoryCore,
+	refUpdates changedRefs,
+	branchProtection protection.BranchProtection,
+) ([]types.RuleViolations, error) {
+	var rulesViolations []types.RuleViolations
+	for _, branch := range refUpdates.branches.updated {
+		violations, err := branchProtection.MergeQueueBranchUpdateVerify(protection.MergeQueueInput{
+			Repo:         repo,
+			TargetBranch: branch,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to check existence of a merge queue for a branch: %w", err)
+		}
+
+		rulesViolations = append(rulesViolations, violations...)
+	}
+
+	return rulesViolations, nil
 }
 
 func processProtectionViolations(

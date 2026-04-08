@@ -572,3 +572,53 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 func mockUserGroupResolver(_ context.Context, _ []int64) ([]int64, error) {
 	return []int64{43}, nil
 }
+
+func TestBranch_SupportsParent(t *testing.T) {
+	mergeQueue := &DefMergeQueue{
+		StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci/build"}},
+		GroupSize:               2,
+		ChecksConcurrency:       2,
+		MaxCheckDurationSeconds: 60,
+	}
+
+	tests := []struct {
+		name    string
+		branch  Branch
+		parent  enum.RuleParent
+		wantErr bool
+	}{
+		{
+			name:    "repo-no-merge-queue",
+			branch:  Branch{},
+			parent:  enum.RuleParentRepo,
+			wantErr: false,
+		},
+		{
+			name:    "repo-with-merge-queue",
+			branch:  Branch{PullReq: DefPullReq{MergeQueue: mergeQueue}},
+			parent:  enum.RuleParentRepo,
+			wantErr: false,
+		},
+		{
+			name:    "space-no-merge-queue",
+			branch:  Branch{},
+			parent:  enum.RuleParentSpace,
+			wantErr: false,
+		},
+		{
+			name:    "space-with-merge-queue",
+			branch:  Branch{PullReq: DefPullReq{MergeQueue: mergeQueue}},
+			parent:  enum.RuleParentSpace,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.branch.SupportsParent(tt.parent)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SupportsParent(%q) error=%v, wantErr=%v", tt.parent, err, tt.wantErr)
+			}
+		})
+	}
+}

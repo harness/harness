@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -133,6 +134,14 @@ func (v *Branch) RefChangeVerify(
 	return
 }
 
+func (v *Branch) MergeQueueDefinition(in MergeQueueInput) (MergeQueueSetup, error) {
+	return v.PullReq.MergeQueueDefinition(in)
+}
+
+func (v *Branch) MergeQueueBranchUpdateVerify(in MergeQueueInput) ([]types.RuleViolations, error) {
+	return v.PullReq.MergeQueueBranchUpdateVerify(in)
+}
+
 func (v *Branch) UserIDs() ([]int64, error) {
 	uniqueUserMap := make(map[int64]struct{}, len(v.Bypass.UserIDs)+len(v.PullReq.Reviewers.DefaultReviewerIDs))
 	for _, id := range v.Bypass.UserIDs {
@@ -181,6 +190,15 @@ func (v *Branch) Sanitize() error {
 
 	if err := v.Lifecycle.Sanitize(); err != nil {
 		return fmt.Errorf("lifecycle: %w", err)
+	}
+
+	return nil
+}
+
+// SupportsParent checks if the branch rule can be defined on the specific parent level.
+func (v *Branch) SupportsParent(parent enum.RuleParent) error {
+	if parent == enum.RuleParentSpace && v.PullReq.MergeQueue != nil {
+		return errors.InvalidArgument("Merge queues can be defined only on repository level branch rules.")
 	}
 
 	return nil

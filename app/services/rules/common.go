@@ -69,7 +69,7 @@ func (s *Service) getRuleUserAndUserGroups(
 
 func (s *Service) getRuleUsers(
 	ctx context.Context,
-	protection protection.Protection,
+	protection protection.UserIDGetter,
 ) (map[int64]*types.PrincipalInfo, []int64, error) {
 	ruleUserIDs, err := protection.UserIDs()
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *Service) getRuleUsers(
 
 func (s *Service) getRuleUserGroups(
 	ctx context.Context,
-	protection protection.Protection,
+	protection protection.UserIDGetter,
 ) (map[int64]*types.UserGroupInfo, []int64, error) {
 	ruleGroupIDs, err := protection.UserGroupIDs()
 	if err != nil {
@@ -110,13 +110,13 @@ func (s *Service) getRuleUserGroups(
 	return userGroupInfoMap, ruleGroupIDs, nil
 }
 
-func (s *Service) parseRule(rule *types.Rule) (protection.Protection, error) {
-	protection, err := s.protectionManager.FromJSON(rule.Type, rule.Definition, false)
+func (s *Service) parseRule(rule *types.Rule) (protection.UserIDGetter, error) {
+	idGetter, err := s.protectionManager.FromJSON(rule.Type, rule.Definition, protection.SanitizeLoose())
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse json rule definition: %w", err)
 	}
 
-	return protection, nil
+	return idGetter, nil
 }
 
 func (s *Service) sendSSE(

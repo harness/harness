@@ -26,7 +26,7 @@ type tagRuleSet struct {
 	manager *Manager
 }
 
-var _ Protection = tagRuleSet{} // ensure that ruleSet implements the Protection interface.
+var _ UserIDGetter = tagRuleSet{} // ensure that ruleSet implements the UserIDGetter interface.
 
 func (s tagRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
@@ -48,9 +48,9 @@ func (s tagRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput
 }
 
 func (s tagRuleSet) UserIDs() ([]int64, error) {
-	return collectIDs(s.manager, s.rules, Protection.UserIDs)
+	return collectIDs(s.manager, s.rules, UserIDGetter.UserIDs)
 }
 
 func (s tagRuleSet) UserGroupIDs() ([]int64, error) {
-	return collectIDs(s.manager, s.rules, Protection.UserGroupIDs)
+	return collectIDs(s.manager, s.rules, UserIDGetter.UserGroupIDs)
 }

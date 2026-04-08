@@ -98,10 +98,6 @@ func (s *Service) Create(ctx context.Context,
 	}
 
 	var err error
-	in.Definition, err = s.protectionManager.SanitizeJSON(in.Type, in.Definition)
-	if err != nil {
-		return nil, errors.InvalidArgument("Invalid rule definition.")
-	}
 
 	scope := ruleScopeRepo
 	if parentType == enum.RuleParentSpace {
@@ -110,6 +106,19 @@ func (s *Service) Create(ctx context.Context,
 			return nil, fmt.Errorf("failed to get parent tree level: %w", err)
 		}
 	}
+
+	in.Definition, err = s.protectionManager.SanitizeJSON(
+		in.Type,
+		in.Definition,
+		protection.SanitizeStrictForParent(parentType),
+	)
+	if errStatus := errors.AsError(err); errStatus != nil {
+		return nil, errStatus
+	}
+	if err != nil {
+		return nil, errors.InvalidArgument("Invalid rule definition.")
+	}
+
 	now := time.Now().UnixMilli()
 	rule := &types.Rule{
 		CreatedBy:     principal.ID,

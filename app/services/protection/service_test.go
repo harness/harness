@@ -17,11 +17,181 @@ package protection
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 	"testing"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
+
+func newTestManager(t *testing.T) *Manager {
+	t.Helper()
+	m := NewManager(nil)
+	_ = m.Register(TypeBranch, func() Definition { return &Branch{} })
+	_ = m.Register(TypeTag, func() Definition { return &Tag{} })
+	_ = m.Register(TypePush, func() Definition { return &Push{} })
+	return m
+}
+
+func ruleInfo(id int, ruleType enum.RuleType, bypassUserIDs ...int64) types.RuleInfoInternal {
+	userIDsJSON := "[]"
+	if len(bypassUserIDs) > 0 {
+		b, _ := json.Marshal(bypassUserIDs)
+		userIDsJSON = string(b)
+	}
+	return types.RuleInfoInternal{
+		RuleInfo: types.RuleInfo{
+			ID:   int64(id),
+			Type: ruleType,
+		},
+		Pattern:    []byte(`{"default":true}`),
+		Definition: []byte(`{"bypass":{"user_ids":` + userIDsJSON + `}}`),
+		RepoTarget: []byte(`{"include":{},"exclude":{}}`),
+	}
+}
+
+func assertUserIDs(t *testing.T, p UserIDGetter, want []int64) {
+	t.Helper()
+	got, err := p.UserIDs()
+	if err != nil {
+		t.Fatalf("UserIDs() error: %v", err)
+	}
+	slices.Sort(got)
+	slices.Sort(want)
+	if len(got) != len(want) {
+		t.Errorf("UserIDs(): want=%v got=%v", want, got)
+		return
+	}
+	for i := range want {
+		if want[i] != got[i] {
+			t.Errorf("UserIDs(): want=%v got=%v", want, got)
+			return
+		}
+	}
+}
+
+func TestManager_FilterBranchProtection(t *testing.T) {
+	m := newTestManager(t)
+
+	branchRule := ruleInfo(1, TypeBranch, 10)
+	tagRule := ruleInfo(2, TypeTag, 20)
+	pushRule := ruleInfo(3, TypePush, 30)
+
+	tests := []struct {
+		name    string
+		rules   []types.RuleInfoInternal
+		wantIDs []int64
+	}{
+		{
+			name:    "empty",
+			rules:   []types.RuleInfoInternal{},
+			wantIDs: nil,
+		},
+		{
+			name:    "only-branch-rules",
+			rules:   []types.RuleInfoInternal{branchRule},
+			wantIDs: []int64{10},
+		},
+		{
+			name:    "mixed-types",
+			rules:   []types.RuleInfoInternal{branchRule, tagRule, pushRule},
+			wantIDs: []int64{10},
+		},
+		{
+			name:    "no-branch-rules",
+			rules:   []types.RuleInfoInternal{tagRule, pushRule},
+			wantIDs: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertUserIDs(t, m.FilterBranchProtection(tt.rules), tt.wantIDs)
+		})
+	}
+}
+
+func TestManager_FilterTagProtection(t *testing.T) {
+	m := newTestManager(t)
+
+	branchRule := ruleInfo(1, TypeBranch, 10)
+	tagRule := ruleInfo(2, TypeTag, 20)
+	pushRule := ruleInfo(3, TypePush, 30)
+
+	tests := []struct {
+		name    string
+		rules   []types.RuleInfoInternal
+		wantIDs []int64
+	}{
+		{
+			name:    "empty",
+			rules:   []types.RuleInfoInternal{},
+			wantIDs: nil,
+		},
+		{
+			name:    "only-tag-rules",
+			rules:   []types.RuleInfoInternal{tagRule},
+			wantIDs: []int64{20},
+		},
+		{
+			name:    "mixed-types",
+			rules:   []types.RuleInfoInternal{branchRule, tagRule, pushRule},
+			wantIDs: []int64{20},
+		},
+		{
+			name:    "no-tag-rules",
+			rules:   []types.RuleInfoInternal{branchRule, pushRule},
+			wantIDs: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertUserIDs(t, m.FilterTagProtection(tt.rules), tt.wantIDs)
+		})
+	}
+}
+
+func TestManager_FilterPushProtection(t *testing.T) {
+	m := newTestManager(t)
+
+	branchRule := ruleInfo(1, TypeBranch, 10)
+	tagRule := ruleInfo(2, TypeTag, 20)
+	pushRule := ruleInfo(3, TypePush, 30)
+
+	tests := []struct {
+		name    string
+		rules   []types.RuleInfoInternal
+		wantIDs []int64
+	}{
+		{
+			name:    "empty",
+			rules:   []types.RuleInfoInternal{},
+			wantIDs: nil,
+		},
+		{
+			name:    "only-push-rules",
+			rules:   []types.RuleInfoInternal{pushRule},
+			wantIDs: []int64{30},
+		},
+		{
+			name:    "mixed-types",
+			rules:   []types.RuleInfoInternal{branchRule, tagRule, pushRule},
+			wantIDs: []int64{30},
+		},
+		{
+			name:    "no-push-rules",
+			rules:   []types.RuleInfoInternal{branchRule, tagRule},
+			wantIDs: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertUserIDs(t, m.FilterPushProtection(tt.rules), tt.wantIDs)
+		})
+	}
+}
 
 func TestIsCritical(t *testing.T) {
 	tests := []struct {
@@ -138,7 +308,7 @@ func TestManager_SanitizeJSON(t *testing.T) {
 				return
 			}
 
-			_, err = m.SanitizeJSON(test.ruleType, json.RawMessage("{}"))
+			_, err = m.SanitizeJSON(test.ruleType, json.RawMessage("{}"), SanitizeLoose())
 			if !errors.Is(err, test.errSan) {
 				t.Errorf("register type error mismatch: want error containing %v, got %v", test.errSan, err)
 			}

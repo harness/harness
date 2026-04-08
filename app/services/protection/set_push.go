@@ -48,19 +48,19 @@ func (s pushRuleSet) PushVerify(
 			continue
 		}
 
-		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
+		ruleDefinition, err := s.manager.FromJSON(r.Type, r.Definition, SanitizeLoose())
 		if err != nil {
 			return out, nil, fmt.Errorf(
-				"failed to parse protection definition ID=%d Type=%s: %w",
+				"failed to parse rule definition ID=%d Type=%s: %w",
 				r.ID, r.Type, err,
 			)
 		}
 
-		pushProtection, ok := protection.(PushProtection)
-		if !ok {
+		pushProtection, ok := ruleDefinition.(PushProtection)
+		if !ok { // theoretically, should never happen
 			return out, nil, fmt.Errorf(
-				"unexpected type for protection: got %T, expected PushProtection",
-				protection,
+				"unexpected type for ruleDefinition: got %T, expected PushProtection",
+				ruleDefinition,
 			)
 		}
 
@@ -106,9 +106,9 @@ func (s pushRuleSet) Violations(ctx context.Context, in *PushViolationsInput) (P
 }
 
 func (s pushRuleSet) UserIDs() ([]int64, error) {
-	return collectIDs(s.manager, s.rules, Protection.UserIDs)
+	return collectIDs(s.manager, s.rules, UserIDGetter.UserIDs)
 }
 
 func (s pushRuleSet) UserGroupIDs() ([]int64, error) {
-	return collectIDs(s.manager, s.rules, Protection.UserGroupIDs)
+	return collectIDs(s.manager, s.rules, UserIDGetter.UserGroupIDs)
 }
