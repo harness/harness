@@ -242,9 +242,9 @@ func getScmClientWithTransport(provider Provider, slug string, authReq bool) (*s
 	return c, nil
 }
 
-// augmentProviderUserFromScm resolves provider.Username to the SCM account login if the provider is Bitbucket or if a username is not provided.
-// For Bitbucket, the user string is an email address so we resolve the API login via Users.Find while leaving the HTTP client on the original credentials for REST.
-// For other providers where a username is not provided, we assume the provider accepts token-only authentication and resolve the username via the same method.
+// augmentProviderUserFromScm resolves provider.Username to the SCM account username when one is not explicitly provided
+// or when the provider is Bitbucket, since this uses email + token to authenticate
+// but requires the username to fetch repository info.
 func augmentProviderUserFromScm(ctx context.Context, provider Provider, scmClient *scm.Client) (Provider, error) {
 	if provider.Password == "" {
 		return provider, nil
