@@ -234,6 +234,7 @@ func TestDeleteArtifact(t *testing.T) {
 					"root/parent",
 					mock.Anything,
 					mock.Anything,
+					mock.Anything,
 				).Return(nil)
 
 				c.SpaceFinder = mockSpaceFinder

@@ -128,8 +128,9 @@ func (c *APIController) DeleteArtifact(ctx context.Context, r artifact.DeleteArt
 		audit.NewResource(audit.ResourceTypeRegistryArtifact, string(r.Artifact)),
 		audit.ActionDeleted,
 		regInfo.ParentRef,
-		audit.WithData("registry name", repoEntity.Name),
-		audit.WithData("artifact name", string(r.Artifact)),
+		audit.WithData("registry_name", repoEntity.Name),
+		audit.WithData("package_name", string(r.Artifact)),
+		audit.WithData("resource_type", "package"),
 	)
 	if auditErr != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete tag operation: %s", auditErr)

@@ -218,7 +218,7 @@ func (c *APIController) deleteRegistryWithAudit(
 				Registry: *registry,
 			},
 		),
-		audit.WithData("registry name", registry.Name),
+		audit.WithData("registry_name", registry.Name),
 	)
 
 	if auditErr != nil {

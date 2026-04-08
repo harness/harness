@@ -128,12 +128,13 @@ func (c *APIController) DeleteArtifactVersion(ctx context.Context, r artifact.De
 	auditErr := c.AuditService.Log(
 		ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRegistry, artifactName),
+		audit.NewResource(audit.ResourceTypeRegistryArtifact, artifactName),
 		audit.ActionDeleted,
 		regInfo.ParentRef,
-		audit.WithData("registry name", registryName),
-		audit.WithData("artifact name", artifactName),
-		audit.WithData("version name", versionName),
+		audit.WithData("registry_name", registryName),
+		audit.WithData("package_name", artifactName),
+		audit.WithData("version_name", versionName),
+		audit.WithData("resource_type", "version"),
 	)
 	if auditErr != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete artifact operation: %s", auditErr)
