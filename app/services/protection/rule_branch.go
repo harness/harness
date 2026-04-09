@@ -131,15 +131,28 @@ func (v *Branch) RefChangeVerify(
 		violations[i].Bypassed = bypassed
 	}
 
-	return
+	if in.RefAction == RefActionUpdate || in.RefAction == RefActionUpdateForce {
+		// merge queue settings can't be bypassed
+		mqv, err := v.MergeQueueBranchUpdateVerify(MergeQueueBranchUpdateInput{
+			Repo:         in.Repo,
+			TargetBranch: in.RefNames[0],
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		violations = append(violations, mqv...)
+	}
+
+	return violations, nil
 }
 
-func (v *Branch) MergeQueueDefinition(in MergeQueueInput) (MergeQueueSetup, error) {
-	return v.PullReq.MergeQueueDefinition(in)
+func (v *Branch) MergeQueueBranchUpdateVerify(in MergeQueueBranchUpdateInput) ([]types.RuleViolations, error) {
+	return v.PullReq.MergeQueue.MergeQueueBranchUpdateVerify(in)
 }
 
-func (v *Branch) MergeQueueBranchUpdateVerify(in MergeQueueInput) ([]types.RuleViolations, error) {
-	return v.PullReq.MergeQueueBranchUpdateVerify(in)
+func (v *Branch) GetMergeQueueSetup(in MergeQueueSetupInput) (MergeQueueSetup, error) {
+	return v.PullReq.MergeQueue.GetMergeQueueSetup(in)
 }
 
 func (v *Branch) UserIDs() ([]int64, error) {

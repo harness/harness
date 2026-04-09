@@ -83,14 +83,22 @@ type (
 		MaxCheckDurationSeconds int      `json:"max_check_duration_seconds"`
 	}
 
-	MergeQueueInput struct {
+	MergeQueueBranchUpdateInput struct {
 		Repo         *types.RepositoryCore
 		TargetBranch string
 	}
 
-	MergeQueueVerifier interface {
-		MergeQueueDefinition(in MergeQueueInput) (MergeQueueSetup, error)
-		MergeQueueBranchUpdateVerify(in MergeQueueInput) ([]types.RuleViolations, error)
+	MergeQueueBranchUpdateVerifier interface {
+		MergeQueueBranchUpdateVerify(in MergeQueueBranchUpdateInput) ([]types.RuleViolations, error)
+	}
+
+	MergeQueueSetupInput struct {
+		Repo         *types.RepositoryCore
+		TargetBranch string
+	}
+
+	MergeQueueSetupGetter interface {
+		GetMergeQueueSetup(in MergeQueueSetupInput) (MergeQueueSetup, error)
 	}
 
 	CreatePullReqVerifier interface {
@@ -118,11 +126,10 @@ type (
 	}
 )
 
-// Ensures that the DefPullReq type implements MergeVerifier, MergeQueueVerifier and CreatePullReqVerifier interface.
+// Ensures that the DefPullReq type implements MergeVerifier and CreatePullReqVerifier interface.
 var (
 	_ MergeVerifier         = (*DefPullReq)(nil)
 	_ CreatePullReqVerifier = (*DefPullReq)(nil)
-	_ MergeQueueVerifier    = (*DefPullReq)(nil)
 )
 
 const (
@@ -573,6 +580,31 @@ func (v *DefMergeQueue) Sanitize() error {
 	return nil
 }
 
+func (v *DefMergeQueue) MergeQueueBranchUpdateVerify(in MergeQueueBranchUpdateInput) ([]types.RuleViolations, error) {
+	if v == nil || len(v.StatusChecks.RequireIdentifiers) == 0 {
+		return nil, nil
+	}
+
+	var violations types.RuleViolations
+	violations.Addf(codeMergeQueueBranchUpdateVerify,
+		"Direct modification of branch %q is not allowed: the branch has a merge queue configured.",
+		in.TargetBranch)
+
+	return []types.RuleViolations{violations}, nil
+}
+
+func (v *DefMergeQueue) GetMergeQueueSetup(_ MergeQueueSetupInput) (MergeQueueSetup, error) {
+	if v == nil {
+		return MergeQueueSetup{}, nil
+	}
+	return MergeQueueSetup{
+		RequiredChecks:          v.StatusChecks.RequireIdentifiers,
+		GroupSize:               v.GroupSize,
+		ChecksConcurrency:       v.ChecksConcurrency,
+		MaxCheckDurationSeconds: v.MaxCheckDurationSeconds,
+	}, nil
+}
+
 type DefPullReq struct {
 	Approvals    DefApprovals    `json:"approvals"`
 	Comments     DefComments     `json:"comments"`
@@ -608,28 +640,6 @@ func (v *DefPullReq) Sanitize() error {
 	}
 
 	return nil
-}
-
-func (v *DefPullReq) MergeQueueDefinition(_ MergeQueueInput) (MergeQueueSetup, error) {
-	if v.MergeQueue == nil {
-		return MergeQueueSetup{}, nil
-	}
-	return MergeQueueSetup{
-		RequiredChecks:          v.MergeQueue.StatusChecks.RequireIdentifiers,
-		GroupSize:               v.MergeQueue.GroupSize,
-		ChecksConcurrency:       v.MergeQueue.ChecksConcurrency,
-		MaxCheckDurationSeconds: v.MergeQueue.MaxCheckDurationSeconds,
-	}, nil
-}
-
-func (v *DefPullReq) MergeQueueBranchUpdateVerify(_ MergeQueueInput) ([]types.RuleViolations, error) {
-	if v.MergeQueue == nil {
-		return nil, nil
-	}
-	var violations types.RuleViolations
-	violations.Add(codeMergeQueueBranchUpdateVerify,
-		"Direct branch modification is not allowed: the branch has a merge queue configured.")
-	return []types.RuleViolations{violations}, nil
 }
 
 func (v MergeQueueSetup) IsActive() bool {

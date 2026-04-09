@@ -394,16 +394,6 @@ func (c *Controller) checkRefRules(
 		ruleViolations = append(ruleViolations, violations...)
 	}
 
-	if opType == enum.GitOpTypeGitPush || opType == enum.GitOpTypeAPIRefsOnly ||
-		opType == enum.GitOpTypeAPIContent || opType == enum.GitOpTypeAPIContentBypassRules {
-		violations, err := c.checkMergeQueueBranchUpdates(repo, refUpdates, branchProtection)
-		if err != nil {
-			return nil, fmt.Errorf("failed to verify if branch with merge queue is updated: %w", err)
-		}
-
-		ruleViolations = append(ruleViolations, violations...)
-	}
-
 	return ruleViolations, nil
 }
 
@@ -483,27 +473,6 @@ func (c *Controller) checkRefUpdatesRules(
 	}
 
 	return ruleViolations, nil
-}
-
-func (c *Controller) checkMergeQueueBranchUpdates(
-	repo *types.RepositoryCore,
-	refUpdates changedRefs,
-	branchProtection protection.BranchProtection,
-) ([]types.RuleViolations, error) {
-	var rulesViolations []types.RuleViolations
-	for _, branch := range refUpdates.branches.updated {
-		violations, err := branchProtection.MergeQueueBranchUpdateVerify(protection.MergeQueueInput{
-			Repo:         repo,
-			TargetBranch: branch,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to check existence of a merge queue for a branch: %w", err)
-		}
-
-		rulesViolations = append(rulesViolations, violations...)
-	}
-
-	return rulesViolations, nil
 }
 
 func processProtectionViolations(

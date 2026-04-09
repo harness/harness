@@ -39,7 +39,8 @@ type (
 	BranchProtection interface {
 		RefProtection
 		MergeVerifier
-		MergeQueueVerifier
+		MergeQueueBranchUpdateVerifier
+		MergeQueueSetupGetter
 		CreatePullReqVerifier
 		UserIDGetter
 	}

@@ -521,6 +521,97 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:   "no-merge-queue-update",
+			branch: Branch{},
+			in: RefChangeVerifyInput{
+				Actor:     user,
+				RefAction: RefActionUpdate,
+				RefType:   RefTypeBranch,
+				RefNames:  []string{"main"},
+				Repo:      &types.RepositoryCore{ID: 1},
+			},
+			expVs: []types.RuleViolations{},
+		},
+		{
+			name: "merge-queue-update-blocked",
+			branch: Branch{
+				PullReq: DefPullReq{
+					MergeQueue: &DefMergeQueue{
+						StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+						GroupSize:               5,
+						ChecksConcurrency:       3,
+						MaxCheckDurationSeconds: 600,
+					},
+				},
+			},
+			in: RefChangeVerifyInput{
+				Actor:     user,
+				RefAction: RefActionUpdate,
+				RefType:   RefTypeBranch,
+				RefNames:  []string{"main"},
+				Repo:      &types.RepositoryCore{ID: 1},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: false,
+					Bypassed:   false,
+					Violations: []types.Violation{
+						{Code: codeMergeQueueBranchUpdateVerify},
+					},
+				},
+			},
+		},
+		{
+			name: "merge-queue-force-update-blocked",
+			branch: Branch{
+				PullReq: DefPullReq{
+					MergeQueue: &DefMergeQueue{
+						StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+						GroupSize:               5,
+						ChecksConcurrency:       3,
+						MaxCheckDurationSeconds: 600,
+					},
+				},
+			},
+			in: RefChangeVerifyInput{
+				Actor:     user,
+				RefAction: RefActionUpdateForce,
+				RefType:   RefTypeBranch,
+				RefNames:  []string{"main"},
+				Repo:      &types.RepositoryCore{ID: 1},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: false,
+					Bypassed:   false,
+					Violations: []types.Violation{
+						{Code: codeMergeQueueBranchUpdateVerify},
+					},
+				},
+			},
+		},
+		{
+			name: "merge-queue-delete-not-blocked",
+			branch: Branch{
+				PullReq: DefPullReq{
+					MergeQueue: &DefMergeQueue{
+						StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+						GroupSize:               5,
+						ChecksConcurrency:       3,
+						MaxCheckDurationSeconds: 600,
+					},
+				},
+			},
+			in: RefChangeVerifyInput{
+				Actor:     user,
+				RefAction: RefActionDelete,
+				RefType:   RefTypeBranch,
+				RefNames:  []string{"main"},
+				Repo:      &types.RepositoryCore{ID: 1},
+			},
+			expVs: []types.RuleViolations{},
+		},
 	}
 
 	ctx := context.Background()

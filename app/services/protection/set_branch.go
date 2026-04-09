@@ -30,7 +30,9 @@ type branchRuleSet struct {
 	manager *Manager
 }
 
-var _ UserIDGetter = branchRuleSet{} // ensure that ruleSet implements the UserIDGetter interface.
+var (
+	_ BranchProtection = branchRuleSet{} // ensure that ruleSet implements the BranchProtection interface.
+)
 
 func (s branchRuleSet) MergeVerify(
 	ctx context.Context,
@@ -116,7 +118,7 @@ func (s branchRuleSet) RequiredChecks(
 	}, nil
 }
 
-func (s branchRuleSet) MergeQueueDefinition(in MergeQueueInput) (MergeQueueSetup, error) {
+func (s branchRuleSet) GetMergeQueueSetup(in MergeQueueSetupInput) (MergeQueueSetup, error) {
 	requiredIDMap := map[string]struct{}{}
 	var out MergeQueueSetup
 
@@ -126,7 +128,7 @@ func (s branchRuleSet) MergeQueueDefinition(in MergeQueueInput) (MergeQueueSetup
 		in.Repo.DefaultBranch,
 		in.TargetBranch,
 		func(_ *types.RuleInfoInternal, p BranchProtection) error {
-			setup, err := p.MergeQueueDefinition(in)
+			setup, err := p.GetMergeQueueSetup(in)
 			if err != nil {
 				return err
 			}
@@ -164,7 +166,7 @@ func (s branchRuleSet) MergeQueueDefinition(in MergeQueueInput) (MergeQueueSetup
 	return out, nil
 }
 
-func (s branchRuleSet) MergeQueueBranchUpdateVerify(in MergeQueueInput) ([]types.RuleViolations, error) {
+func (s branchRuleSet) MergeQueueBranchUpdateVerify(in MergeQueueBranchUpdateInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
 
 	err := s.forEachRuleMatchBranch(

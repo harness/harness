@@ -809,34 +809,42 @@ func sortEvaluations(approvals []*types.DefaultReviewerApprovalsResponse) {
 }
 
 //nolint:nestif
-func TestDefPullReq_MergeQueueBranchUpdateVerify(t *testing.T) {
+func TestDefMergeQueue_MergeQueueBranchUpdateVerify(t *testing.T) {
 	tests := []struct {
 		name         string
-		def          DefPullReq
+		def          *DefMergeQueue
 		wantViolated bool
 	}{
 		{
-			name:         "no-merge-queue",
-			def:          DefPullReq{},
+			name:         "nil",
+			def:          nil,
 			wantViolated: false,
 		},
 		{
-			name: "with-merge-queue",
-			def: DefPullReq{
-				MergeQueue: &DefMergeQueue{
-					StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
-					GroupSize:               5,
-					ChecksConcurrency:       3,
-					MaxCheckDurationSeconds: 600,
-				},
+			name: "with-required-identifiers",
+			def: &DefMergeQueue{
+				StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+				GroupSize:               5,
+				ChecksConcurrency:       3,
+				MaxCheckDurationSeconds: 600,
 			},
 			wantViolated: true,
+		},
+		{
+			name: "empty-identifiers",
+			def: &DefMergeQueue{
+				StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{}},
+				GroupSize:               5,
+				ChecksConcurrency:       3,
+				MaxCheckDurationSeconds: 600,
+			},
+			wantViolated: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			violations, err := tt.def.MergeQueueBranchUpdateVerify(MergeQueueInput{})
+			violations, err := tt.def.MergeQueueBranchUpdateVerify(MergeQueueBranchUpdateInput{})
 			if err != nil {
 				t.Errorf("got error: %s", err.Error())
 				return

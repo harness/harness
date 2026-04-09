@@ -474,7 +474,7 @@ func TestRuleSet_RequiredChecks(t *testing.T) {
 	}
 }
 
-func TestRuleSet_MergeQueueDefinition(t *testing.T) {
+func TestRuleSet_MergeQueueSetup(t *testing.T) {
 	tests := []struct {
 		name  string
 		rules []types.RuleInfoInternal
@@ -721,7 +721,7 @@ func TestRuleSet_MergeQueueDefinition(t *testing.T) {
 		return &Branch{}
 	})
 
-	in := MergeQueueInput{
+	in := MergeQueueSetupInput{
 		Repo:         &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 		TargetBranch: "main",
 	}
@@ -733,7 +733,7 @@ func TestRuleSet_MergeQueueDefinition(t *testing.T) {
 				manager: m,
 			}
 
-			got, err := set.MergeQueueDefinition(in)
+			got, err := set.GetMergeQueueSetup(in)
 			if err != nil {
 				t.Errorf("got error: %s", err.Error())
 				return
@@ -839,7 +839,7 @@ func TestRuleSet_MergeQueueBranchUpdateVerify(t *testing.T) {
 		return &Branch{}
 	})
 
-	in := MergeQueueInput{
+	in := MergeQueueBranchUpdateInput{
 		Repo:         &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
 		TargetBranch: "main",
 	}
