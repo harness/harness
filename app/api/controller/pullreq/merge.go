@@ -25,7 +25,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
-	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
@@ -195,11 +194,6 @@ func (c *Controller) Merge(
 		)
 	}
 
-	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load list of reviwers: %w", err)
-	}
-
 	// Use APIRefsOnly for PR merge - this updates the target branch reference.
 	targetWriteParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, targetRepo)
 	if err != nil {
@@ -241,30 +235,14 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 
-	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, in.SourceSHA)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to list status checks: %w", err)
-	}
-
-	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, targetRepo, pr, reviewers)
-	// check for error and ignore if it is codeowners file not found else throw error
-	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
-		return nil, nil, fmt.Errorf("CODEOWNERS evaluation failed: %w", err)
-	}
-
-	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
-		ResolveUserGroupIDs: c.userGroupService.ListUserIDsByGroupIDs,
-		MapUserGroupIDs:     c.userGroupService.MapGroupIDsToPrincipals,
-		Actor:               &session.Principal,
-		AllowBypass:         in.BypassRules,
-		IsRepoOwner:         isRepoOwner,
-		TargetRepo:          targetRepo,
-		SourceRepo:          sourceRepo,
-		PullReq:             pr,
-		Reviewers:           reviewers,
-		Method:              in.Method,
-		CheckResults:        checkResults,
-		CodeOwners:          codeOwnerWithApproval,
+	ruleOut, violations, err := c.mergeService.CheckRules(ctx, protectionRules, merge.CheckRulesInput{
+		PullReq:          pr,
+		TargetRepo:       targetRepo,
+		SourceRepo:       sourceRepo,
+		Actor:            &session.Principal,
+		IsRepoOwner:      isRepoOwner,
+		MergeMethod:      in.Method,
+		AllowBypassRules: in.BypassRules,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)

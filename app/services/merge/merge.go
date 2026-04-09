@@ -22,8 +22,6 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/bootstrap"
-	"github.com/harness/gitness/app/services/codeowners"
-	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
@@ -170,41 +168,19 @@ func (s *Service) Merge(
 		return nil, false, fmt.Errorf("failed to get pull request target branch: %w", err)
 	}
 
-	targetSHA := targetBranch.Branch.SHA
-
-	reviewers, err := s.reviewerStore.List(ctx, pr.ID)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to load list of reviwers: %w", err)
-	}
-
 	protectionRules, err := s.protectionManager.ListRepoBranchRules(ctx, pr.TargetRepoID)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
-	checkResults, err := s.checkStore.ListResults(ctx, pr.TargetRepoID, pr.SourceSHA)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to list status checks: %w", err)
-	}
-
-	codeOwnerWithApproval, err := s.codeOwners.Evaluate(ctx, targetRepo, pr, reviewers)
-	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
-		return nil, false, fmt.Errorf("CODEOWNERS evaluation failed: %w", err)
-	}
-
-	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
-		ResolveUserGroupIDs: s.userGroupService.ListUserIDsByGroupIDs,
-		MapUserGroupIDs:     s.userGroupService.MapGroupIDsToPrincipals,
-		Actor:               &input.Principal,
-		AllowBypass:         false,
-		IsRepoOwner:         false,
-		TargetRepo:          targetRepo,
-		SourceRepo:          sourceRepo,
-		PullReq:             pr,
-		Reviewers:           reviewers,
-		Method:              input.MergeMethod,
-		CheckResults:        checkResults,
-		CodeOwners:          codeOwnerWithApproval,
+	ruleOut, violations, err := s.CheckRules(ctx, protectionRules, CheckRulesInput{
+		PullReq:          pr,
+		TargetRepo:       targetRepo,
+		SourceRepo:       sourceRepo,
+		Actor:            &input.Principal,
+		IsRepoOwner:      false,
+		MergeMethod:      input.MergeMethod,
+		AllowBypassRules: false,
 	})
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to verify protection rules: %w", err)
@@ -223,6 +199,8 @@ func (s *Service) Merge(
 			(ruleOut.DeleteSourceBranch || input.DeleteBranch)
 
 	principalInfo := input.Principal.ToPrincipalInfo()
+
+	targetSHA := targetBranch.Branch.SHA
 
 	mergeInput, err := s.PreparePullReqMergeInput(
 		pr,
