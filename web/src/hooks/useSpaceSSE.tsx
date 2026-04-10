@@ -19,7 +19,6 @@ import { isEqual } from 'lodash-es'
 import { EventSourcePolyfill } from 'event-source-polyfill'
 import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
-import SessionToken from 'utils/SessionToken'
 
 type UseSpaceSSEProps = {
   space: string
@@ -34,7 +33,6 @@ const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = tru
   const { standalone, routingId } = useAppContext()
   const [events, setEvents] = useState(_events)
   const eventSourceRef = useRef<EventSource | null>(null)
-  const bearerToken = SessionToken.getToken()
 
   useEffect(() => {
     if (!isEqual(events, _events)) {
@@ -49,12 +47,12 @@ const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = tru
         const pathAndQuery = getConfig(
           `code/api/v1/spaces/${space}/+/events${standalone ? '' : `?routingId=${routingId}`}`
         )
-        const options: { heartbeatTimeout: number; headers?: { Authorization?: string } } = {
-          heartbeatTimeout: 999999999
-        }
-
-        if (!standalone) {
-          options.headers = { Authorization: `Bearer ${bearerToken}` }
+        const options: {
+          heartbeatTimeout: number
+          withCredentials: boolean
+        } = {
+          heartbeatTimeout: 999999999,
+          withCredentials: true
         }
 
         eventSourceRef.current = new EventSourcePolyfill(pathAndQuery, options)
@@ -94,7 +92,7 @@ const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = tru
         eventSourceRef.current = null
       }
     }
-  }, [space, events, shouldRun, onEvent, onError, routingId, standalone, bearerToken])
+  }, [space, events, shouldRun, onEvent, onError, routingId, standalone])
 }
 
 export enum SSEEvents {

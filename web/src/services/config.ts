@@ -16,7 +16,6 @@
 
 import qs, { IStringifyOptions } from 'qs'
 import { mapKeys } from 'lodash'
-import SessionToken from 'utils/SessionToken'
 
 export const getConfig = (str: string): string => {
   // 'code/api/v1' -> 'api/v1'       (standalone)
@@ -72,8 +71,9 @@ export const getUsingFetch = <
   const headers = getHeaders(props.requestOptions?.headers)
   return fetch(url, {
     signal,
+    credentials: 'same-origin',
     ...(props.requestOptions || {}),
-    headers // Include generated headers in the request
+    headers
   }).then(res => {
     const responseEvent = new CustomEvent('PROMISE_API_RESPONSE', { detail: { response: res } })
     window.dispatchEvent(responseEvent)
@@ -98,11 +98,6 @@ export const getUsingFetch = <
 const getHeaders = (headers: RequestInit['headers'] = {}): RequestInit['headers'] => {
   const retHeaders: RequestInit['headers'] = {
     'content-type': 'application/json'
-  }
-
-  const token = SessionToken.getToken()
-  if (token && token.length > 0) {
-    retHeaders.Authorization = `Bearer ${token}`
   }
 
   // add/overwrite passed headers

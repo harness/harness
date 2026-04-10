@@ -31,23 +31,3 @@ export function handle401() {
     window.location.href = signinUrl
   }
 }
-
-/**
- * Build Restful React Request Options.
- *
- * This function is an extension to configure HTTP headers before passing to Restful
- * React to make an API call. Customizations to fulfill the micro-frontend backend
- * service happen here.
- *
- * @param token API token
- * @returns Restful React RequestInit object.
- */
-export function buildRestfulReactRequestOptions(token?: string): Partial<RequestInit> {
-  const headers: RequestInit['headers'] = {}
-
-  if (token?.length) {
-    headers.Authorization = `Bearer ${token}`
-  }
-
-  return { headers }
-}

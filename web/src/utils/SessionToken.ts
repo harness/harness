@@ -8,7 +8,6 @@
 import SecureStorage from './SecureStorage'
 
 export default {
-  getToken: (): string => SecureStorage.get<string>('token') || '',
   username: (): string => SecureStorage.get<string>('username') || '',
   accountId: (): string => SecureStorage.get<string>('acctId') || '',
   getLastTokenSetTime: (): number | undefined => SecureStorage.get<number>('lastTokenSetTime'),

@@ -66,7 +66,6 @@ export interface AppProps {
   }
   /** React Hooks that Harness Platform passes down. Note: Pass only hooks that your app need */
   hooks: Partial<{
-    useGetToken: Unknown
     usePermissionTranslate: Unknown
     useGenerateToken: Unknown
     useExecutionDataHook: Unknown

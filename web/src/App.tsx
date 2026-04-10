@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import { RestfulProvider } from 'restful-react'
 import { IconoirProvider } from 'iconoir-react'
 import cx from 'classnames'
@@ -23,7 +23,7 @@ import { FocusStyleManager } from '@blueprintjs/core'
 import AppErrorBoundary from 'framework/AppErrorBoundary/AppErrorBoundary'
 import { AppContextProvider, defaultCurrentUser } from 'AppContext'
 import type { AppProps } from 'AppProps'
-import { buildRestfulReactRequestOptions, handle401 } from 'AppUtils'
+import { handle401 } from 'AppUtils'
 import { RouteDestinations } from 'RouteDestinations'
 import { routes as _routes } from 'RouteDefinitions'
 import { getConfig } from 'services/config'
@@ -54,10 +54,6 @@ const App: React.FC<AppProps> = React.memo(function App({
   accountInfo = {}
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
-  const getRequestOptions = useCallback(
-    (): Partial<RequestInit> => buildRestfulReactRequestOptions(hooks?.useGetToken?.() || ''),
-    [hooks]
-  )
   const routingId = useMemo(() => (standalone ? '' : space.split('/').shift() || ''), [standalone, space])
   const queryParams = useMemo(() => (!standalone ? { routingId } : {}), [standalone, routingId])
 
@@ -79,7 +75,6 @@ const App: React.FC<AppProps> = React.memo(function App({
             <AppErrorBoundary>
               <RestfulProvider
                 base={standalone ? '/' : getConfig('code')}
-                requestOptions={getRequestOptions}
                 queryParams={queryParams}
                 queryParamStringifyOptions={{ skipNulls: true }}
                 onResponse={response => {
