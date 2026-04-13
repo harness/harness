@@ -33,6 +33,7 @@ import (
 	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
@@ -88,6 +89,7 @@ type Controller struct {
 	userGroupService       usergroup.Service
 	branchStore            store.BranchStore
 	userGroupResolver      usergroup.Resolver
+	signatureVerifyService publickey.SignatureVerifyService
 }
 
 func NewController(
@@ -128,6 +130,7 @@ func NewController(
 	userGroupService usergroup.Service,
 	branchStore store.BranchStore,
 	userGroupResolver usergroup.Resolver,
+	signatureVerifyService publickey.SignatureVerifyService,
 ) *Controller {
 	return &Controller{
 		tx:                     tx,
@@ -167,6 +170,7 @@ func NewController(
 		userGroupService:       userGroupService,
 		branchStore:            branchStore,
 		userGroupResolver:      userGroupResolver,
+		signatureVerifyService: signatureVerifyService,
 	}
 }
 

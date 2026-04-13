@@ -32,7 +32,7 @@ func (c *Controller) Commits(
 	repoRef string,
 	pullreqNum int64,
 	filter *types.PaginationFilter,
-) ([]types.Commit, error) {
+) ([]*types.Commit, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
@@ -57,9 +57,14 @@ func (c *Controller) Commits(
 		return nil, err
 	}
 
-	commits := make([]types.Commit, len(output.Commits))
+	commits := make([]*types.Commit, len(output.Commits))
 	for i := range output.Commits {
-		commits[i] = *controller.MapCommit(&output.Commits[i])
+		commits[i] = controller.MapCommit(&output.Commits[i])
+	}
+
+	err = c.signatureVerifyService.VerifyCommits(ctx, repo.ID, commits)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify signature of commits: %w", err)
 	}
 
 	return commits, nil

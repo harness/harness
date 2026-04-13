@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
@@ -83,6 +84,7 @@ func ProvideController(
 	userGroupService usergroup.Service,
 	branchStore store.BranchStore,
 	userGroupResolver usergroup.Resolver,
+	signatureVerifyService publickey.SignatureVerifyService,
 ) *Controller {
 	return NewController(tx,
 		urlProvider,
@@ -121,5 +123,6 @@ func ProvideController(
 		userGroupService,
 		branchStore,
 		userGroupResolver,
+		signatureVerifyService,
 	)
 }
