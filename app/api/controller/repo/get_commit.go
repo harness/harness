@@ -46,5 +46,10 @@ func (c *Controller) GetCommit(ctx context.Context,
 
 	commit := controller.MapCommit(&rpcOut.Commit)
 
+	err = c.signatureVerifyService.VerifyCommits(ctx, repo.ID, []*types.Commit{commit})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify signature of commit: %w", err)
+	}
+
 	return commit, nil
 }
