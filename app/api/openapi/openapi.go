@@ -15,7 +15,10 @@
 package openapi
 
 import (
+	"reflect"
+
 	"github.com/harness/gitness/app/config"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/version"
 
 	"github.com/swaggest/openapi-go/openapi3"
@@ -41,6 +44,18 @@ func NewOpenAPIService() *OpenAPI {
 // to json or yaml, as needed.
 func (*OpenAPI) Generate() *openapi3.Spec {
 	reflector := openapi3.Reflector{}
+	reflector.InterceptDefName(func(t reflect.Type, defaultDefName string) string {
+		switch t {
+		case reflect.TypeFor[settings.GeneralSettings]():
+			return "ReposettingsGeneralSettings"
+		case reflect.TypeFor[settings.GeneralSettingsSpace]():
+			return "SpacesettingsGeneralSettings"
+		case reflect.TypeFor[settings.SecuritySettings]():
+			return "ReposettingsSecuritySettings"
+		default:
+			return defaultDefName
+		}
+	})
 	reflector.Spec = &openapi3.Spec{Openapi: "3.0.0"}
 	reflector.Spec.Info.
 		WithTitle("API Specification").
