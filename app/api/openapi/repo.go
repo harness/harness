@@ -1550,4 +1550,31 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opForkSyncBranch, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/fork-sync", opForkSyncBranch)
+
+	linkedCreate := openapi3.Operation{}
+	linkedCreate.WithTags("repository")
+	linkedCreate.WithMapOfAnything(map[string]any{"operationId": "linkedCreateRepository"})
+	linkedCreate.WithParameters(queryParameterSpacePath)
+	_ = reflector.SetRequest(&linkedCreate, &repo.LinkedCreateInput{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&linkedCreate, new(repo.RepositoryOutput), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&linkedCreate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&linkedCreate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&linkedCreate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&linkedCreate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/link", linkedCreate)
+
+	opLinkedSync := openapi3.Operation{}
+	opLinkedSync.WithTags("repository")
+	opLinkedSync.WithMapOfAnything(map[string]any{"operationId": "linkedSyncRepository"})
+	_ = reflector.SetRequest(&opLinkedSync, &struct {
+		repoRequest
+		repo.LinkedSyncInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opLinkedSync, new(repo.LinkedSyncOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opLinkedSync, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opLinkedSync, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opLinkedSync, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opLinkedSync, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opLinkedSync, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/linked/sync", opLinkedSync)
 }

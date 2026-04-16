@@ -2724,6 +2724,132 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/fork:
+    post:
+      operationId: forkCreate
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                fork_branch:
+                  type: string
+                identifier:
+                  type: string
+                parent_ref:
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoRepositoryOutput'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/fork-sync:
+    post:
+      operationId: forkSyncBranch
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                branch:
+                  type: string
+                branch_commit_sha:
+                  $ref: '#/components/schemas/ShaSHA'
+                branch_upstream:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesForkSyncOutput'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesForkSyncConflict'
+          description: Conflict
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/import-progress:
     get:
       operationId: importProgressRepository
@@ -3345,6 +3471,103 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TypesLabelValue'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/languages:
+    get:
+      operationId: getLanguages
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesRepoLangStat'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/linked/sync:
+    post:
+      operationId: linkedSyncRepository
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiLinkedSyncRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoLinkedSyncOutput'
           description: OK
         '400':
           content:
@@ -4982,6 +5205,7 @@ paths:
           schema:
             items:
               enum:
+                - auto-merge-unsupported-merge-method
                 - branch-delete
                 - branch-restore
                 - branch-update
@@ -4989,6 +5213,7 @@ paths:
                 - comment
                 - label-modify
                 - merge
+                - non-unique-merge-base
                 - review-submit
                 - reviewer-add
                 - reviewer-delete
@@ -5042,6 +5267,155 @@ paths:
                 items:
                   $ref: '#/components/schemas/TypesPullReqActivity'
                 type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/automerge:
+    delete:
+      operationId: prAutoMergeDisable
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+    get:
+      operationId: prAutoMergeGet
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesAutoMergeResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+    put:
+      operationId: prAutoMergeEnable
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                delete_source_branch:
+                  type: boolean
+                message:
+                  type: string
+                method:
+                  $ref: '#/components/schemas/EnumMergeMethod'
+                title:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesAutoMergeResponse'
           description: OK
         '400':
           content:
@@ -6747,12 +7121,6 @@ paths:
     get:
       operationId: getPullReqByBranches
       parameters:
-        - description: Source repository ref of the pull requests.
-          in: query
-          name: source_repo_ref
-          required: false
-          schema:
-            type: string
         - description: If true, the summary of check for the branch commit SHA would
             be included in the response.
           in: query
@@ -7498,7 +7866,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReposettingsGeneralSettings'
+                $ref: '#/components/schemas/SettingsGeneralSettings'
           description: OK
         '400':
           content:
@@ -7550,7 +7918,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReposettingsGeneralSettings'
+                $ref: '#/components/schemas/SettingsGeneralSettings'
           description: OK
         '400':
           content:
@@ -7598,7 +7966,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReposettingsSecuritySettings'
+                $ref: '#/components/schemas/SettingsSecuritySettings'
           description: OK
         '400':
           content:
@@ -7650,7 +8018,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReposettingsSecuritySettings'
+                $ref: '#/components/schemas/SettingsSecuritySettings'
           description: OK
         '400':
           content:
@@ -8642,6 +9010,55 @@ paths:
                   deprecated: true
                   type: string
               type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoRepositoryOutput'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/link:
+    post:
+      operationId: linkedCreateRepository
+      parameters:
+        - description: path of parent space (Not needed in standalone).
+          in: query
+          name: space_path
+          required: false
+          schema:
+            default: false
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiLinkedCreateRequest'
       responses:
         '201':
           content:
@@ -11542,6 +11959,106 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/settings/general:
+    get:
+      operationId: findSpaceGeneralSettings
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsGeneralSettingsSpace'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    patch:
+      operationId: updateSpaceGeneralSettings
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiGeneralSpaceSettingsRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsGeneralSettingsSpace'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/spaces:
     get:
       operationId: listSpaces
@@ -12996,6 +13513,10 @@ components:
         start_line:
           type: integer
       type: object
+    EnumAIAgent:
+      enum:
+        - claude-code
+      type: string
     EnumCIStatus:
       enum:
         - blocked
@@ -13257,6 +13778,7 @@ components:
       type: string
     EnumPullReqActivityType:
       enum:
+        - auto-merge-unsupported-merge-method
         - branch-delete
         - branch-restore
         - branch-update
@@ -13264,6 +13786,7 @@ components:
         - comment
         - label-modify
         - merge
+        - non-unique-merge-base
         - review-submit
         - reviewer-add
         - reviewer-delete
@@ -13299,9 +13822,16 @@ components:
         - merged
         - open
       type: string
+    EnumPullReqSubState:
+      enum:
+        - ''
+        - auto_merge
+      type: string
     EnumRepoState:
       nullable: true
       type: integer
+    EnumRepoType:
+      type: string
     EnumResolverType:
       type: string
     EnumResourceType:
@@ -13491,6 +14021,22 @@ components:
           $ref: '#/components/schemas/GitIdentity'
         when:
           format: date-time
+          type: string
+      type: object
+    HookReferenceUpdate:
+      properties:
+        new:
+          $ref: '#/components/schemas/ShaSHA'
+        old:
+          $ref: '#/components/schemas/ShaSHA'
+        ref:
+          type: string
+      type: object
+    ImporterConnectorDef:
+      properties:
+        identifier:
+          type: string
+        path:
           type: string
       type: object
     ImporterPipelineOption:
@@ -13707,6 +14253,11 @@ components:
       type: object
     OpenapiCreateGitspaceRequest:
       properties:
+        ai_agents:
+          items:
+            $ref: '#/components/schemas/EnumAIAgent'
+          nullable: true
+          type: array
         branch:
           type: string
         code_repo_ref:
@@ -13812,6 +14363,10 @@ components:
           type: string
         enabled:
           type: boolean
+        extra_headers:
+          items:
+            $ref: '#/components/schemas/TypesExtraHeader'
+          type: array
         identifier:
           type: string
         insecure:
@@ -13835,8 +14390,6 @@ components:
           type: string
         description:
           type: string
-        fork_id:
-          type: integer
         git_ignore:
           type: string
         identifier:
@@ -13849,6 +14402,8 @@ components:
           type: string
         readme:
           type: boolean
+        tags:
+          $ref: '#/components/schemas/TypesRepoTags'
         uid:
           deprecated: true
           type: string
@@ -13889,6 +14444,10 @@ components:
           type: string
         enabled:
           type: boolean
+        extra_headers:
+          items:
+            $ref: '#/components/schemas/TypesExtraHeader'
+          type: array
         identifier:
           type: string
         insecure:
@@ -13980,6 +14539,9 @@ components:
       type: object
     OpenapiGeneralSettingsRequest:
       properties:
+        auto_merge_enabled:
+          nullable: true
+          type: boolean
         file_size_limit:
           description: file size limit in bytes
           nullable: true
@@ -13987,6 +14549,13 @@ components:
         git_lfs_enabled:
           nullable: true
           type: boolean
+      type: object
+    OpenapiGeneralSpaceSettingsRequest:
+      properties:
+        default_branch:
+          description: default branch name
+          nullable: true
+          type: string
       type: object
     OpenapiGetContentOutput:
       properties:
@@ -14005,12 +14574,35 @@ components:
       type: object
     OpenapiImportRepositoriesRequest:
       properties:
+        include_subgroups_repos:
+          type: boolean
         pipelines:
           $ref: '#/components/schemas/ImporterPipelineOption'
         provider:
           $ref: '#/components/schemas/ImporterProvider'
         provider_space:
           type: string
+      type: object
+    OpenapiLinkedCreateRequest:
+      properties:
+        connector:
+          $ref: '#/components/schemas/ImporterConnectorDef'
+        description:
+          type: string
+        identifier:
+          type: string
+        is_public:
+          type: boolean
+        parent_ref:
+          type: string
+      type: object
+    OpenapiLinkedSyncRequest:
+      properties:
+        branches:
+          items:
+            type: string
+          nullable: true
+          type: array
       type: object
     OpenapiLoginRequest:
       properties:
@@ -14030,6 +14622,8 @@ components:
       type: object
     OpenapiMergePullReq:
       properties:
+        bypass_message:
+          type: string
         bypass_rules:
           type: boolean
         delete_source_branch:
@@ -14063,6 +14657,9 @@ components:
     OpenapiMoveSpaceRequest:
       properties:
         identifier:
+          nullable: true
+          type: string
+        parent_ref:
           nullable: true
           type: string
         uid:
@@ -14264,14 +14861,11 @@ components:
           type: string
         state:
           $ref: '#/components/schemas/EnumRepoState'
+        tags:
+          $ref: '#/components/schemas/TypesRepoTags'
       type: object
     OpenapiUpdateRepoWebhookRequest:
       properties:
-        extra_headers:
-          items:
-            $ref: '#/components/schemas/TypesExtraHeader'
-          nullable: true
-          type: array
         description:
           nullable: true
           type: string
@@ -14281,6 +14875,10 @@ components:
         enabled:
           nullable: true
           type: boolean
+        extra_headers:
+          items:
+            $ref: '#/components/schemas/TypesExtraHeader'
+          type: array
         identifier:
           nullable: true
           type: string
@@ -14341,6 +14939,10 @@ components:
         enabled:
           nullable: true
           type: boolean
+        extra_headers:
+          items:
+            $ref: '#/components/schemas/TypesExtraHeader'
+          type: array
         identifier:
           nullable: true
           type: string
@@ -14414,17 +15016,16 @@ components:
           type: integer
         created_by:
           type: integer
-        extra_headers:
-          items:
-            $ref: '#/components/schemas/TypesExtraHeader'
-          nullable: true
-          type: array
         description:
           type: string
         display_name:
           type: string
         enabled:
           type: boolean
+        extra_headers:
+          items:
+            $ref: '#/components/schemas/TypesExtraHeader'
+          type: array
         has_secret:
           type: boolean
         id:
@@ -14510,10 +15111,23 @@ components:
           type: boolean
         delete_branch:
           type: boolean
+        require_bypass_message:
+          type: boolean
         strategies_allowed:
           items:
             $ref: '#/components/schemas/EnumMergeMethod'
           type: array
+      type: object
+    ProtectionDefMergeQueue:
+      properties:
+        checks_concurrency:
+          type: integer
+        group_size:
+          type: integer
+        max_check_duration_seconds:
+          type: integer
+        status_checks:
+          $ref: '#/components/schemas/ProtectionDefStatusChecks'
       type: object
     ProtectionDefPullReq:
       properties:
@@ -14523,6 +15137,8 @@ components:
           $ref: '#/components/schemas/ProtectionDefComments'
         merge:
           $ref: '#/components/schemas/ProtectionDefMerge'
+        merge_queue:
+          $ref: '#/components/schemas/ProtectionDefMergeQueue'
         reviewers:
           $ref: '#/components/schemas/ProtectionDefReviewers'
         status_checks:
@@ -14693,6 +15309,14 @@ components:
         size:
           type: integer
       type: object
+    RepoLinkedSyncOutput:
+      properties:
+        branches:
+          items:
+            $ref: '#/components/schemas/HookReferenceUpdate'
+          nullable: true
+          type: array
+      type: object
     RepoListPathsOutput:
       properties:
         directories:
@@ -14754,6 +15378,8 @@ components:
           type: boolean
         is_public:
           type: boolean
+        language:
+          type: string
         last_git_push:
           type: integer
         num_closed_pulls:
@@ -14770,6 +15396,8 @@ components:
           type: integer
         path:
           type: string
+        repo_type:
+          $ref: '#/components/schemas/EnumRepoType'
         size:
           description: size of the repository in KiB
           type: integer
@@ -14780,8 +15408,11 @@ components:
           type: integer
         state:
           $ref: '#/components/schemas/EnumRepoState'
+        tags: {}
         updated:
           type: integer
+        upstream:
+          $ref: '#/components/schemas/TypesRepositoryCore'
       type: object
     RepoSoftDeleteResponse:
       properties:
@@ -14802,25 +15433,6 @@ components:
         target:
           type: string
       type: object
-    ReposettingsGeneralSettings:
-      properties:
-        file_size_limit:
-          description: file size limit in bytes
-          nullable: true
-          type: integer
-        git_lfs_enabled:
-          nullable: true
-          type: boolean
-      type: object
-    ReposettingsSecuritySettings:
-      properties:
-        principal_committer_match:
-          nullable: true
-          type: boolean
-        secret_scanning_enabled:
-          nullable: true
-          type: boolean
-      type: object
     ScmCodeRepositoryResponse:
       properties:
         branch:
@@ -14829,6 +15441,35 @@ components:
           type: boolean
         url:
           type: string
+      type: object
+    SettingsGeneralSettings:
+      properties:
+        auto_merge_enabled:
+          nullable: true
+          type: boolean
+        file_size_limit:
+          description: file size limit in bytes
+          nullable: true
+          type: integer
+        git_lfs_enabled:
+          nullable: true
+          type: boolean
+      type: object
+    SettingsGeneralSettingsSpace:
+      properties:
+        default_branch:
+          description: default branch name
+          nullable: true
+          type: string
+      type: object
+    SettingsSecuritySettings:
+      properties:
+        principal_committer_match:
+          nullable: true
+          type: boolean
+        secret_scanning_enabled:
+          nullable: true
+          type: boolean
       type: object
     ShaSHA:
       description: Git object hash
@@ -14847,6 +15488,8 @@ components:
           type: string
         identifier:
           type: string
+        include_subgroups_repos:
+          type: boolean
         is_public:
           type: boolean
         parent_ref:
@@ -14921,13 +15564,21 @@ components:
     TimeDuration:
       nullable: true
       type: integer
-    TypesExtraHeader:
+    TypesAutoMergeResponse:
       properties:
-        key:
-          type: string
-        masked:
+        created:
+          type: integer
+        delete_branch:
           type: boolean
-        value:
+        merge_method:
+          $ref: '#/components/schemas/EnumMergeMethod'
+        merge_response:
+          $ref: '#/components/schemas/TypesMergeResponse'
+        message:
+          type: string
+        requested_by:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        title:
           type: string
       type: object
     TypesBasicAuthCreds:
@@ -15409,6 +16060,15 @@ components:
         trigger:
           type: string
       type: object
+    TypesExtraHeader:
+      properties:
+        key:
+          type: string
+        masked:
+          type: boolean
+        value:
+          type: string
+      type: object
     TypesFavoriteResource:
       properties:
         resource_id:
@@ -15422,6 +16082,23 @@ components:
           $ref: '#/components/schemas/ShaSHA'
         path:
           type: string
+      type: object
+    TypesForkSyncConflict:
+      properties:
+        conflict_files:
+          items:
+            type: string
+          nullable: true
+          type: array
+        message:
+          type: string
+      type: object
+    TypesForkSyncOutput:
+      properties:
+        already_ancestor:
+          type: boolean
+        new_commit_sha:
+          $ref: '#/components/schemas/ShaSHA'
       type: object
     TypesGitSignatureResult:
       nullable: true
@@ -15450,6 +16127,10 @@ components:
       type: object
     TypesGitspaceConfig:
       properties:
+        ai_agents:
+          items:
+            $ref: '#/components/schemas/EnumAIAgent'
+          type: array
         branch:
           type: string
         branch_url:
@@ -15839,6 +16520,8 @@ components:
           type: integer
         minimum_required_approvals_count_latest:
           type: integer
+        requires_bypass_message:
+          type: boolean
         requires_code_owners_approval:
           type: boolean
         requires_code_owners_approval_latest:
@@ -16034,7 +16717,10 @@ components:
           type: array
         source_branch:
           type: string
+        source_repo:
+          $ref: '#/components/schemas/TypesRepositoryCore'
         source_repo_id:
+          nullable: true
           type: integer
         source_sha:
           type: string
@@ -16042,6 +16728,8 @@ components:
           $ref: '#/components/schemas/EnumPullReqState'
         stats:
           $ref: '#/components/schemas/TypesPullReqStats'
+        substate:
+          $ref: '#/components/schemas/EnumPullReqSubState'
         target_branch:
           type: string
         target_repo_id:
@@ -16263,11 +16951,19 @@ components:
         old_path:
           type: string
       type: object
-    TypesRepositoryCore:
+    TypesRepoLangStat:
+      type: object
+    TypesRepoTags:
+      additionalProperties:
+        type: string
       nullable: true
+      type: object
+    TypesRepositoryCore:
       properties:
         default_branch:
           type: string
+        fork_id:
+          type: integer
         id:
           type: integer
         identifier:
@@ -16276,6 +16972,8 @@ components:
           type: integer
         path:
           type: string
+        type:
+          $ref: '#/components/schemas/EnumRepoType'
       type: object
     TypesRepositoryPullReqSummary:
       properties:
@@ -16312,6 +17010,8 @@ components:
           $ref: '#/components/schemas/TypesPrincipalInfo'
         sha:
           type: string
+        updated:
+          type: integer
       type: object
     TypesRuleInfo:
       properties:
