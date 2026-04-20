@@ -54,6 +54,7 @@ type Hook struct {
 	Cron         string            `json:"cron"`
 	Sender       string            `json:"sender"`
 	Params       map[string]string `json:"params"`
+	Stages       []string          `json:"stages,omitempty"`
 }
 
 // HookService manages post-commit hooks in the external

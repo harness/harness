@@ -221,7 +221,7 @@ func (s Server) Handler() http.Handler {
 
 				r.With(
 					acl.CheckWriteAccess(),
-				).Post("/{number}", builds.HandleRetry(s.Repos, s.Builds, s.Triggerer))
+				).Post("/{number}", builds.HandleRetry(s.Repos, s.Builds, s.Stages, s.Triggerer))
 
 				r.With(
 					acl.CheckWriteAccess(),

@@ -327,6 +327,25 @@ func (t *triggerer) Trigger(ctx context.Context, repo *core.Repository, base *co
 		}
 	}
 
+	if len(base.Stages) > 0 {
+		allowed := make(map[string]bool, len(base.Stages))
+		for _, s := range base.Stages {
+			allowed[s] = true
+		}
+		var filtered []*yaml.Pipeline
+		for _, p := range matched {
+			if allowed[p.Name] {
+				filtered = append(filtered, p)
+			} else {
+				if node, ok := dag.Get(p.Name); ok {
+					node.Skip = true
+				}
+				logger.WithField("pipeline", p.Name).Infoln("trigger: skipping pipeline, not in requested stages")
+			}
+		}
+		matched = filtered
+	}
+
 	if dag.DetectCycles() {
 		return t.createBuildError(ctx, repo, base, "Error: Dependency cycle detected in Pipeline")
 	}
