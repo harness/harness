@@ -204,6 +204,10 @@ var migrations = []struct {
 		name: "create-new-table-cards",
 		stmt: createNewTableCards,
 	},
+	{
+		name: "alter-table-builds-alter-column-deploy-id",
+		stmt: alterTableBuildsAlterColumnDeployId,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -790,4 +794,15 @@ CREATE TABLE IF NOT EXISTS cards
     card_data BLOB,
     FOREIGN KEY (card_id) REFERENCES steps (step_id) ON DELETE CASCADE
 );
+`
+
+//
+// 019_amend_column_builds_deploy_id.sql
+//
+
+var alterTableBuildsAlterColumnDeployId = `
+ALTER TABLE builds
+ALTER COLUMN build_deploy_id SET DATA TYPE BIGINT,
+ALTER COLUMN build_deploy_id SET NOT NULL,
+ALTER COLUMN build_deploy_id SET DEFAULT 0;
 `
