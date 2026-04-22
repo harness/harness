@@ -55,6 +55,13 @@ func (c *Controller) GetBranch(ctx context.Context,
 		return nil, fmt.Errorf("failed to map branch: %w", err)
 	}
 
+	if branch.Commit != nil {
+		err = c.signatureVerifyService.VerifyCommits(ctx, repo.ID, []*types.Commit{branch.Commit})
+		if err != nil {
+			return nil, fmt.Errorf("failed to verify signature of branch commit: %w", err)
+		}
+	}
+
 	branchExtended := &types.BranchExtended{
 		Branch:    branch,
 		IsDefault: branchName == repo.DefaultBranch,
