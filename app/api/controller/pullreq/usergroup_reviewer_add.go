@@ -114,7 +114,7 @@ func (c *Controller) UserGroupReviewerAdd(
 		return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
 	}
 
-	c.reportUserGroupReviewerAdded(ctx, &session.Principal, pr, userGroupReviewer.UserGroupID)
+	c.reportUserGroupReviewerAdded(ctx, &session.Principal, pr, []int64{userGroupReviewer.UserGroupID}, userIDs)
 
 	err = func() error {
 		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
@@ -153,13 +153,15 @@ func (c *Controller) reportUserGroupReviewerAdded(
 	ctx context.Context,
 	principal *types.Principal,
 	pr *types.PullReq,
-	userGroupReviewerID int64,
+	userGroupReviewerIDs []int64,
+	reviewerIDs []int64,
 ) {
 	c.eventReporter.UserGroupReviewerAdded(
 		ctx,
 		&events.UserGroupReviewerAddedPayload{
-			Base:                eventBase(pr, principal),
-			UserGroupReviewerID: userGroupReviewerID,
+			Base:                 eventBase(pr, principal),
+			UserGroupReviewerIDs: userGroupReviewerIDs,
+			ReviewerIDs:          reviewerIDs,
 		},
 	)
 }

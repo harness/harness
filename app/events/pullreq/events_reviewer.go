@@ -34,7 +34,8 @@ type ReviewerAddedPayload struct {
 
 type UserGroupReviewerAddedPayload struct {
 	Base
-	UserGroupReviewerID int64 `json:"usergroup_reviewer_id"`
+	UserGroupReviewerIDs []int64 `json:"usergroup_reviewer_ids,omitempty"`
+	ReviewerIDs          []int64 `json:"reviewer_ids,omitempty"`
 }
 
 func (r *Reporter) ReviewerAdded(
@@ -82,6 +83,5 @@ func (r *Reader) RegisterUserGroupReviewerAdded(
 	fn events.HandlerFunc[*UserGroupReviewerAddedPayload],
 	opts ...events.HandlerOption,
 ) error {
-	// TODO: Start using this for sending out notifications
 	return events.ReaderRegisterEvent(r.innerReader, UserGroupReviewerAdded, fn, opts...)
 }

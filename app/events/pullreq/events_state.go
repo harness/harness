@@ -27,10 +27,11 @@ const CreatedEvent events.EventType = "created"
 
 type CreatedPayload struct {
 	Base
-	SourceBranch string  `json:"source_branch"`
-	TargetBranch string  `json:"target_branch"`
-	SourceSHA    string  `json:"source_sha"`
-	ReviewerIDs  []int64 `json:"reviewer_ids"`
+	SourceBranch         string  `json:"source_branch"`
+	TargetBranch         string  `json:"target_branch"`
+	SourceSHA            string  `json:"source_sha"`
+	ReviewerIDs          []int64 `json:"reviewer_ids"`
+	UserGroupReviewerIDs []int64 `json:"usergroup_reviewer_ids,omitempty"`
 }
 
 func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {

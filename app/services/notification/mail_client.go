@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	TemplateReviewerAdded        = "reviewer_added.html"
-	TemplateCommentPRAuthor      = "comment_pr_author.html"
-	TemplateCommentMentions      = "comment_mentions.html"
-	TemplateCommentParticipants  = "comment_participants.html"
-	TemplatePullReqBranchUpdated = "pullreq_branch_updated.html"
-	TemplateNameReviewSubmitted  = "review_submitted.html"
-	TemplatePullReqStateChanged  = "pullreq_state_changed.html"
+	TemplateReviewerAdded          = "reviewer_added.html"
+	TemplateUserGroupReviewerAdded = "usergroup_reviewer_added.html"
+	TemplateCommentPRAuthor        = "comment_pr_author.html"
+	TemplateCommentMentions        = "comment_mentions.html"
+	TemplateCommentParticipants    = "comment_participants.html"
+	TemplatePullReqBranchUpdated   = "pullreq_branch_updated.html"
+	TemplateNameReviewSubmitted    = "review_submitted.html"
+	TemplatePullReqStateChanged    = "pullreq_state_changed.html"
 )
 
 type MailClient struct {
@@ -113,6 +114,25 @@ func (m MailClient) SendReviewerAdded(
 	if err != nil {
 		return fmt.Errorf("failed to generate mail requests after processing %s event: %w",
 			pullreqevents.ReviewerAddedEvent, err)
+	}
+
+	return m.Mailer.Send(ctx, *email)
+}
+
+func (m MailClient) SendUserGroupReviewerAdded(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *UserGroupReviewerAddedPayload,
+) error {
+	email, err := GenerateEmailFromPayload(
+		TemplateUserGroupReviewerAdded,
+		recipients,
+		payload.Base,
+		payload,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate mail requests after processing %s event: %w",
+			pullreqevents.UserGroupReviewerAdded, err)
 	}
 
 	return m.Mailer.Send(ctx, *email)

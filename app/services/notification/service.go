@@ -141,6 +141,7 @@ func NewService(
 			_ = r.RegisterCreated(service.notifyPullReqCreated)
 
 			_ = r.RegisterReviewerAdded(service.notifyReviewerAdded)
+			_ = r.RegisterUserGroupReviewerAdded(service.notifyUserGroupReviewerAdded)
 			_ = r.RegisterCommentCreated(service.notifyCommentCreated)
 			_ = r.RegisterBranchUpdated(service.notifyPullReqBranchUpdated)
 			_ = r.RegisterReviewSubmitted(service.notifyReviewSubmitted)

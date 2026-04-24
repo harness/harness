@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+<p>
+  {{if gt .ReviewerCount 1}}
+  <b>{{.ReviewerNames}}</b> were added as reviewers for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{else}}
+  <b>{{.ReviewerNames}}</b> was added as a reviewer for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{end}}
+</p>
+<p>
+  <a href="{{.Base.PullReqURL}}">View pull request #{{.Base.PullReq.Number}}</a>
+</p>
+</body>
+</html>

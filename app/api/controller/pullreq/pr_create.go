@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -410,12 +411,15 @@ func (c *Controller) Create(
 	c.storeLabelAssignActivity(ctx, pr, session.Principal.ID, labelAssignOuts)
 
 	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
-		Base:         eventBase(pr, &session.Principal),
-		SourceBranch: in.SourceBranch,
-		TargetBranch: in.TargetBranch,
-		SourceSHA:    sourceSHA.String(),
-		ReviewerIDs:  maps.Keys(userReviewerMap),
+		Base:                 eventBase(pr, &session.Principal),
+		SourceBranch:         in.SourceBranch,
+		TargetBranch:         in.TargetBranch,
+		SourceSHA:            sourceSHA.String(),
+		ReviewerIDs:          maps.Keys(userReviewerMap),
+		UserGroupReviewerIDs: maps.Keys(userGroupReviewerMap),
 	})
+
+	c.notifyUserGroupReviewersAdded(ctx, session, pr, userGroupReviewerMap)
 
 	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
@@ -607,6 +611,47 @@ func (c *Controller) getCodeOwnerReviewers(
 	return userMap, userGroupMap, nil
 }
 
+func (c *Controller) notifyUserGroupReviewersAdded(
+	ctx context.Context,
+	session *auth.Session,
+	pr *types.PullReq,
+	userGroupReviewerMap map[int64]*types.UserGroup,
+) {
+	if len(userGroupReviewerMap) == 0 {
+		return
+	}
+
+	var userUIDs []string
+	for _, userGroup := range userGroupReviewerMap {
+		userUIDs = append(userUIDs, userGroup.Users...)
+	}
+	slices.Sort(userUIDs)
+	userUIDs = slices.Compact(userUIDs)
+
+	principals, err := c.principalStore.FindManyByUID(ctx, userUIDs)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to find group members by UID for reviewer notifications")
+		return
+	}
+
+	principalIDs := make([]int64, 0, len(principals))
+	for _, member := range principals {
+		if member.ID == session.Principal.ID {
+			continue
+		}
+
+		principalIDs = append(principalIDs, member.ID)
+	}
+
+	if len(principalIDs) == 0 {
+		return
+	}
+
+	c.reportUserGroupReviewerAdded(
+		ctx, &session.Principal, pr, maps.Keys(userGroupReviewerMap), principalIDs,
+	)
+}
+
 func (c *Controller) getDefaultReviewers(
 	ctx context.Context,
 	sessionPrincipalID int64,
@@ -628,6 +673,18 @@ func (c *Controller) getDefaultReviewers(
 		userGroupMap, err = c.userGroupStore.FindManyByIDs(ctx, defaultGroupReviewerIDs)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to find user group reviewers by ids: %w", err)
+		}
+
+		for _, userGroup := range userGroupMap {
+			ug, err := c.userGroupResolver.Resolve(ctx, userGroup.Identifier)
+			if errors.Is(err, usergroup.ErrNotFound) {
+				log.Ctx(ctx).Warn().Msgf("user group %q not found, skipping", userGroup.Identifier)
+				continue
+			}
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to resolve user group %q: %w", userGroup.Identifier, err)
+			}
+			userGroupMap[userGroup.ID] = ug
 		}
 	}
 
