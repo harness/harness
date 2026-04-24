@@ -1011,4 +1011,31 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opAutoMergeGet, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/automerge", opAutoMergeGet)
+
+	opMergeQueueEnable := openapi3.Operation{}
+	opMergeQueueEnable.WithTags("pullreq")
+	opMergeQueueEnable.WithMapOfAnything(map[string]any{"operationId": "prMergeQueueEnable"})
+	_ = reflector.SetRequest(&opMergeQueueEnable, new(struct {
+		pullReqRequest
+		pullreq.MergeQueueEnableInput
+	}), http.MethodPut)
+	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/mergequeue", opMergeQueueEnable)
+
+	opMergeQueueRemove := openapi3.Operation{}
+	opMergeQueueRemove.WithTags("pullreq")
+	opMergeQueueRemove.WithMapOfAnything(map[string]any{"operationId": "prMergeQueueRemove"})
+	_ = reflector.SetRequest(&opMergeQueueRemove, new(pullReqRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opMergeQueueRemove, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opMergeQueueRemove, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opMergeQueueRemove, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMergeQueueRemove, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMergeQueueRemove, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/mergequeue", opMergeQueueRemove)
 }

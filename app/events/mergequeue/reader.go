@@ -12,34 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package events
 
-type RefType int
-
-const (
-	RefTypeRaw RefType = iota
-	RefTypeBranch
-	RefTypeTag
-	RefTypePullReqHead
-	RefTypePullReqMerge
-	RefTypePullReqMergeQueue
+import (
+	"github.com/harness/gitness/events"
 )
 
-func (t RefType) String() string {
-	switch t {
-	case RefTypeRaw:
-		return "raw"
-	case RefTypeBranch:
-		return "branch"
-	case RefTypeTag:
-		return "tag"
-	case RefTypePullReqHead:
-		return "head"
-	case RefTypePullReqMerge:
-		return "merge"
-	case RefTypePullReqMergeQueue:
-		return "merge_queue"
-	default:
-		return ""
+func NewReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	readerFactoryFunc := func(innerReader *events.GenericReader) (*Reader, error) {
+		return &Reader{
+			innerReader: innerReader,
+		}, nil
 	}
+
+	return events.NewReaderFactory(eventsSystem, category, readerFactoryFunc)
+}
+
+// Reader is the event reader for this package.
+type Reader struct {
+	innerReader *events.GenericReader
+}
+
+func (r *Reader) Configure(opts ...events.ReaderOption) {
+	r.innerReader.Configure(opts...)
 }

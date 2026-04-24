@@ -743,6 +743,10 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Delete("/", handlerpullreq.HandleAutoMergeDisable(pullreqCtrl))
 				r.Get("/", handlerpullreq.HandleAutoMergeGet(pullreqCtrl))
 			})
+			r.Route("/mergequeue", func(r chi.Router) {
+				r.Put("/", handlerpullreq.HandleMergeQueueEnable(pullreqCtrl))
+				r.Delete("/", handlerpullreq.HandleMergeQueueRemove(pullreqCtrl))
+			})
 
 			setupPullReqLabels(r, pullreqCtrl)
 		})

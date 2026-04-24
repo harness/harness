@@ -54,6 +54,9 @@ const (
 	SSETypePullReqAutoMergeEnabled  SSEType = "pullreq_auto_merge_enabled"
 	SSETypePullReqAutoMergeDisabled SSEType = "pullreq_auto_merge_disabled"
 
+	SSETypePullReqMergeQueueEnabled SSEType = "pullreq_merge_queue_enabled"
+	SSETypePullReqMergeQueueRemoved SSEType = "pullreq_merge_queue_removed"
+
 	// Branches.
 
 	SSETypeBranchMergableUpdated SSEType = "branch_mergable_updated"

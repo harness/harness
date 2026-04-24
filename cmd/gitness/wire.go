@@ -60,6 +60,7 @@ import (
 	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"
 	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
 	gitspaceoperationsevents "github.com/harness/gitness/app/events/gitspaceoperations"
+	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	pipelineevents "github.com/harness/gitness/app/events/pipeline"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
@@ -106,6 +107,7 @@ import (
 	"github.com/harness/gitness/app/services/languageanalyzer"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
+	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/metric"
 	migrateservice "github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
@@ -194,6 +196,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		reposettings.WireSet,
 		pullreq.WireSet,
 		merge.WireSet,
+		mergequeue.WireSet,
+		mergequeueevents.WireSet,
 		controllerwebhook.WireSet,
 		controllerwebhook.ProvidePreprocessor,
 		svclabel.WireSet,

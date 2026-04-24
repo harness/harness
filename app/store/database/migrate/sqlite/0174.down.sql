@@ -1,0 +1,7 @@
+DROP INDEX idx_merge_queue_entries_queue_id_order_index;
+DROP INDEX idx_merge_queue_entries_merge_commit_sha;
+DROP INDEX idx_merge_queue_entries_merge_deadline;
+DROP TABLE merge_queue_entries;
+
+DROP INDEX idx_merge_queues_repo_id_branch_name;
+DROP TABLE merge_queues;

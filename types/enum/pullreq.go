@@ -49,13 +49,15 @@ func GetAllPullReqSubStates() ([]PullReqSubState, PullReqSubState) { return pull
 
 // PullReqSubState enumeration.
 const (
-	PullReqSubStateNone      PullReqSubState = ""
-	PullReqSubStateAutoMerge PullReqSubState = "auto_merge"
+	PullReqSubStateNone       PullReqSubState = ""
+	PullReqSubStateAutoMerge  PullReqSubState = "auto_merge"
+	PullReqSubStateMergeQueue PullReqSubState = "merge_queue"
 )
 
 var pullReqSubStates = sortEnum([]PullReqSubState{
 	PullReqSubStateNone,
 	PullReqSubStateAutoMerge,
+	PullReqSubStateMergeQueue,
 })
 
 // PullReqSort defines pull request attribute that can be used for sorting.
@@ -115,6 +117,8 @@ const (
 	PullReqActivityTypeLabelModify                     PullReqActivityType = "label-modify"
 	PullReqActivityTypeNonUniqueMergeBase              PullReqActivityType = "non-unique-merge-base"
 	PullReqActivityTypeAutoMergeUnsupportedMergeMethod PullReqActivityType = "auto-merge-unsupported-merge-method"
+	PullReqActivityTypeMergeQueueAdd                   PullReqActivityType = "merge-queue-added"
+	PullReqActivityTypeMergeQueueRemove                PullReqActivityType = "merge-queue-removed"
 )
 
 var pullReqActivityTypes = sortEnum([]PullReqActivityType{
@@ -135,6 +139,8 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeLabelModify,
 	PullReqActivityTypeNonUniqueMergeBase,
 	PullReqActivityTypeAutoMergeUnsupportedMergeMethod,
+	PullReqActivityTypeMergeQueueAdd,
+	PullReqActivityTypeMergeQueueRemove,
 })
 
 // PullReqActivityKind defines kind of pull request activity system message.

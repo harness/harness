@@ -12,34 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package events
 
-type RefType int
+import (
+	"github.com/harness/gitness/events"
 
-const (
-	RefTypeRaw RefType = iota
-	RefTypeBranch
-	RefTypeTag
-	RefTypePullReqHead
-	RefTypePullReqMerge
-	RefTypePullReqMergeQueue
+	"github.com/google/wire"
 )
 
-func (t RefType) String() string {
-	switch t {
-	case RefTypeRaw:
-		return "raw"
-	case RefTypeBranch:
-		return "branch"
-	case RefTypeTag:
-		return "tag"
-	case RefTypePullReqHead:
-		return "head"
-	case RefTypePullReqMerge:
-		return "merge"
-	case RefTypePullReqMergeQueue:
-		return "merge_queue"
-	default:
-		return ""
-	}
+// WireSet provides a wire set for this package.
+var WireSet = wire.NewSet(
+	ProvideReaderFactory,
+	ProvideReporter,
+)
+
+func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	return NewReaderFactory(eventsSystem)
+}
+
+func ProvideReporter(eventsSystem *events.System) (*Reporter, error) {
+	return NewReporter(eventsSystem)
 }

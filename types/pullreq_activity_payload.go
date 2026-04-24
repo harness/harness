@@ -251,3 +251,19 @@ type PullRequestActivityPayloadAutoMergeDisabled struct {
 func (a *PullRequestActivityPayloadAutoMergeDisabled) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeAutoMergeUnsupportedMergeMethod
 }
+
+type PullRequestActivityPayloadMergeQueueAdd struct {
+	MergeMethod enum.MergeMethod `json:"merge_method"`
+}
+
+func (a *PullRequestActivityPayloadMergeQueueAdd) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeMergeQueueAdd
+}
+
+type PullRequestActivityPayloadMergeQueueRemove struct {
+	Reason enum.MergeQueueRemovalReason `json:"reason"`
+}
+
+func (a *PullRequestActivityPayloadMergeQueueRemove) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeMergeQueueRemove
+}

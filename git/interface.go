@@ -51,6 +51,7 @@ type Interface interface {
 	// prior to the call. To remove a ref use the zero ref as the NewValue. To require the creation of a new one and
 	// not update of an exiting one, set the zero ref as the OldValue.
 	UpdateRef(ctx context.Context, params UpdateRefParams) error
+	UpdateRefs(ctx context.Context, params UpdateRefsParams) error
 
 	SyncRepository(ctx context.Context, params *SyncRepositoryParams) (*SyncRepositoryOutput, error)
 	SyncRefs(ctx context.Context, params *SyncRefsParams) (*SyncRefsOutput, error)

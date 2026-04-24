@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
+	mergequeuesvc "github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publickey"
@@ -65,6 +66,9 @@ func ProvideController(
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
 	autoMergeStore store.AutoMergeStore,
+	mergeQueueStore store.MergeQueueStore,
+	mergeQueueEntryStore store.MergeQueueEntryStore,
+	mergeQueueService *mergequeuesvc.Service,
 	rpcClient git.Interface,
 	repoFinder refcache.RepoFinder,
 	eventReporter *pullreqevents.Reporter,
@@ -104,6 +108,9 @@ func ProvideController(
 		membershipStore,
 		checkStore,
 		autoMergeStore,
+		mergeQueueStore,
+		mergeQueueEntryStore,
+		mergeQueueService,
 		rpcClient,
 		repoFinder,
 		eventReporter,

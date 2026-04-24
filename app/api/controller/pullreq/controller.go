@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
+	mergequeuesvc "github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publickey"
@@ -70,6 +71,9 @@ type Controller struct {
 	membershipStore        store.MembershipStore
 	checkStore             store.CheckStore
 	autoMergeStore         store.AutoMergeStore
+	mergeQueueStore        store.MergeQueueStore
+	mergeQueueEntryStore   store.MergeQueueEntryStore
+	mergeQueueService      *mergequeuesvc.Service
 	git                    git.Interface
 	repoFinder             refcache.RepoFinder
 	eventReporter          *pullreqevents.Reporter
@@ -111,6 +115,9 @@ func NewController(
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
 	autoMergeStore store.AutoMergeStore,
+	mergeQueueStore store.MergeQueueStore,
+	mergeQueueEntryStore store.MergeQueueEntryStore,
+	mergeQueueService *mergequeuesvc.Service,
 	git git.Interface,
 	repoFinder refcache.RepoFinder,
 	eventReporter *pullreqevents.Reporter,
@@ -151,6 +158,9 @@ func NewController(
 		membershipStore:        membershipStore,
 		checkStore:             checkStore,
 		autoMergeStore:         autoMergeStore,
+		mergeQueueStore:        mergeQueueStore,
+		mergeQueueEntryStore:   mergeQueueEntryStore,
+		mergeQueueService:      mergeQueueService,
 		git:                    git,
 		repoFinder:             repoFinder,
 		codeCommentMigrator:    codeCommentMigrator,

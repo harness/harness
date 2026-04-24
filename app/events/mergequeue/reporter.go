@@ -12,34 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package events
 
-type RefType int
+import (
+	"errors"
 
-const (
-	RefTypeRaw RefType = iota
-	RefTypeBranch
-	RefTypeTag
-	RefTypePullReqHead
-	RefTypePullReqMerge
-	RefTypePullReqMergeQueue
+	"github.com/harness/gitness/events"
 )
 
-func (t RefType) String() string {
-	switch t {
-	case RefTypeRaw:
-		return "raw"
-	case RefTypeBranch:
-		return "branch"
-	case RefTypeTag:
-		return "tag"
-	case RefTypePullReqHead:
-		return "head"
-	case RefTypePullReqMerge:
-		return "merge"
-	case RefTypePullReqMergeQueue:
-		return "merge_queue"
-	default:
-		return ""
+// Reporter is the event reporter for this package.
+type Reporter struct {
+	innerReporter *events.GenericReporter
+}
+
+func NewReporter(eventsSystem *events.System) (*Reporter, error) {
+	innerReporter, err := events.NewReporter(eventsSystem, category)
+	if err != nil {
+		return nil, errors.New("failed to create new GenericReporter from event system")
 	}
+
+	return &Reporter{
+		innerReporter: innerReporter,
+	}, nil
 }

@@ -621,6 +621,34 @@ type (
 		Upsert(ctx context.Context, autoMerge *types.AutoMerge) error
 	}
 
+	MergeQueueStore interface {
+		Find(ctx context.Context, id int64) (*types.MergeQueue, error)
+		FindByRepoAndBranch(ctx context.Context, repoID int64, branch string) (*types.MergeQueue, error)
+		Create(ctx context.Context, q *types.MergeQueue) error
+		Update(ctx context.Context, q *types.MergeQueue) error
+		Delete(ctx context.Context, id int64) error
+		UpdateOptLock(ctx context.Context,
+			q *types.MergeQueue,
+			mutateFn func(q *types.MergeQueue) error,
+		) (*types.MergeQueue, error)
+	}
+
+	MergeQueueEntryStore interface {
+		Find(ctx context.Context, pullReqID int64) (*types.MergeQueueEntry, error)
+		FindByMergeCommit(ctx context.Context, mergeCommitSHA sha.SHA) (*types.MergeQueueEntry, error)
+		Create(ctx context.Context, e *types.MergeQueueEntry) error
+		Update(ctx context.Context, e *types.MergeQueueEntry) error
+		UpdateOptLock(ctx context.Context,
+			e *types.MergeQueueEntry,
+			mutateFn func(e *types.MergeQueueEntry) error,
+		) (*types.MergeQueueEntry, error)
+		Delete(ctx context.Context, pullReqID int64) error
+		DeleteAllForMergeQueue(ctx context.Context, mergeQueueID int64) error
+		ListForMergeQueue(ctx context.Context, mergeQueueID int64) ([]*types.MergeQueueEntry, error)
+		ListOverdueChecks(ctx context.Context, now int64) ([]*types.MergeQueueEntry, error)
+		CountForRepoAndBranch(ctx context.Context, repoID int64, branch string) (int64, error)
+	}
+
 	// RuleStore defines database interface for protection rules.
 	RuleStore interface {
 		// Find finds a protection rule by ID.

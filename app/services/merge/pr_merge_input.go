@@ -34,7 +34,7 @@ type PullReqGitInput struct {
 	SourceSHA     sha.SHA
 }
 
-func (*Service) PreparePullReqMergeInput(
+func (s *Service) PreparePullReqMergeInput(
 	pr *types.PullReq,
 	sourceRepo *types.RepositoryCore,
 	targetSHA sha.SHA,
@@ -43,44 +43,7 @@ func (*Service) PreparePullReqMergeInput(
 	title string,
 	message string,
 ) (PullReqGitInput, error) {
-	var author *git.Identity
-
-	switch method {
-	case enum.MergeMethodMerge:
-		author = controller.IdentityFromPrincipalInfo(*principal)
-	case enum.MergeMethodSquash:
-		author = controller.IdentityFromPrincipalInfo(pr.Author)
-	case enum.MergeMethodRebase, enum.MergeMethodFastForward:
-		author = nil // Not important for these merge methods: the author info in the commits will be preserved.
-	}
-
-	var committer *git.Identity
-
-	switch method {
-	case enum.MergeMethodMerge, enum.MergeMethodSquash:
-		committer = controller.SystemServicePrincipalInfo()
-	case enum.MergeMethodRebase:
-		committer = controller.IdentityFromPrincipalInfo(*principal)
-	case enum.MergeMethodFastForward:
-		committer = nil // Not important for fast-forward merge
-	}
-
-	if title == "" {
-		switch method {
-		case enum.MergeMethodMerge:
-			if sourceRepo == nil {
-				title = fmt.Sprintf("Merge branch '%s' of deleted fork (#%d)",
-					pr.SourceBranch, pr.Number)
-			} else {
-				title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch,
-					sourceRepo.Path, pr.Number)
-			}
-		case enum.MergeMethodSquash:
-			title = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
-		case enum.MergeMethodRebase, enum.MergeMethodFastForward:
-			// Not used.
-		}
-	}
+	input := s.PreparePullReqMergeInputNoRefUpdates(pr, sourceRepo, principal, method, title, message)
 
 	// create merge commit(s)
 
@@ -129,11 +92,64 @@ func (*Service) PreparePullReqMergeInput(
 		New:  sha.Nil,
 	})
 
+	input.RefUpdates = refUpdates
+	input.SourceSHA = sourceBranchSHA
+
+	return input, nil
+}
+
+func (*Service) PreparePullReqMergeInputNoRefUpdates(
+	pr *types.PullReq,
+	sourceRepo *types.RepositoryCore,
+	principal *types.PrincipalInfo,
+	method enum.MergeMethod,
+	title string,
+	message string,
+) PullReqGitInput {
+	var author *git.Identity
+
+	switch method {
+	case enum.MergeMethodMerge:
+		author = controller.IdentityFromPrincipalInfo(*principal)
+	case enum.MergeMethodSquash:
+		author = controller.IdentityFromPrincipalInfo(pr.Author)
+	case enum.MergeMethodRebase, enum.MergeMethodFastForward:
+		author = nil // Not important for these merge methods: the author info in the commits will be preserved.
+	}
+
+	var committer *git.Identity
+
+	switch method {
+	case enum.MergeMethodMerge, enum.MergeMethodSquash:
+		committer = controller.SystemServicePrincipalInfo()
+	case enum.MergeMethodRebase:
+		committer = controller.IdentityFromPrincipalInfo(*principal)
+	case enum.MergeMethodFastForward:
+		committer = nil // Not important for fast-forward merge
+	}
+
+	if title == "" {
+		switch method {
+		case enum.MergeMethodMerge:
+			if sourceRepo == nil {
+				title = fmt.Sprintf("Merge branch '%s' of deleted fork (#%d)",
+					pr.SourceBranch, pr.Number)
+			} else {
+				title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch,
+					sourceRepo.Path, pr.Number)
+			}
+		case enum.MergeMethodSquash:
+			title = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
+		case enum.MergeMethodRebase, enum.MergeMethodFastForward:
+			// Not used.
+		}
+	}
+
 	return PullReqGitInput{
 		Author:        author,
 		Committer:     committer,
-		RefUpdates:    refUpdates,
+		RefUpdates:    nil,
 		CommitMessage: git.CommitMessage(title, message),
-		SourceSHA:     sourceBranchSHA,
-	}, nil
+		SourceSHA:     sha.None,
+	}
 }

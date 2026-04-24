@@ -104,11 +104,44 @@ func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 	return nil
 }
 
+type UpdateRefsParams struct {
+	WriteParams
+	Refs []RefUpdate
+}
+
+func (s *Service) UpdateRefs(ctx context.Context, params UpdateRefsParams) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to create ref updater: %w", err)
+	}
+
+	var refUpdates []hook.ReferenceUpdate
+	for _, ref := range params.Refs {
+		refUpdates = append(refUpdates, hook.ReferenceUpdate{
+			Ref: ref.Name,
+			Old: ref.Old,
+			New: ref.New,
+		})
+	}
+
+	if err := refUpdater.Do(ctx, refUpdates); err != nil {
+		return fmt.Errorf("failed to update refs: %w", err)
+	}
+
+	return nil
+}
+
 func GetRefPath(refName string, refType enum.RefType) (string, error) {
 	const (
 		refPullReqPrefix      = "refs/pullreq/"
 		refPullReqHeadSuffix  = "/head"
 		refPullReqMergeSuffix = "/merge"
+		refMergeQueuePrefix   = "refs/mergequeue/"
 	)
 
 	switch refType {
@@ -122,9 +155,19 @@ func GetRefPath(refName string, refType enum.RefType) (string, error) {
 		return refPullReqPrefix + refName + refPullReqHeadSuffix, nil
 	case enum.RefTypePullReqMerge:
 		return refPullReqPrefix + refName + refPullReqMergeSuffix, nil
+	case enum.RefTypePullReqMergeQueue:
+		return refMergeQueuePrefix + refName, nil
 	default:
 		return "", errors.InvalidArgumentf("provided reference type '%s' is invalid", refType)
 	}
+}
+
+func GetBranchRefPath(branchName string) string {
+	return api.BranchPrefix + branchName
+}
+
+func GetTagRefPath(tagName string) string {
+	return api.TagPrefix + tagName
 }
 
 // wrapInstructorWithOptionalPagination wraps the provided walkInstructor with pagination.

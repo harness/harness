@@ -56,6 +56,8 @@ var WireSet = wire.NewSet(
 	ProvidePullReqReviewerStore,
 	ProvidePullReqFileViewStore,
 	ProvideAutoMergeStore,
+	ProvideMergeQueueStore,
+	ProvideMergeQueueEntryStore,
 	ProvideWebhookStore,
 	ProvideWebhookExecutionStore,
 	ProvideSettingsStore,
@@ -325,6 +327,14 @@ func ProvidePullReqFileViewStore(db *sqlx.DB) store.PullReqFileViewStore {
 
 func ProvideAutoMergeStore(db *sqlx.DB) store.AutoMergeStore {
 	return NewAutoMergeStore(db)
+}
+
+func ProvideMergeQueueStore(db *sqlx.DB) store.MergeQueueStore {
+	return NewMergeQueueStore(db)
+}
+
+func ProvideMergeQueueEntryStore(db *sqlx.DB) store.MergeQueueEntryStore {
+	return NewMergeQueueEntryStore(db)
 }
 
 // ProvideWebhookStore provides a webhook store.
