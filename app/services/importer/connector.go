@@ -17,6 +17,12 @@ package importer
 import (
 	"fmt"
 	"net/url"
+	"strings"
+)
+
+const (
+	connectorRefAccountPrefix = "account."
+	connectorRefOrgPrefix     = "org."
 )
 
 type ConnectorDef struct {
@@ -28,6 +34,32 @@ type AccessInfo struct {
 	Username string
 	Password string
 	URL      string
+}
+
+// DecodeConnectorRef splits a scoped ref into (connector space path, identifier)
+// using parentSpacePath as the source of account/org/project segments:
+//
+//	"account.<id>" -> (<account>,              <id>)
+//	"org.<id>"     -> (<account>/<org>,        <id>)
+//	"<id>"         -> (<account>/<org>/<proj>, <id>)
+func DecodeConnectorRef(parentSpacePath, ref string) (connectorPath, connectorIdentifier string) {
+	parts := strings.SplitN(parentSpacePath, "/", 3)
+
+	switch {
+	case strings.HasPrefix(ref, connectorRefAccountPrefix):
+		return firstNJoined(parts, 1), ref[len(connectorRefAccountPrefix):]
+	case strings.HasPrefix(ref, connectorRefOrgPrefix):
+		return firstNJoined(parts, 2), ref[len(connectorRefOrgPrefix):]
+	default:
+		return parentSpacePath, ref
+	}
+}
+
+func firstNJoined(parts []string, n int) string {
+	if n > len(parts) {
+		n = len(parts)
+	}
+	return strings.Join(parts[:n], "/")
 }
 
 func (info AccessInfo) URLWithCredentials() (string, error) {

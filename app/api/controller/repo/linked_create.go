@@ -42,12 +42,16 @@ type LinkedCreateInput struct {
 
 	IsPublic bool `json:"is_public"`
 
-	Connector importer.ConnectorDef `json:"connector"`
+	ConnectorRef string `json:"connector_ref"`
 }
 
 func (in *LinkedCreateInput) sanitize() error {
 	if err := ValidateParentRef(in.ParentRef); err != nil {
 		return err
+	}
+
+	if in.ConnectorRef == "" {
+		return errors.InvalidArgument("connector_ref must not be empty")
 	}
 
 	return nil
@@ -84,7 +88,13 @@ func (c *Controller) LinkedCreate(
 		return nil, errPublicRepoCreationDisabled
 	}
 
-	defaultBranch, err := c.verifyConnectorAccess(ctx, in.Connector)
+	connectorPath, connectorIdentifier := importer.DecodeConnectorRef(parentSpace.Path, in.ConnectorRef)
+	connector := importer.ConnectorDef{
+		Path:       connectorPath,
+		Identifier: connectorIdentifier,
+	}
+
+	defaultBranch, err := c.verifyConnectorAccess(ctx, connector)
 	if err != nil {
 		return nil, errors.InvalidArgument("Failed to use connector to access the remote repository.")
 	}
@@ -124,8 +134,8 @@ func (c *Controller) LinkedCreate(
 			Created:             now,
 			Updated:             now,
 			LastFullSync:        now,
-			ConnectorPath:       in.Connector.Path,
-			ConnectorIdentifier: in.Connector.Identifier,
+			ConnectorPath:       connector.Path,
+			ConnectorIdentifier: connector.Identifier,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create linked repository: %w", err)
