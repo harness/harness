@@ -39,6 +39,9 @@ const (
 
 	// GitOpTypeManageRepo represents repo lifecycle operations (create, delete, sync/import/link).
 	GitOpTypeManageRepo GitOpType = "manage_repo"
+
+	// GitOpTypeMergeQueue represents internal system-maintained reference operations of merge queue service.
+	GitOpTypeMergeQueue GitOpType = "merge_queue"
 )
 
 var gitOpTypes = sortEnum([]GitOpType{
@@ -49,6 +52,7 @@ var gitOpTypes = sortEnum([]GitOpType{
 	GitOpTypeAPIContent,
 	GitOpTypeAPIContentBypassRules,
 	GitOpTypeManageRepo,
+	GitOpTypeMergeQueue,
 })
 
 func (GitOpType) Enum() []any {

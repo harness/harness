@@ -92,6 +92,14 @@ func (c *Controller) Rebase(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
+	mqViolations, err := c.mergeQueueService.BranchInQueueViolations(ctx, repo.ID, in.HeadBranch)
+	if err != nil {
+		return nil, nil,
+			fmt.Errorf("failed to check for merge queue existence: %w", err)
+	}
+
+	violations = append(violations, mqViolations...)
+
 	if in.DryRunRules {
 		// DryRunRules is true: Just return rule violations and don't attempt to rebase.
 		return &types.RebaseResponse{

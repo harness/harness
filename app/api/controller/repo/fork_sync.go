@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/controller"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -84,6 +85,16 @@ func (c *Controller) ForkSync(
 	if !branchForkInfo.SHA.Equal(in.BranchCommitSHA) {
 		return nil, nil, errors.InvalidArgumentf("The commit %s isn't the latest commit on the branch %s",
 			in.BranchCommitSHA, in.Branch)
+	}
+
+	isInMergeQueue, err := c.mergeQueueService.IsBranchInQueue(ctx, repoForkCore.ID, in.Branch)
+	if err != nil {
+		return nil, nil,
+			fmt.Errorf("failed to check for merge queue existence: %w", err)
+	}
+	if isInMergeQueue {
+		return nil, nil,
+			usererror.BadRequest("Branch sync not allowed, because it has a pull request in a merge queue.")
 	}
 
 	branchUpstreamSHA, repoUpstreamCore, err := c.dotRangeService.FetchUpstreamBranch(

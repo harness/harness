@@ -74,6 +74,14 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return types.DeleteBranchOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
+	mqViolations, err := c.mergeQueueService.BranchInQueueViolations(ctx, repo.ID, branchName)
+	if err != nil {
+		return types.DeleteBranchOutput{}, nil,
+			fmt.Errorf("failed to check for merge queue existence: %w", err)
+	}
+
+	violations = append(violations, mqViolations...)
+
 	if dryRunRules {
 		return types.DeleteBranchOutput{
 			DryRunRulesOutput: types.DryRunRulesOutput{

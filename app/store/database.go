@@ -647,6 +647,7 @@ type (
 		ListForMergeQueue(ctx context.Context, mergeQueueID int64) ([]*types.MergeQueueEntry, error)
 		ListOverdueChecks(ctx context.Context, now int64) ([]*types.MergeQueueEntry, error)
 		CountForRepoAndBranch(ctx context.Context, repoID int64, branch string) (int64, error)
+		BranchesWithPullReqInQueue(ctx context.Context, repoID int64, branches []string) (map[string]struct{}, error)
 	}
 
 	// RuleStore defines database interface for protection rules.

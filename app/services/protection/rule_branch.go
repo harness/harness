@@ -131,17 +131,19 @@ func (v *Branch) RefChangeVerify(
 		violations[i].Bypassed = bypassed
 	}
 
-	if in.RefAction == RefActionUpdate || in.RefAction == RefActionUpdateForce {
-		// merge queue settings can't be bypassed
-		mqv, err := v.MergeQueueBranchUpdateVerify(MergeQueueBranchUpdateInput{
-			Repo:         in.Repo,
-			TargetBranch: in.RefNames[0],
-		})
-		if err != nil {
-			return nil, err
-		}
+	if in.RefAction == RefActionUpdate || in.RefAction == RefActionUpdateForce || in.RefAction == RefActionDelete {
+		for _, refName := range in.RefNames {
+			// merge queue settings can't be bypassed
+			mqv, err := v.MergeQueueBranchUpdateVerify(MergeQueueBranchUpdateInput{
+				Repo:         in.Repo,
+				TargetBranch: refName,
+			})
+			if err != nil {
+				return nil, err
+			}
 
-		violations = append(violations, mqv...)
+			violations = append(violations, mqv...)
+		}
 	}
 
 	return violations, nil

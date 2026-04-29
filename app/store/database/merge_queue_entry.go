@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -370,6 +371,52 @@ func (s *MergeQueueEntryStore) CountForRepoAndBranch(
 	}
 
 	return count, nil
+}
+
+// BranchesWithPullReqInQueue tells which of the following branches from the given repository
+// have a pull request (or more than one) in the merge queue. In case of forked repositories,
+// the pull can be in the upstream repository. If the list of branches is empty, the query
+// returns all branches that have a pull request in the merge queue.
+func (s *MergeQueueEntryStore) BranchesWithPullReqInQueue(
+	ctx context.Context,
+	repoID int64,
+	branches []string,
+) (map[string]struct{}, error) {
+	result := make(map[string]struct{}, len(branches))
+
+	stmt := database.Builder.
+		Select("DISTINCT pullreq_source_branch").
+		From("merge_queue_entries").
+		Join("pullreqs ON pullreq_id = merge_queue_entry_pullreq_id").
+		Where("pullreq_source_repo_id = ?", repoID)
+
+	switch len(branches) {
+	case 0:
+		// do nothing
+	case 1:
+		stmt = stmt.Where("pullreq_source_branch = ?", branches[0])
+	default:
+		stmt = stmt.Where(squirrel.Eq{"pullreq_source_branch": branches})
+	}
+
+	sqlQuery, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build branches with pull req in queue SQL: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var rows []string
+	if err := db.SelectContext(ctx, &rows, sqlQuery, args...); err != nil {
+		return nil,
+			database.ProcessSQLErrorf(ctx, err, "failed to find branches with a pull request in merge queue")
+	}
+
+	for _, branch := range rows {
+		result[branch] = struct{}{}
+	}
+
+	return result, nil
 }
 
 func (s *MergeQueueEntryStore) ListOverdueChecks(

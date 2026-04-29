@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -30,6 +31,7 @@ type MergeQueueEnableInput struct {
 	Title              string           `json:"title"`
 	Message            string           `json:"message"`
 	DeleteSourceBranch bool             `json:"delete_source_branch"`
+	BypassRules        bool             `json:"bypass_rules"`
 }
 
 func (in *MergeQueueEnableInput) sanitize() error {
@@ -72,7 +74,58 @@ func (c *Controller) MergeQueueEnable(
 		return nil, nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	pr, violations, err := c.mergeQueueService.Enqueue(
+	if pr.SubState == enum.PullReqSubStateAutoMerge {
+		return nil, nil, usererror.BadRequest(
+			"Enqueueing is not allowed, because the pull request has auto-merge enabled. Disable auto-merge first.")
+	}
+
+	sourceRepo := targetRepo
+	if pr.SourceRepoID != nil && pr.TargetRepoID != *pr.SourceRepoID {
+		sourceRepo, err = c.repoFinder.FindByID(ctx, *pr.SourceRepoID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to find source repo: %w", err)
+		}
+	}
+
+	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, targetRepo)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
+	}
+
+	setup, err := protectionRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+		Repo:         targetRepo,
+		TargetBranch: pr.TargetBranch,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get merge queue setup: %w", err)
+	}
+
+	if !setup.IsActive() {
+		return nil, nil,
+			usererror.BadRequestf("Merge queue has not been configured for branch %q.", pr.TargetBranch)
+	}
+
+	_, violations, err := c.mergeService.CheckRules(ctx, protectionRules, merge.CheckRulesInput{
+		PullReq:          pr,
+		TargetRepo:       targetRepo,
+		SourceRepo:       sourceRepo,
+		Actor:            &session.Principal,
+		IsRepoOwner:      isRepoOwner,
+		MergeMethod:      in.Method,
+		AllowBypassRules: in.BypassRules,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+
+	if protection.IsCritical(violations) {
+		return nil, &types.MergeViolations{
+			RuleViolations: violations,
+			Message:        protection.GenerateErrorMessageForBlockingViolations(violations),
+		}, nil
+	}
+
+	pr, err = c.mergeQueueService.Enqueue(
 		ctx,
 		pr,
 		targetRepo,
@@ -84,12 +137,6 @@ func (c *Controller) MergeQueueEnable(
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to enqueue pull request: %w", err)
-	}
-	if violations != nil {
-		return nil, &types.MergeViolations{
-			RuleViolations: violations,
-			Message:        protection.GenerateErrorMessageForBlockingViolations(violations),
-		}, nil
 	}
 
 	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqMergeQueueEnabled, pr)

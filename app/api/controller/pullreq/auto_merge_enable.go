@@ -97,6 +97,11 @@ func (c *Controller) AutoMergeEnable(
 		return nil, err
 	}
 
+	if c.mergeQueueService.IsEnqueued(pr) {
+		return nil, usererror.BadRequest(
+			"Enabling auto-merge is not allowed, because the pull request is in the merge queue.")
+	}
+
 	autoMerge := types.AutoMerge{
 		PullReqID:    pr.ID,
 		Requested:    time.Now().UnixMilli(),

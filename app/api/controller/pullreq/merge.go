@@ -188,6 +188,11 @@ func (c *Controller) Merge(
 			usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
 	}
 
+	if c.mergeQueueService.IsEnqueued(pr) {
+		return nil, nil, usererror.BadRequest(
+			"Direct merge is not allowed. The pull request would be merged through the merge queue.")
+	}
+
 	if pr.IsDraft && !in.DryRunRules && !in.DryRun {
 		return nil, nil, usererror.BadRequest(
 			"Draft pull requests can't be merged. Clear the draft flag first.",
@@ -257,6 +262,7 @@ func (c *Controller) Merge(
 	deleteSourceBranch := pr.SourceRepoID != nil && pr.TargetRepoID == *pr.SourceRepoID &&
 		(in.DeleteSourceBranch || ruleOut.DeleteSourceBranch)
 
+	// If we're only dry run the rules, then we can return the response here.
 	if in.DryRunRules {
 		err := c.backfillApprovalInfo(ctx, ruleOut.DefaultReviewerApprovals)
 		if err != nil {

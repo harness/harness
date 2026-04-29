@@ -592,7 +592,7 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 			},
 		},
 		{
-			name: "merge-queue-delete-not-blocked",
+			name: "merge-queue-delete-blocked",
 			branch: Branch{
 				PullReq: DefPullReq{
 					MergeQueue: &DefMergeQueue{
@@ -610,7 +610,15 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 				RefNames:  []string{"main"},
 				Repo:      &types.RepositoryCore{ID: 1},
 			},
-			expVs: []types.RuleViolations{},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: false,
+					Bypassed:   false,
+					Violations: []types.Violation{
+						{Code: codeMergeQueueBranchUpdateVerify},
+					},
+				},
+			},
 		},
 	}
 

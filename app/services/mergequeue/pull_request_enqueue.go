@@ -21,10 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/app/bootstrap"
 	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
-	"github.com/harness/gitness/app/services/merge"
-	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -44,87 +41,41 @@ func (s *Service) Enqueue(
 	commitTitle string,
 	commitMessage string,
 	deleteBranch bool,
-) (*types.PullReq, []types.RuleViolations, error) {
+) (*types.PullReq, error) {
 	if m, ok := mergeMethod.Sanitize(); ok {
 		mergeMethod = m
 	} else {
-		return nil, nil, usererror.BadRequestf("Invalid merge method: %q.", mergeMethod)
+		return nil, usererror.BadRequestf("Invalid merge method: %q.", mergeMethod)
 	}
 
 	if mergeMethod == enum.MergeMethodFastForward {
-		return nil, nil, usererror.BadRequest("Fast forward method is not supported by merge queue.")
+		return nil, usererror.BadRequest("Fast forward method is not supported by merge queue.")
 	}
 
 	err := s.VerifyIfMergeQueueable(pr)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	sourceRepo := targetRepo
-	if pr.SourceRepoID != nil && pr.TargetRepoID != *pr.SourceRepoID {
-		sourceRepo, err = s.repoFinder.FindByID(ctx, *pr.SourceRepoID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to find source repo: %w", err)
-		}
-	}
-
-	branchProtection, err := s.protectionManager.ListRepoBranchRules(ctx, targetRepo.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to list repository branch rules: %w", err)
-	}
-
-	// use the system principal, as it will merge the PR in the merge queue
-	systemSession := bootstrap.NewSystemServiceSession()
-
-	_, violations, err := s.mergeService.CheckRules(ctx, branchProtection, merge.CheckRulesInput{
-		PullReq:          pr,
-		TargetRepo:       targetRepo,
-		SourceRepo:       sourceRepo,
-		Actor:            &systemSession.Principal,
-		IsRepoOwner:      false,
-		MergeMethod:      mergeMethod,
-		AllowBypassRules: false, // system principal can't bypass rules
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
-	}
-
-	if protection.IsCritical(violations) {
-		return nil, violations, nil
-	}
-
-	setup, err := branchProtection.GetMergeQueueSetup(protection.MergeQueueSetupInput{
-		Repo:         targetRepo,
-		TargetBranch: pr.TargetBranch,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get merge queue setup: %w", err)
-	}
-
-	if !setup.IsActive() {
-		return nil, nil,
-			usererror.BadRequestf("Merge queue has not been configured for branch %q.", pr.TargetBranch)
+		return nil, err
 	}
 
 	count, err := s.mergeQueueEntryStore.CountForRepoAndBranch(ctx, targetRepo.ID, pr.TargetBranch)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get merge queue entry count: %w", err)
+		return nil, fmt.Errorf("failed to get merge queue entry count: %w", err)
 	}
 
 	if count >= MaximumQueueSize {
-		return nil, nil, usererror.BadRequestf("Merge queue is full (maximum %d entries).", MaximumQueueSize)
+		return nil, usererror.BadRequestf("Merge queue is full (maximum %d entries).", MaximumQueueSize)
 	}
 
 	q, err := s.FindOrCreateMergeQueue(ctx, targetRepo.ID, pr.TargetBranch)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create merge queue: %w", err)
+		return nil, fmt.Errorf("failed to create merge queue: %w", err)
 	}
 
 	prID := pr.ID
 
 	q, seq, err := s.reserveSequenceNumber(ctx, q)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to reserve merge queue entry sequence number: %w", err)
+		return nil, fmt.Errorf("failed to reserve merge queue entry sequence number: %w", err)
 	}
 
 	var entry *types.MergeQueueEntry
@@ -183,7 +134,7 @@ func (s *Service) Enqueue(
 		return nil
 	}, dbtx.TxRepeatableRead)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create merge queue: %w", err)
+		return nil, fmt.Errorf("failed to create merge queue: %w", err)
 	}
 
 	payload := &types.PullRequestActivityPayloadMergeQueueAdd{
@@ -202,7 +153,7 @@ func (s *Service) Enqueue(
 		},
 	})
 
-	return pr, nil, nil
+	return pr, nil
 }
 
 func (s *Service) reserveSequenceNumber(

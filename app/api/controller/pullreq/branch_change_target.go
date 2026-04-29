@@ -56,6 +56,11 @@ func (c *Controller) ChangeTargetBranch(ctx context.Context,
 		return nil, errors.InvalidArgument("Pull request is already merged.")
 	}
 
+	if c.mergeQueueService.IsEnqueued(pr) {
+		return nil, usererror.BadRequest(
+			"Changing target branch is not allowed, because the pull request is in the merge queue.")
+	}
+
 	if _, err = c.verifyBranchExistence(ctx, repo, in.BranchName); err != nil {
 		return nil,
 			fmt.Errorf("failed to verify branch existence: %w", err)

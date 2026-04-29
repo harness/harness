@@ -82,6 +82,11 @@ func (c *Controller) State(ctx context.Context,
 		return nil, usererror.BadRequest("Merged pull requests can't be modified.")
 	}
 
+	if c.mergeQueueService.IsEnqueued(pr) {
+		return nil, usererror.BadRequest(
+			"Changing pull request state is not allowed, because the pull request is in the merge queue.")
+	}
+
 	if pr.State == in.State && in.IsDraft == pr.IsDraft {
 		return pr, nil // no changes are necessary: state is the same and is_draft hasn't change
 	}

@@ -63,6 +63,10 @@ func (c *Controller) CommentStatus(
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
+	if errValidate := in.Validate(); errValidate != nil {
+		return nil, errValidate
+	}
+
 	var pr *types.PullReq
 	var act *types.PullReqActivity
 
@@ -73,10 +77,6 @@ func (c *Controller) CommentStatus(
 		pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 		if err != nil {
 			return fmt.Errorf("failed to find pull request by number: %w", err)
-		}
-
-		if errValidate := in.Validate(); errValidate != nil {
-			return errValidate
 		}
 
 		act, err = c.getCommentCheckChangeStatusAccess(ctx, pr, commentID)

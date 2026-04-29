@@ -89,7 +89,7 @@ func (s *Service) fastForward(
 	systemSession := bootstrap.NewSystemServiceSession()
 	systemPrincipalInfo := systemSession.Principal.ToPrincipalInfo()
 
-	writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, s.urlProvider, systemSession, repo)
+	writeParams, err := controller.CreateRPCSystemMergeQueueWriteParams(ctx, s.urlProvider, systemSession, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create rpc system references write params: %w", err)
 	}

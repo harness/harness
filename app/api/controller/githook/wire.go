@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
 	eventsrepo "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
@@ -67,6 +68,7 @@ func ProvideController(
 	lfsStore store.LFSObjectStore,
 	auditService audit.Service,
 	userGroupService usergroup.Service,
+	mergeQueueService *mergequeue.Service,
 ) *Controller {
 	ctrl := NewController(
 		authorizer,
@@ -87,6 +89,7 @@ func ProvideController(
 		lfsStore,
 		auditService,
 		userGroupService,
+		mergeQueueService,
 	)
 
 	// TODO: improve wiring if possible

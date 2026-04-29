@@ -105,6 +105,12 @@ func (c *Controller) CommentApplySuggestions(
 		return CommentApplySuggestionsOutput{}, nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
+	if c.mergeQueueService.IsEnqueued(pr) {
+		return CommentApplySuggestionsOutput{}, nil,
+			usererror.BadRequest("Applying suggestions is not allowed, " +
+				"because the pull request is in the merge queue.")
+	}
+
 	if err := in.sanitize(); err != nil {
 		return CommentApplySuggestionsOutput{}, nil, err
 	}

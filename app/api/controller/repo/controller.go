@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
+	mergequeuesvc "github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/publickey"
@@ -126,6 +127,7 @@ type Controller struct {
 	dotRangeService        *dotrange.Service
 	connectorService       importer.ConnectorService
 	repoLangStore          store.RepoLangStore
+	mergeQueueService      *mergequeuesvc.Service
 }
 
 func NewController(
@@ -174,6 +176,7 @@ func NewController(
 	dotRangeService *dotrange.Service,
 	connectorService importer.ConnectorService,
 	repoLangStore store.RepoLangStore,
+	mergeQueueService *mergequeuesvc.Service,
 ) *Controller {
 	return &Controller{
 		defaultBranch:          config.Git.DefaultBranch,
@@ -221,6 +224,7 @@ func NewController(
 		dotRangeService:        dotRangeService,
 		connectorService:       connectorService,
 		repoLangStore:          repoLangStore,
+		mergeQueueService:      mergeQueueService,
 	}
 }
 

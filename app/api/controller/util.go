@@ -104,6 +104,20 @@ func CreateRPCAPILinkedSyncWriteParams(
 	)
 }
 
+// CreateRPCSystemMergeQueueWriteParams creates base write parameters for write operations
+// on merge queue. Includes updates of PR target branches (always with FF merge),
+// updates pull request references.
+func CreateRPCSystemMergeQueueWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.RepositoryCore,
+) (git.WriteParams, error) {
+	return createRPCWriteParamsWithOperationType(
+		ctx, urlProvider, session, repo, true, enum.GitOpTypeMergeQueue,
+	)
+}
+
 // createRPCWriteParamsWithOperationType creates base write parameters for git write operations.
 func createRPCWriteParamsWithOperationType(
 	ctx context.Context,

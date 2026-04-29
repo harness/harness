@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	gitevents "github.com/harness/gitness/app/events/git"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
@@ -62,6 +63,7 @@ type Controller struct {
 	lfsStore            store.LFSObjectStore
 	auditService        audit.Service
 	userGroupService    usergroup.Service
+	mergeQueueService   *mergequeue.Service
 }
 
 func NewController(
@@ -83,6 +85,7 @@ func NewController(
 	lfsStore store.LFSObjectStore,
 	auditService audit.Service,
 	userGroupService usergroup.Service,
+	mergeQueueService *mergequeue.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
@@ -103,6 +106,7 @@ func NewController(
 		lfsStore:            lfsStore,
 		auditService:        auditService,
 		userGroupService:    userGroupService,
+		mergeQueueService:   mergeQueueService,
 	}
 }
 

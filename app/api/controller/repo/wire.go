@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/publickey"
@@ -98,6 +99,7 @@ func ProvideController(
 	dotRangeService *dotrange.Service,
 	connectorService importer.ConnectorService,
 	repoLangStore store.RepoLangStore,
+	mergeQueueService *mergequeue.Service,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
@@ -109,7 +111,7 @@ func ProvideController(
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
 		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService,
 		autolinkSvc, dotRangeService, connectorService,
-		repoLangStore,
+		repoLangStore, mergeQueueService,
 	)
 }
 

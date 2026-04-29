@@ -120,11 +120,6 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		return types.CommitFilesResponse{}, nil, err
 	}
 
-	rules, isRepoOwner, err := c.fetchBranchRules(ctx, session, repo)
-	if err != nil {
-		return types.CommitFilesResponse{}, nil, err
-	}
-
 	var refAction protection.RefAction
 	var branchName string
 	if in.NewBranch != "" {
@@ -133,6 +128,11 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	} else {
 		refAction = protection.RefActionUpdate
 		branchName = in.Branch
+	}
+
+	rules, isRepoOwner, err := c.fetchBranchRules(ctx, session, repo)
+	if err != nil {
+		return types.CommitFilesResponse{}, nil, err
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
@@ -148,6 +148,14 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
+
+	mqViolations, err := c.mergeQueueService.BranchInQueueViolations(ctx, repo.ID, branchName)
+	if err != nil {
+		return types.CommitFilesResponse{}, nil,
+			fmt.Errorf("failed to check for merge queue existence: %w", err)
+	}
+
+	violations = append(violations, mqViolations...)
 
 	if in.DryRunRules {
 		return types.CommitFilesResponse{

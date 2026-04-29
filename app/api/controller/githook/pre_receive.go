@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git/hook"
@@ -67,6 +68,13 @@ func (c *Controller) PreReceive(
 		}
 
 		// For linked repositories, we don't check repo settings and protection rules
+		return hook.Output{}, nil
+	}
+
+	// Merge queue PR merge always just fast forwards target branches, so it
+	// never produces new content, not even minor conflict resolutions.
+	// There's no need to check repo size or block anything in this case.
+	if in.OperationType == enum.GitOpTypeMergeQueue {
 		return hook.Output{}, nil
 	}
 
@@ -168,6 +176,14 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, err
 	}
 	rulesViolations = append(rulesViolations, pushRulesViolations...)
+
+	mergeQueueViolations, err := c.checkMergeQueueProtection(
+		ctx, repo, refUpdates,
+	)
+	if err != nil {
+		return hook.Output{}, err
+	}
+	rulesViolations = append(rulesViolations, mergeQueueViolations...)
 
 	processProtectionViolations(&output, rulesViolations, settingsViolations)
 
@@ -479,6 +495,44 @@ func (c *Controller) checkRefUpdatesRules(
 	}
 
 	return ruleViolations, nil
+}
+
+// checkMergeQueueProtection checks if one of the modified or deleted branches currently
+// has a pull requests created from it (as the source branch). If it does it will report
+// a dummy merge queue rule violation. Note: This is different from the blocking target
+// branch. The target branch is directly protected by a branch rule and a proper
+// rule violation would be reported in this case (in checkRefUpdatesRules with a call to
+// RefChangeVerify).
+func (c *Controller) checkMergeQueueProtection(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	refUpdates changedRefs,
+) ([]types.RuleViolations, error) {
+	branches := make([]string, 0,
+		len(refUpdates.branches.updated)+
+			len(refUpdates.branches.forced)+
+			len(refUpdates.branches.deleted))
+	branches = append(branches, refUpdates.branches.updated...)
+	branches = append(branches, refUpdates.branches.forced...)
+	branches = append(branches, refUpdates.branches.deleted...)
+	if len(branches) == 0 {
+		return nil, nil
+	}
+
+	branchesWithPR, err := c.mergeQueueService.BranchesWithPullReqInQueue(ctx, repo.ID, branches)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check branches with PR in merge queue: %w", err)
+	}
+
+	var violations []types.RuleViolations
+
+	for _, branch := range branches {
+		if _, ok := branchesWithPR[branch]; ok {
+			violations = append(violations, mergequeue.Violation(branch))
+		}
+	}
+
+	return violations, nil
 }
 
 func processProtectionViolations(
