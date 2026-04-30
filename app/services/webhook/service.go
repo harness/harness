@@ -22,6 +22,7 @@ import (
 	"time"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -196,6 +197,7 @@ func NewService(
 	tx dbtx.Transactor,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
+	mqReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
 	spaceStore store.SpaceStore,
@@ -297,6 +299,25 @@ func NewService(
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch pr event reader for webhooks: %w", err)
+	}
+
+	_, err = mqReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+		func(r *mergequeueevents.Reader) error {
+			const idleTimeout = 1 * time.Minute
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
+
+			_ = r.RegisterChecksRequested(service.handleEventMergeQueueChecksRequested)
+			_ = r.RegisterChecksCanceled(service.handleEventMergeQueueChecksCanceled)
+
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch merge queue event reader for webhooks: %w", err)
 	}
 
 	return service, nil

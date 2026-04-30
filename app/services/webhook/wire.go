@@ -18,6 +18,7 @@ import (
 	"context"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -44,6 +45,7 @@ func ProvideService(
 	tx dbtx.Transactor,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
+	mqReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
 	spaceStore store.SpaceStore,
@@ -68,6 +70,7 @@ func ProvideService(
 		tx,
 		gitReaderFactory,
 		prReaderFactory,
+		mqReaderFactory,
 		webhookStore,
 		webhookExecutionStore,
 		spaceStore, repoStore,

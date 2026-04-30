@@ -197,6 +197,11 @@ const (
 	// WebhookTriggerPullReqTargetBranchChanged gets triggered when a pull request target branch is changed.
 	WebhookTriggerPullReqTargetBranchChanged = "pullreq_target_branch_changed"
 
+	// WebhookTriggerMergeQueueChecksRequested gets triggered when merge queue checks are requested.
+	WebhookTriggerMergeQueueChecksRequested WebhookTrigger = "merge_queue_checks_requested"
+	// WebhookTriggerMergeQueueChecksCanceled gets triggered when merge queue checks are canceled.
+	WebhookTriggerMergeQueueChecksCanceled WebhookTrigger = "merge_queue_checks_canceled"
+
 	// WebhookTriggerArtifactCreated gets triggered when an artifact gets created.
 	WebhookTriggerArtifactCreated WebhookTrigger = "artifact_created"
 	// WebhookTriggerArtifactDeleted gets triggered when an artifact gets deleted.
@@ -222,6 +227,8 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqLabelAssigned,
 	WebhookTriggerPullReqReviewSubmitted,
 	WebhookTriggerPullReqTargetBranchChanged,
+	WebhookTriggerMergeQueueChecksRequested,
+	WebhookTriggerMergeQueueChecksCanceled,
 	WebhookTriggerArtifactCreated,
 	WebhookTriggerArtifactDeleted,
 })

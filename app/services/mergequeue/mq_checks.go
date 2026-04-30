@@ -16,11 +16,14 @@ package mergequeue
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/harness/gitness/app/bootstrap"
+	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // updateChecks applies chain-based state transitions to ChecksPending entries.
@@ -104,24 +107,42 @@ func (s *Service) updateChecks(
 	return entries, toStore
 }
 
-func (s *Service) startChecks(ctx context.Context, sha sha.SHA) error {
-	if sha.IsEmpty() || sha.IsNil() {
-		return fmt.Errorf("invalid sha %s", sha)
+func (s *Service) startChecks(ctx context.Context, q *types.MergeQueue, commitSHA sha.SHA) {
+	if commitSHA.IsEmpty() || commitSHA.IsNil() {
+		log.Ctx(ctx).Warn().
+			Int64("repo_id", q.RepoID).
+			Str("branch", q.Branch).
+			Str("commit_sha", commitSHA.String()).
+			Msg("startChecks called with invalid sha")
+		return
 	}
 
-	// TODO: Implement by triggering a webhook
-	_ = ctx
-
-	return nil
+	s.mergeQueueEventReporter.ChecksRequested(ctx, &mergequeueevents.ChecksRequestedPayload{
+		Base: mergequeueevents.Base{
+			RepoID: q.RepoID,
+			Branch: q.Branch,
+		},
+		PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
+		CommitSHA:   commitSHA.String(),
+	})
 }
 
-func (s *Service) stopChecks(ctx context.Context, sha sha.SHA) error {
-	if sha.IsEmpty() || sha.IsNil() {
-		return fmt.Errorf("invalid sha %s", sha)
+func (s *Service) stopChecks(ctx context.Context, q *types.MergeQueue, commitSHA sha.SHA) {
+	if commitSHA.IsEmpty() || commitSHA.IsNil() {
+		log.Ctx(ctx).Warn().
+			Int64("repo_id", q.RepoID).
+			Str("branch", q.Branch).
+			Str("commit_sha", commitSHA.String()).
+			Msg("stopChecks called with invalid sha")
+		return
 	}
 
-	// TODO: Implement by triggering a webhook
-	_ = ctx
-
-	return nil
+	s.mergeQueueEventReporter.ChecksCanceled(ctx, &mergequeueevents.ChecksCanceledPayload{
+		Base: mergequeueevents.Base{
+			RepoID: q.RepoID,
+			Branch: q.Branch,
+		},
+		PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
+		CommitSHA:   commitSHA.String(),
+	})
 }

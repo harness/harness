@@ -145,11 +145,7 @@ func (s *Service) removeAll(
 	}
 
 	for commitSHA := range checksToAbort {
-		if err := s.stopChecks(ctx, commitSHA); err != nil {
-			log.Ctx(ctx).Warn().Err(err).
-				Str("commit_sha", commitSHA.String()).
-				Msg("failed to stop merge queue checks")
-		}
+		s.stopChecks(ctx, q, commitSHA)
 	}
 
 	s.deleteReference(ctx, repo, q.Branch)
@@ -303,12 +299,7 @@ func (s *Service) remove(
 	}
 
 	for mergeSHA := range checksToAbort {
-		err = s.stopChecks(ctx, mergeSHA)
-		if err != nil {
-			log.Ctx(ctx).Warn().Err(err).
-				Str("mergeSHA", mergeSHA.String()).
-				Msg("failed to stop merge queue check")
-		}
+		s.stopChecks(ctx, q, mergeSHA)
 	}
 
 	return nil

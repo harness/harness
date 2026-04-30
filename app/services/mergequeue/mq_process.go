@@ -256,18 +256,14 @@ func (s *Service) process(
 	}
 
 	// Reset the remaining entries to merge pending state.
-	s.resetEntries(ctx, pendingEntries)
+	s.resetEntries(ctx, data.queue, pendingEntries)
 
 	// Update the merge queue reference to point to the last merge commit in the queue.
 	s.updateReference(ctx, data, lastMergeCommitSHA)
 
 	// Stop checks that became stale because new merge commits were created.
 	for commitSHA := range checksToStop {
-		if err := s.stopChecks(ctx, commitSHA); err != nil {
-			log.Ctx(ctx).Warn().Err(err).
-				Str("commit_sha", commitSHA.String()).
-				Msg("failed to stop stale merge queue checks")
-		}
+		s.stopChecks(ctx, data.queue, commitSHA)
 	}
 
 	// Find the entries for which checks should be triggered and make merge groups.
@@ -299,13 +295,7 @@ func (s *Service) process(
 
 		for _, entry := range entriesToUpdate {
 			if entry.State == enum.MergeQueueEntryStateChecksInProgress {
-				if err = s.startChecks(ctx, entry.MergeCommitSHA); err != nil {
-					return fmt.Errorf("failed to start checks for entry %d: %w", entry.PullReqID, err)
-				}
-
-				log.Ctx(ctx).Info().
-					Str("commit_sha", entry.MergeCommitSHA.String()).
-					Msg("triggered merge queue checks for merge commit")
+				s.startChecks(ctx, data.queue, entry.MergeCommitSHA)
 			}
 		}
 	}
@@ -355,18 +345,14 @@ func (s *Service) createProcessCommonData(
 	}, nil
 }
 
-func (s *Service) resetEntries(ctx context.Context, entries []*types.MergeQueueEntry) {
+func (s *Service) resetEntries(ctx context.Context, q *types.MergeQueue, entries []*types.MergeQueueEntry) {
 	for _, entry := range entries {
 		if entry.State == enum.MergeQueueEntryStateMergePending {
 			continue
 		}
 
 		if entry.State == enum.MergeQueueEntryStateChecksInProgress {
-			if err := s.stopChecks(ctx, entry.ChecksCommitSHA); err != nil {
-				log.Ctx(ctx).Warn().Err(err).
-					Str("commit_sha", entry.ChecksCommitSHA.String()).
-					Msg("failed to stop merge queue checks")
-			}
+			s.stopChecks(ctx, q, entry.ChecksCommitSHA)
 		}
 
 		_, err := s.mergeQueueEntryStore.UpdateOptLock(ctx, entry, func(entry *types.MergeQueueEntry) error {

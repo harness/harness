@@ -40,11 +40,11 @@ func (r *Reporter) Updated(ctx context.Context, payload *UpdatedPayload) {
 
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, UpdatedEvent, payload)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to send pull request branch updated event")
+		log.Ctx(ctx).Err(err).Msg("failed to send merge queue updated event")
 		return
 	}
 
-	log.Ctx(ctx).Debug().Msgf("reported pull request branch updated event with id '%s'", eventID)
+	log.Ctx(ctx).Debug().Msgf("reported merge queue updated event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterUpdated(
@@ -52,4 +52,62 @@ func (r *Reader) RegisterUpdated(
 	opts ...events.HandlerOption,
 ) error {
 	return events.ReaderRegisterEvent(r.innerReader, UpdatedEvent, fn, opts...)
+}
+
+const ChecksRequestedEvent events.EventType = "checks_requested"
+
+type ChecksRequestedPayload struct {
+	Base
+	PrincipalID int64  `json:"principal_id"`
+	CommitSHA   string `json:"commit_sha"`
+}
+
+func (r *Reporter) ChecksRequested(ctx context.Context, payload *ChecksRequestedPayload) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, ChecksRequestedEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to send merge queue checks requested event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported merge queue checks requested event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterChecksRequested(
+	fn events.HandlerFunc[*ChecksRequestedPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, ChecksRequestedEvent, fn, opts...)
+}
+
+const ChecksCanceledEvent events.EventType = "checks_canceled"
+
+type ChecksCanceledPayload struct {
+	Base
+	PrincipalID int64  `json:"principal_id"`
+	CommitSHA   string `json:"commit_sha"`
+}
+
+func (r *Reporter) ChecksCanceled(ctx context.Context, payload *ChecksCanceledPayload) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, ChecksCanceledEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to send merge queue checks canceled event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported merge queue checks canceled event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterChecksCanceled(
+	fn events.HandlerFunc[*ChecksCanceledPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, ChecksCanceledEvent, fn, opts...)
 }
