@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
@@ -57,6 +58,8 @@ func ProvideService(
 	mergeService *merge.Service,
 	urlProvider url.Provider,
 	locker *locker.Locker,
+	scheduler *job.Scheduler,
+	executor *job.Executor,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -77,5 +80,7 @@ func ProvideService(
 		mergeService,
 		urlProvider,
 		locker,
+		scheduler,
+		executor,
 	)
 }

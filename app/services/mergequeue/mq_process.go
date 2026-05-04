@@ -119,7 +119,7 @@ func (s *Service) process(
 
 			entries = append(entries[:index], entries[index+1:]...)
 
-			err = s.remove(ctx, pr.ID, enum.MergeQueueRemovalReasonNotQueueable)
+			err = s.remove(ctx, pr.ID, enum.MergeQueueRemovalReasonError)
 			if err != nil {
 				log.Ctx(ctx).Warn().Err(err).
 					Msg("failed to remove from merge queue because PR is not queueable")

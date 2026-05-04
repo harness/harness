@@ -403,7 +403,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	mergequeueService, err := mergequeue.ProvideService(ctx, config, gitInterface, transactor, reporter3, readerFactory, eventsReaderFactory, repoFinder, repoStore, pullReqStore, pullReqActivityStore, checkStore, mergeQueueStore, mergeQueueEntryStore, protectionManager, mergeService, provider, lockerLocker)
+	mergequeueService, err := mergequeue.ProvideService(ctx, config, gitInterface, transactor, reporter3, readerFactory, eventsReaderFactory, repoFinder, repoStore, pullReqStore, pullReqActivityStore, checkStore, mergeQueueStore, mergeQueueEntryStore, protectionManager, mergeService, provider, lockerLocker, jobScheduler, executor)
 	if err != nil {
 		return nil, err
 	}

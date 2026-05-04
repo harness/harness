@@ -65,8 +65,8 @@ const (
 	MergeQueueRemovalReasonConflict MergeQueueRemovalReason = "conflict"
 	// MergeQueueRemovalReasonCheckFail indicates the entry was removed because CI checks failed.
 	MergeQueueRemovalReasonCheckFail MergeQueueRemovalReason = "check_fail"
-	// MergeQueueRemovalReasonNotQueueable indicates the entry was removed because pull request couldn't be queued.
-	MergeQueueRemovalReasonNotQueueable MergeQueueRemovalReason = "not_queueable"
+	// MergeQueueRemovalReasonCheckTimeout indicates the entry was removed because checks exceeded the deadline.
+	MergeQueueRemovalReasonCheckTimeout MergeQueueRemovalReason = "check_timeout"
 	// MergeQueueRemovalReasonNoQueue indicates the entry was removed because merge queue isn't configured.
 	MergeQueueRemovalReasonNoQueue MergeQueueRemovalReason = "no_queue"
 	// MergeQueueRemovalReasonError indicates the entry was removed due to an unexpected error.
@@ -77,7 +77,7 @@ var mergeQueueRemovalReasons = sortEnum([]MergeQueueRemovalReason{
 	MergeQueueRemovalReasonManual,
 	MergeQueueRemovalReasonConflict,
 	MergeQueueRemovalReasonCheckFail,
-	MergeQueueRemovalReasonNotQueueable,
+	MergeQueueRemovalReasonCheckTimeout,
 	MergeQueueRemovalReasonNoQueue,
 	MergeQueueRemovalReasonError,
 })

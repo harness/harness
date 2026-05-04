@@ -16,6 +16,7 @@ package mergequeue
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	checkevents "github.com/harness/gitness/app/events/check"
@@ -28,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
@@ -74,6 +76,8 @@ func NewService(
 	mergeService *merge.Service,
 	urlProvider url.Provider,
 	locker *locker.Locker,
+	scheduler *job.Scheduler,
+	executor *job.Executor,
 ) (*Service, error) {
 	service := &Service{
 		git:                       git,
@@ -131,6 +135,21 @@ func NewService(
 		})
 	if err != nil {
 		return nil, err
+	}
+
+	overdueJob := &jobOverdueChecks{
+		mergeQueueEntryStore: mergeQueueEntryStore,
+		service:              service,
+	}
+
+	err = executor.Register(jobTypeOverdueChecks, overdueJob)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register merge queue overdue checks job: %w", err)
+	}
+
+	err = scheduler.AddRecurring(ctx, jobTypeOverdueChecks, jobTypeOverdueChecks, jobOverdueCron, jobOverdueTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("failed to schedule merge queue overdue checks job: %w", err)
 	}
 
 	return service, nil
