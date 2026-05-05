@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
+
+	"github.com/google/uuid"
 )
 
 // GenericReporter represents an event reporter that supports sending typesafe messages
@@ -40,8 +42,13 @@ type GenericReporter struct {
 func ReporterSendEvent[T any](reporter *GenericReporter, ctx context.Context,
 	eventType EventType, payload T) (string, error) {
 	streamID := getStreamID(reporter.category, eventType)
+	eventID, err := uuid.NewV7()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate event ID: %w", err)
+	}
+
 	event := Event[T]{
-		ID:        "", // will be set by GenericReader
+		ID:        eventID.String(),
 		Timestamp: time.Now(),
 		Payload:   payload,
 	}
@@ -60,6 +67,9 @@ func ReporterSendEvent[T any](reporter *GenericReporter, ctx context.Context,
 		streamPayloadKey: buff.Bytes(),
 	}
 
-	// We are using the message ID as event ID.
-	return reporter.producer.Send(ctx, streamID, streamPayload)
+	if _, err = reporter.producer.Send(ctx, streamID, streamPayload); err != nil {
+		return "", fmt.Errorf("failed to send event: %w", err)
+	}
+
+	return event.ID, nil
 }

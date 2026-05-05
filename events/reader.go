@@ -196,9 +196,6 @@ func ReaderRegisterEvent[T any](reader *GenericReader,
 				return fmt.Errorf("stream payload can't be decoded into type %T (message '%s')", *new(T), messageID)
 			}
 
-			// populate event ID using the message ID (has to be populated here, producer doesn't know the message ID yet)
-			event.ID = messageID
-
 			// update ctx with event type for proper logging
 			log := log.Ctx(ctx).With().
 				Str("events.type", string(eventType)).
