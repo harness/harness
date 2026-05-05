@@ -22,11 +22,12 @@ import (
 )
 
 type CheckInput struct {
-	ParentRef     string `json:"parent_ref"`
-	Identifier    string `json:"identifier"`
-	DefaultBranch string `json:"default_branch"`
-	Description   string `json:"description"`
-	IsPublic      bool   `json:"is_public"`
+	ParentRef     string         `json:"parent_ref"`
+	Identifier    string         `json:"identifier"`
+	DefaultBranch string         `json:"default_branch"`
+	Description   string         `json:"description"`
+	IsPublic      bool           `json:"is_public"`
+	Tags          types.RepoTags `json:"tags"`
 
 	IsFork       bool   `json:"is_fork,omitempty"`
 	UpstreamPath string `json:"upstream_path,omitempty"`

@@ -100,6 +100,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		IsPublic:          in.IsPublic,
 		IsFork:            false,
 		CreateFileOptions: in.CreateFileOptions,
+		Tags:              in.Tags,
 	})
 	if err != nil {
 		return nil, err
