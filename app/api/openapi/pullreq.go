@@ -1038,4 +1038,16 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeQueueRemove, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/mergequeue", opMergeQueueRemove)
+
+	opMergeQueuePrioritize := openapi3.Operation{}
+	opMergeQueuePrioritize.WithTags("pullreq")
+	opMergeQueuePrioritize.WithMapOfAnything(map[string]any{"operationId": "prMergeQueuePrioritize"})
+	_ = reflector.SetRequest(&opMergeQueuePrioritize, new(pullReqRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opMergeQueuePrioritize, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opMergeQueuePrioritize, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opMergeQueuePrioritize, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMergeQueuePrioritize, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMergeQueuePrioritize, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/mergequeue/prioritize", opMergeQueuePrioritize)
 }

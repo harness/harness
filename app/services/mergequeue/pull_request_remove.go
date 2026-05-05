@@ -31,8 +31,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var ErrNotInQueue = errors.New("not in queue")
-
 // Remove removes a pull request from a merge queue.
 // Intended to be called from external packages, such as a pull request controller.
 // Triggers merge queue Updated event. Must not be called inside a transaction.

@@ -746,6 +746,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Route("/mergequeue", func(r chi.Router) {
 				r.Put("/", handlerpullreq.HandleMergeQueueEnable(pullreqCtrl))
 				r.Delete("/", handlerpullreq.HandleMergeQueueRemove(pullreqCtrl))
+				r.Post("/prioritize", handlerpullreq.HandleMergeQueuePrioritize(pullreqCtrl))
 			})
 
 			setupPullReqLabels(r, pullreqCtrl)

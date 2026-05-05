@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
@@ -37,6 +38,11 @@ import (
 
 const (
 	MaximumQueueSize = 100
+)
+
+var (
+	ErrNotInQueue  = errors.New("not in queue")
+	ErrAlreadyHead = errors.New("already head")
 )
 
 type Service struct {
