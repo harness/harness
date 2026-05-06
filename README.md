@@ -192,3 +192,7 @@ Refer to [CONTRIBUTING.md](https://github.com/harness/harness/blob/main/CONTRIBU
 ## License
 
 Apache License 2.0, see [LICENSE](https://github.com/harness/harness/blob/main/LICENSE).
+
+## My GitHub Learning Note
+
+I am currently learning how to use GitHub and getting familiar with version control step by step. It feels a little new and challenging at first, but I am happy to see myself making progress and understanding more each day.
