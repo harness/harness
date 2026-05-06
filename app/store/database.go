@@ -1540,6 +1540,12 @@ type (
 		UpdateLastPR(ctx context.Context, repoID int64, branchName string, pullReqID *int64) error
 	}
 
+	RepoActivityStore interface {
+		Create(ctx context.Context, activity *types.RepoActivity) error
+		Count(ctx context.Context, repoID int64, filter *types.RepoActivityFilter) (int, error)
+		List(ctx context.Context, repoID int64, filter *types.RepoActivityFilter) ([]*types.RepoActivity, error)
+	}
+
 	InfraProviderTemplateStore interface {
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderTemplate, error)
 		Find(ctx context.Context, id int64) (*types.InfraProviderTemplate, error)

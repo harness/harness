@@ -135,6 +135,7 @@ type calculateCommitDivergenceRequest struct {
 type listBranchesRequest struct {
 	repoRequest
 }
+
 type createBranchRequest struct {
 	repoRequest
 	repo.CreateBranchInput
@@ -261,6 +262,36 @@ var queryParameterSince = openapi3.ParameterOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
 				Example: ptrptr(1728348213),
+			},
+		},
+	},
+}
+
+var queryParameterRepoActivityAfter = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamAfter,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Epoch timestamp after which repository activity should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Example: ptrptr(1728348213),
+			},
+		},
+	},
+}
+
+var queryParameterRepoActivityBefore = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamBefore,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Epoch timestamp before which repository activity should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Example: ptrptr(1746668446),
 			},
 		},
 	},
@@ -1311,6 +1342,24 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/summary", opSummary)
+
+	opListActivities := openapi3.Operation{}
+	opListActivities.WithTags("repository")
+	opListActivities.WithMapOfAnything(map[string]any{"operationId": "listActivities"})
+	opListActivities.WithParameters(
+		queryParameterRepoActivityAfter,
+		queryParameterRepoActivityBefore,
+		QueryParameterPage,
+		QueryParameterLimit,
+	)
+	_ = reflector.SetRequest(&opListActivities, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListActivities, []*types.RepoActivity{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListActivities, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opListActivities, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListActivities, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListActivities, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListActivities, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/activities", opListActivities)
 
 	opDefineLabel := openapi3.Operation{}
 	opDefineLabel.WithTags("repository")

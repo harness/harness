@@ -59,6 +59,7 @@ func ProvideController(
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
+	repoActivityStore store.RepoActivityStore,
 	linkedRepoStore store.LinkedRepoStore,
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
@@ -103,7 +104,7 @@ func ProvideController(
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
-		repoStore, linkedRepoStore, spaceStore, pipelineStore, executionStore,
+		repoStore, repoActivityStore, linkedRepoStore, spaceStore, pipelineStore, executionStore,
 		principalStore, ruleStore, checkStore, pullReqStore, settings,
 		principalInfoCache, protectionManager, rpcClient, spaceFinder, repoFinder,
 		importer, referenceSync, importLinked,

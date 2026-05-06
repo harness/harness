@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/notification"
+	"github.com/harness/gitness/app/services/repoactivity"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
@@ -357,6 +358,14 @@ func ProvideTriggerConfig(config *types.Config) trigger.Config {
 
 func ProvideBranchConfig(config *types.Config) branch.Config {
 	return branch.Config{
+		EventReaderName: config.InstanceID,
+		Concurrency:     config.Branch.Concurrency,
+		MaxRetries:      config.Branch.MaxRetries,
+	}
+}
+
+func ProvideRepoActivityConfig(config *types.Config) repoactivity.Config {
+	return repoactivity.Config{
 		EventReaderName: config.InstanceID,
 		Concurrency:     config.Branch.Concurrency,
 		MaxRetries:      config.Branch.MaxRetries,

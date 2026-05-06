@@ -84,6 +84,7 @@ func (s *Service) handleEventBranchUpdated(
 	if err := s.branchStore.Upsert(ctx, event.Payload.RepoID, branch); err != nil {
 		return fmt.Errorf("failed to upsert branch in database: %w", err)
 	}
+
 	return nil
 }
 

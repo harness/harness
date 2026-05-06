@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/repo"
+	"github.com/harness/gitness/app/services/repoactivity"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
@@ -62,6 +63,7 @@ type Services struct {
 	instrumentRepoCounter          *instrument.RepositoryCount
 	registryWebhooksService        *registrywebhooks.Service
 	Branch                         *branch.Service
+	repoActivity                   *repoactivity.Service
 	registryAsyncProcessingService *registryasyncprocessing.Service
 	languageAnalyzer               languageanalyzer.LanguageAnalyzer
 }
@@ -113,6 +115,7 @@ func ProvideServices(
 	instrumentRepoCounter *instrument.RepositoryCount,
 	registryWebhooksService *registrywebhooks.Service,
 	branchSvc *branch.Service,
+	repoActivitySvc *repoactivity.Service,
 	registryAsyncProcessingService *registryasyncprocessing.Service,
 	registryJobRpmRegistryIndex *handler.JobRpmRegistryIndex,
 	languageAnalyzer languageanalyzer.LanguageAnalyzer,
@@ -134,6 +137,7 @@ func ProvideServices(
 		instrumentRepoCounter:          instrumentRepoCounter,
 		registryWebhooksService:        registryWebhooksService,
 		Branch:                         branchSvc,
+		repoActivity:                   repoActivitySvc,
 		registryAsyncProcessingService: registryAsyncProcessingService,
 		languageAnalyzer:               languageAnalyzer,
 	}

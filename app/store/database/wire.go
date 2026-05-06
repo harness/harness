@@ -40,6 +40,7 @@ var WireSet = wire.NewSet(
 	ProvideRepoLangStore,
 	ProvideLinkRepoStore,
 	ProvideBranchStore,
+	ProvideRepoActivityStore,
 	ProvideRuleStore,
 	ProvideJobStore,
 	ProvideExecutionStore,
@@ -382,6 +383,11 @@ func ProvideGitSignatureResultStore(db *sqlx.DB) store.GitSignatureResultStore {
 // ProvideBranchStore provides a branch store.
 func ProvideBranchStore(db *sqlx.DB) store.BranchStore {
 	return NewBranchStore(db)
+}
+
+// ProvideRepoActivityStore provides a repository activity store.
+func ProvideRepoActivityStore(db *sqlx.DB) store.RepoActivityStore {
+	return NewRepoActivityStore(db)
 }
 
 // ProvideGitspaceEventStore provides a gitspace event store.

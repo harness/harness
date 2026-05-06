@@ -87,6 +87,7 @@ type Controller struct {
 	urlProvider            url.Provider
 	authorizer             authz.Authorizer
 	repoStore              store.RepoStore
+	repoActivityStore      store.RepoActivityStore
 	linkedRepoStore        store.LinkedRepoStore
 	spaceStore             store.SpaceStore
 	pipelineStore          store.PipelineStore
@@ -136,6 +137,7 @@ func NewController(
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
+	repoActivityStore store.RepoActivityStore,
 	linkedRepoStore store.LinkedRepoStore,
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
@@ -184,6 +186,7 @@ func NewController(
 		urlProvider:            urlProvider,
 		authorizer:             authorizer,
 		repoStore:              repoStore,
+		repoActivityStore:      repoActivityStore,
 		linkedRepoStore:        linkedRepoStore,
 		spaceStore:             spaceStore,
 		pipelineStore:          pipelineStore,

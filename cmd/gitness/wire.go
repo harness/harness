@@ -119,6 +119,7 @@ import (
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/remoteauth"
 	reposervice "github.com/harness/gitness/app/services/repo"
+	"github.com/harness/gitness/app/services/repoactivity"
 	"github.com/harness/gitness/app/services/rules"
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
@@ -333,6 +334,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		registryindex.WireSet,
 		cliserver.ProvideBranchConfig,
 		branch.WireSet,
+		cliserver.ProvideRepoActivityConfig,
+		repoactivity.WireSet,
 		autolink.WireSet,
 		dotrange.WireSet,
 		cargoutils.WireSet,
