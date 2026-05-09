@@ -628,12 +628,6 @@ func findReviewerInList(email string, uid string, reviewers []*types.PullReqRevi
 // Match matches a file path against the provided CODEOWNERS pattern.
 // The code follows the .gitignore syntax closely (similar to github):
 // https://git-scm.com/docs/gitignore#_pattern_format
-//
-// IMPORTANT: It seems that doublestar has a bug, as `*k/**` matches `k` but `k*/**` doesnt (incorrect)'.
-// Because of that, we currently match patterns like `test*` only partially:
-// - `test2`, `test/abc`, `test2/abc` are matching
-// - `test` is not matching
-// As a workaround, the user will have to add the same rule without a trailing `*` for now.
 func match(pattern string, path string) (bool, error) {
 	if pattern == "" {
 		return false, fmt.Errorf("empty pattern not allowed")
@@ -667,6 +661,14 @@ func match(pattern string, path string) (bool, error) {
 	// Since doublestar matches pattern "x/**" with target "x", we replace it with "x/*/**".
 	if strings.HasSuffix(pattern, "/**") {
 		pattern = pattern[:len(pattern)-3] + "/*/**"
+	}
+
+	fileMatch, err := doublestar.PathMatch(pattern, path)
+	if err != nil {
+		return false, fmt.Errorf("failed doublestar path match: %w", err)
+	}
+	if fileMatch {
+		return true, nil
 	}
 
 	// If CODEOWNERS matches a file, it also matches a folder with the same name, and anything inside that folder.
