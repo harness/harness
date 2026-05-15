@@ -16,25 +16,23 @@ package pullreq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	events "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-type ReviewerAddInput struct {
-	ReviewerID int64 `json:"reviewer_id"`
-}
-
-// ReviewerAdd adds a new reviewer to the pull request.
-func (c *Controller) ReviewerAdd(
+// ReviewerSuggestApply applies one reviewer suggestion to the pull request.
+func (c *Controller) ReviewerSuggestApply(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	prNum int64,
-	in *ReviewerAddInput,
+	reviewerID int64,
 ) (*types.PullReqReviewer, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {
@@ -46,29 +44,23 @@ func (c *Controller) ReviewerAdd(
 		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
-	reviewer, added, err := c.pullreqService.AddReviewer(ctx, &session.Principal, repo, pr, in.ReviewerID)
+	suggestion, err := c.reviewerSuggestionStore.Find(ctx, pr.ID, reviewerID)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		return nil, usererror.NotFoundf("Suggested reviewer with ID %d could not be found.", reviewerID)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to find reviewer suggestion: %w", err)
+	}
+
+	reviewer, added, err := c.pullreqService.AddReviewer(ctx, &session.Principal, repo, pr, suggestion.PrincipalID)
 	if err != nil {
 		return nil, err
 	}
 
-	if !added {
-		return reviewer, nil
+	if added {
+		c.reportReviewerAddition(ctx, session, pr, reviewer)
+		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqReviewerAdded, pr)
 	}
 
-	c.reportReviewerAddition(ctx, session, pr, reviewer)
-
-	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqReviewerAdded, pr)
 	return reviewer, nil
-}
-
-func (c *Controller) reportReviewerAddition(
-	ctx context.Context,
-	session *auth.Session,
-	pr *types.PullReq,
-	reviewer *types.PullReqReviewer,
-) {
-	c.eventReporter.ReviewerAdded(ctx, &events.ReviewerAddedPayload{
-		Base:       eventBase(pr, &session.Principal),
-		ReviewerID: reviewer.PrincipalID,
-	})
 }

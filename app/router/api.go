@@ -770,6 +770,14 @@ func setupPullReqLabels(r chi.Router, pullreqCtrl *pullreq.Controller) {
 
 func setupPullReqSuggestions(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	r.Route("/suggestions", func(r chi.Router) {
+		r.Route("/reviewers", func(r chi.Router) {
+			r.Get("/", handlerpullreq.HandleReviewerSuggestList(pullreqCtrl))
+			r.Post("/batch", handlerpullreq.HandleReviewerSuggestBatch(pullreqCtrl))
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamPrincipalID), func(r chi.Router) {
+				r.Delete("/", handlerpullreq.HandleReviewerSuggestDelete(pullreqCtrl))
+				r.Post("/apply", handlerpullreq.HandleReviewerSuggestApply(pullreqCtrl))
+			})
+		})
 		r.Route("/labels", func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleListSuggestedLabels(pullreqCtrl))
 			r.Post("/batch", handlerpullreq.HandleSuggestLabels(pullreqCtrl))

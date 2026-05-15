@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	labelsvc "github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/protection"
+	pullreqsvc "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -705,14 +706,14 @@ func (c *Controller) createUserReviewers(
 		return nil
 	}
 
-	requestedBy := session.Principal.ToPrincipalInfo()
+	addedBy := session.Principal.ToPrincipalInfo()
 	for _, principalInfo := range principalInfos {
-		reviewer := newPullReqReviewer(
-			session, pr, repo,
+		reviewer := pullreqsvc.NewPullReqReviewer(
+			pr, repo,
 			principalInfo,
-			requestedBy,
+			addedBy,
 			enum.PullReqReviewerTypeRequested,
-			&ReviewerAddInput{ReviewerID: principalInfo.ID},
+			principalInfo.ID,
 		)
 		if err := c.reviewerStore.Create(ctx, reviewer); err != nil {
 			return fmt.Errorf("failed to create pull request reviewer: %w", err)

@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/label"
+	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/git"
 	gittypes "github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
@@ -164,6 +165,16 @@ type getPullReqChecksRequest struct {
 type pullReqAssignLabelInput struct {
 	pullReqRequest
 	types.PullReqLabelAssignInput
+}
+
+type pullReqSuggestReviewersBatchRequest struct {
+	pullReqRequest
+	pullreqservice.ReviewerSuggestBatchInput
+}
+
+type pullReqSuggestedReviewerRequest struct {
+	pullReqRequest
+	PrincipalID int64 `path:"principal_id"`
 }
 
 type pullReqSuggestLabelsBatchRequest struct {
@@ -1078,6 +1089,58 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeQueuePrioritize, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/mergequeue/prioritize", opMergeQueuePrioritize)
+
+	opListSuggestedReviewers := openapi3.Operation{}
+	opListSuggestedReviewers.WithTags("pullreq")
+	opListSuggestedReviewers.WithMapOfAnything(map[string]any{"operationId": "listSuggestedReviewers"})
+	opListSuggestedReviewers.WithParameters(QueryParameterPage, QueryParameterLimit)
+	_ = reflector.SetRequest(&opListSuggestedReviewers, new(pullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListSuggestedReviewers, new(types.ListReviewerSuggestionsOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListSuggestedReviewers, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opListSuggestedReviewers, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListSuggestedReviewers, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListSuggestedReviewers, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/suggestions/reviewers", opListSuggestedReviewers)
+
+	opSuggestReviewersBatch := openapi3.Operation{}
+	opSuggestReviewersBatch.WithTags("pullreq")
+	opSuggestReviewersBatch.WithMapOfAnything(map[string]any{"operationId": "suggestReviewersBatch"})
+	_ = reflector.SetRequest(&opSuggestReviewersBatch, new(pullReqSuggestReviewersBatchRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, nil, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/suggestions/reviewers/batch", opSuggestReviewersBatch)
+
+	opRemoveSuggestedReviewer := openapi3.Operation{}
+	opRemoveSuggestedReviewer.WithTags("pullreq")
+	opRemoveSuggestedReviewer.WithMapOfAnything(map[string]any{"operationId": "removeSuggestedReviewer"})
+	_ = reflector.SetRequest(&opRemoveSuggestedReviewer, new(pullReqSuggestedReviewerRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opRemoveSuggestedReviewer, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opRemoveSuggestedReviewer, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opRemoveSuggestedReviewer, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRemoveSuggestedReviewer, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRemoveSuggestedReviewer, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRemoveSuggestedReviewer, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/suggestions/reviewers/{principal_id}", opRemoveSuggestedReviewer)
+
+	opApplySuggestedReviewer := openapi3.Operation{}
+	opApplySuggestedReviewer.WithTags("pullreq")
+	opApplySuggestedReviewer.WithMapOfAnything(map[string]any{"operationId": "applySuggestedReviewer"})
+	_ = reflector.SetRequest(&opApplySuggestedReviewer, new(pullReqSuggestedReviewerRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opApplySuggestedReviewer, new(types.PullReqReviewer), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opApplySuggestedReviewer, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opApplySuggestedReviewer, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opApplySuggestedReviewer, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opApplySuggestedReviewer, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opApplySuggestedReviewer, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/suggestions/reviewers/{principal_id}/apply", opApplySuggestedReviewer)
 
 	opListSuggestedLabels := openapi3.Operation{}
 	opListSuggestedLabels.WithTags("pullreq")

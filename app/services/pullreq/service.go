@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
@@ -31,24 +32,30 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type Service struct {
-	pullreqEvReporter   *pullreqevents.Reporter
-	git                 git.Interface
-	repoFinder          refcache.RepoFinder
-	repoStore           store.RepoStore
-	pullreqStore        store.PullReqStore
-	activityStore       store.PullReqActivityStore
-	codeCommentView     store.CodeCommentView
-	principalInfoCache  store.PrincipalInfoCache
-	codeCommentMigrator *codecomments.Migrator
-	fileViewStore       store.PullReqFileViewStore
-	sseStreamer         sse.Streamer
-	urlProvider         url.Provider
+	pullreqEvReporter       *pullreqevents.Reporter
+	tx                      dbtx.Transactor
+	authorizer              authz.Authorizer
+	git                     git.Interface
+	repoFinder              refcache.RepoFinder
+	repoStore               store.RepoStore
+	pullreqStore            store.PullReqStore
+	activityStore           store.PullReqActivityStore
+	principalStore          store.PrincipalStore
+	reviewerStore           store.PullReqReviewerStore
+	reviewerSuggestionStore store.PullReqReviewerSuggestionStore
+	codeCommentView         store.CodeCommentView
+	principalInfoCache      store.PrincipalInfoCache
+	codeCommentMigrator     *codecomments.Migrator
+	fileViewStore           store.PullReqFileViewStore
+	sseStreamer             sse.Streamer
+	urlProvider             url.Provider
 
 	cancelMutex        sync.Mutex
 	cancelMergeability map[string]context.CancelFunc
@@ -62,11 +69,16 @@ func New(ctx context.Context,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	pullreqEvReporter *pullreqevents.Reporter,
+	tx dbtx.Transactor,
+	authorizer authz.Authorizer,
 	git git.Interface,
 	repoFinder refcache.RepoFinder,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
+	principalStore store.PrincipalStore,
+	reviewerStore store.PullReqReviewerStore,
+	reviewerSuggestionStore store.PullReqReviewerSuggestionStore,
 	codeCommentView store.CodeCommentView,
 	codeCommentMigrator *codecomments.Migrator,
 	fileViewStore store.PullReqFileViewStore,
@@ -76,20 +88,25 @@ func New(ctx context.Context,
 	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	service := &Service{
-		pullreqEvReporter:   pullreqEvReporter,
-		git:                 git,
-		repoFinder:          repoFinder,
-		repoStore:           repoStore,
-		pullreqStore:        pullreqStore,
-		activityStore:       activityStore,
-		principalInfoCache:  principalInfoCache,
-		codeCommentView:     codeCommentView,
-		urlProvider:         urlProvider,
-		codeCommentMigrator: codeCommentMigrator,
-		fileViewStore:       fileViewStore,
-		cancelMergeability:  make(map[string]context.CancelFunc),
-		pubsub:              bus,
-		sseStreamer:         sseStreamer,
+		pullreqEvReporter:       pullreqEvReporter,
+		tx:                      tx,
+		authorizer:              authorizer,
+		git:                     git,
+		repoFinder:              repoFinder,
+		repoStore:               repoStore,
+		pullreqStore:            pullreqStore,
+		activityStore:           activityStore,
+		principalStore:          principalStore,
+		reviewerStore:           reviewerStore,
+		reviewerSuggestionStore: reviewerSuggestionStore,
+		principalInfoCache:      principalInfoCache,
+		codeCommentView:         codeCommentView,
+		urlProvider:             urlProvider,
+		codeCommentMigrator:     codeCommentMigrator,
+		fileViewStore:           fileViewStore,
+		cancelMergeability:      make(map[string]context.CancelFunc),
+		pubsub:                  bus,
+		sseStreamer:             sseStreamer,
 	}
 
 	var err error

@@ -54,51 +54,52 @@ import (
 )
 
 type Controller struct {
-	tx                     dbtx.Transactor
-	urlProvider            url.Provider
-	authorizer             authz.Authorizer
-	auditService           audit.Service
-	pullreqStore           store.PullReqStore
-	activityStore          store.PullReqActivityStore
-	codeCommentView        store.CodeCommentView
-	reviewStore            store.PullReqReviewStore
-	reviewerStore          store.PullReqReviewerStore
-	userGroupReviewerStore store.UserGroupReviewerStore
-	repoStore              store.RepoStore
-	principalStore         store.PrincipalStore
-	userGroupStore         store.UserGroupStore
-	principalInfoCache     store.PrincipalInfoCache
-	fileViewStore          store.PullReqFileViewStore
-	membershipStore        store.MembershipStore
-	checkStore             store.CheckStore
-	autoMergeStore         store.AutoMergeStore
-	mergeQueueStore        store.MergeQueueStore
-	mergeQueueEntryStore   store.MergeQueueEntryStore
-	mergeQueueService      *mergequeuesvc.Service
-	git                    git.Interface
-	repoFinder             refcache.RepoFinder
-	eventReporter          *pullreqevents.Reporter
-	codeCommentMigrator    *codecomments.Migrator
-	pullreqService         *pullreq.Service
-	pullreqListService     *pullreq.ListService
-	mergeService           *merge.Service
-	autoMergeService       *automerge.Service
-	protectionManager      *protection.Manager
-	sseStreamer            sse.Streamer
-	dotRangeService        *dotrange.Service
-	codeOwners             *codeowners.Service
-	locker                 *locker.Locker
-	settings               *settings.Service
-	importer               *migrate.PullReq
-	labelSvc               *label.Service
-	labelStore             store.LabelStore
-	labelValueStore        store.LabelValueStore
-	labelSuggestionStore   store.PullReqLabelSuggestionStore
-	instrumentation        instrument.Service
-	userGroupService       usergroup.Service
-	branchStore            store.BranchStore
-	userGroupResolver      usergroup.Resolver
-	signatureVerifyService publickey.SignatureVerifyService
+	tx                      dbtx.Transactor
+	urlProvider             url.Provider
+	authorizer              authz.Authorizer
+	auditService            audit.Service
+	pullreqStore            store.PullReqStore
+	activityStore           store.PullReqActivityStore
+	codeCommentView         store.CodeCommentView
+	reviewStore             store.PullReqReviewStore
+	reviewerStore           store.PullReqReviewerStore
+	reviewerSuggestionStore store.PullReqReviewerSuggestionStore
+	userGroupReviewerStore  store.UserGroupReviewerStore
+	repoStore               store.RepoStore
+	principalStore          store.PrincipalStore
+	userGroupStore          store.UserGroupStore
+	principalInfoCache      store.PrincipalInfoCache
+	fileViewStore           store.PullReqFileViewStore
+	membershipStore         store.MembershipStore
+	checkStore              store.CheckStore
+	autoMergeStore          store.AutoMergeStore
+	mergeQueueStore         store.MergeQueueStore
+	mergeQueueEntryStore    store.MergeQueueEntryStore
+	mergeQueueService       *mergequeuesvc.Service
+	git                     git.Interface
+	repoFinder              refcache.RepoFinder
+	eventReporter           *pullreqevents.Reporter
+	codeCommentMigrator     *codecomments.Migrator
+	pullreqService          *pullreq.Service
+	pullreqListService      *pullreq.ListService
+	mergeService            *merge.Service
+	autoMergeService        *automerge.Service
+	protectionManager       *protection.Manager
+	sseStreamer             sse.Streamer
+	dotRangeService         *dotrange.Service
+	codeOwners              *codeowners.Service
+	locker                  *locker.Locker
+	settings                *settings.Service
+	importer                *migrate.PullReq
+	labelSvc                *label.Service
+	labelStore              store.LabelStore
+	labelValueStore         store.LabelValueStore
+	labelSuggestionStore    store.PullReqLabelSuggestionStore
+	instrumentation         instrument.Service
+	userGroupService        usergroup.Service
+	branchStore             store.BranchStore
+	userGroupResolver       usergroup.Resolver
+	signatureVerifyService  publickey.SignatureVerifyService
 }
 
 func NewController(
@@ -111,6 +112,7 @@ func NewController(
 	codeCommentView store.CodeCommentView,
 	pullreqReviewStore store.PullReqReviewStore,
 	pullreqReviewerStore store.PullReqReviewerStore,
+	pullreqReviewerSuggestionStore store.PullReqReviewerSuggestionStore,
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	userGroupStore store.UserGroupStore,
@@ -149,51 +151,52 @@ func NewController(
 	signatureVerifyService publickey.SignatureVerifyService,
 ) *Controller {
 	return &Controller{
-		tx:                     tx,
-		urlProvider:            urlProvider,
-		authorizer:             authorizer,
-		auditService:           auditService,
-		pullreqStore:           pullreqStore,
-		activityStore:          pullreqActivityStore,
-		codeCommentView:        codeCommentView,
-		reviewStore:            pullreqReviewStore,
-		reviewerStore:          pullreqReviewerStore,
-		repoStore:              repoStore,
-		principalStore:         principalStore,
-		userGroupStore:         userGroupStore,
-		userGroupReviewerStore: userGroupReviewerStore,
-		principalInfoCache:     principalInfoCache,
-		fileViewStore:          fileViewStore,
-		membershipStore:        membershipStore,
-		checkStore:             checkStore,
-		autoMergeStore:         autoMergeStore,
-		mergeQueueStore:        mergeQueueStore,
-		mergeQueueEntryStore:   mergeQueueEntryStore,
-		mergeQueueService:      mergeQueueService,
-		git:                    git,
-		repoFinder:             repoFinder,
-		codeCommentMigrator:    codeCommentMigrator,
-		eventReporter:          eventReporter,
-		pullreqService:         pullreqService,
-		pullreqListService:     pullreqListService,
-		protectionManager:      protectionManager,
-		mergeService:           mergeService,
-		autoMergeService:       autoMergeService,
-		sseStreamer:            sseStreamer,
-		dotRangeService:        dotRangeService,
-		codeOwners:             codeowners,
-		locker:                 locker,
-		settings:               settings,
-		importer:               importer,
-		labelSvc:               labelSvc,
-		labelStore:             labelStore,
-		labelValueStore:        labelValueStore,
-		labelSuggestionStore:   labelSuggestionStore,
-		instrumentation:        instrumentation,
-		userGroupService:       userGroupService,
-		branchStore:            branchStore,
-		userGroupResolver:      userGroupResolver,
-		signatureVerifyService: signatureVerifyService,
+		tx:                      tx,
+		urlProvider:             urlProvider,
+		authorizer:              authorizer,
+		auditService:            auditService,
+		pullreqStore:            pullreqStore,
+		activityStore:           pullreqActivityStore,
+		codeCommentView:         codeCommentView,
+		reviewStore:             pullreqReviewStore,
+		reviewerStore:           pullreqReviewerStore,
+		reviewerSuggestionStore: pullreqReviewerSuggestionStore,
+		userGroupReviewerStore:  userGroupReviewerStore,
+		repoStore:               repoStore,
+		principalStore:          principalStore,
+		userGroupStore:          userGroupStore,
+		principalInfoCache:      principalInfoCache,
+		fileViewStore:           fileViewStore,
+		membershipStore:         membershipStore,
+		checkStore:              checkStore,
+		autoMergeStore:          autoMergeStore,
+		mergeQueueStore:         mergeQueueStore,
+		mergeQueueEntryStore:    mergeQueueEntryStore,
+		mergeQueueService:       mergeQueueService,
+		git:                     git,
+		repoFinder:              repoFinder,
+		codeCommentMigrator:     codeCommentMigrator,
+		eventReporter:           eventReporter,
+		pullreqService:          pullreqService,
+		pullreqListService:      pullreqListService,
+		protectionManager:       protectionManager,
+		mergeService:            mergeService,
+		autoMergeService:        autoMergeService,
+		sseStreamer:             sseStreamer,
+		dotRangeService:         dotRangeService,
+		codeOwners:              codeowners,
+		locker:                  locker,
+		settings:                settings,
+		importer:                importer,
+		labelSvc:                labelSvc,
+		labelStore:              labelStore,
+		labelValueStore:         labelValueStore,
+		labelSuggestionStore:    labelSuggestionStore,
+		instrumentation:         instrumentation,
+		userGroupService:        userGroupService,
+		branchStore:             branchStore,
+		userGroupResolver:       userGroupResolver,
+		signatureVerifyService:  signatureVerifyService,
 	}
 }
 

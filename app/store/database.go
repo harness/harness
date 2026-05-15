@@ -588,6 +588,23 @@ type (
 		List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error)
 	}
 
+	PullReqReviewerSuggestionStore interface {
+		// Find returns reviewer suggestion by pull request id and principal id.
+		Find(ctx context.Context, prID, principalID int64) (*types.PullReqReviewerSuggestion, error)
+
+		// List returns reviewer suggestions for a pull request.
+		List(ctx context.Context, prID int64, pagination types.Pagination) ([]*types.PullReqReviewerSuggestion, error)
+
+		// Count returns total number of reviewer suggestions for a pull request.
+		Count(ctx context.Context, prID int64) (int64, error)
+
+		// CreateMany inserts reviewer suggestions in batch and ignores conflicts.
+		CreateMany(ctx context.Context, suggestions []*types.PullReqReviewerSuggestion) error
+
+		// Delete removes reviewer suggestion by pull request id and principal id.
+		Delete(ctx context.Context, prID, principalID int64) error
+	}
+
 	// UserGroupReviewerStore defines the pull request usergroup reviewer storage.
 	UserGroupReviewerStore interface {
 		Create(ctx context.Context, v *types.UserGroupReviewer) error

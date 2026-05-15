@@ -1,0 +1,1 @@
+DROP TABLE pullreq_reviewer_suggestions;
