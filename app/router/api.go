@@ -753,7 +753,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			})
 
 			setupPullReqLabels(r, pullreqCtrl)
-			setupPullReqSuggestions(r, pullreqCtrl)
+			SetupPullReqSuggestions(r, pullreqCtrl)
 		})
 	})
 }
@@ -768,7 +768,7 @@ func setupPullReqLabels(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	})
 }
 
-func setupPullReqSuggestions(r chi.Router, pullreqCtrl *pullreq.Controller) {
+func SetupPullReqSuggestions(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	r.Route("/suggestions", func(r chi.Router) {
 		r.Route("/reviewers", func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleReviewerSuggestList(pullreqCtrl))
