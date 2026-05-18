@@ -113,14 +113,15 @@ type PullReqTargetBrancheChangedSegment struct {
 // RepositoryInfo describes the repo related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type RepositoryInfo struct {
-	ID            int64  `json:"id"`
-	Path          string `json:"path"`
-	Identifier    string `json:"identifier"`
-	Description   string `json:"description"`
-	DefaultBranch string `json:"default_branch"`
-	URL           string `json:"url"`
-	GitURL        string `json:"git_url"`
-	GitSSHURL     string `json:"git_ssh_url"`
+	ID            int64           `json:"id"`
+	Path          string          `json:"path"`
+	Identifier    string          `json:"identifier"`
+	Description   string          `json:"description"`
+	DefaultBranch string          `json:"default_branch"`
+	URL           string          `json:"url"`
+	GitURL        string          `json:"git_url"`
+	GitSSHURL     string          `json:"git_ssh_url"`
+	Tags          json.RawMessage `json:"tags,omitempty"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.
@@ -141,6 +142,7 @@ func repositoryInfoFrom(ctx context.Context, repo *types.Repository, urlProvider
 	if repo == nil {
 		return RepositoryInfo{}
 	}
+
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,
@@ -150,6 +152,7 @@ func repositoryInfoFrom(ctx context.Context, repo *types.Repository, urlProvider
 		URL:           urlProvider.GenerateUIRepoURL(ctx, repo.Path),
 		GitURL:        urlProvider.GenerateGITCloneURL(ctx, repo.Path),
 		GitSSHURL:     urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path),
+		Tags:          repo.Tags,
 	}
 }
 
