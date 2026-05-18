@@ -107,10 +107,14 @@ func (s *Service) autoMerge(ctx context.Context, pr *types.PullReq) error {
 		return err
 	}
 
-	log.Info().
-		Str("merge_method", string(*prMerged.MergeMethod)).
-		Bool("branch_deleted", branchDeleted).
-		Msg("successfully auto-merged pull request")
+	if prMerged.Merged != nil {
+		log.Info().
+			Bool("branch_deleted", branchDeleted).
+			Msg("successfully auto-merged pull request")
+	} else if prMerged.SubState == enum.PullReqSubStateMergeQueue {
+		log.Info().
+			Msg("pull request moved to merge queue")
+	}
 
 	return nil
 }
@@ -119,6 +123,8 @@ func (s *Service) autoMerge(ctx context.Context, pr *types.PullReq) error {
 // If the merging succeeded the relevant git references would be updated and the PR would be marked as merged in the DB.
 // If the merging failed because of the pull request state, rules or a conflict the error would be one of the
 // ErrNotEligible, ErrRuleViolation or ErrConflict, respectively.
+//
+//nolint:nestif
 func (s *Service) Merge(
 	ctx context.Context,
 	pr *types.PullReq,
@@ -171,7 +177,7 @@ func (s *Service) Merge(
 		return nil, false, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
-	ruleOut, violations, err := s.mergeService.CheckRules(ctx, protectionRules, merge.CheckRulesInput{
+	checkRulesInput := merge.CheckRulesInput{
 		PullReq:          pr,
 		TargetRepo:       targetRepo,
 		SourceRepo:       sourceRepo,
@@ -179,7 +185,9 @@ func (s *Service) Merge(
 		IsRepoOwner:      false,
 		MergeMethod:      input.MergeMethod,
 		AllowBypassRules: false,
-	})
+	}
+
+	ruleOut, violations, err := s.mergeService.CheckRules(ctx, protectionRules, checkRulesInput)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
@@ -188,7 +196,48 @@ func (s *Service) Merge(
 		if !slices.Contains(ruleOut.AllowedMethods, input.MergeMethod) {
 			return nil, false, ErrMethodNotAllowed
 		}
-		return nil, false, ErrRuleViolation
+
+		if !ruleOut.RequiresMergeQueue || input.MergeMethod == enum.MergeMethodFastForward {
+			return nil, false, ErrRuleViolation
+		}
+
+		// If merge queue is required for this target branch and there are no other issues
+		// we'll disable the auto-merge for the PR and try to enqueue in the merge queue.
+
+		// Re-run the rules, but for merge queue, to make sure no rules are violated.
+		_, violations, err = s.mergeService.CheckRulesForMergeQueue(ctx, protectionRules, checkRulesInput)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to re-verify protection rules for merge queue: %w", err)
+		}
+
+		if violations != nil {
+			return nil, false, ErrRuleViolation
+		}
+
+		if pr.SubState == enum.PullReqSubStateAutoMerge {
+			pr, err = s.Disable(ctx, targetRepo, pr.Number)
+			if err != nil {
+				return nil, false, fmt.Errorf("failed to disable auto-merge on pull request: %w", err)
+			}
+
+			s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqAutoMergeDisabled, pr)
+		}
+
+		pr, err = s.mergeQueueService.Enqueue(
+			ctx,
+			pr,
+			targetRepo,
+			input.Principal.ID,
+			input.MergeMethod,
+			input.Title,
+			input.Message,
+			input.DeleteBranch,
+		)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to enqueue PR into the merge queue: %w", err)
+		}
+
+		return pr, false, nil
 	}
 
 	// only delete the source branch if it's the source repository is the same as the target repository.

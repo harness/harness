@@ -21,6 +21,8 @@ import (
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gotidy/ptr"
 )
 
 func pendingEntry(pullReqID int64) *types.MergeQueueEntry {
@@ -397,6 +399,103 @@ func TestUpdateChecks_Concurrency(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUpdateChecks_Deadline(t *testing.T) {
+	const now int64 = 1_000_000
+
+	svc := &Service{}
+
+	tests := []struct {
+		name                    string
+		maxCheckDurationSeconds int
+		wantDeadline            *int64
+	}{
+		{
+			name:                    "zero means no deadline",
+			maxCheckDurationSeconds: 0,
+			wantDeadline:            nil,
+		},
+		{
+			name:                    "negative means no deadline",
+			maxCheckDurationSeconds: -1,
+			wantDeadline:            nil,
+		},
+		{
+			name:                    "positive sets deadline",
+			maxCheckDurationSeconds: 60,
+			wantDeadline:            ptr.Int64(now + 60*1000),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entries := []*types.MergeQueueEntry{pendingEntry(1)}
+			_, toStore := svc.updateChecks(entries, 3, 0, tt.maxCheckDurationSeconds, now)
+
+			if len(toStore) != 1 {
+				t.Fatalf("toStore len = %d, want 1", len(toStore))
+			}
+
+			got := toStore[0].ChecksDeadline
+			if (tt.wantDeadline == nil) != (got == nil) {
+				t.Fatalf("ChecksDeadline nil mismatch: got nil=%v, want nil=%v", got == nil, tt.wantDeadline == nil)
+			}
+			if tt.wantDeadline != nil && *got != *tt.wantDeadline {
+				t.Errorf("ChecksDeadline = %d, want %d", *got, *tt.wantDeadline)
+			}
+		})
+	}
+}
+
+func TestUpdateChecks_ConcurrencyLimitHitOnPendingBoundary(t *testing.T) {
+	const now int64 = 1_000_000
+
+	svc := &Service{}
+
+	// groupSize=2, maxInProgress=1, entries=[P,P,P,P,P,P]
+	// First chain [0,1] is processed, inProgressCount reaches 1.
+	// At i=2 (pending), chainStart=2. At i=4 (pending), chainLen=2==groupSize,
+	// but the limit is hit and isPending=true, so chainStart is reset to i=4.
+	// At i=6 (past end), chainLen=2==groupSize, limit still hit, isPending=false,
+	// so chainStart is reset to -1. Only the first chain is stored.
+	entries := []*types.MergeQueueEntry{
+		pendingEntry(1),
+		pendingEntry(2),
+		pendingEntry(3),
+		pendingEntry(4),
+		pendingEntry(5),
+		pendingEntry(6),
+	}
+
+	_, toStore := svc.updateChecks(entries, 2, 1, 0, now)
+
+	if len(toStore) != 2 {
+		t.Fatalf("toStore len = %d, want 2", len(toStore))
+	}
+
+	if toStore[0].PullReqID != 1 || toStore[0].State != enum.MergeQueueEntryStateMergeGroup {
+		t.Errorf("toStore[0]: got PR %d state %q, want PR 1 MergeGroup",
+			toStore[0].PullReqID, toStore[0].State)
+	}
+	if toStore[1].PullReqID != 2 || toStore[1].State != enum.MergeQueueEntryStateChecksInProgress {
+		t.Errorf("toStore[1]: got PR %d state %q, want PR 2 ChecksInProgress",
+			toStore[1].PullReqID, toStore[1].State)
+	}
+}
+
+func TestUpdateChecks_GroupSizeZeroPanics(t *testing.T) {
+	svc := &Service{}
+
+	entries := []*types.MergeQueueEntry{pendingEntry(1)}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("expected panic with groupSize=0, but did not panic")
+		}
+	}()
+
+	svc.updateChecks(entries, 0, 0, 0, 0)
 }
 
 func TestUpdateChecks_UpdatedListReflectsNewStates(t *testing.T) {

@@ -56,12 +56,20 @@ func (c *Controller) AutoMergeGet(
 		return nil, fmt.Errorf("failed to find auto merge state: %w", err)
 	}
 
+	requestedBy, err := c.principalInfoCache.Get(ctx, autoMerge.RequestedBy)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get principal info for auto merge requester: %w", err)
+	}
+
 	return &types.AutoMergeResponse{
-		Requested:    autoMerge.Requested,
-		RequestedBy:  session.Principal.ToPrincipalInfo(),
-		MergeMethod:  autoMerge.MergeMethod,
-		Title:        autoMerge.Title,
-		Message:      autoMerge.Message,
-		DeleteBranch: autoMerge.DeleteBranch,
+		MergeResponse:   nil,
+		Requested:       autoMerge.Requested,
+		RequestedBy:     requestedBy,
+		PullReqState:    pr.State,
+		PullReqSubState: pr.SubState,
+		MergeMethod:     autoMerge.MergeMethod,
+		Title:           autoMerge.Title,
+		Message:         autoMerge.Message,
+		DeleteBranch:    autoMerge.DeleteBranch,
 	}, nil
 }

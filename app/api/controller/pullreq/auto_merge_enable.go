@@ -131,6 +131,23 @@ func (c *Controller) AutoMergeEnable(
 		return nil, fmt.Errorf("failed to merge pull request %d: %w", pr.ID, err)
 	}
 
+	// Merge didn't merge the PR, but has placed it in the merge queue instead.
+
+	if prMerged != nil && prMerged.SubState == enum.PullReqSubStateMergeQueue {
+		pr = prMerged
+		return &types.AutoMergeResponse{
+			MergeResponse:   nil,
+			Requested:       autoMerge.Requested,
+			RequestedBy:     session.Principal.ToPrincipalInfo(),
+			PullReqState:    pr.State,
+			PullReqSubState: pr.SubState,
+			MergeMethod:     autoMerge.MergeMethod,
+			Title:           autoMerge.Title,
+			Message:         autoMerge.Message,
+			DeleteBranch:    autoMerge.DeleteBranch,
+		}, nil
+	}
+
 	// if merge succeeded we're done
 
 	if prMerged != nil && prMerged.MergeMethod != nil && prMerged.MergeSHA != nil {
@@ -140,12 +157,14 @@ func (c *Controller) AutoMergeEnable(
 				SHA:           *pr.MergeSHA,
 				BranchDeleted: branchDeleted,
 			},
-			Requested:    autoMerge.Requested,
-			RequestedBy:  session.Principal.ToPrincipalInfo(),
-			MergeMethod:  autoMerge.MergeMethod,
-			Title:        autoMerge.Title,
-			Message:      autoMerge.Message,
-			DeleteBranch: autoMerge.DeleteBranch,
+			Requested:       autoMerge.Requested,
+			RequestedBy:     session.Principal.ToPrincipalInfo(),
+			PullReqState:    pr.State,
+			PullReqSubState: pr.SubState,
+			MergeMethod:     autoMerge.MergeMethod,
+			Title:           autoMerge.Title,
+			Message:         autoMerge.Message,
+			DeleteBranch:    autoMerge.DeleteBranch,
 		}, nil
 	}
 
@@ -182,13 +201,15 @@ func (c *Controller) AutoMergeEnable(
 	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqAutoMergeEnabled, pr)
 
 	return &types.AutoMergeResponse{
-		MergeResponse: nil,
-		Requested:     autoMerge.Requested,
-		RequestedBy:   session.Principal.ToPrincipalInfo(),
-		MergeMethod:   autoMerge.MergeMethod,
-		Title:         autoMerge.Title,
-		Message:       autoMerge.Message,
-		DeleteBranch:  autoMerge.DeleteBranch,
+		MergeResponse:   nil,
+		Requested:       autoMerge.Requested,
+		RequestedBy:     session.Principal.ToPrincipalInfo(),
+		PullReqState:    pr.State,
+		PullReqSubState: pr.SubState,
+		MergeMethod:     autoMerge.MergeMethod,
+		Title:           autoMerge.Title,
+		Message:         autoMerge.Message,
+		DeleteBranch:    autoMerge.DeleteBranch,
 	}, nil
 }
 

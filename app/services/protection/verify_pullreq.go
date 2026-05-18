@@ -558,7 +558,10 @@ func (v *DefReviewers) Sanitize() error {
 	return nil
 }
 
-const MaxGroupSize = 10
+const (
+	MaxGroupSize         = 10
+	MaxChecksConcurrency = 10
+)
 
 type DefMergeQueue struct {
 	StatusChecks            DefStatusChecks `json:"status_checks"`
@@ -577,18 +580,18 @@ func (v *DefMergeQueue) Sanitize() error {
 			"To define a merge queue at least one required check must be specified.")
 	}
 
-	if v.GroupSize <= 0 || v.GroupSize >= MaxGroupSize {
+	if v.GroupSize <= 0 || v.GroupSize > MaxGroupSize {
 		return errors.InvalidArgumentf(
-			"Group size must be greater than 0 and less than %d.", MaxGroupSize)
+			"Group size must be between 1 and %d.", MaxGroupSize)
 	}
 
-	if v.ChecksConcurrency <= 0 || v.ChecksConcurrency >= MaxGroupSize {
+	if v.ChecksConcurrency <= 0 || v.ChecksConcurrency > MaxChecksConcurrency {
 		return errors.InvalidArgumentf(
-			"Checks concurrency must be greater than 0 and less than %d.", MaxGroupSize)
+			"Checks concurrency must be between 1 and %d.", MaxChecksConcurrency)
 	}
 
 	if v.MaxCheckDurationSeconds <= 0 {
-		return errors.InvalidArgument("Max check duration seconds must be greater than 0.")
+		return errors.InvalidArgument("Max check duration in seconds must be greater than 0.")
 	}
 
 	if err := v.StatusChecks.Sanitize(); err != nil {

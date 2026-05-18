@@ -83,6 +83,19 @@ func (s *Service) process(
 
 	lastMergeCommitSHA := sha.Nil
 
+	// Make sure the merge queue setup is correct
+
+	if setup.GroupSize <= 0 {
+		setup.GroupSize = 1
+	} else if setup.GroupSize > protection.MaxGroupSize {
+		setup.GroupSize = protection.MaxGroupSize
+	}
+	if setup.ChecksConcurrency <= 0 {
+		setup.ChecksConcurrency = 1
+	} else if setup.ChecksConcurrency > protection.MaxChecksConcurrency {
+		setup.ChecksConcurrency = protection.MaxChecksConcurrency
+	}
+
 	var (
 		prev           *types.MergeQueueEntry
 		index          int

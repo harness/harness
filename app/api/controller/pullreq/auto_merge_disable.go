@@ -18,9 +18,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/api/controller"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/app/services/automerge"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -35,39 +36,18 @@ func (c *Controller) AutoMergeDisable(
 		return fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
-	var pr *types.PullReq
-
-	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
-		pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
-		if err != nil {
-			return fmt.Errorf("failed to get pull request by number: %w", err)
-		}
-
-		err = verifyIfAutoMergeable(pr)
-		if err != nil {
-			return fmt.Errorf("pull request is not mergeable: %w", err)
-		}
-
-		if pr.SubState != enum.PullReqSubStateAutoMerge {
-			return nil
-		}
-
-		pr.SubState = enum.PullReqSubStateNone
-
-		err = c.pullreqStore.Update(ctx, pr)
-		if err != nil {
-			return fmt.Errorf("failed to update pull request: %w", err)
-		}
-
-		_, err = c.autoMergeStore.Delete(ctx, pr.ID)
-		if err != nil {
-			return fmt.Errorf("failed to update auto merge state: %w", err)
-		}
-
-		return nil
-	})
+	pr, err := c.autoMergeService.Disable(ctx, targetRepo, pullreqNum)
+	if errors.Is(err, automerge.ErrPullReqNotOpen) {
+		return usererror.BadRequest("Pull request must be open.")
+	}
+	if errors.Is(err, automerge.ErrPullReqDraft) {
+		return usererror.BadRequest("Pull request mustn't be draft.")
+	}
+	if errors.Is(err, automerge.ErrNotInAutoMerge) {
+		return usererror.BadRequest("Pull request is not in auto-merge mode.")
+	}
 	if err != nil {
-		return fmt.Errorf("failed to disable auto merge for the pull request: %w", err)
+		return fmt.Errorf("failed to disable auto merge service: %w", err)
 	}
 
 	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqAutoMergeDisabled, pr)

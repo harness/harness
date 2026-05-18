@@ -42,6 +42,9 @@ type AutoMergeResponse struct {
 	Requested   int64          `json:"created,omitempty"`
 	RequestedBy *PrincipalInfo `json:"requested_by,omitempty"`
 
+	PullReqState    enum.PullReqState    `json:"pull_request_state,omitempty"`
+	PullReqSubState enum.PullReqSubState `json:"pull_request_sub_state,omitempty"`
+
 	MergeMethod  enum.MergeMethod `json:"merge_method,omitempty"`
 	Title        string           `json:"title,omitempty"`
 	Message      string           `json:"message,omitempty"`

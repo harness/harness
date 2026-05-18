@@ -544,7 +544,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	automergeService, err := automerge.ProvideService(ctx, config, gitInterface, transactor, mergeService, readerFactory, readerFactory3, repoFinder, pullReqStore, pullReqActivityStore, principalStore, autoMergeStore, protectionManager, streamer, lockerLocker)
+	automergeService, err := automerge.ProvideService(ctx, config, gitInterface, transactor, mergeService, mergequeueService, readerFactory, readerFactory3, repoFinder, pullReqStore, pullReqActivityStore, principalStore, autoMergeStore, protectionManager, streamer, lockerLocker)
 	if err != nil {
 		return nil, err
 	}

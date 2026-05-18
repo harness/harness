@@ -22,6 +22,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
+	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
@@ -38,6 +39,7 @@ type Service struct {
 	git               git.Interface
 	tx                dbtx.Transactor
 	mergeService      *merge.Service
+	mergeQueueService *mergequeue.Service
 	repoFinder        refcache.RepoFinder
 	pullreqStore      store.PullReqStore
 	activityStore     store.PullReqActivityStore
@@ -54,6 +56,7 @@ func NewService(
 	git git.Interface,
 	tx dbtx.Transactor,
 	mergeService *merge.Service,
+	mergeQueueService *mergequeue.Service,
 	statusCheckFactory *events.ReaderFactory[*checkevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	repoFinder refcache.RepoFinder,
@@ -69,6 +72,7 @@ func NewService(
 		git:               git,
 		tx:                tx,
 		mergeService:      mergeService,
+		mergeQueueService: mergeQueueService,
 		repoFinder:        repoFinder,
 		pullreqStore:      pullreqStore,
 		activityStore:     activityStore,
