@@ -374,6 +374,12 @@ func (g *Git) ListLocalReferences(
 	stdout := bytes.NewBuffer(nil)
 
 	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(stdout)); err != nil {
+		// git show-ref exits with status 1 (and no stderr) when none of the
+		// requested refs exist locally. That's a valid "no refs found" result,
+		// not a failure - return an empty map so callers can proceed.
+		if cmdErr := command.AsError(err); cmdErr != nil && cmdErr.IsExitCode(1) && len(cmdErr.StdErr) == 0 {
+			return map[string]sha.SHA{}, nil
+		}
 		return nil, fmt.Errorf("failed to list references: %w", err)
 	}
 
