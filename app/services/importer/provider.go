@@ -135,7 +135,7 @@ func basicAuthTransport(username, password string) http.RoundTripper {
 }
 
 // getScmClientWithTransport creates an SCM client along with the necessary transport
-// layer depending on the provider. For example, for bitbucket we support app passwords
+// layer depending on the provider. For example, for bitbucket we support API tokens
 // so the auth transport is BasicAuth whereas it's Oauth for other providers.
 // It validates that auth credentials are provided if authReq is true.
 func getScmClientWithTransport(provider Provider, slug string, authReq bool) (*scm.Client, error) { //nolint:gocognit
@@ -242,6 +242,25 @@ func getScmClientWithTransport(provider Provider, slug string, authReq bool) (*s
 	return c, nil
 }
 
+// augmentProviderUserFromScm resolves provider.Username to the SCM account username when one is not explicitly provided
+// or when the provider is Bitbucket, since this uses email + token to authenticate
+// but requires the username to fetch repository info.
+func augmentProviderUserFromScm(ctx context.Context, provider Provider, scmClient *scm.Client) (Provider, error) {
+	if provider.Password == "" {
+		return provider, nil
+	}
+
+	if provider.Password != "" && (provider.Username == "" || provider.Type == ProviderTypeBitbucket) {
+		user, _, err := scmClient.Users.Find(ctx)
+		if err != nil {
+			return provider, usererror.BadRequestf("Could not find user: %s", err)
+		}
+		provider.Username = user.Login
+	}
+
+	return provider, nil
+}
+
 func LoadRepositoryFromProvider(
 	ctx context.Context,
 	provider Provider,
@@ -256,13 +275,9 @@ func LoadRepositoryFromProvider(
 		return RepositoryInfo{}, provider, usererror.BadRequestf("Could not create client: %s", err)
 	}
 
-	// Augment user information if it's not provided for certain vendors.
-	if provider.Password != "" && provider.Username == "" {
-		user, _, err := scmClient.Users.Find(ctx)
-		if err != nil {
-			return RepositoryInfo{}, provider, usererror.BadRequestf("Could not find user: %s", err)
-		}
-		provider.Username = user.Login
+	provider, err = augmentProviderUserFromScm(ctx, provider, scmClient)
+	if err != nil {
+		return RepositoryInfo{}, provider, err
 	}
 
 	if provider.Type == ProviderTypeAzure {
@@ -302,17 +317,14 @@ func LoadRepositoriesFromProviderSpace(
 		return nil, provider, usererror.BadRequestf("Could not create client: %s", err)
 	}
 
-	opts := scm.ListOptions{
-		Size: 100,
+	provider, err = augmentProviderUserFromScm(ctx, provider, scmClient)
+
+	if err != nil {
+		return nil, provider, err
 	}
 
-	// Augment user information if it's not provided for certain vendors.
-	if provider.Password != "" && provider.Username == "" {
-		user, _, err := scmClient.Users.Find(ctx)
-		if err != nil {
-			return nil, provider, usererror.BadRequestf("Could not find user: %s", err)
-		}
-		provider.Username = user.Login
+	opts := scm.ListOptions{
+		Size: 100,
 	}
 
 	var optsv2 scm.RepoListOptions
