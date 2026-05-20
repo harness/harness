@@ -51,7 +51,7 @@ type linkedRepo struct {
 	ConnectorPath       string `db:"linked_repo_connector_path"`
 	ConnectorIdentifier string `db:"linked_repo_connector_identifier"`
 	ConnectorRepo       string `db:"linked_repo_connector_repo"`
-	CloneURL            string `db:"linked_repo_clone_url"`
+	ProviderRepoID      string `db:"linked_repo_provider_repo_id"`
 }
 
 const (
@@ -64,7 +64,7 @@ const (
 		,linked_repo_connector_path
 		,linked_repo_connector_identifier
 		,linked_repo_connector_repo
-		,linked_repo_clone_url`
+		,linked_repo_provider_repo_id`
 
 	linkedRepoSelectBase = `
 	SELECT` + linkedRepoColumns + `
@@ -96,7 +96,7 @@ func (s *LinkedRepoStore) Create(ctx context.Context, v *types.LinkedRepo) error
 		,linked_repo_connector_path
 		,linked_repo_connector_identifier
 		,linked_repo_connector_repo
-		,linked_repo_clone_url
+		,linked_repo_provider_repo_id
 	) values (
 		 :linked_repo_id
 		,:linked_repo_version
@@ -106,7 +106,7 @@ func (s *LinkedRepoStore) Create(ctx context.Context, v *types.LinkedRepo) error
 		,:linked_repo_connector_path
 		,:linked_repo_connector_identifier
 		,:linked_repo_connector_repo
-		,:linked_repo_clone_url
+		,:linked_repo_provider_repo_id
 	)`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -130,7 +130,6 @@ func (s *LinkedRepoStore) Update(ctx context.Context, linked *types.LinkedRepo) 
 			 linked_repo_version = :linked_repo_version
 			,linked_repo_updated = :linked_repo_updated
 			,linked_repo_last_full_sync = :linked_repo_last_full_sync
-			,linked_repo_clone_url = :linked_repo_clone_url
 		WHERE linked_repo_id = :linked_repo_id AND linked_repo_version = :linked_repo_version - 1`
 
 	dbLinked := mapToInternalLinkedRepo(linked)
@@ -160,7 +159,6 @@ func (s *LinkedRepoStore) Update(ctx context.Context, linked *types.LinkedRepo) 
 
 	linked.Version = dbLinked.Version
 	linked.Updated = dbLinked.Updated
-	linked.CloneURL = dbLinked.CloneURL
 
 	return nil
 }
@@ -233,7 +231,7 @@ func mapToLinkedRepo(src *linkedRepo) *types.LinkedRepo {
 		ConnectorPath:       src.ConnectorPath,
 		ConnectorIdentifier: src.ConnectorIdentifier,
 		ConnectorRepo:       src.ConnectorRepo,
-		CloneURL:            src.CloneURL,
+		ProviderRepoID:      src.ProviderRepoID,
 	}
 }
 
@@ -247,6 +245,6 @@ func mapToInternalLinkedRepo(src *types.LinkedRepo) *linkedRepo {
 		ConnectorPath:       src.ConnectorPath,
 		ConnectorIdentifier: src.ConnectorIdentifier,
 		ConnectorRepo:       src.ConnectorRepo,
-		CloneURL:            src.CloneURL,
+		ProviderRepoID:      src.ProviderRepoID,
 	}
 }

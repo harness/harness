@@ -213,7 +213,7 @@ type LinkedRepo struct {
 	ConnectorPath       string
 	ConnectorIdentifier string
 	ConnectorRepo       string
-	CloneURL            string
+	ProviderRepoID      string
 }
 
 type RepoLangStat struct {

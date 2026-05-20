@@ -94,7 +94,7 @@ func (c *Controller) LinkedCreate(
 		Identifier: connectorIdentifier,
 	}
 
-	defaultBranch, repoURL, err := c.verifyConnectorAccess(ctx, connector)
+	access, err := c.verifyConnectorAccess(ctx, connector)
 	if err != nil {
 		return nil, errors.InvalidArgument("Failed to use connector to access the remote repository.")
 	}
@@ -107,7 +107,7 @@ func (c *Controller) LinkedCreate(
 		SpacePath:           parentSpace.Path,
 		ConnectorPath:       connector.Path,
 		ConnectorIdentifier: connector.Identifier,
-		CloneURL:            repoURL,
+		CloneURL:            access.CloneURL,
 	}); err != nil {
 		return nil, webhookRegistrationUserError(err)
 	}
@@ -118,7 +118,7 @@ func (c *Controller) LinkedCreate(
 		in.Identifier,
 		in.Description,
 		&session.Principal,
-		defaultBranch,
+		access.DefaultBranch,
 	)
 
 	repo.Type = enum.RepoTypeLinked
@@ -149,7 +149,7 @@ func (c *Controller) LinkedCreate(
 			LastFullSync:        now,
 			ConnectorPath:       connector.Path,
 			ConnectorIdentifier: connector.Identifier,
-			CloneURL:            repoURL,
+			ProviderRepoID:      access.ProviderRepoID,
 		}
 		err = c.linkedRepoStore.Create(ctx, linkedRepo)
 		if err != nil {
@@ -206,24 +206,33 @@ func (c *Controller) LinkedCreate(
 	return repoOutput, nil
 }
 
+// connectorAccess captures everything verifyConnectorAccess resolves about a
+// linked repo: its default branch, the (credential-free) clone URL needed to
+// register the provider-side webhook, and the provider's stable repo
+// identifier persisted on the linked_repositories row.
+type connectorAccess struct {
+	DefaultBranch  string
+	CloneURL       string
+	ProviderRepoID string
+}
+
 // verifyConnectorAccess verifies the connector can reach the remote repo and
-// returns its default branch plus the (credential-free) clone URL. The URL is
-// needed later to register the provider-side webhook.
+// returns the resolved details needed by the linked-create flow.
 func (c *Controller) verifyConnectorAccess(
 	ctx context.Context,
 	connector importer.ConnectorDef,
-) (string, string, error) {
+) (connectorAccess, error) {
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
 	gitIdentity := identityFromPrincipal(systemPrincipal)
 
 	accessInfo, err := c.connectorService.GetAccessInfo(ctx, connector)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to get repository access info from connector: %w", err)
+		return connectorAccess{}, fmt.Errorf("failed to get repository access info from connector: %w", err)
 	}
 
 	urlWithCredentials, err := accessInfo.URLWithCredentials()
 	if err != nil {
-		return "", "", fmt.Errorf("failed to get repository URL: %w", err)
+		return connectorAccess{}, fmt.Errorf("failed to get repository URL: %w", err)
 	}
 
 	envVars, err := githook.GenerateEnvironmentVariablesForOperation(
@@ -235,7 +244,7 @@ func (c *Controller) verifyConnectorAccess(
 		enum.GitOpTypeManageRepo,
 	)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to generate git hook environment variables: %w", err)
+		return connectorAccess{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}
 
 	now := time.Now()
@@ -250,7 +259,7 @@ func (c *Controller) verifyConnectorAccess(
 		CommitterDate: &now,
 	})
 	if err != nil {
-		return "", "", fmt.Errorf("failed to create repository: %w", err)
+		return connectorAccess{}, fmt.Errorf("failed to create repository: %w", err)
 	}
 
 	gitUID := resp.UID
@@ -275,8 +284,20 @@ func (c *Controller) verifyConnectorAccess(
 		Source:     urlWithCredentials,
 	})
 	if err != nil {
-		return "", "", fmt.Errorf("failed to get repository default branch: %w", err)
+		return connectorAccess{}, fmt.Errorf("failed to get repository default branch: %w", err)
 	}
 
-	return respDefBranch.BranchName, accessInfo.URL, nil
+	// Fetch the provider's stable repo id only at link-creation time. Hot-path
+	// callers of GetAccessInfo (sync jobs, credential refresh) don't need this
+	// and shouldn't pay the extra SCM round-trip.
+	providerRepoID, err := c.connectorService.FetchProviderRepoID(ctx, connector)
+	if err != nil {
+		return connectorAccess{}, fmt.Errorf("failed to fetch provider repo id: %w", err)
+	}
+
+	return connectorAccess{
+		DefaultBranch:  respDefBranch.BranchName,
+		CloneURL:       accessInfo.URL,
+		ProviderRepoID: providerRepoID,
+	}, nil
 }

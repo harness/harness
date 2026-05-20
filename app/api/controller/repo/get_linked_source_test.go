@@ -52,6 +52,10 @@ type mockConnectorService struct {
 	receivedDef importer.ConnectorDef
 	called      bool
 
+	providerRepoID         string
+	providerRepoIDErr      error
+	fetchProviderRepoCalls int
+
 	resolveCalled             bool
 	resolveGotParentSpacePath string
 	resolveGotRef             string
@@ -63,6 +67,11 @@ func (m *mockConnectorService) GetAccessInfo(_ context.Context, c importer.Conne
 	m.called = true
 	m.receivedDef = c
 	return m.info, m.err
+}
+
+func (m *mockConnectorService) FetchProviderRepoID(_ context.Context, _ importer.ConnectorDef) (string, error) {
+	m.fetchProviderRepoCalls++
+	return m.providerRepoID, m.providerRepoIDErr
 }
 
 func (m *mockConnectorService) ResolveConnectorRef(parentSpacePath, ref string) (string, string) {

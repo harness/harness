@@ -189,7 +189,6 @@ func (r *JobSyncLinkedRepositories) Handle(
 
 		updated, err := r.linkedRepoStore.UpdateOptLock(ctx, &linkedRepo, func(l *types.LinkedRepo) error {
 			l.LastFullSync = time.Now().UnixMilli()
-			l.CloneURL = accessInfo.URL
 			return nil
 		})
 		if err != nil {
