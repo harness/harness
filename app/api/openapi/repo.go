@@ -1567,6 +1567,24 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodPost,
 		"/repos/{repo_ref}/squash", opSquashBranch)
 
+	opMergeCommit := openapi3.Operation{}
+	opMergeCommit.WithTags("repository")
+	opMergeCommit.WithMapOfAnything(
+		map[string]any{"operationId": "mergeCommit"})
+	_ = reflector.SetRequest(&opMergeCommit, &struct {
+		repoRequest
+		repo.MergeCommitInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opMergeCommit, new(types.MergeCommitResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMergeCommit, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opMergeCommit, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMergeCommit, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMergeCommit, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opMergeCommit, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opMergeCommit, new(types.MergeViolations), http.StatusUnprocessableEntity)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/merge-commit", opMergeCommit)
+
 	opForkCreate := openapi3.Operation{}
 	opForkCreate.WithTags("repository")
 	opForkCreate.WithMapOfAnything(

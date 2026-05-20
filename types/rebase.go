@@ -34,3 +34,13 @@ type SquashResponse struct {
 	DryRun        bool     `json:"dry_run,omitempty"`
 	ConflictFiles []string `json:"conflict_files,omitempty"`
 }
+
+type MergeCommitResponse struct {
+	AlreadyAncestor  bool             `json:"already_ancestor,omitempty"`
+	NewHeadBranchSHA sha.SHA          `json:"new_head_branch_sha"`
+	RuleViolations   []RuleViolations `json:"rule_violations,omitempty"`
+
+	DryRunRules   bool     `json:"dry_run_rules,omitempty"`
+	DryRun        bool     `json:"dry_run,omitempty"`
+	ConflictFiles []string `json:"conflict_files,omitempty"`
+}

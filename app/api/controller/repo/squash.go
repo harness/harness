@@ -143,11 +143,6 @@ func (c *Controller) Squash(
 			in.HeadCommitSHA, headBranch.Branch.Name)
 	}
 
-	headBranchRef, err := git.GetRefPath(in.HeadBranch, gitenum.RefTypeBranch)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to gerenere ref name: %w", err)
-	}
-
 	baseCommitSHA := in.BaseCommitSHA
 	if baseCommitSHA.IsEmpty() {
 		baseBranch, err := c.git.GetBranch(ctx, &git.GetBranchParams{
@@ -170,7 +165,7 @@ func (c *Controller) Squash(
 	var refs []git.RefUpdate
 	if !in.DryRun {
 		refs = append(refs, git.RefUpdate{
-			Name: headBranchRef,
+			Name: git.GetBranchRefPath(in.HeadBranch),
 			Old:  headBranch.Branch.SHA,
 			New:  sha.SHA{}, // update to the result of the merge
 		})

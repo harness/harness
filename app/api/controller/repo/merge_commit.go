@@ -17,6 +17,8 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
@@ -29,19 +31,22 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-type RebaseInput struct {
+type MergeCommitInput struct {
 	BaseBranch    string  `json:"base_branch"`
 	BaseCommitSHA sha.SHA `json:"base_commit_sha"`
 
 	HeadBranch    string  `json:"head_branch"`
 	HeadCommitSHA sha.SHA `json:"head_commit_sha"`
 
+	Title   string `json:"title"`
+	Message string `json:"message"`
+
 	DryRun      bool `json:"dry_run"`
 	DryRunRules bool `json:"dry_run_rules"`
 	BypassRules bool `json:"bypass_rules"`
 }
 
-func (in *RebaseInput) validate() error {
+func (in *MergeCommitInput) sanitize() error {
 	if in.BaseBranch == "" && in.BaseCommitSHA.IsEmpty() {
 		return usererror.BadRequest("Either base branch or base commit SHA name must be provided")
 	}
@@ -54,17 +59,21 @@ func (in *RebaseInput) validate() error {
 		return usererror.BadRequest("Head branch commit SHA must be provided")
 	}
 
+	// cleanup title / message (NOTE: git doesn't support white space only)
+	in.Title = strings.TrimSpace(in.Title)
+	in.Message = strings.TrimSpace(in.Message)
+
 	return nil
 }
 
-// Rebase rebases a branch against (the latest commit from) a different branch.
-func (c *Controller) Rebase(
+// MergeCommit creates a merge commit on the head branch against a base branch or base commit.
+func (c *Controller) MergeCommit(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	in *RebaseInput,
-) (*types.RebaseResponse, *types.MergeViolations, error) {
-	if err := in.validate(); err != nil {
+	in *MergeCommitInput,
+) (*types.MergeCommitResponse, *types.MergeViolations, error) {
+	if err := in.sanitize(); err != nil {
 		return nil, nil, err
 	}
 
@@ -84,7 +93,7 @@ func (c *Controller) Rebase(
 		AllowBypass:        in.BypassRules,
 		IsRepoOwner:        isRepoOwner,
 		Repo:               repo,
-		RefAction:          protection.RefActionUpdateForce,
+		RefAction:          protection.RefActionUpdate,
 		RefType:            protection.RefTypeBranch,
 		RefNames:           []string{in.HeadBranch},
 	})
@@ -101,8 +110,8 @@ func (c *Controller) Rebase(
 	violations = append(violations, mqViolations...)
 
 	if in.DryRunRules {
-		// DryRunRules is true: Just return rule violations and don't attempt to rebase.
-		return &types.RebaseResponse{
+		// DryRunRules is true: Just return rule violations and don't attempt to create a merge commit.
+		return &types.MergeCommitResponse{
 			RuleViolations: violations,
 			DryRunRules:    true,
 		}, nil, nil
@@ -154,13 +163,25 @@ func (c *Controller) Rebase(
 
 	if isAncestor.Ancestor {
 		// The head branch already contains the latest commit from the base branch - nothing to do.
-		return &types.RebaseResponse{
+		return &types.MergeCommitResponse{
 			AlreadyAncestor: true,
 			RuleViolations:  violations,
 		}, nil, nil
 	}
 
-	// Use APIRefsOnly for rebase - branch rules are verified at the controller layer.
+	author := controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
+	committer := controller.SystemServicePrincipalInfo()
+	now := time.Now()
+
+	message := git.CommitMessage(in.Title, in.Message)
+	if message == "" {
+		if in.BaseBranch != "" {
+			message = fmt.Sprintf("Merge branch '%s' into %s", in.BaseBranch, in.HeadBranch)
+		} else {
+			message = fmt.Sprintf("Merge commit '%s' into %s", in.BaseCommitSHA.String(), in.HeadBranch)
+		}
+	}
+
 	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
@@ -179,18 +200,23 @@ func (c *Controller) Rebase(
 		WriteParams:           writeParams,
 		BaseSHA:               baseCommitSHA,
 		HeadBranch:            in.HeadBranch,
+		Message:               message,
 		Refs:                  refs,
+		Committer:             committer,
+		CommitterDate:         &now,
+		Author:                author,
+		AuthorDate:            &now,
 		HeadBranchExpectedSHA: in.HeadCommitSHA,
-		Method:                gitenum.MergeMethodRebase,
+		Method:                gitenum.MergeMethodMerge,
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("rebase execution failed: %w", err)
+		return nil, nil, fmt.Errorf("merge commit creation failed: %w", err)
 	}
 
 	if in.DryRun {
 		// DryRun is true: Just return rule violations and list of conflicted files.
 		// No reference is updated, so don't return the resulting commit SHA.
-		return &types.RebaseResponse{
+		return &types.MergeCommitResponse{
 			RuleViolations: violations,
 			DryRun:         true,
 			ConflictFiles:  mergeOutput.ConflictFiles,
@@ -201,11 +227,12 @@ func (c *Controller) Rebase(
 		return nil, &types.MergeViolations{
 			ConflictFiles:  mergeOutput.ConflictFiles,
 			RuleViolations: violations,
-			Message:        fmt.Sprintf("Rebase blocked by conflicting files: %v", mergeOutput.ConflictFiles),
+			Message: fmt.Sprintf("Merge commit creation blocked by conflicting files: %v",
+				mergeOutput.ConflictFiles),
 		}, nil
 	}
 
-	return &types.RebaseResponse{
+	return &types.MergeCommitResponse{
 		NewHeadBranchSHA: mergeOutput.MergeSHA,
 		RuleViolations:   violations,
 	}, nil, nil
