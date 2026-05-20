@@ -103,6 +103,36 @@ func (e *FileParseError) Is(target error) bool {
 	return ok
 }
 
+// InvalidFileModeError is returned when CODEOWNERS exists but is not a readable blob
+// (e.g. directory, symlink, or submodule).
+type InvalidFileModeError struct {
+	Mode git.TreeNodeMode
+}
+
+func (e *InvalidFileModeError) Error() string {
+	return fmt.Sprintf(
+		"The repository's CODEOWNERS file has an unsupported type (%s). CODEOWNERS must be a regular file.",
+		e.Mode,
+	)
+}
+
+//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
+func (e *InvalidFileModeError) Is(target error) bool {
+	_, ok := target.(*InvalidFileModeError)
+	return ok
+}
+
+// validateCodeOwnersFileMode ensures the tree node is a blob we can read as text.
+// Executable blobs (100755) are accepted to match repo content handling and GitHub behavior.
+func validateCodeOwnersFileMode(mode git.TreeNodeMode) error {
+	switch mode {
+	case git.TreeNodeModeFile, git.TreeNodeModeExec:
+		return nil
+	default:
+		return &InvalidFileModeError{Mode: mode}
+	}
+}
+
 type Config struct {
 	FilePaths []string
 }
@@ -295,12 +325,8 @@ func (s *Service) getCodeOwnerFile(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get CODEOWNERS file node: %w", err)
 	}
-	if node.Node.Mode != git.TreeNodeModeFile {
-		return nil, fmt.Errorf(
-			"CODEOWNERS file is of format '%s' but expected to be of format '%s'",
-			node.Node.Mode,
-			git.TreeNodeModeFile,
-		)
+	if err := validateCodeOwnersFileMode(node.Node.Mode); err != nil {
+		return nil, err
 	}
 
 	output, err := s.git.GetBlob(ctx, &git.GetBlobParams{
