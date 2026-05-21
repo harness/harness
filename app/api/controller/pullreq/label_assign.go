@@ -21,6 +21,8 @@ import (
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/label"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -57,7 +59,8 @@ func (c *Controller) AssignLabel(
 			return fmt.Errorf("failed to create pullreq label: %w", err)
 		}
 
-		if err = c.labelSuggestionStore.Delete(ctx, pullreq.ID, in.LabelID); err != nil {
+		if err = c.labelSuggestionStore.Delete(ctx, pullreq.ID, in.LabelID); err != nil &&
+			!errors.Is(err, store.ErrResourceNotFound) {
 			return fmt.Errorf("failed to delete label suggestions: %w", err)
 		}
 
