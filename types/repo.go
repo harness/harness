@@ -214,6 +214,7 @@ type LinkedRepo struct {
 	ConnectorIdentifier string
 	ConnectorRepo       string
 	ProviderRepoID      string
+	ProviderType        string
 }
 
 type RepoLangStat struct {

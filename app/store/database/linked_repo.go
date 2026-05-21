@@ -52,6 +52,7 @@ type linkedRepo struct {
 	ConnectorIdentifier string `db:"linked_repo_connector_identifier"`
 	ConnectorRepo       string `db:"linked_repo_connector_repo"`
 	ProviderRepoID      string `db:"linked_repo_provider_repo_id"`
+	ProviderType        string `db:"linked_repo_provider_type"`
 }
 
 const (
@@ -64,7 +65,8 @@ const (
 		,linked_repo_connector_path
 		,linked_repo_connector_identifier
 		,linked_repo_connector_repo
-		,linked_repo_provider_repo_id`
+		,linked_repo_provider_repo_id
+		,linked_repo_provider_type`
 
 	linkedRepoSelectBase = `
 	SELECT` + linkedRepoColumns + `
@@ -97,6 +99,7 @@ func (s *LinkedRepoStore) Create(ctx context.Context, v *types.LinkedRepo) error
 		,linked_repo_connector_identifier
 		,linked_repo_connector_repo
 		,linked_repo_provider_repo_id
+		,linked_repo_provider_type
 	) values (
 		 :linked_repo_id
 		,:linked_repo_version
@@ -107,6 +110,7 @@ func (s *LinkedRepoStore) Create(ctx context.Context, v *types.LinkedRepo) error
 		,:linked_repo_connector_identifier
 		,:linked_repo_connector_repo
 		,:linked_repo_provider_repo_id
+		,:linked_repo_provider_type
 	)`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -232,6 +236,7 @@ func mapToLinkedRepo(src *linkedRepo) *types.LinkedRepo {
 		ConnectorIdentifier: src.ConnectorIdentifier,
 		ConnectorRepo:       src.ConnectorRepo,
 		ProviderRepoID:      src.ProviderRepoID,
+		ProviderType:        src.ProviderType,
 	}
 }
 
@@ -246,5 +251,6 @@ func mapToInternalLinkedRepo(src *types.LinkedRepo) *linkedRepo {
 		ConnectorIdentifier: src.ConnectorIdentifier,
 		ConnectorRepo:       src.ConnectorRepo,
 		ProviderRepoID:      src.ProviderRepoID,
+		ProviderType:        src.ProviderType,
 	}
 }

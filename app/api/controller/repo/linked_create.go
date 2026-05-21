@@ -150,6 +150,7 @@ func (c *Controller) LinkedCreate(
 			ConnectorPath:       connector.Path,
 			ConnectorIdentifier: connector.Identifier,
 			ProviderRepoID:      access.ProviderRepoID,
+			ProviderType:        string(access.ProviderType),
 		}
 		err = c.linkedRepoStore.Create(ctx, linkedRepo)
 		if err != nil {
@@ -206,14 +207,11 @@ func (c *Controller) LinkedCreate(
 	return repoOutput, nil
 }
 
-// connectorAccess captures everything verifyConnectorAccess resolves about a
-// linked repo: its default branch, the (credential-free) clone URL needed to
-// register the provider-side webhook, and the provider's stable repo
-// identifier persisted on the linked_repositories row.
 type connectorAccess struct {
 	DefaultBranch  string
 	CloneURL       string
 	ProviderRepoID string
+	ProviderType   importer.ProviderType
 }
 
 // verifyConnectorAccess verifies the connector can reach the remote repo and
@@ -287,17 +285,15 @@ func (c *Controller) verifyConnectorAccess(
 		return connectorAccess{}, fmt.Errorf("failed to get repository default branch: %w", err)
 	}
 
-	// Fetch the provider's stable repo id only at link-creation time. Hot-path
-	// callers of GetAccessInfo (sync jobs, credential refresh) don't need this
-	// and shouldn't pay the extra SCM round-trip.
-	providerRepoID, err := c.connectorService.FetchProviderRepoID(ctx, connector)
+	providerInfo, err := c.connectorService.FetchProviderRepoInfo(ctx, connector)
 	if err != nil {
-		return connectorAccess{}, fmt.Errorf("failed to fetch provider repo id: %w", err)
+		return connectorAccess{}, fmt.Errorf("failed to fetch provider repo info: %w", err)
 	}
 
 	return connectorAccess{
 		DefaultBranch:  respDefBranch.BranchName,
 		CloneURL:       accessInfo.URL,
-		ProviderRepoID: providerRepoID,
+		ProviderRepoID: providerInfo.RepoID,
+		ProviderType:   providerInfo.Type,
 	}, nil
 }
