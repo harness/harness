@@ -220,6 +220,7 @@ func mapFromRepoActivity(in *repoActivity) (*types.RepoActivity, error) {
 		Key:         in.Key,
 		RepoID:      in.RepoID,
 		PrincipalID: in.PrincipalID,
+		Type:        activityType,
 		Payload:     data,
 		Timestamp:   in.Created,
 	}
