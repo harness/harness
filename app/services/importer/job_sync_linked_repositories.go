@@ -156,8 +156,9 @@ func (r *JobSyncLinkedRepositories) Handle(
 		}
 
 		connector := ConnectorDef{
-			Path:       linkedRepo.ConnectorPath,
-			Identifier: linkedRepo.ConnectorIdentifier,
+			Path:           linkedRepo.ConnectorPath,
+			Identifier:     linkedRepo.ConnectorIdentifier,
+			RepoIdentifier: linkedRepo.ConnectorRepo,
 		}
 
 		accessInfo, err := r.connectorService.GetAccessInfo(ctx, connector)

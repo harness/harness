@@ -48,8 +48,9 @@ func (c *Controller) GetLinkedSource(
 	}
 
 	connector := importer.ConnectorDef{
-		Path:       linkedRepo.ConnectorPath,
-		Identifier: linkedRepo.ConnectorIdentifier,
+		Path:           linkedRepo.ConnectorPath,
+		Identifier:     linkedRepo.ConnectorIdentifier,
+		RepoIdentifier: linkedRepo.ConnectorRepo,
 	}
 
 	accessInfo, err := c.connectorService.GetAccessInfo(ctx, connector)

@@ -93,8 +93,9 @@ func (c *Controller) LinkedSync(
 	}
 
 	connector := importer.ConnectorDef{
-		Path:       linkedRepo.ConnectorPath,
-		Identifier: linkedRepo.ConnectorIdentifier,
+		Path:           linkedRepo.ConnectorPath,
+		Identifier:     linkedRepo.ConnectorIdentifier,
+		RepoIdentifier: linkedRepo.ConnectorRepo,
 	}
 
 	// Use dedicated linked-sync operation type.

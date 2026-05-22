@@ -109,6 +109,40 @@ func TestLinkedCreateInput_Sanitize_ValidRefs(t *testing.T) {
 	}
 }
 
+func TestLinkedCreateInput_Sanitize_TrimsRepoIdentifier(t *testing.T) {
+	cases := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"leading and trailing spaces", "  owner/repo  ", "owner/repo"},
+		{"leading tab", "\towner/repo", "owner/repo"},
+		{"trailing newline", "owner/repo\n", "owner/repo"},
+		{"already clean", "owner/repo", "owner/repo"},
+		{"empty stays empty", "", ""},
+		{"only whitespace becomes empty", "   ", ""},
+		{"nested path preserved", "  group/subgroup/project  ", "group/subgroup/project"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := &LinkedCreateInput{
+				ParentRef:      "my-org/my-project",
+				Identifier:     "my-linked-repo",
+				ConnectorRef:   "account.githubConn",
+				RepoIdentifier: tc.input,
+			}
+
+			if err := in.sanitize(); err != nil {
+				t.Fatalf("sanitize() failed: %v", err)
+			}
+			if in.RepoIdentifier != tc.want {
+				t.Errorf("RepoIdentifier = %q; want %q", in.RepoIdentifier, tc.want)
+			}
+		})
+	}
+}
+
 type staticSpaceIDCache struct {
 	spaces map[int64]*types.SpaceCore
 }
@@ -125,14 +159,15 @@ func (c *staticSpaceIDCache) Get(_ context.Context, id int64) (*types.SpaceCore,
 // TestLinkedCreate_DelegatesConnectorRefDecode drives LinkedCreate up to
 // verifyConnectorAccess and asserts the controller routes the API-facing ref
 // + parent space path through ConnectorService.ResolveConnectorRef, then
-// forwards the resolved (path, identifier) pair to GetAccessInfo. The
-// connector service is stubbed to fail so the call returns before the
-// transactional repo-creation block, which would otherwise need a full
-// store/git/tx setup.
+// forwards the resolved (path, identifier) pair plus the caller-supplied
+// repo_identifier to GetAccessInfo. The connector service is stubbed to fail
+// so the call returns before the transactional repo-creation block, which
+// would otherwise need a full store/git/tx setup.
 func TestLinkedCreate_DelegatesConnectorRefDecode(t *testing.T) {
 	const parentSpaceID int64 = 1
 	const parentSpacePath = "acme/platform/code"
 	const inputRef = "account.githubConn"
+	const inputRepoIdentifier = "harness/gitness"
 	const resolvedPath = "acme"
 	const resolvedIdentifier = "githubConn"
 
@@ -144,9 +179,10 @@ func TestLinkedCreate_DelegatesConnectorRefDecode(t *testing.T) {
 	c := newLinkedCreateTestController(parentSpaceID, parentSpacePath, connSvc)
 
 	_, err := c.LinkedCreate(context.Background(), &auth.Session{}, &LinkedCreateInput{
-		ParentRef:    fmt.Sprintf("%d", parentSpaceID),
-		Identifier:   "my-linked-repo",
-		ConnectorRef: inputRef,
+		ParentRef:      fmt.Sprintf("%d", parentSpaceID),
+		Identifier:     "my-linked-repo",
+		ConnectorRef:   inputRef,
+		RepoIdentifier: inputRepoIdentifier,
 	})
 	if err == nil {
 		t.Fatal("expected connector-access error, got nil")
@@ -174,6 +210,14 @@ func TestLinkedCreate_DelegatesConnectorRefDecode(t *testing.T) {
 	if connSvc.receivedDef.Identifier != resolvedIdentifier {
 		t.Errorf("connector identifier = %q; want %q",
 			connSvc.receivedDef.Identifier, resolvedIdentifier)
+	}
+	// RepoIdentifier is the user-supplied "which repo under this account" value;
+	// the controller must thread it through unchanged so resolveCloneURL on the
+	// service side sees it. If this regresses, account-level linked repos will
+	// silently fall back to the "missing repo_identifier" error path.
+	if connSvc.receivedDef.RepoIdentifier != inputRepoIdentifier {
+		t.Errorf("connector repo_identifier = %q; want %q",
+			connSvc.receivedDef.RepoIdentifier, inputRepoIdentifier)
 	}
 }
 

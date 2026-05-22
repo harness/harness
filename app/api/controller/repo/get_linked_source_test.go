@@ -140,6 +140,7 @@ func TestGetLinkedSource_Success(t *testing.T) {
 				RepoID:              linkedRepoID,
 				ConnectorPath:       "account.myOrg.myProject",
 				ConnectorIdentifier: "myGithubConnector",
+				ConnectorRepo:       "myorg/myrepo",
 			},
 		},
 		connSvc,
@@ -162,6 +163,14 @@ func TestGetLinkedSource_Success(t *testing.T) {
 	}
 	if connSvc.receivedDef.Identifier != "myGithubConnector" {
 		t.Errorf("expected connector identifier %q, got %q", "myGithubConnector", connSvc.receivedDef.Identifier)
+	}
+	// RepoIdentifier on the ConnectorDef must be hydrated from the persisted
+	// LinkedRepo.ConnectorRepo column. If this regresses, account-level
+	// linked repos lose their "which repo under this account" pin on every
+	// read path (sync job, manual sync, webhook re-register, get-source).
+	if connSvc.receivedDef.RepoIdentifier != "myorg/myrepo" {
+		t.Errorf("expected connector repo_identifier %q, got %q",
+			"myorg/myrepo", connSvc.receivedDef.RepoIdentifier)
 	}
 
 	// The returned URL must be the plain URL, not URLWithCredentials() which would embed the token.

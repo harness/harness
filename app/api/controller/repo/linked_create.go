@@ -17,6 +17,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -43,6 +44,10 @@ type LinkedCreateInput struct {
 	IsPublic bool `json:"is_public"`
 
 	ConnectorRef string `json:"connector_ref"`
+	// RepoIdentifier is the provider-side full repo path (e.g. "owner/repo",
+	// "group/subgroup/project"). Required for account-level connectors, must
+	// be empty for repo-level ones; validated in the connector service.
+	RepoIdentifier string `json:"repo_identifier"`
 }
 
 func (in *LinkedCreateInput) sanitize() error {
@@ -53,6 +58,8 @@ func (in *LinkedCreateInput) sanitize() error {
 	if in.ConnectorRef == "" {
 		return errors.InvalidArgument("connector_ref must not be empty")
 	}
+
+	in.RepoIdentifier = strings.TrimSpace(in.RepoIdentifier)
 
 	return nil
 }
@@ -90,8 +97,9 @@ func (c *Controller) LinkedCreate(
 
 	connectorPath, connectorIdentifier := c.connectorService.ResolveConnectorRef(parentSpace.Path, in.ConnectorRef)
 	connector := importer.ConnectorDef{
-		Path:       connectorPath,
-		Identifier: connectorIdentifier,
+		Path:           connectorPath,
+		Identifier:     connectorIdentifier,
+		RepoIdentifier: in.RepoIdentifier,
 	}
 
 	access, err := c.verifyConnectorAccess(ctx, connector)
@@ -149,6 +157,7 @@ func (c *Controller) LinkedCreate(
 			LastFullSync:        now,
 			ConnectorPath:       connector.Path,
 			ConnectorIdentifier: connector.Identifier,
+			ConnectorRepo:       connector.RepoIdentifier,
 			ProviderRepoID:      access.ProviderRepoID,
 			ProviderType:        string(access.ProviderType),
 		}

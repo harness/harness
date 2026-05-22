@@ -22,6 +22,10 @@ import (
 type ConnectorDef struct {
 	Path       string `json:"path"`
 	Identifier string `json:"identifier"`
+	// RepoIdentifier is the provider-side full repo path (e.g. "owner/repo",
+	// "group/subgroup/project"). Required for account-level connectors, must
+	// be empty for repo-level ones.
+	RepoIdentifier string `json:"repo_identifier,omitempty"`
 }
 
 type AccessInfo struct {

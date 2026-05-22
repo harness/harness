@@ -70,8 +70,9 @@ func (c *Controller) LinkedRegisterWebhook(
 	parentSpacePath := paths.Parent(repo.Path)
 
 	accessInfo, err := c.connectorService.GetAccessInfo(ctx, importer.ConnectorDef{
-		Path:       linkedRepo.ConnectorPath,
-		Identifier: linkedRepo.ConnectorIdentifier,
+		Path:           linkedRepo.ConnectorPath,
+		Identifier:     linkedRepo.ConnectorIdentifier,
+		RepoIdentifier: linkedRepo.ConnectorRepo,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to get connector access info: %w", err)

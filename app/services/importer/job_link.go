@@ -170,8 +170,9 @@ func (r *JobRepositoryLink) Handle(ctx context.Context, data string, _ job.Progr
 	}
 
 	accessInfo, err := r.connectorService.GetAccessInfo(ctx, ConnectorDef{
-		Path:       linkedRepo.ConnectorPath,
-		Identifier: linkedRepo.ConnectorIdentifier,
+		Path:           linkedRepo.ConnectorPath,
+		Identifier:     linkedRepo.ConnectorIdentifier,
+		RepoIdentifier: linkedRepo.ConnectorRepo,
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to get repository access info from connector: %w", err)
