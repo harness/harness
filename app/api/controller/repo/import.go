@@ -16,14 +16,17 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/app/api/controller/limiter"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/store"
 
 	"github.com/rs/zerolog/log"
 )
@@ -77,7 +80,10 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		err = c.repoStore.Create(ctx, repo)
-		if err != nil {
+		if errors.Is(err, store.ErrDuplicate) {
+			return usererror.Conflict(fmt.Sprintf(
+				"A repository with identifier %q already exists in this space.", repo.Identifier))
+		} else if err != nil {
 			return fmt.Errorf("failed to create repository in storage: %w", err)
 		}
 

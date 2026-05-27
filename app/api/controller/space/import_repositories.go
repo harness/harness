@@ -104,7 +104,8 @@ func (c *Controller) ImportRepositories(
 		for _, repo := range repos {
 			err = c.repoStore.Create(ctx, repo)
 			if errors.Is(err, store.ErrDuplicate) {
-				return fmt.Errorf("failed to create duplicate repo %s", repo.Identifier)
+				return usererror.Conflict(fmt.Sprintf(
+					"A repository with identifier %q already exists in this space.", repo.Identifier))
 			} else if err != nil {
 				return fmt.Errorf("failed to create repository in storage: %w", err)
 			}
