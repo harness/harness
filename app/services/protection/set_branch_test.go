@@ -417,6 +417,151 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			},
 			expViol: nil,
 		},
+		{
+			name: "require-target-is-ancestor-violation",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						RepoPath:   "space/repo",
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq": {
+							"commits": {
+								"require_target_is_ancestor": true
+							}
+						}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			input: MergeVerifyInput{
+				Actor:            &types.Principal{ID: 1},
+				TargetRepo:       &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
+				PullReq:          &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
+				TargetIsAncestor: false,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:           enum.MergeMethods,
+				RequiresTargetIsAncestor: true,
+			},
+			expViol: []types.RuleViolations{
+				{
+					Rule: types.RuleInfo{
+						RepoPath:   "space/repo",
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Violations: []types.Violation{
+						{Code: codePullReqCommitsTargetIsAncestor},
+					},
+				},
+			},
+		},
+		{
+			name: "require-target-is-ancestor-satisfied",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						RepoPath:   "space/repo",
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq": {
+							"commits": {
+								"require_target_is_ancestor": true
+							}
+						}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			input: MergeVerifyInput{
+				Actor:            &types.Principal{ID: 1},
+				TargetRepo:       &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
+				PullReq:          &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
+				TargetIsAncestor: true,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
+			expViol: nil,
+		},
+		{
+			name: "require-target-is-ancestor-aggregation-across-rules",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						RepoPath:   "space/repo",
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq": {
+							"commits": {
+								"require_target_is_ancestor": false
+							}
+						}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+				{
+					RuleInfo: types.RuleInfo{
+						RepoPath:   "space/repo",
+						ID:         2,
+						Identifier: "rule2",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq": {
+							"commits": {
+								"require_target_is_ancestor": true
+							}
+						}
+					}`),
+					RepoTarget: emptyRepoTarget,
+				},
+			},
+			input: MergeVerifyInput{
+				Actor:            &types.Principal{ID: 1},
+				TargetRepo:       &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
+				PullReq:          &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
+				TargetIsAncestor: false,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:           enum.MergeMethods,
+				RequiresTargetIsAncestor: true,
+			},
+			expViol: []types.RuleViolations{
+				{
+					Rule: types.RuleInfo{
+						RepoPath:   "space/repo",
+						ID:         2,
+						Identifier: "rule2",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Violations: []types.Violation{
+						{Code: codePullReqCommitsTargetIsAncestor},
+					},
+				},
+			},
+		},
 	}
 
 	ctx := context.Background()

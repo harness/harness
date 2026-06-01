@@ -105,12 +105,18 @@ func (c *Controller) MergeQueueEnable(
 			usererror.BadRequestf("Merge queue has not been configured for branch %q.", pr.TargetBranch)
 	}
 
+	_, _, isAncestor, err := c.mergeService.GetTargetSourceSHAs(ctx, targetRepo, pr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get pull request commit SHAs: %w", err)
+	}
+
 	_, violations, err := c.mergeService.CheckRulesForMergeQueue(ctx, protectionRules, merge.CheckRulesInput{
 		PullReq:          pr,
 		TargetRepo:       targetRepo,
 		SourceRepo:       sourceRepo,
 		Actor:            &session.Principal,
 		IsRepoOwner:      isRepoOwner,
+		IsAncestor:       isAncestor,
 		MergeMethod:      in.Method,
 		AllowBypassRules: in.BypassRules,
 	})

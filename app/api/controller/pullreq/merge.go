@@ -34,7 +34,6 @@ import (
 	"github.com/harness/gitness/git"
 	gitapi "github.com/harness/gitness/git/api"
 	gitenum "github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/sha"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -220,20 +219,10 @@ func (c *Controller) Merge(
 		sourceRepo = targetRepo
 	}
 
-	getHeadRef, err := c.git.GetRef(ctx, git.GetRefParams{
-		ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
-		Name:       strconv.FormatInt(pr.Number, 10),
-		Type:       gitenum.RefTypePullReqHead,
-	})
+	targetSHA, sourceSHA, isAncestor, err := c.mergeService.GetTargetSourceSHAs(ctx, targetRepo, pr)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get pull request head ref: %w", err)
+		return nil, nil, fmt.Errorf("failed to get pull request commit SHAs: %w", err)
 	}
-
-	if getHeadRef.SHA != sha.Must(pr.SourceSHA) {
-		return nil, nil, usererror.BadRequest("The pull request head ref doesn't match the source SHA.")
-	}
-
-	sourceSHA := getHeadRef.SHA
 
 	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, targetRepo)
 	if err != nil {
@@ -246,6 +235,7 @@ func (c *Controller) Merge(
 		SourceRepo:       sourceRepo,
 		Actor:            &session.Principal,
 		IsRepoOwner:      isRepoOwner,
+		IsAncestor:       isAncestor,
 		MergeMethod:      in.Method,
 		AllowBypassRules: in.BypassRules,
 	})
@@ -277,16 +267,6 @@ func (c *Controller) Merge(
 			MergeVerifyOutput: types.MergeVerifyOutput(ruleOut),
 		}, nil, nil
 	}
-
-	targetBranch, err := c.git.GetBranch(ctx, &git.GetBranchParams{
-		ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
-		BranchName: pr.TargetBranch,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get pull request target branch: %w", err)
-	}
-
-	targetSHA := targetBranch.Branch.SHA
 
 	// we want to complete the merge independent of request cancel - start with new, time restricted context.
 	// TODO: This is a small change to reduce likelihood of dirty state.

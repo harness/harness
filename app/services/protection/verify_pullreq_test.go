@@ -765,6 +765,44 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				AllowedMethods: enum.MergeMethods,
 			},
 		},
+		{
+			name: codePullReqCommitsTargetIsAncestor + "-fail",
+			def:  DefPullReq{Commits: DefCommits{RequireTargetIsAncestor: true}},
+			in: MergeVerifyInput{
+				PullReq:          &types.PullReq{TargetBranch: "main"},
+				TargetIsAncestor: false,
+				Method:           enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqCommitsTargetIsAncestor},
+			expParams: [][]any{{"main"}},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:           enum.MergeMethods,
+				RequiresTargetIsAncestor: true,
+			},
+		},
+		{
+			name: codePullReqCommitsTargetIsAncestor + "-success",
+			def:  DefPullReq{Commits: DefCommits{RequireTargetIsAncestor: true}},
+			in: MergeVerifyInput{
+				PullReq:          &types.PullReq{TargetBranch: "main"},
+				TargetIsAncestor: true,
+				Method:           enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
+		},
+		{
+			name: codePullReqCommitsTargetIsAncestor + "-not-required",
+			def:  DefPullReq{Commits: DefCommits{RequireTargetIsAncestor: false}},
+			in: MergeVerifyInput{
+				TargetIsAncestor: false,
+				Method:           enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
+		},
 	}
 
 	for _, test := range tests {

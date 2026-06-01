@@ -31,6 +31,7 @@ type CheckRulesInput struct {
 	SourceRepo       *types.RepositoryCore
 	Actor            *types.Principal
 	IsRepoOwner      bool
+	IsAncestor       bool // is the current target branch commit an ancestor of the latest commit on the source branch
 	MergeMethod      enum.MergeMethod
 	AllowBypassRules bool
 }
@@ -83,6 +84,7 @@ func (s *Service) checkRules(
 		PullReq:             in.PullReq,
 		Reviewers:           reviewers,
 		Method:              in.MergeMethod,
+		TargetIsAncestor:    in.IsAncestor,
 		CheckResults:        checkResults,
 		CodeOwners:          codeOwnerWithApproval,
 		OmitMQViolations:    isMergeQueue,

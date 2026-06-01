@@ -164,12 +164,9 @@ func (s *Service) Merge(
 		sourceRepo = targetRepo
 	}
 
-	targetBranch, err := s.git.GetBranch(ctx, &git.GetBranchParams{
-		ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
-		BranchName: pr.TargetBranch,
-	})
+	targetSHA, _, isAncestor, err := s.mergeService.GetTargetSourceSHAs(ctx, targetRepo, pr)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to get pull request target branch: %w", err)
+		return nil, false, fmt.Errorf("failed to get pull request commit SHAs: %w", err)
 	}
 
 	protectionRules, err := s.protectionManager.ListRepoBranchRules(ctx, pr.TargetRepoID)
@@ -183,6 +180,7 @@ func (s *Service) Merge(
 		SourceRepo:       sourceRepo,
 		Actor:            &input.Principal,
 		IsRepoOwner:      false,
+		IsAncestor:       isAncestor,
 		MergeMethod:      input.MergeMethod,
 		AllowBypassRules: false,
 	}
@@ -246,8 +244,6 @@ func (s *Service) Merge(
 			(ruleOut.DeleteSourceBranch || input.DeleteBranch)
 
 	principalInfo := input.Principal.ToPrincipalInfo()
-
-	targetSHA := targetBranch.Branch.SHA
 
 	mergeInput, err := s.mergeService.PreparePullReqMergeInput(
 		pr,

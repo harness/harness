@@ -305,6 +305,7 @@ type MergeVerifyOutput struct {
 	RequiresCodeOwnersApproval       bool `json:"requires_code_owners_approval,omitempty"`
 	RequiresCodeOwnersApprovalLatest bool `json:"requires_code_owners_approval_latest,omitempty"`
 	RequiresCommentResolution        bool `json:"requires_comment_resolution,omitempty"`
+	RequiresTargetIsAncestor         bool `json:"requires_target_is_ancestor,omitempty"`
 	RequiresNoChangeRequests         bool `json:"requires_no_change_requests,omitempty"`
 	RequiresBypassMessage            bool `json:"requires_bypass_message,omitempty"`
 	RequiresMergeQueue               bool `json:"requires_merge_queue,omitempty"`

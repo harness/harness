@@ -46,6 +46,7 @@ type (
 		PullReq             *types.PullReq
 		Reviewers           []*types.PullReqReviewer
 		Method              enum.MergeMethod // the method can be empty for dry run or dry run rules
+		TargetIsAncestor    bool
 		CheckResults        []types.CheckResult
 		CodeOwners          *codeowners.Evaluation
 		OmitMQViolations    bool // should be set to true only by the merge queue service
@@ -64,6 +65,7 @@ type (
 		RequiresCodeOwnersApproval       bool
 		RequiresCodeOwnersApprovalLatest bool
 		RequiresCommentResolution        bool
+		RequiresTargetIsAncestor         bool
 		RequiresNoChangeRequests         bool
 		RequiresBypassMessage            bool
 		RequiresMergeQueue               bool
@@ -160,6 +162,8 @@ const (
 
 	codePullReqCommentsReqResolveAll      = "pullreq.comments.require_resolve_all"
 	codePullReqStatusChecksReqIdentifiers = "pullreq.status_checks.required_identifiers"
+
+	codePullReqCommitsTargetIsAncestor = "pullreq.commits.require_target_is_ancestor"
 )
 
 //nolint:gocognit,gocyclo,cyclop // well aware of this
@@ -367,6 +371,19 @@ func (v *DefPullReq) MergeVerify(
 		)
 	}
 
+	// pullreq.commits
+
+	if v.Commits.RequireTargetIsAncestor && !in.TargetIsAncestor {
+		out.RequiresTargetIsAncestor = true
+
+		violations.Addf(
+			codePullReqCommitsTargetIsAncestor,
+			"The source branch is not up to date with %q. "+
+				"Please rebase or merge the target branch into your source branch.",
+			in.PullReq.TargetBranch,
+		)
+	}
+
 	// pullreq.merge
 
 	out.AllowedMethods = enum.MergeMethods
@@ -514,6 +531,14 @@ func (c *DefStatusChecks) Sanitize() error {
 	return nil
 }
 
+type DefCommits struct {
+	RequireTargetIsAncestor bool `json:"require_target_is_ancestor,omitempty"`
+}
+
+func (v *DefCommits) Sanitize() error {
+	return nil
+}
+
 type DefMerge struct {
 	StrategiesAllowed    []enum.MergeMethod `json:"strategies_allowed,omitempty"`
 	DeleteBranch         bool               `json:"delete_branch,omitempty"`
@@ -630,6 +655,7 @@ type DefPullReq struct {
 	Approvals    DefApprovals    `json:"approvals"`
 	Comments     DefComments     `json:"comments"`
 	StatusChecks DefStatusChecks `json:"status_checks"`
+	Commits      DefCommits      `json:"commits"`
 	Merge        DefMerge        `json:"merge"`
 	Reviewers    DefReviewers    `json:"reviewers"`
 	MergeQueue   *DefMergeQueue  `json:"merge_queue,omitempty"`
@@ -646,6 +672,10 @@ func (v *DefPullReq) Sanitize() error {
 
 	if err := v.StatusChecks.Sanitize(); err != nil {
 		return fmt.Errorf("status checks: %w", err)
+	}
+
+	if err := v.Commits.Sanitize(); err != nil {
+		return fmt.Errorf("commits: %w", err)
 	}
 
 	if err := v.Merge.Sanitize(); err != nil {

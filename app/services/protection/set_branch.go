@@ -64,6 +64,7 @@ func (s branchRuleSet) MergeVerify(
 			out.RequiresCodeOwnersApproval = out.RequiresCodeOwnersApproval || rOut.RequiresCodeOwnersApproval
 			out.RequiresCodeOwnersApprovalLatest = out.RequiresCodeOwnersApprovalLatest || rOut.RequiresCodeOwnersApprovalLatest
 			out.RequiresCommentResolution = out.RequiresCommentResolution || rOut.RequiresCommentResolution
+			out.RequiresTargetIsAncestor = out.RequiresTargetIsAncestor || rOut.RequiresTargetIsAncestor
 			out.RequiresNoChangeRequests = out.RequiresNoChangeRequests || rOut.RequiresNoChangeRequests
 			out.RequiresBypassMessage = out.RequiresBypassMessage || rOut.RequiresBypassMessage
 			out.DefaultReviewerApprovals = append(out.DefaultReviewerApprovals, rOut.DefaultReviewerApprovals...)
