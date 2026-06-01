@@ -700,6 +700,12 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 					r.Patch("/", handlerpullreq.HandleCommentUpdate(pullreqCtrl))
 					r.Delete("/", handlerpullreq.HandleCommentDelete(pullreqCtrl))
 					r.Put("/status", handlerpullreq.HandleCommentStatus(pullreqCtrl))
+					r.Route("/reactions", func(r chi.Router) {
+						r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqCommentReactionEmoji), func(r chi.Router) {
+							r.Post("/", handlerpullreq.HandleCommentReactionCreate(pullreqCtrl))
+							r.Delete("/", handlerpullreq.HandleCommentReactionDelete(pullreqCtrl))
+						})
+					})
 				})
 			})
 			r.Route("/reviewers", func(r chi.Router) {

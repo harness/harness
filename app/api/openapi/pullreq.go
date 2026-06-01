@@ -113,6 +113,14 @@ type commentStatusPullReqRequest struct {
 	pullreq.CommentStatusInput
 }
 
+type pullReqCommentReactionRequest struct {
+	pullReqCommentRequest
+	Emoji string `path:"pullreq_reaction_emoji"`
+}
+
+// OpenapiCreateReactionResponse is the response body for creating a PR comment reaction.
+type OpenapiCreateReactionResponse = types.PullReqCommentReaction
+
 type reviewerListPullReqRequest struct {
 	pullReqRequest
 }
@@ -663,6 +671,34 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPut,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status", commentStatusPullReq)
+
+	commentReactionCreate := openapi3.Operation{}
+	commentReactionCreate.WithTags("pullreq")
+	commentReactionCreate.WithMapOfAnything(map[string]any{"operationId": "commentReactionCreatePullReq"})
+	_ = reflector.SetRequest(&commentReactionCreate, new(pullReqCommentReactionRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&commentReactionCreate, new(OpenapiCreateReactionResponse), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&commentReactionCreate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&commentReactionCreate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&commentReactionCreate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&commentReactionCreate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&commentReactionCreate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/reactions/{pullreq_reaction_emoji}",
+		commentReactionCreate)
+
+	commentReactionDelete := openapi3.Operation{}
+	commentReactionDelete.WithTags("pullreq")
+	commentReactionDelete.WithMapOfAnything(map[string]any{"operationId": "commentReactionDeletePullReq"})
+	_ = reflector.SetRequest(&commentReactionDelete, new(pullReqCommentReactionRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&commentReactionDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&commentReactionDelete, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&commentReactionDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&commentReactionDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&commentReactionDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&commentReactionDelete, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/reactions/{pullreq_reaction_emoji}",
+		commentReactionDelete)
 
 	commentApplySuggestions := openapi3.Operation{}
 	commentApplySuggestions.WithTags("pullreq")

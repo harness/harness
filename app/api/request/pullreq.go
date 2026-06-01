@@ -24,12 +24,13 @@ import (
 )
 
 const (
-	PathParamPullReqNumber    = "pullreq_number"
-	PathParamPullReqCommentID = "pullreq_comment_id"
-	PathParamReviewerID       = "pullreq_reviewer_id"
-	PathParamUserGroupID      = "user_group_id"
-	PathParamSourceBranch     = "source_branch"
-	PathParamTargetBranch     = "target_branch"
+	PathParamPullReqNumber               = "pullreq_number"
+	PathParamPullReqCommentID            = "pullreq_comment_id"
+	PathParamPullReqCommentReactionEmoji = "pullreq_reaction_emoji"
+	PathParamReviewerID                  = "pullreq_reviewer_id"
+	PathParamUserGroupID                 = "user_group_id"
+	PathParamSourceBranch                = "source_branch"
+	PathParamTargetBranch                = "target_branch"
 
 	QueryParamCommenterID        = "commenter_id"
 	QueryParamReviewerID         = "reviewer_id"
@@ -54,6 +55,18 @@ func GetUserGroupIDFromPath(r *http.Request) (int64, error) {
 
 func GetPullReqCommentIDPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, PathParamPullReqCommentID)
+}
+
+func GetPullReqCommentReactionEmojiFromPath(r *http.Request) (enum.PullReqCommentReactionEmoji, error) {
+	emojiStr, err := PathParamOrError(r, PathParamPullReqCommentReactionEmoji)
+	if err != nil {
+		return "", err
+	}
+	emoji, ok := enum.PullReqCommentReactionEmoji(emojiStr).Sanitize()
+	if !ok {
+		return "", errors.InvalidArgumentf("unsupported emoji %q", emojiStr)
+	}
+	return emoji, nil
 }
 
 func GetPullReqSourceBranchFromPath(r *http.Request) (string, error) {
