@@ -294,7 +294,7 @@ func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Sp
 	return s.Find(ctx, rootID)
 }
 
-// GetRootSpaces returns all spaces where space_parent_id is NULL.
+// GetAllRootSpaces returns all spaces where space_parent_id is NULL.
 func (s *SpaceStore) GetAllRootSpaces(ctx context.Context, opts *types.SpaceFilter) ([]*types.Space, error) {
 	stmt := database.Builder.
 		Select(spaceColumns).
