@@ -57,6 +57,7 @@ var WireSet = wire.NewSet(
 	ProvidePullReqReviewerStore,
 	ProvidePullReqReviewerSuggestionStore,
 	ProvidePullReqFileViewStore,
+	ProvidePullReqFileGroupStore,
 	ProvideAutoMergeStore,
 	ProvideMergeQueueStore,
 	ProvideMergeQueueEntryStore,
@@ -331,6 +332,11 @@ func ProvidePullReqReviewerSuggestionStore(db *sqlx.DB) store.PullReqReviewerSug
 // ProvidePullReqFileViewStore provides a pull request file view store.
 func ProvidePullReqFileViewStore(db *sqlx.DB) store.PullReqFileViewStore {
 	return NewPullReqFileViewStore(db)
+}
+
+// ProvidePullReqFileGroupStore provides a pull request file group store.
+func ProvidePullReqFileGroupStore(db *sqlx.DB) store.PullReqFileGroupStore {
+	return NewPullReqFileGroupStore(db)
 }
 
 func ProvideAutoMergeStore(db *sqlx.DB) store.AutoMergeStore {

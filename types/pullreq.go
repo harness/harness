@@ -266,6 +266,37 @@ type PullReqFileView struct {
 	Updated int64 `json:"-"`
 }
 
+// PullReqFileGroup represents a logical group of changed files in a pull request.
+type PullReqFileGroup struct {
+	ID int64 `json:"-"`
+
+	PullReqID int64 `json:"-"`
+
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+
+	Created   int64 `json:"created"`
+	Updated   int64 `json:"updated"`
+	CreatedBy int64 `json:"-"`
+	UpdatedBy int64 `json:"-"`
+}
+
+// PullReqFileGroupFile represents assignment of a changed file to a pull request file group.
+type PullReqFileGroupFile struct {
+	PullReqFileGroupID int64 `json:"-"`
+
+	Path string `json:"path"`
+
+	OldSHA string `json:"old_sha,omitempty"`
+	NewSHA string `json:"new_sha,omitempty"`
+}
+
+// PullReqFileGroupWithFiles represents a file group together with its files.
+type PullReqFileGroupWithFiles struct {
+	PullReqFileGroup
+	Files []*PullReqFileGroupFile `json:"files,omitempty"`
+}
+
 type DefaultReviewerApprovalsResponse struct {
 	MinimumRequiredCount       int                   `json:"minimum_required_count"`
 	MinimumRequiredCountLatest int                   `json:"minimum_required_count_latest"`

@@ -743,6 +743,10 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Get("/", handlerpullreq.HandleFileViewList(pullreqCtrl))
 				r.Delete("/*", handlerpullreq.HandleFileViewDelete(pullreqCtrl))
 			})
+			r.Route("/view", func(r chi.Router) {
+				r.Get("/", handlerpullreq.HandlePullReqViewGet(pullreqCtrl))
+				r.Put("/", handlerpullreq.HandlePullReqViewCreate(pullreqCtrl))
+			})
 			r.Get("/codeowners", handlerpullreq.HandleCodeOwner(pullreqCtrl))
 			r.Get("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 			r.Post("/diff", handlerpullreq.HandleDiff(pullreqCtrl))

@@ -154,6 +154,11 @@ type fileViewDeletePullReqRequest struct {
 	Path string `path:"file_path"`
 }
 
+type pullReqViewCreateRequest struct {
+	pullReqRequest
+	pullreq.PullReqViewCreateInput
+}
+
 type getRawPRDiffRequest struct {
 	pullReqRequest
 	Path             []string `query:"path" description:"provide path for diff operation"`
@@ -932,6 +937,30 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&fileViewDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/file-views/{file_path}", fileViewDelete)
+
+	pullReqViewGet := openapi3.Operation{}
+	pullReqViewGet.WithTags("pullreq")
+	pullReqViewGet.WithMapOfAnything(map[string]any{"operationId": "pullReqViewGet"})
+	_ = reflector.SetRequest(&pullReqViewGet, new(pullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&pullReqViewGet, new(pullreq.PullReqViewResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&pullReqViewGet, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&pullReqViewGet, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&pullReqViewGet, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&pullReqViewGet, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/view", pullReqViewGet)
+
+	pullReqViewCreate := openapi3.Operation{}
+	pullReqViewCreate.WithTags("pullreq")
+	pullReqViewCreate.WithMapOfAnything(map[string]any{"operationId": "pullReqViewCreate"})
+	_ = reflector.SetRequest(&pullReqViewCreate, new(pullReqViewCreateRequest), http.MethodPut)
+	_ = reflector.SetJSONResponse(&pullReqViewCreate, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&pullReqViewCreate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&pullReqViewCreate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&pullReqViewCreate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&pullReqViewCreate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/view", pullReqViewCreate)
 
 	codeOwners := openapi3.Operation{}
 	codeOwners.WithTags("pullreq")

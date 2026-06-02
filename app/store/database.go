@@ -632,6 +632,18 @@ type (
 		List(ctx context.Context, prID int64, principalID int64) ([]*types.PullReqFileView, error)
 	}
 
+	// PullReqFileGroupStore stores pull request file groups.
+	PullReqFileGroupStore interface {
+		// List returns all pull request file groups with their files.
+		List(ctx context.Context, prID int64) ([]*types.PullReqFileGroupWithFiles, error)
+
+		// DeleteByPrID deletes all file groups for the pull request.
+		DeleteByPrID(ctx context.Context, prID int64) error
+
+		// CreateMany inserts the provided file groups for the pull request.
+		CreateMany(ctx context.Context, groups []*types.PullReqFileGroupWithFiles) error
+	}
+
 	AutoMergeStore interface {
 		Find(ctx context.Context, pullreqID int64) (*types.AutoMerge, error)
 		Delete(ctx context.Context, pullreqID int64) (bool, error)

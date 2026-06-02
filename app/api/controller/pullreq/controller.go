@@ -70,6 +70,7 @@ type Controller struct {
 	userGroupStore          store.UserGroupStore
 	principalInfoCache      store.PrincipalInfoCache
 	fileViewStore           store.PullReqFileViewStore
+	fileGroupStore          store.PullReqFileGroupStore
 	membershipStore         store.MembershipStore
 	checkStore              store.CheckStore
 	autoMergeStore          store.AutoMergeStore
@@ -119,6 +120,7 @@ func NewController(
 	userGroupReviewerStore store.UserGroupReviewerStore,
 	principalInfoCache store.PrincipalInfoCache,
 	fileViewStore store.PullReqFileViewStore,
+	fileGroupStore store.PullReqFileGroupStore,
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
 	autoMergeStore store.AutoMergeStore,
@@ -167,6 +169,7 @@ func NewController(
 		userGroupStore:          userGroupStore,
 		principalInfoCache:      principalInfoCache,
 		fileViewStore:           fileViewStore,
+		fileGroupStore:          fileGroupStore,
 		membershipStore:         membershipStore,
 		checkStore:              checkStore,
 		autoMergeStore:          autoMergeStore,
