@@ -1108,7 +1108,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opMergeQueueGet.WithTags("pullreq")
 	opMergeQueueGet.WithMapOfAnything(map[string]any{"operationId": "prMergeQueueGet"})
 	_ = reflector.SetRequest(&opMergeQueueGet, new(pullReqRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opMergeQueueGet, new(pullreq.MergeQueueGetOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMergeQueueGet, new(types.MergeQueueInfo), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMergeQueueGet, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opMergeQueueGet, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMergeQueueGet, new(usererror.Error), http.StatusUnauthorized)
@@ -1123,7 +1123,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		pullReqRequest
 		pullreq.MergeQueueEnableInput
 	}), http.MethodPut)
-	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(types.MergeQueueInfo), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMergeQueueEnable, new(usererror.Error), http.StatusUnauthorized)

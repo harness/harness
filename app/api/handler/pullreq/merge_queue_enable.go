@@ -49,7 +49,7 @@ func HandleMergeQueueEnable(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		pr, violation, err := pullreqCtrl.MergeQueueEnable(ctx, session, repoRef, pullreqNumber, in)
+		out, violation, err := pullreqCtrl.MergeQueueEnable(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -59,6 +59,6 @@ func HandleMergeQueueEnable(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, pr)
+		render.JSON(w, http.StatusOK, out)
 	}
 }

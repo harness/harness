@@ -221,7 +221,7 @@ func (s *Service) Merge(
 			s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqAutoMergeDisabled, pr)
 		}
 
-		pr, err = s.mergeQueueService.Enqueue(
+		pr, _, err = s.mergeQueueService.Enqueue(
 			ctx,
 			pr,
 			targetRepo,

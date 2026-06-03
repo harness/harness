@@ -41,41 +41,41 @@ func (s *Service) Enqueue(
 	commitTitle string,
 	commitMessage string,
 	deleteBranch bool,
-) (*types.PullReq, error) {
+) (*types.PullReq, *types.MergeQueueEntry, error) {
 	if m, ok := mergeMethod.Sanitize(); ok {
 		mergeMethod = m
 	} else {
-		return nil, usererror.BadRequestf("Invalid merge method: %q.", mergeMethod)
+		return nil, nil, usererror.BadRequestf("Invalid merge method: %q.", mergeMethod)
 	}
 
 	if mergeMethod == enum.MergeMethodFastForward {
-		return nil, usererror.BadRequest("Fast forward method is not supported by merge queue.")
+		return nil, nil, usererror.BadRequest("Fast forward method is not supported by merge queue.")
 	}
 
 	err := s.VerifyIfMergeQueueable(pr)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	count, err := s.mergeQueueEntryStore.CountForRepoAndBranch(ctx, targetRepo.ID, pr.TargetBranch)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get merge queue entry count: %w", err)
+		return nil, nil, fmt.Errorf("failed to get merge queue entry count: %w", err)
 	}
 
 	if count >= MaximumQueueSize {
-		return nil, usererror.BadRequestf("Merge queue is full (maximum %d entries).", MaximumQueueSize)
+		return nil, nil, usererror.BadRequestf("Merge queue is full (maximum %d entries).", MaximumQueueSize)
 	}
 
 	q, err := s.FindOrCreateMergeQueue(ctx, targetRepo.ID, pr.TargetBranch)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create merge queue: %w", err)
+		return nil, nil, fmt.Errorf("failed to create merge queue: %w", err)
 	}
 
 	prID := pr.ID
 
 	q, seq, err := s.reserveSequenceNumber(ctx, q)
 	if err != nil {
-		return nil, fmt.Errorf("failed to reserve merge queue entry sequence number: %w", err)
+		return nil, nil, fmt.Errorf("failed to reserve merge queue entry sequence number: %w", err)
 	}
 
 	var entry *types.MergeQueueEntry
@@ -134,7 +134,7 @@ func (s *Service) Enqueue(
 		return nil
 	}, dbtx.TxRepeatableRead)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create merge queue: %w", err)
+		return nil, nil, fmt.Errorf("failed to create merge queue: %w", err)
 	}
 
 	payload := &types.PullRequestActivityPayloadMergeQueueAdd{
@@ -153,7 +153,7 @@ func (s *Service) Enqueue(
 		},
 	})
 
-	return pr, nil
+	return pr, entry, nil
 }
 
 func (s *Service) reserveSequenceNumber(

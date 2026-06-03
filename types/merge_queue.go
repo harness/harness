@@ -21,6 +21,15 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+// MergeQueueInfo describes a pull request's position and status in its merge queue.
+type MergeQueueInfo struct {
+	State             enum.MergeQueueEntryState `json:"state"`
+	MergeCommitSHA    sha.SHA                   `json:"merge_commit_sha"`
+	ChecksCommitSHA   sha.SHA                   `json:"checks_commit_sha"`
+	Checks            []PullReqCheck            `json:"checks"`
+	PullRequestsAhead int                       `json:"pull_requests_ahead"`
+}
+
 type MergeQueue struct {
 	ID            int64
 	RepoID        int64

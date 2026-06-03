@@ -59,7 +59,7 @@ func (c *Controller) MergeQueueEnable(
 	repoRef string,
 	pullreqNum int64,
 	in *MergeQueueEnableInput,
-) (*types.PullReq, *types.MergeViolations, error) {
+) (*types.MergeQueueInfo, *types.MergeViolations, error) {
 	if err := in.sanitize(); err != nil {
 		return nil, nil, err
 	}
@@ -92,7 +92,7 @@ func (c *Controller) MergeQueueEnable(
 		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 
-	setup, err := protectionRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+	mqSetup, err := protectionRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
 		Repo:         targetRepo,
 		TargetBranch: pr.TargetBranch,
 	})
@@ -100,7 +100,7 @@ func (c *Controller) MergeQueueEnable(
 		return nil, nil, fmt.Errorf("failed to get merge queue setup: %w", err)
 	}
 
-	if !setup.IsActive() {
+	if !mqSetup.IsActive() {
 		return nil, nil,
 			usererror.BadRequestf("Merge queue has not been configured for branch %q.", pr.TargetBranch)
 	}
@@ -131,7 +131,7 @@ func (c *Controller) MergeQueueEnable(
 		}, nil
 	}
 
-	pr, err = c.mergeQueueService.Enqueue(
+	pr, entry, err := c.mergeQueueService.Enqueue(
 		ctx,
 		pr,
 		targetRepo,
@@ -147,5 +147,10 @@ func (c *Controller) MergeQueueEnable(
 
 	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqMergeQueueEnabled, pr)
 
-	return pr, nil, nil
+	info, err := c.mergeQueueService.BuildMergeQueueInfo(ctx, targetRepo, entry, mqSetup)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to build merge queue info: %w", err)
+	}
+
+	return info, nil, nil
 }
