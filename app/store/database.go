@@ -351,6 +351,27 @@ type (
 			mutateFn func(*types.LinkedRepo) error,
 		) (*types.LinkedRepo, error)
 		List(ctx context.Context, limit int) ([]types.LinkedRepo, error)
+		ListByProviderID(
+			ctx context.Context,
+			accountID, provider, providerID string,
+			pagination types.Pagination,
+		) ([]types.LinkedRepo, error)
+	}
+
+	// LinkedPullReqStore defines persistence operations for the linked-PR mirror table.
+	LinkedPullReqStore interface {
+		Find(ctx context.Context, pullReqID int64) (*types.LinkedPullReq, error)
+		// FindByLinkedRepoAndProviderPR returns the linked-PR row scoped to a
+		// single linked repo.
+		FindByLinkedRepoAndProviderPR(
+			ctx context.Context,
+			linkedRepoID int64,
+			provider, providerID string,
+			providerPRNumber int,
+		) (*types.LinkedPullReq, error)
+		// Create inserts a new linked-PR row; parent pullreqs row must exist.
+		Create(ctx context.Context, v *types.LinkedPullReq) error
+		Update(ctx context.Context, v *types.LinkedPullReq) error
 	}
 
 	// SettingsStore defines the settings storage.

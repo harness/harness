@@ -26,15 +26,14 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
 var _ store.LinkedRepoStore = (*LinkedRepoStore)(nil)
 
 func NewLinkedRepoStore(db *sqlx.DB) *LinkedRepoStore {
-	return &LinkedRepoStore{
-		db: db,
-	}
+	return &LinkedRepoStore{db: db}
 }
 
 // LinkedRepoStore implements store.LinkedRepoStore backed by a relational database.
@@ -127,6 +126,9 @@ func (s *LinkedRepoStore) Create(ctx context.Context, v *types.LinkedRepo) error
 	return nil
 }
 
+// Update refreshes only fields that can legitimately change after creation:
+// LastFullSync, the display-cache ConnectorRepo, and ProviderRepoID (for
+// backfilling existing rows that pre-date the provider id columns).
 func (s *LinkedRepoStore) Update(ctx context.Context, linked *types.LinkedRepo) error {
 	const sqlQuery = `
 		UPDATE linked_repositories
@@ -134,6 +136,8 @@ func (s *LinkedRepoStore) Update(ctx context.Context, linked *types.LinkedRepo) 
 			 linked_repo_version = :linked_repo_version
 			,linked_repo_updated = :linked_repo_updated
 			,linked_repo_last_full_sync = :linked_repo_last_full_sync
+			,linked_repo_provider_repo_id = :linked_repo_provider_repo_id
+			,linked_repo_connector_repo = :linked_repo_connector_repo
 		WHERE linked_repo_id = :linked_repo_id AND linked_repo_version = :linked_repo_version - 1`
 
 	dbLinked := mapToInternalLinkedRepo(linked)
@@ -222,6 +226,55 @@ func (s *LinkedRepoStore) List(ctx context.Context, limit int) ([]types.LinkedRe
 		result[i] = *mapToLinkedRepo(&dst[i])
 	}
 
+	return result, nil
+}
+
+// ListByProviderID is the canonical lookup for inbound webhook routing:
+// matches on (provider, provider_id), which the SCM keeps stable across
+// upstream renames and ownership transfers. Scoped to the account whose id
+// is the first segment of connector_path (either exact match for
+// account-scoped connectors or "<accountID>/..." prefix for org/project-scoped
+// connectors).
+func (s *LinkedRepoStore) ListByProviderID(
+	ctx context.Context,
+	accountID string,
+	provider string,
+	providerID string,
+	pagination types.Pagination,
+) ([]types.LinkedRepo, error) {
+	// Account ids are Harness-issued opaque tokens with no LIKE
+	// metacharacters, so a plain `LIKE accountID || '/%'` is safe here.
+	stmt := database.Builder.
+		Select(linkedRepoColumns).
+		From("linked_repositories").
+		InnerJoin("repositories ON repo_id = linked_repo_id").
+		Where(squirrel.Eq{"linked_repo_provider_type": provider}).
+		Where(squirrel.Eq{"linked_repo_provider_repo_id": providerID}).
+		Where(squirrel.Or{
+			squirrel.Eq{"linked_repo_connector_path": accountID},
+			squirrel.Expr("linked_repo_connector_path LIKE ? || '/%'", accountID),
+		}).
+		Where("repo_deleted IS NULL").
+		OrderBy("linked_repo_id").
+		Limit(database.Limit(pagination.Size)).
+		Offset(database.Offset(pagination.Page, pagination.Size))
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert find linked repos by provider id query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := make([]linkedRepo, 0)
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find linked repos by provider node id")
+	}
+
+	result := make([]types.LinkedRepo, len(dst))
+	for i := range dst {
+		result[i] = *mapToLinkedRepo(&dst[i])
+	}
 	return result, nil
 }
 

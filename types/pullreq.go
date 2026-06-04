@@ -73,6 +73,8 @@ type PullReq struct {
 	CheckSummary *CheckCountSummary            `json:"check_summary,omitempty"`
 	Rules        []RuleInfo                    `json:"rules,omitempty"`
 
+	Type *enum.PullReqType `json:"pullreq_type,omitempty"`
+
 	SourceRepo *RepositoryCore `json:"source_repo,omitempty"`
 }
 

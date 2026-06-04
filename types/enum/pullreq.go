@@ -315,3 +315,10 @@ var LabelActivityTypes = sortEnum([]PullReqLabelActivityType{
 	LabelActivityReassign,
 	LabelActivityNoop,
 })
+
+type PullReqType string
+
+const (
+	PullReqTypeNormal PullReqType = ""
+	PullReqTypeLinked PullReqType = "linked"
+)

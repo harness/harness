@@ -102,6 +102,8 @@ type pullReq struct {
 	FileCount   null.Int `db:"pullreq_file_count"`
 	Additions   null.Int `db:"pullreq_additions"`
 	Deletions   null.Int `db:"pullreq_deletions"`
+
+	Type null.String `db:"pullreq_type"`
 }
 
 const (
@@ -140,7 +142,8 @@ const (
 		,pullreq_commit_count
 		,pullreq_file_count
 		,pullreq_additions
-		,pullreq_deletions`
+		,pullreq_deletions
+		,pullreq_type`
 
 	pullReqColumns = pullReqColumnsNoDescription + `
 		,pullreq_description`
@@ -242,6 +245,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_file_count
 		,pullreq_additions
 		,pullreq_deletions
+		,pullreq_type
 	) values (
 		 :pullreq_version
 		,:pullreq_number
@@ -278,6 +282,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_file_count
 		,:pullreq_additions
 		,:pullreq_deletions
+		,:pullreq_type
 	) RETURNING pullreq_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -328,6 +333,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_file_count = :pullreq_file_count
 		,pullreq_additions = :pullreq_additions
 		,pullreq_deletions = :pullreq_deletions
+		,pullreq_type = :pullreq_type
 	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -781,6 +787,7 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 		*stmt = stmt.InnerJoin("repositories ON repo_id = pullreq_target_repo_id")
 		switch s.db.DriverName() {
 		case SqliteDriverName:
+			//nolint:goconst // SQL column name; codebase inlines these
 			*stmt = stmt.Where(squirrel.Eq{"repo_parent_id": opts.SpaceIDs})
 		case PostgresDriverName:
 			*stmt = stmt.Where("repo_parent_id = ANY(?)", pq.Array(opts.SpaceIDs))
@@ -869,7 +876,7 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 	switch {
 	case len(opts.LabelID) > 0 && len(opts.ValueID) == 0:
 		*stmt = stmt.Where(
-			squirrel.Eq{"pullreq_label_label_id": opts.LabelID},
+			squirrel.Eq{"pullreq_label_label_id": opts.LabelID}, //nolint:goconst // SQL column name; codebase inlines these
 		)
 
 	case len(opts.LabelID) == 0 && len(opts.ValueID) > 0:
@@ -941,6 +948,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 				Deletions:    pr.Deletions.Ptr(),
 			},
 		},
+		Type: (*enum.PullReqType)(pr.Type.Ptr()),
 	}
 }
 
@@ -984,6 +992,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		FileCount:               null.IntFromPtr(pr.Stats.FilesChanged),
 		Additions:               null.IntFromPtr(pr.Stats.Additions),
 		Deletions:               null.IntFromPtr(pr.Stats.Deletions),
+		Type:                    null.StringFromPtr((*string)(pr.Type)),
 	}
 
 	return m

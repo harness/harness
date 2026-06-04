@@ -39,6 +39,7 @@ var WireSet = wire.NewSet(
 	ProvideRepoStore,
 	ProvideRepoLangStore,
 	ProvideLinkRepoStore,
+	ProvideLinkedPullReqStore,
 	ProvideBranchStore,
 	ProvideRepoActivityStore,
 	ProvideRuleStore,
@@ -177,6 +178,12 @@ func ProvideLinkRepoStore(
 	db *sqlx.DB,
 ) store.LinkedRepoStore {
 	return NewLinkedRepoStore(db)
+}
+
+func ProvideLinkedPullReqStore(
+	db *sqlx.DB,
+) store.LinkedPullReqStore {
+	return NewLinkedPullReqStore(db)
 }
 
 // ProvideRuleStore provides a rule store.
