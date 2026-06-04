@@ -1238,6 +1238,21 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/merge-check/{range}", opMergeCheck)
 
+	opListMergeQueueEntries := openapi3.Operation{}
+	opListMergeQueueEntries.WithTags("repository")
+	opListMergeQueueEntries.WithMapOfAnything(map[string]any{"operationId": "listMergeQueue"})
+	_ = reflector.SetRequest(&opListMergeQueueEntries, &struct {
+		repoRequest
+		BranchName string `path:"branch_name" required:"true"`
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(repo.MergeQueueFullInfo), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/mergequeue/{branch_name}", opListMergeQueueEntries)
+
 	opCodeOwnerValidate := openapi3.Operation{}
 	opCodeOwnerValidate.WithTags("repository")
 	opCodeOwnerValidate.WithMapOfAnything(map[string]any{"operationId": "codeOwnersValidate"})

@@ -491,6 +491,10 @@ func setupRepos(r chi.Router,
 				r.Post("/*", handlerrepo.HandleMergeCheck(repoCtrl))
 			})
 
+			r.Route("/mergequeue", func(r chi.Router) {
+				r.Get("/*", handlerrepo.HandleListMergeQueueEntries(repoCtrl))
+			})
+
 			r.Post("/rebase", handlerrepo.HandleRebase(repoCtrl))
 			r.Post("/squash", handlerrepo.HandleSquash(repoCtrl))
 			r.Post("/merge-commit", handlerrepo.HandleMergeCommit(repoCtrl))

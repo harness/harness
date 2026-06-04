@@ -30,6 +30,13 @@ type MergeQueueInfo struct {
 	PullRequestsAhead int                       `json:"pull_requests_ahead"`
 }
 
+// MergeQueueListItem is a single entry in a merge queue listing,
+// pairing the queued pull request with its merge queue status.
+type MergeQueueListItem struct {
+	MergeQueueInfo *MergeQueueInfo `json:"merge_queue_info"`
+	PullReq        *PullReq        `json:"pull_request"`
+}
+
 type MergeQueue struct {
 	ID            int64
 	RepoID        int64
