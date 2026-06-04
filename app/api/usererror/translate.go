@@ -40,9 +40,10 @@ func Translate(ctx context.Context, err error) *Error {
 		appError                 *errors.Error
 		unrelatedHistoriesErr    *api.UnrelatedHistoriesError
 		maxBytesErr              *http.MaxBytesError
-		codeOwnersTooLargeError  *codeowners.TooLargeError
-		codeOwnersFileParseError *codeowners.FileParseError
-		lockError                *lock.Error
+		codeOwnersTooLargeError      *codeowners.TooLargeError
+		codeOwnersFileParseError     *codeowners.FileParseError
+		codeOwnersInvalidFileModeErr *codeowners.InvalidFileModeError
+		lockError                    *lock.Error
 	)
 
 	// print original error for debugging purposes
@@ -136,6 +137,8 @@ func Translate(ctx context.Context, err error) *Error {
 				"err":         codeOwnersFileParseError.Err.Error(),
 			},
 		)
+	case errors.As(err, &codeOwnersInvalidFileModeErr):
+		return UnprocessableEntity(codeOwnersInvalidFileModeErr.Error())
 	// lock errors
 	case errors.As(err, &lockError):
 		return errorFromLockError(lockError)

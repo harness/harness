@@ -15,12 +15,43 @@
 package codeowners
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
 )
+
+func Test_validateCodeOwnersFileMode(t *testing.T) {
+	tests := []struct {
+		name    string
+		mode    git.TreeNodeMode
+		wantErr bool
+	}{
+		{name: "regular file", mode: git.TreeNodeModeFile, wantErr: false},
+		{name: "executable file", mode: git.TreeNodeModeExec, wantErr: false},
+		{name: "directory", mode: git.TreeNodeModeTree, wantErr: true},
+		{name: "symlink", mode: git.TreeNodeModeSymlink, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateCodeOwnersFileMode(tt.mode)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validateCodeOwnersFileMode(%v) error = %v, wantErr %v", tt.mode, err, tt.wantErr)
+			}
+			if tt.wantErr {
+				var modeErr *InvalidFileModeError
+				if !errors.As(err, &modeErr) {
+					t.Fatalf("expected InvalidFileModeError, got %T: %v", err, err)
+				}
+				if modeErr.Mode != tt.mode {
+					t.Fatalf("mode = %v, want %v", modeErr.Mode, tt.mode)
+				}
+			}
+		})
+	}
+}
 
 func TestService_ParseCodeOwner(t *testing.T) {
 	type fields struct {
