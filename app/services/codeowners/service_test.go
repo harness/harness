@@ -406,17 +406,14 @@ func Test_match(t *testing.T) {
 				nonMatchingTargets: []string{"a.txt"},
 			},
 		},
-		/*
-			TODO: Fix bug in doublestar library, currently doesn't match `a.` ...
-				{
-					name: "trailing match-all on string",
-					args: args{
-						pattern:            "a.*",
-						matchingTargets:    []string{"a.", "a.txt", "x/a.txt", "x/a.txt/b.go", "x/a.txt/b.go/c.ar"},
-						nonMatchingTargets: []string{"atxt", "b.txt"},
-					},
-				},
-		*/
+		{
+			name: "trailing match-all on string",
+			args: args{
+				pattern:            "a.*",
+				matchingTargets:    []string{"a.", "a.txt", "x/a.txt", "x/a.txt/b.go", "x/a.txt/b.go/c.ar"},
+				nonMatchingTargets: []string{"atxt", "b.txt"},
+			},
+		},
 		{
 			name: "globstar",
 			args: args{
@@ -441,17 +438,14 @@ func Test_match(t *testing.T) {
 				nonMatchingTargets: []string{"a.txt", "x", "y/a.txt", "w/x/a.txt"},
 			},
 		},
-		/*
-			TODO: Fix bug in doublestar library, currently doesn't match `a.` ...
-				{
-					name: "trailing globstar on string",
-					args: args{
-						pattern:            "a.**",
-						matchingTargets:    []string{"a.", "a.txt", "x/a.txt", "x/a.txt/b.go", "x/a.txt/b.go/c.ar"},
-						nonMatchingTargets: []string{"atxt", "b.txt"},
-					},
-				},
-		*/
+		{
+			name: "trailing globstar on string",
+			args: args{
+				pattern:            "a.**",
+				matchingTargets:    []string{"a.", "a.txt", "x/a.txt", "x/a.txt/b.go", "x/a.txt/b.go/c.ar"},
+				nonMatchingTargets: []string{"atxt", "b.txt"},
+			},
+		},
 		{
 			name: "leading globstar",
 			args: args{
