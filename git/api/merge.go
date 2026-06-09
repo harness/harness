@@ -100,7 +100,7 @@ func (g *Git) GetMergeBase(
 	if count := strings.Count(mergeBase, "\n") + 1; count > 1 {
 		return sha.None, "",
 			errors.InvalidArgumentf("The commits %s and %s have %d merge bases. This is not supported.",
-				base, head, count)
+				base, head, count).SetErr(ErrMergeBaseNonUnique)
 	}
 
 	result, err := sha.New(mergeBase)

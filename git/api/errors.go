@@ -177,6 +177,15 @@ func (e *UnrelatedHistoriesError) Error() string {
 	return fmt.Sprintf("%s and %s have entirely different commit histories.", baseRef, headRef)
 }
 
+// ErrMergeBaseNonUnique indicates that two commits have more than one merge base.
+var ErrMergeBaseNonUnique = errors.New("the commits have more than one merge base")
+
+// IsMergeBaseNonUniqueError checks if an error was caused by two commits having
+// more than one merge base.
+func IsMergeBaseNonUniqueError(err error) bool {
+	return errors.Is(err, ErrMergeBaseNonUnique)
+}
+
 // IsUnrelatedHistoriesError checks if an error is a UnrelatedHistoriesError.
 func IsUnrelatedHistoriesError(err error) bool {
 	return AsUnrelatedHistoriesError(err) != nil

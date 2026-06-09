@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	gitapi "github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/lock"
 	gitness_store "github.com/harness/gitness/store"
@@ -385,20 +386,30 @@ func (r *repoImportState) convertPullReq(
 			return nil, fmt.Errorf("failed to fetch target branch of an open pull request: %w", err)
 		}
 
-		mergeBase, err := r.git.MergeBase(ctx, git.MergeBaseParams{
-			ReadParams: params,
-			Ref1:       sourceBranch.Branch.SHA.String(),
-			Ref2:       targetBranch.Branch.SHA.String(),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to find merge base an open pull request: %w", err)
-		}
-
 		sourceSHA := sourceBranch.Branch.SHA.String()
 		targetSHA := targetBranch.Branch.SHA.String()
 		pr.SourceSHA = sourceSHA
 		pr.MergeTargetSHA = &targetSHA
-		pr.MergeBaseSHA = mergeBase.MergeBaseSHA.String()
+
+		mergeBase, err := r.git.MergeBase(ctx, git.MergeBaseParams{
+			ReadParams: params,
+			Ref1:       sourceSHA,
+			Ref2:       targetSHA,
+		})
+		switch {
+		case err == nil:
+			pr.MergeBaseSHA = mergeBase.MergeBaseSHA.String()
+		case gitapi.IsMergeBaseNonUniqueError(err) || gitapi.IsUnrelatedHistoriesError(err):
+			// The source and target branches have more than one merge base. This must not fail
+			// the whole migration. Use the target branch SHA as the merge base.
+			log.Warn().Err(err).Msg(
+				"open pull request has a non-unique merge base during import; " +
+					"using target branch SHA as merge base")
+			pr.MergeBaseSHA = targetSHA
+		default:
+			return nil, fmt.Errorf("failed to find merge base of an open pull request: %w", err)
+		}
+
 		pr.MarkAsMergeUnchecked()
 	}
 
