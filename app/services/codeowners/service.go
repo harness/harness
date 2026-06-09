@@ -75,7 +75,7 @@ func (e *TooLargeError) Error() string {
 	)
 }
 
-//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
+//nolint:errorlint // the purpose of this method is to check whether the target itself is of this type.
 func (e *TooLargeError) Is(target error) bool {
 	_, ok := target.(*TooLargeError)
 	return ok
@@ -100,6 +100,25 @@ func (e *FileParseError) Unwrap() error {
 
 func (e *FileParseError) Is(target error) bool {
 	_, ok := target.(*FileParseError)
+	return ok
+}
+
+// InvalidFileTypeError represents an error if the CODEOWNERS path resolves to a tree node that
+// can't be read as a regular file (e.g. a symlink, directory or submodule).
+type InvalidFileTypeError struct {
+	Mode git.TreeNodeMode
+}
+
+func (e *InvalidFileTypeError) Error() string {
+	return fmt.Sprintf(
+		"The repository's CODEOWNERS file is of type %q but a regular file is required",
+		e.Mode,
+	)
+}
+
+//nolint:errorlint // the purpose of this method is to check whether the target itself is of this type.
+func (e *InvalidFileTypeError) Is(target error) bool {
+	_, ok := target.(*InvalidFileTypeError)
 	return ok
 }
 
@@ -295,12 +314,10 @@ func (s *Service) getCodeOwnerFile(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get CODEOWNERS file node: %w", err)
 	}
-	if node.Node.Mode != git.TreeNodeModeFile {
-		return nil, fmt.Errorf(
-			"CODEOWNERS file is of format '%s' but expected to be of format '%s'",
-			node.Node.Mode,
-			git.TreeNodeModeFile,
-		)
+	// An executable file is still a readable blob, so it's accepted like a regular file.
+	// Other modes (symlink, tree, submodule) can't be read as a CODEOWNERS file.
+	if node.Node.Mode != git.TreeNodeModeFile && node.Node.Mode != git.TreeNodeModeExec {
+		return nil, &InvalidFileTypeError{Mode: node.Node.Mode}
 	}
 
 	output, err := s.git.GetBlob(ctx, &git.GetBlobParams{

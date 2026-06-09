@@ -35,14 +35,15 @@ import (
 
 func Translate(ctx context.Context, err error) *Error {
 	var (
-		rError                   *Error
-		checkError               *check.ValidationError
-		appError                 *errors.Error
-		unrelatedHistoriesErr    *api.UnrelatedHistoriesError
-		maxBytesErr              *http.MaxBytesError
-		codeOwnersTooLargeError  *codeowners.TooLargeError
-		codeOwnersFileParseError *codeowners.FileParseError
-		lockError                *lock.Error
+		rError                       *Error
+		checkError                   *check.ValidationError
+		appError                     *errors.Error
+		unrelatedHistoriesErr        *api.UnrelatedHistoriesError
+		maxBytesErr                  *http.MaxBytesError
+		codeOwnersTooLargeError      *codeowners.TooLargeError
+		codeOwnersFileParseError     *codeowners.FileParseError
+		codeOwnersInvalidFileTypeErr *codeowners.InvalidFileTypeError
+		lockError                    *lock.Error
 	)
 
 	// print original error for debugging purposes
@@ -126,6 +127,8 @@ func Translate(ctx context.Context, err error) *Error {
 		return ErrCodeOwnersNotFound
 	case errors.As(err, &codeOwnersTooLargeError):
 		return UnprocessableEntity(codeOwnersTooLargeError.Error())
+	case errors.As(err, &codeOwnersInvalidFileTypeErr):
+		return UnprocessableEntity(codeOwnersInvalidFileTypeErr.Error())
 	case errors.As(err, &codeOwnersFileParseError):
 		return NewWithPayload(
 			http.StatusUnprocessableEntity,

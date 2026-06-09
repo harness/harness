@@ -15,12 +15,101 @@
 package codeowners
 
 import (
+	"context"
+	"errors"
+	"io"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/types"
 )
+
+// stubGit implements only the git.Interface methods used by getCodeOwnerFile; the embedded
+// interface leaves the rest unimplemented (they panic if called).
+type stubGit struct {
+	git.Interface
+	treeNode *git.GetTreeNodeOutput
+	treeErr  error
+	blob     *git.GetBlobOutput
+}
+
+func (s *stubGit) GetTreeNode(_ context.Context, _ *git.GetTreeNodeParams) (*git.GetTreeNodeOutput, error) {
+	return s.treeNode, s.treeErr
+}
+
+func (s *stubGit) GetBlob(_ context.Context, _ *git.GetBlobParams) (*git.GetBlobOutput, error) {
+	return s.blob, nil
+}
+
+func TestService_getCodeOwnerFile_FileMode(t *testing.T) {
+	const content = "* user1@harness.io"
+	tests := []struct {
+		name        string
+		mode        git.TreeNodeMode
+		wantErr     bool
+		wantInvalid bool
+	}{
+		{
+			name: "regular file is read",
+			mode: git.TreeNodeModeFile,
+		},
+		{
+			name: "executable file is read",
+			mode: git.TreeNodeModeExec,
+		},
+		{
+			name:        "symlink is rejected with typed error",
+			mode:        git.TreeNodeModeSymlink,
+			wantErr:     true,
+			wantInvalid: true,
+		},
+		{
+			name:        "tree is rejected with typed error",
+			mode:        git.TreeNodeModeTree,
+			wantErr:     true,
+			wantInvalid: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Service{
+				git: &stubGit{
+					treeNode: &git.GetTreeNodeOutput{
+						Node: git.TreeNode{Mode: tt.mode, SHA: "sha", Path: "CODEOWNERS"},
+					},
+					blob: &git.GetBlobOutput{
+						Size:    int64(len(content)),
+						Content: io.NopCloser(strings.NewReader(content)),
+					},
+				},
+				config: Config{FilePaths: []string{"CODEOWNERS"}},
+			}
+
+			repo := &types.RepositoryCore{GitUID: "uid", DefaultBranch: "main"}
+			got, err := s.get(context.Background(), repo, "main")
+
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("get() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantInvalid {
+				var invalidFileTypeErr *InvalidFileTypeError
+				if !errors.As(err, &invalidFileTypeErr) {
+					t.Fatalf("get() error = %v, want *InvalidFileTypeError", err)
+				}
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+			if got == nil || len(got.Entries) != 1 || got.Entries[0].Pattern != "*" {
+				t.Fatalf("get() = %+v, want single entry with pattern '*'", got)
+			}
+		})
+	}
+}
 
 func TestService_ParseCodeOwner(t *testing.T) {
 	type fields struct {
