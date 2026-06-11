@@ -99,6 +99,10 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
+	if targetRepo.Type == enum.RepoTypeLinked {
+		return nil, errors.Forbidden("Pull request creation is not allowed in a linked repository")
+	}
+
 	sourceRepo := targetRepo
 	if in.SourceRepoRef != "" {
 		sourceRepo, err = c.getRepoCheckAccess(ctx, session, in.SourceRepoRef, enum.PermissionRepoPush)
