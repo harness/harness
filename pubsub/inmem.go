@@ -75,19 +75,18 @@ func (r *InMemory) Subscribe(
 		f.Apply(&config)
 	}
 
-	// create subscriber and map it to the registry
 	subscriber := &inMemorySubscriber{
 		config:  &config,
 		handler: handler,
+		channel: make(chan []byte, config.channelSize),
+		done:    make(chan struct{}),
 	}
 
 	config.topics = append(config.topics, topic)
 	subscriber.topics = subscriber.formatTopics(config.topics...)
 
-	// start subscriber
 	go subscriber.start(ctx)
 
-	// register subscriber
 	r.registry = append(r.registry, subscriber)
 
 	return subscriber
@@ -114,16 +113,16 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 			wg.Add(1)
 			go func(subscriber *inMemorySubscriber) {
 				defer wg.Done()
-				// timer is based on subscriber data
 				t := time.NewTimer(subscriber.config.sendTimeout)
 				defer t.Stop()
 				select {
 				case <-ctx.Done():
 					return
+				case <-subscriber.done:
+					return
 				case subscriber.channel <- payload:
 					log.Ctx(ctx).Trace().Msgf("in pubsub Publish: message %v sent to topic %s", string(payload), topic)
 				case <-t.C:
-					// channel is full for topic (message is dropped)
 					log.Ctx(ctx).Warn().Msgf("in pubsub Publish: %s topic is full for %s (message is dropped)",
 						topic, subscriber.config.sendTimeout)
 				}
@@ -131,8 +130,6 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 		}
 	}
 
-	// Wait for all subscribers to complete
-	// Otherwise, we might fail notifying some subscribers due to context completion.
 	wg.Wait()
 
 	return nil
@@ -140,7 +137,7 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 
 func (r *InMemory) Close(_ context.Context) error {
 	for _, subscriber := range r.registry {
-		if err := subscriber.Close(); err != nil {
+		if err := subscriber.Close(); err != nil && !errors.Is(err, ErrClosed) {
 			return err
 		}
 	}
@@ -151,22 +148,22 @@ type inMemorySubscriber struct {
 	config  *SubscribeConfig
 	handler func([]byte) error
 	channel chan []byte
-	once    sync.Once
-	mutex   sync.RWMutex
-	topics  []string
-	closed  bool
+	// done is closed by Close to signal shutdown. We close done rather than
+	// channel so concurrent senders in Publish cannot panic on a closed channel.
+	done   chan struct{}
+	mutex  sync.RWMutex
+	topics []string
+	closed bool
 }
 
 func (s *inMemorySubscriber) start(ctx context.Context) {
-	s.channel = make(chan []byte, s.config.channelSize)
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case msg, ok := <-s.channel:
-			if !ok {
-				return
-			}
+		case <-s.done:
+			return
+		case msg := <-s.channel:
 			if err := s.handler(msg); err != nil {
 				// TODO: bump err to caller
 				log.Ctx(ctx).Err(err).Msgf("in pubsub start: error while running handler for topic")
@@ -209,15 +206,13 @@ func (s *inMemorySubscriber) Close() error {
 		return ErrClosed
 	}
 	s.closed = true
-	s.once.Do(func() {
-		close(s.channel)
-	})
+	close(s.done)
 	return nil
 }
 
 func (s *inMemorySubscriber) isClosed() bool {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	return s.closed
 }
 
