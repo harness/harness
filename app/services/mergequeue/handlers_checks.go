@@ -72,12 +72,12 @@ func (s *Service) handlerCheckFinished(
 		return fmt.Errorf("failed to find merge queue from entry's ID: %w", err)
 	}
 
-	branchProtection, err := s.protectionManager.ListRepoBranchRules(ctx, repoID)
+	repoLevelBranchRules, err := s.protectionManager.ListOnlyRepoBranchRules(ctx, repo)
 	if err != nil {
-		return fmt.Errorf("failed to list repo branch rules: %w", err)
+		return fmt.Errorf("failed to list only repo-level branch rules: %w", err)
 	}
 
-	mergeQueueSetup, err := branchProtection.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+	mergeQueueSetup, err := repoLevelBranchRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
 		Repo:         repo,
 		TargetBranch: q.Branch,
 	})

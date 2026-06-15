@@ -466,6 +466,52 @@ func (s *RuleStore) ListAllRepoRules(
 	return s.mapToRuleInfos(result), nil
 }
 
+// ListOnlyRepoRules returns a list of only repo-level protection rules.
+func (s *RuleStore) ListOnlyRepoRules(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	ruleTypes ...enum.RuleType,
+) ([]types.RuleInfoInternal, error) {
+	columns := `
+		 rule_id
+		,rule_uid
+		,rule_type
+		,rule_state
+		,rule_pattern
+		,rule_repo_target
+		,rule_definition`
+
+	stmt := database.Builder.
+		Select(columns).
+		From("rules").
+		Where("rule_repo_id = ?", repo.ID).
+		Where(squirrel.Eq{"rule_state": []enum.RuleState{enum.RuleStateActive, enum.RuleStateMonitor}})
+
+	if len(ruleTypes) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"rule_type": ruleTypes})
+	}
+
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var result []ruleInfo
+
+	err = db.SelectContext(ctx, &result, query, args...)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing list only repo rules query")
+	}
+
+	for i := range result {
+		result[i].RepoPath = repo.Path
+	}
+
+	return s.mapToRuleInfos(result), nil
+}
+
 func (s *RuleStore) UpdateParentSpace(
 	ctx context.Context,
 	srcParentSpaceID int64,

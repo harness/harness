@@ -45,12 +45,12 @@ func (s *Service) handlerUpdated(
 		return fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	branchProtection, err := s.protectionManager.ListRepoBranchRules(ctx, repoID)
+	repoLevelBranchRules, err := s.protectionManager.ListOnlyRepoBranchRules(ctx, repo)
 	if err != nil {
-		return fmt.Errorf("failed to list repo branch rules: %w", err)
+		return fmt.Errorf("failed to list only repo-level branch rules: %w", err)
 	}
 
-	mergeQueueSetup, err := branchProtection.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+	mergeQueueSetup, err := repoLevelBranchRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
 		Repo:         repo,
 		TargetBranch: branch,
 	})

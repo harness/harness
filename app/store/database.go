@@ -743,6 +743,14 @@ type (
 			ruleTypes ...enum.RuleType,
 		) ([]types.RuleInfoInternal, error)
 
+		// ListOnlyRepoRules returns a list of only repo-level protection rules for a repository.
+		// Should be used only if the relevant rules can be defined on repo level only (such as merge queue).
+		ListOnlyRepoRules(
+			ctx context.Context,
+			repo *types.RepositoryCore,
+			ruleTypes ...enum.RuleType,
+		) ([]types.RuleInfoInternal, error)
+
 		// UpdateParentSpace updates the parent space of rules.
 		UpdateParentSpace(ctx context.Context, srcParentSpaceID int64, targetParentSpaceID int64) (int64, error)
 	}

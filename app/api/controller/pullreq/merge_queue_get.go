@@ -55,12 +55,12 @@ func (c *Controller) MergeQueueGet(
 		return nil, fmt.Errorf("failed to find merge queue entry: %w", err)
 	}
 
-	protectionRules, _, err := c.fetchRules(ctx, session, targetRepo)
+	repoLevelBranchRules, err := c.protectionManager.ListOnlyRepoBranchRules(ctx, targetRepo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch rules: %w", err)
+		return nil, fmt.Errorf("failed to fetch protection repo-level rules for the repository: %w", err)
 	}
 
-	mqSetup, err := protectionRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+	mqSetup, err := repoLevelBranchRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
 		Repo:         targetRepo,
 		TargetBranch: pr.TargetBranch,
 	})

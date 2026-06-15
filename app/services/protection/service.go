@@ -190,6 +190,34 @@ func (m *Manager) SanitizeJSON(
 	return rawMsg, nil
 }
 
+func (m *Manager) ListOnlyRepoRules(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	ruleTypes ...enum.RuleType,
+) ([]types.RuleInfoInternal, error) {
+	ruleInfos, err := m.ruleStore.ListOnlyRepoRules(ctx, repo, ruleTypes...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list repo-level rules for repository: %w", err)
+	}
+
+	return ruleInfos, nil
+}
+
+func (m *Manager) ListOnlyRepoBranchRules(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+) (BranchProtection, error) {
+	ruleInfos, err := m.ListOnlyRepoRules(ctx, repo, TypeBranch)
+	if err != nil {
+		return branchRuleSet{}, err
+	}
+
+	return branchRuleSet{
+		rules:   ruleInfos,
+		manager: m,
+	}, nil
+}
+
 func (m *Manager) ListRepoRules(
 	ctx context.Context,
 	repoID int64,
