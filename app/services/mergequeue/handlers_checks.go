@@ -86,7 +86,7 @@ func (s *Service) handlerCheckFinished(
 	}
 
 	if !mergeQueueSetup.IsActive() {
-		err = s.removeAll(ctx, repo, q)
+		err = s.RemoveAll(ctx, repo, q.Branch, enum.MergeQueueRemovalReasonNoQueue)
 		if err != nil {
 			return fmt.Errorf("failed to clear merge queue: %w", err)
 		}

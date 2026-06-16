@@ -22,8 +22,8 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleMergeQueueListEntries returns the entire merge queue for the given branch.
-func HandleMergeQueueListEntries(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleMergeQueueClear clears the merge queue for the given branch.
+func HandleMergeQueueClear(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -36,12 +36,12 @@ func HandleMergeQueueListEntries(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		branch := request.GetOptionalRemainderFromPath(r)
 
-		out, err := repoCtrl.MergeQueueListEntries(ctx, session, repoRef, branch)
+		err = repoCtrl.MergeQueueClear(ctx, session, repoRef, branch)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, out)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

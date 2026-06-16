@@ -492,7 +492,8 @@ func setupRepos(r chi.Router,
 			})
 
 			r.Route("/mergequeue", func(r chi.Router) {
-				r.Get("/*", handlerrepo.HandleListMergeQueueEntries(repoCtrl))
+				r.Get("/*", handlerrepo.HandleMergeQueueListEntries(repoCtrl))
+				r.Delete("/*", handlerrepo.HandleMergeQueueClear(repoCtrl))
 			})
 
 			r.Post("/rebase", handlerrepo.HandleRebase(repoCtrl))

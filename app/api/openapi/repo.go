@@ -1238,20 +1238,35 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/merge-check/{range}", opMergeCheck)
 
-	opListMergeQueueEntries := openapi3.Operation{}
-	opListMergeQueueEntries.WithTags("repository")
-	opListMergeQueueEntries.WithMapOfAnything(map[string]any{"operationId": "listMergeQueue"})
-	_ = reflector.SetRequest(&opListMergeQueueEntries, &struct {
+	opMergeQueueListEntries := openapi3.Operation{}
+	opMergeQueueListEntries.WithTags("repository")
+	opMergeQueueListEntries.WithMapOfAnything(map[string]any{"operationId": "mergeQueueListEntries"})
+	_ = reflector.SetRequest(&opMergeQueueListEntries, &struct {
 		repoRequest
 		BranchName string `path:"branch_name" required:"true"`
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(repo.MergeQueueFullInfo), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opListMergeQueueEntries, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opMergeQueueListEntries, new(repo.MergeQueueFullInfo), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMergeQueueListEntries, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opMergeQueueListEntries, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMergeQueueListEntries, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMergeQueueListEntries, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/repos/{repo_ref}/mergequeue/{branch_name}", opListMergeQueueEntries)
+		"/repos/{repo_ref}/mergequeue/{branch_name}", opMergeQueueListEntries)
+
+	opMergeQueueClear := openapi3.Operation{}
+	opMergeQueueClear.WithTags("repository")
+	opMergeQueueClear.WithMapOfAnything(map[string]any{"operationId": "mergeQueueClear"})
+	_ = reflector.SetRequest(&opMergeQueueClear, &struct {
+		repoRequest
+		BranchName string `path:"branch_name" required:"true"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opMergeQueueClear, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opMergeQueueClear, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opMergeQueueClear, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMergeQueueClear, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMergeQueueClear, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/mergequeue/{branch_name}", opMergeQueueClear)
 
 	opCodeOwnerValidate := openapi3.Operation{}
 	opCodeOwnerValidate.WithTags("repository")

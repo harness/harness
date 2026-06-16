@@ -67,17 +67,28 @@ func (s *Service) Remove(
 	return nil
 }
 
-// removeAll removes all entries from a merge queue, deletes the merge queue row,
+// RemoveAll removes all entries from a merge queue, deletes the merge queue row,
 // and removes the merge queue git reference. Must not be called inside a transaction.
-func (s *Service) removeAll(
+func (s *Service) RemoveAll(
 	ctx context.Context,
 	repo *types.RepositoryCore,
-	q *types.MergeQueue,
+	branch string,
+	reason enum.MergeQueueRemovalReason,
 ) error {
-	checksToAbort := make(map[sha.SHA]struct{})
-	var pullReqs []*types.PullReq
+	var (
+		pullReqs      []*types.PullReq
+		q             *types.MergeQueue
+		checksToAbort = make(map[sha.SHA]struct{})
+	)
 
 	err := controller.TxOptLock(ctx, s.tx, func(ctx context.Context) error {
+		var err error
+
+		q, err = s.mergeQueueStore.FindByRepoAndBranch(ctx, repo.ID, branch)
+		if err != nil {
+			return fmt.Errorf("failed to find merge queue by repo ID and branch: %w", err)
+		}
+
 		entries, err := s.mergeQueueEntryStore.ListForMergeQueue(ctx, q.ID)
 		if err != nil {
 			return fmt.Errorf("failed to list merge queue entries: %w", err)
@@ -128,11 +139,13 @@ func (s *Service) removeAll(
 		return fmt.Errorf("failed to remove all entries from merge queue: %w", err)
 	}
 
+	s.deleteReference(ctx, repo, q.Branch)
+
 	session := bootstrap.NewSystemServiceSession()
 
 	for _, pr := range pullReqs {
 		payload := &types.PullRequestActivityPayloadMergeQueueRemove{
-			Reason: enum.MergeQueueRemovalReasonNoQueue,
+			Reason: reason,
 		}
 
 		_, prErr := s.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil)
@@ -145,8 +158,6 @@ func (s *Service) removeAll(
 	for commitSHA := range checksToAbort {
 		s.stopChecks(ctx, q, commitSHA)
 	}
-
-	s.deleteReference(ctx, repo, q.Branch)
 
 	return nil
 }

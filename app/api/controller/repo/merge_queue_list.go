@@ -34,9 +34,9 @@ type MergeQueueFullInfo struct {
 	Entries []types.MergeQueueListItem `json:"entries"`
 }
 
-// ListMergeQueueEntries returns the entire merge queue for the given branch in queue order.
+// MergeQueueListEntries returns the entire merge queue for the given branch in queue order.
 // Each item pairs the queued pull request with its merge queue info (state, position, checks).
-func (c *Controller) ListMergeQueueEntries(
+func (c *Controller) MergeQueueListEntries(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
