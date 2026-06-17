@@ -78,6 +78,11 @@ func (c *Controller) State(ctx context.Context,
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
+	if pr.IsLinked() {
+		return nil, errors.Forbidden(
+			"Changing state of a linked pull request is not allowed")
+	}
+
 	if pr.State == enum.PullReqStateMerged {
 		return nil, usererror.BadRequest("Merged pull requests can't be modified.")
 	}

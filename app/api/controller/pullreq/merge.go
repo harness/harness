@@ -174,6 +174,11 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
+	if pr.IsLinked() {
+		return nil, nil, errors.Forbidden(
+			"Merging a linked pull request is not allowed")
+	}
+
 	if pr.Merged != nil {
 		return nil, nil, usererror.BadRequest("Pull request already merged")
 	}

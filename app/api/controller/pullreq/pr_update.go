@@ -68,6 +68,11 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
+	if pr.IsLinked() {
+		return nil, errors.Forbidden(
+			"Editing title or description of a linked pull request is not allowed")
+	}
+
 	switch {
 	case pr.SourceRepoID == nil:
 		// the source repo is purged

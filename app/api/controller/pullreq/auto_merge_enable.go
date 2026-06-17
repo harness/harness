@@ -214,6 +214,10 @@ func (c *Controller) AutoMergeEnable(
 }
 
 func verifyIfAutoMergeable(pr *types.PullReq) error {
+	if pr.IsLinked() {
+		return usererror.BadRequest("Auto-merge is not supported for linked pull requests.")
+	}
+
 	if pr.Merged != nil {
 		return usererror.BadRequest("Pull request already merged")
 	}

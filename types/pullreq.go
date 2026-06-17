@@ -101,6 +101,11 @@ func (pr *PullReq) UpdateMergeOutcome(method enum.MergeMethod, conflictFiles []s
 	}
 }
 
+// IsLinked returns true if the pull request is mirrored from an external SCM provider.
+func (pr *PullReq) IsLinked() bool {
+	return pr.Type != nil && *pr.Type == enum.PullReqTypeLinked
+}
+
 func (pr *PullReq) MarkAsMergeUnchecked() {
 	pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 	pr.MergeConflicts = nil
