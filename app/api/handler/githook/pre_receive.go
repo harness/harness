@@ -23,6 +23,8 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 // HandlePreReceive returns a handler function that handles pre-receive git hooks.
@@ -37,14 +39,15 @@ func HandlePreReceive(
 		in := types.GithookPreReceiveInput{}
 		err := json.NewDecoder(r.Body).Decode(&in)
 		if err != nil {
-			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			log.Ctx(ctx).Error().Err(err).Msg("internal request body in pre-receive githook")
+			render.BadRequest(ctx, w)
 			return
 		}
 
-		// Harness doesn't require any custom git connector.
 		out, err := githookCtrl.PreReceive(ctx, git, session, in)
 		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
+			log.Ctx(ctx).Error().Err(err).Msg("internal server error in pre-receive githook")
+			render.InternalError(ctx, w)
 			return
 		}
 
