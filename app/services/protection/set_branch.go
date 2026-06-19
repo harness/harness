@@ -45,7 +45,7 @@ func (s branchRuleSet) MergeVerify(
 
 	err := s.forEachRuleMatchBranch(
 		in.TargetRepo.ID,
-		in.TargetRepo.Identifier,
+		in.TargetRepo.Path,
 		in.TargetRepo.DefaultBranch,
 		in.PullReq.TargetBranch,
 		func(r *types.RuleInfoInternal, p BranchProtection) error {
@@ -88,7 +88,7 @@ func (s branchRuleSet) RequiredChecks(
 
 	err := s.forEachRuleMatchBranch(
 		in.Repo.ID,
-		in.Repo.Identifier,
+		in.Repo.Path,
 		in.Repo.DefaultBranch,
 		in.PullReq.TargetBranch,
 		func(_ *types.RuleInfoInternal, p BranchProtection) error {
@@ -126,7 +126,7 @@ func (s branchRuleSet) GetMergeQueueSetup(in MergeQueueSetupInput) (MergeQueueSe
 
 	err := s.forEachRuleMatchBranch(
 		in.Repo.ID,
-		in.Repo.Identifier,
+		in.Repo.Path,
 		in.Repo.DefaultBranch,
 		in.TargetBranch,
 		func(_ *types.RuleInfoInternal, p BranchProtection) error {
@@ -173,7 +173,7 @@ func (s branchRuleSet) MergeQueueBranchUpdateVerify(in MergeQueueBranchUpdateInp
 
 	err := s.forEachRuleMatchBranch(
 		in.Repo.ID,
-		in.Repo.Identifier,
+		in.Repo.Path,
 		in.Repo.DefaultBranch,
 		in.TargetBranch,
 		func(r *types.RuleInfoInternal, p BranchProtection) error {
@@ -200,7 +200,7 @@ func (s branchRuleSet) CreatePullReqVerify(
 
 	err := s.forEachRuleMatchBranch(
 		in.RepoID,
-		in.RepoIdentifier,
+		in.RepoPath,
 		in.DefaultBranch,
 		in.TargetBranch,
 		func(r *types.RuleInfoInternal, p BranchProtection) error {
@@ -234,7 +234,7 @@ func (s branchRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyIn
 		s.manager,
 		s.rules,
 		in.Repo.ID,
-		in.Repo.Identifier,
+		in.Repo.Path,
 		in.Repo.DefaultBranch,
 		in.RefNames,
 		refChangeVerifyFunc(ctx, in, &violations),
@@ -256,7 +256,7 @@ func (s branchRuleSet) UserGroupIDs() ([]int64, error) {
 
 func (s branchRuleSet) forEachRuleMatchBranch(
 	repoID int64,
-	repoIdentifier string,
+	repoPath string,
 	defaultBranch string,
 	branchName string,
 	fn func(r *types.RuleInfoInternal, p BranchProtection) error,
@@ -264,7 +264,7 @@ func (s branchRuleSet) forEachRuleMatchBranch(
 	for i := range s.rules {
 		r := s.rules[i]
 
-		matchedRepo, err := matchesRepo(r.RepoTarget, repoID, repoIdentifier)
+		matchedRepo, err := matchesRepo(r.RepoTarget, repoID, repoPath, r.SpacePath)
 		if err != nil {
 			return err
 		}

@@ -523,7 +523,7 @@ func (c *Controller) createPullReqVerify(
 		DefaultBranch:      targetRepo.DefaultBranch,
 		TargetBranch:       in.TargetBranch,
 		RepoID:             targetRepo.ID,
-		RepoIdentifier:     targetRepo.Identifier,
+		RepoPath:           targetRepo.Path,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify protection rules: %w", err)

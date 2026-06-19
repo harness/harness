@@ -34,7 +34,7 @@ type (
 		IsRepoOwner        bool
 		AllowBypass        bool
 		RepoID             int64
-		RepoIdentifier     string
+		RepoPath           string
 	}
 
 	PushViolationsInput struct {

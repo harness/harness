@@ -302,7 +302,7 @@ func (c *Controller) checkPushProtection(
 			IsRepoOwner:        isRepoOwner,
 			AllowBypass:        allowBypass,
 			RepoID:             repo.ID,
-			RepoIdentifier:     repo.Identifier,
+			RepoPath:           repo.Path,
 		},
 	)
 	if err != nil {

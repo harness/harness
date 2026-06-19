@@ -37,11 +37,11 @@ func (s pushRuleSet) PushVerify(
 	out.Protections = make(map[int64]PushProtection, len(s.rules))
 
 	for _, r := range s.rules {
-		matches, err := matchesRepo(r.RepoTarget, in.RepoID, in.RepoIdentifier)
+		matches, err := matchesRepo(r.RepoTarget, in.RepoID, in.RepoPath, r.SpacePath)
 		if err != nil {
 			return out, violations, fmt.Errorf(
-				"error matching repo for protection definition ID=%d to repo identifier=%s: %w",
-				r.ID, in.RepoIdentifier, err,
+				"error matching repo for protection definition ID=%d to repo path=%s: %w",
+				r.ID, in.RepoPath, err,
 			)
 		}
 		if !matches {

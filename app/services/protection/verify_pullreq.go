@@ -124,7 +124,7 @@ type (
 		DefaultBranch      string
 		TargetBranch       string
 		RepoID             int64
-		RepoIdentifier     string
+		RepoPath           string
 	}
 
 	CreatePullReqVerifyOutput struct {

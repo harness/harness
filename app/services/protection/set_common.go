@@ -95,7 +95,7 @@ func forEachRuleMatchRefs(
 	manager *Manager,
 	rules []types.RuleInfoInternal,
 	repoID int64,
-	repoIdentifier string,
+	repoPath string,
 	defaultRef string,
 	refNames []string,
 	fn func(r *types.RuleInfoInternal, p RefProtection, matched []string) error,
@@ -103,7 +103,7 @@ func forEachRuleMatchRefs(
 	for i := range rules {
 		r := rules[i]
 
-		matchedRepo, err := matchesRepo(r.RepoTarget, repoID, repoIdentifier)
+		matchedRepo, err := matchesRepo(r.RepoTarget, repoID, repoPath, r.SpacePath)
 		if err != nil {
 			return err
 		}

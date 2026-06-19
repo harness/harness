@@ -35,7 +35,7 @@ func (s tagRuleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput
 		s.manager,
 		s.rules,
 		in.Repo.ID,
-		in.Repo.Identifier,
+		in.Repo.Path,
 		"",
 		in.RefNames,
 		refChangeVerifyFunc(ctx, in, &violations),
