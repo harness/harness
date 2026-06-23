@@ -129,7 +129,7 @@ func (s *Service) processCommentCreatedEvent(
 	seen := make(map[int64]bool)
 	seen[commenter.ID] = true
 
-	// process mentions
+	// process mentions (users only — service accounts cannot receive email notifications)
 	mentionsMap, err := s.processMentions(ctx, activity.Metadata, seen)
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -147,8 +147,8 @@ func (s *Service) processCommentCreatedEvent(
 		return nil, nil, nil, nil, err
 	}
 
-	// process author
-	if !seen[base.Author.ID] {
+	// process author (skip service accounts — they cannot receive email notifications)
+	if !seen[base.Author.ID] && base.Author.Type == gitnessenum.PrincipalTypeUser {
 		author = base.Author
 	}
 
@@ -179,6 +179,8 @@ func (s *Service) processMentions(
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch thread mentions from principalInfoView: %w", err)
 	}
+
+	deleteNonUserPrincipals(mentions)
 
 	return mentions, nil
 }
@@ -217,7 +219,28 @@ func (s *Service) processParticipants(
 		if err != nil {
 			return participants, fmt.Errorf("failed to fetch thread participants from principalInfoView: %w", err)
 		}
+		participants = filterUserPrincipals(participants)
 	}
 
 	return participants, nil
+}
+
+// filterUserPrincipals returns only principals of type user, excluding service accounts and services.
+func filterUserPrincipals(principals []*types.PrincipalInfo) []*types.PrincipalInfo {
+	var filtered []*types.PrincipalInfo
+	for _, p := range principals {
+		if p.Type == gitnessenum.PrincipalTypeUser {
+			filtered = append(filtered, p)
+		}
+	}
+	return filtered
+}
+
+// deleteNonUserPrincipals removes non-user principals from the map in-place.
+func deleteNonUserPrincipals(principals map[int64]*types.PrincipalInfo) {
+	for id, p := range principals {
+		if p.Type != gitnessenum.PrincipalTypeUser {
+			delete(principals, id)
+		}
+	}
 }

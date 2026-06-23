@@ -111,7 +111,7 @@ func (p *RepoTarget) Matches(repoID int64, repoPath, spacePath string) bool {
 	}
 
 	// If includes are specified, a repo must match at least one
-    if slices.Contains(p.Include.IDs, repoID) {
+	if slices.Contains(p.Include.IDs, repoID) {
 		return true
 	}
 
