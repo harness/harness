@@ -156,8 +156,9 @@ registry/tests/maven/
 ├── 03_content_discovery_test.go # Content discovery tests
 ├── 05_error_test.go             # Error handling tests
 ├── config.go                    # Test configuration and helpers
-├── client.go                    # HTTP client implementation
 ├── reporter.go                  # Test reporting functionality
+├── reporter_init.go             # Test reporting initialization
+├── generate_junit_report.sh     # JUnit XML report generator script
 └── scripts/                     # Helper scripts
     └── setup_test.sh            # Environment setup script
 ```
