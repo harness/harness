@@ -389,14 +389,19 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 						// WARNING this will discard the message!
 						errAck := c.rdb.XAck(ctx, streamID, c.groupName, resMessage.ID).Err()
 						if errAck != nil {
-							c.pushError(fmt.Errorf(
-								"failed to force acknowledge (discard) message '%s' (Retries: %d) in stream '%s': %w",
-								resMessage.ID, resMessage.RetryCount, streamID, errAck))
+							c.pushError(&DiscardedMessageError{
+								MessageID:  resMessage.ID,
+								StreamID:   streamID,
+								RetryCount: resMessage.RetryCount,
+								AckErr:     errAck,
+							})
 						} else {
 							retryCount := resMessage.RetryCount - 1 // redis is counting this execution as retry
-							c.pushError(fmt.Errorf(
-								"force acknowledged (discarded) message '%s' (Retries: %d) in stream '%s'",
-								resMessage.ID, retryCount, streamID))
+							c.pushError(&DiscardedMessageError{
+								MessageID:  resMessage.ID,
+								StreamID:   streamID,
+								RetryCount: retryCount,
+							})
 						}
 						continue
 					}

@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/stream"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -35,6 +37,7 @@ type ReaderFactory[R Reader] struct {
 	category                string
 	streamConsumerFactoryFn StreamConsumerFactoryFunc
 	readerFactoryFn         ReaderFactoryFunc[R]
+	collector               Collector
 }
 
 // Launch launches a new reader for the provided group and client name.
@@ -84,9 +87,16 @@ func (f *ReaderFactory[R]) Launch(ctx context.Context,
 	}
 
 	// hook into all available logs
+	collector := f.collector
 	go func(errorCh <-chan error) {
 		for err := range errorCh {
 			log.Err(err).Msg("received an error from stream consumer")
+			var de *stream.DiscardedMessageError
+			if errors.As(err, &de) {
+				collector.RecordDiscard(f.category, groupName)
+			} else {
+				collector.RecordError(f.category, groupName)
+			}
 		}
 	}(streamConsumer.Errors())
 

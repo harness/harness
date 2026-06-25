@@ -256,7 +256,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	publicKeySubKeyStore := database.ProvidePublicKeySubKeyStore(db)
 	gitSignatureResultStore := database.ProvideGitSignatureResultStore(db)
 	eventsConfig := server.ProvideEventsConfig(config)
-	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
+	collector := events.ProvideNoopCollector()
+	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient, collector)
 	if err != nil {
 		return nil, err
 	}

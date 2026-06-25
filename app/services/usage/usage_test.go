@@ -58,7 +58,7 @@ func TestMediator_basic(t *testing.T) {
 	eventSystem, err := events.ProvideSystem(events.Config{
 		Mode:            events.ModeInMemory,
 		MaxStreamLength: 100,
-	}, nil)
+	}, nil, events.NewNoopCollector())
 	if err != nil {
 		t.Fatalf("failed to create event system: %v", err)
 	}

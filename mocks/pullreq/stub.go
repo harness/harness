@@ -29,7 +29,7 @@ func NewStubReporter(t *testing.T) *pullreqevents.Reporter {
 	eventSystem, err := events.ProvideSystem(events.Config{
 		Mode:            events.ModeInMemory,
 		MaxStreamLength: 1000,
-	}, nil)
+	}, nil, events.NewNoopCollector())
 	if err != nil {
 		t.Fatalf("create in-memory event system: %v", err)
 	}

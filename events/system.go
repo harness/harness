@@ -21,19 +21,28 @@ import "errors"
 type System struct {
 	streamConsumerFactoryFn StreamConsumerFactoryFunc
 	streamProducer          StreamProducer
+	collector               Collector
 }
 
-func NewSystem(streamConsumerFactoryFunc StreamConsumerFactoryFunc, streamProducer StreamProducer) (*System, error) {
+func NewSystem(
+	streamConsumerFactoryFunc StreamConsumerFactoryFunc,
+	streamProducer StreamProducer,
+	collector Collector,
+) (*System, error) {
 	if streamConsumerFactoryFunc == nil {
 		return nil, errors.New("streamConsumerFactoryFunc can't be empty")
 	}
 	if streamProducer == nil {
 		return nil, errors.New("streamProducer can't be empty")
 	}
+	if collector == nil {
+		return nil, errors.New("collector can't be empty")
+	}
 
 	return &System{
 		streamConsumerFactoryFn: streamConsumerFactoryFunc,
 		streamProducer:          streamProducer,
+		collector:               collector,
 	}, nil
 }
 
@@ -51,6 +60,7 @@ func NewReaderFactory[R Reader](system *System, category string, fn ReaderFactor
 	return &ReaderFactory[R]{
 		// values coming from system
 		streamConsumerFactoryFn: system.streamConsumerFactoryFn,
+		collector:               system.collector,
 
 		// values coming from input parameters
 		category:        category,

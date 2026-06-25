@@ -235,6 +235,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		encrypt.WireSet,
 		cliserver.ProvideEventsConfig,
 		events.WireSet,
+		events.ProvideNoopCollector,
 		cliserver.ProvideWebhookConfig,
 		cliserver.ProvideNotificationConfig,
 		webhook.WireSet,

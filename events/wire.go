@@ -29,18 +29,26 @@ var WireSet = wire.NewSet(
 	ProvideSystem,
 )
 
-func ProvideSystem(config Config, redisClient redis.UniversalClient) (*System, error) {
+func ProvideNoopCollector() Collector {
+	return NewNoopCollector()
+}
+
+func ProvideSystem(config Config, redisClient redis.UniversalClient, collector Collector) (*System, error) {
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("provided config is invalid: %w", err)
 	}
 
-	var system *System
-	var err error
+	var (
+		consumerFn StreamConsumerFactoryFunc
+		producer   StreamProducer
+		err        error
+	)
+
 	switch config.Mode {
 	case ModeInMemory:
-		system, err = provideSystemInMemory(config)
+		consumerFn, producer, err = provideSystemInMemory(config)
 	case ModeRedis:
-		system, err = provideSystemRedis(config, redisClient)
+		consumerFn, producer, err = provideSystemRedis(config, redisClient)
 	default:
 		return nil, fmt.Errorf("events system mode '%s' is not supported", config.Mode)
 	}
@@ -49,31 +57,31 @@ func ProvideSystem(config Config, redisClient redis.UniversalClient) (*System, e
 		return nil, fmt.Errorf("failed to setup event system for mode '%s': %w", config.Mode, err)
 	}
 
-	return system, nil
+	return NewSystem(consumerFn, producer, collector)
 }
 
-func provideSystemInMemory(config Config) (*System, error) {
+func provideSystemInMemory(config Config) (StreamConsumerFactoryFunc, StreamProducer, error) {
 	broker, err := stream.NewMemoryBroker(config.MaxStreamLength)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return NewSystem(
-		newMemoryStreamConsumerFactoryMethod(broker, config.Namespace),
+	return newMemoryStreamConsumerFactoryMethod(broker, config.Namespace),
 		newMemoryStreamProducer(broker, config.Namespace),
-	)
+		nil
 }
 
-func provideSystemRedis(config Config, redisClient redis.UniversalClient) (*System, error) {
+func provideSystemRedis(
+	config Config, redisClient redis.UniversalClient,
+) (StreamConsumerFactoryFunc, StreamProducer, error) {
 	if redisClient == nil {
-		return nil, errors.New("redis client required")
+		return nil, nil, errors.New("redis client required")
 	}
 
-	return NewSystem(
-		newRedisStreamConsumerFactoryMethod(redisClient, config.Namespace),
+	return newRedisStreamConsumerFactoryMethod(redisClient, config.Namespace),
 		newRedisStreamProducer(redisClient, config.Namespace,
 			config.MaxStreamLength, config.ApproxMaxStreamLength),
-	)
+		nil
 }
 
 func newMemoryStreamConsumerFactoryMethod(broker *stream.MemoryBroker, namespace string) StreamConsumerFactoryFunc {

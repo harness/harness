@@ -74,7 +74,7 @@ func TestCreateRegistry(t *testing.T) {
 		// Return a sentinel error to indicate consumer is not needed in tests.
 		return nil, ErrTestConsumerNotNeeded
 	}
-	eventsSystem, err := events.NewSystem(consumerFactory, producer)
+	eventsSystem, err := events.NewSystem(consumerFactory, producer, events.NewNoopCollector())
 	if err != nil {
 		t.Fatalf("Failed to create events system: %v", err)
 	}
