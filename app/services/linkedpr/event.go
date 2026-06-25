@@ -16,7 +16,6 @@ package linkedpr
 
 import (
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/types/enum"
 )
 
 // Kind identifies the SCM event family carried by Event.
@@ -24,6 +23,7 @@ type Kind string
 
 const (
 	KindPullRequest Kind = "pull_request"
+	KindCheck       Kind = "check_run"
 )
 
 // Provider identifies the upstream SCM. Alias of importer.ProviderType so
@@ -54,43 +54,6 @@ type Payload interface {
 	RepoProviderID() string
 }
 
-// PullRequestPayload is the authoritative PR state decoded from the
-// producer's ParseWebhookResponse. The handler reads it directly; no SCM
-// API re-fetch. PR identity is (provider, repo provider id, Number) —
-// the repo provider id is sourced from the matched LinkedRepo.
-type PullRequestPayload struct {
-	Number int
-
-	Title       string
-	Description string
-
-	HeadRef string
-	HeadSHA string
-	BaseRef string
-	BaseSHA string
-
-	State enum.PullReqState
-	Draft bool
-
-	// CreatedAt / UpdatedAt are millis since epoch; UpdatedAt drives the
-	// out-of-order guard and also stands in for closed_at / merged_at
-	// (the parsed-response proto does not expose those).
-	CreatedAt int64
-	UpdatedAt int64
-
-	HTMLURL string
-
-	Author User
-	// Sender is the upstream actor who triggered this event (the merger on
-	// a merge action).
-	Sender User
-
-	Repository Repository
-}
-
-func (PullRequestPayload) Kind() Kind               { return KindPullRequest }
-func (p PullRequestPayload) RepoProviderID() string { return p.Repository.ProviderID }
-
 // User identifies a provider-side actor.
 type User struct {
 	Login   string
@@ -98,6 +61,7 @@ type User struct {
 	HTMLURL string
 }
 
+// Repository is the minimal provider-side repo identity used for routing.
 type Repository struct {
 	ProviderID string
 }

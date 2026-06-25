@@ -15,6 +15,7 @@
 package github
 
 import (
+	checkevents "github.com/harness/gitness/app/events/check"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/linkedpr"
@@ -30,7 +31,16 @@ import (
 // WireSet exposes the GitHub-specific providers.
 var WireSet = wire.NewSet(
 	ProvidePullRequestHandler,
+	ProvideCheckHandler,
 )
+
+func ProvideCheckHandler(
+	checkStore store.CheckStore,
+	eventReporter *checkevents.Reporter,
+	authorResolver linkedpr.AuthorResolver,
+) *CheckHandler {
+	return NewCheckHandler(checkStore, eventReporter, authorResolver)
+}
 
 func ProvidePullRequestHandler(
 	pullReqStore store.PullReqStore,

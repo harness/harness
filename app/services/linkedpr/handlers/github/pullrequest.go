@@ -132,7 +132,7 @@ func (h *PullRequestHandler) Handle(
 
 	// Out-of-order guard: drop deliveries with a provider-clock UpdatedAt
 	// older than or equal to the last we applied. <= also dedups identical
-	// webhook retries that GitHub re-sends on transient errors.
+	// webhook retries that GitHub re-sends on transient errors
 	if prPayload.UpdatedAt > 0 && existing.ProviderUpdatedAt > 0 &&
 		prPayload.UpdatedAt <= existing.ProviderUpdatedAt {
 		log.Ctx(ctx).Debug().
@@ -168,10 +168,10 @@ func (h *PullRequestHandler) Handle(
 	return h.update(ctx, prPayload, existing, parent, mergeBaseSHA, shaChanged)
 }
 
-// refsToFetch returns the (head, base) ref pair needed for merge-base computation.
 func refsToFetch(p linkedpr.PullRequestPayload) []string {
 	return []string{
 		fmt.Sprintf("refs/pull/%d/head", p.Number),
+		fmt.Sprintf("refs/heads/%s", p.HeadRef),
 		fmt.Sprintf("refs/heads/%s", p.BaseRef),
 	}
 }
