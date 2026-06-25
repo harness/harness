@@ -21,10 +21,14 @@ import (
 
 func (s *Service) Delete(
 	ctx context.Context,
+	scope Scope,
 	autolinkID int64,
 ) error {
-	err := s.autoLinkStore.Delete(ctx, autolinkID)
-	if err != nil {
+	if _, err := s.findAndCheck(ctx, scope, autolinkID); err != nil {
+		return err
+	}
+
+	if err := s.autoLinkStore.Delete(ctx, autolinkID); err != nil {
 		return fmt.Errorf("failed to delete autolink: %w", err)
 	}
 

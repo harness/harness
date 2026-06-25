@@ -35,7 +35,7 @@ func (c *Controller) AutolinkCreate(
 		return nil, err
 	}
 
-	autolink, err := c.autolinkSvc.Create(ctx, session.Principal.ID, &space.ID, nil, in)
+	autolink, err := c.autolinkSvc.Create(ctx, session.Principal.ID, autolink.Scope{SpaceID: &space.ID}, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create autolink: %w", err)
 	}

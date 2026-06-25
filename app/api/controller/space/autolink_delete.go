@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -28,12 +29,12 @@ func (c *Controller) AutolinkDelete(
 	spaceRef string,
 	autolinkIdentifier int64,
 ) error {
-	_, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return err
 	}
 
-	err = c.autolinkSvc.Delete(ctx, autolinkIdentifier)
+	err = c.autolinkSvc.Delete(ctx, autolink.Scope{SpaceID: &space.ID}, autolinkIdentifier)
 	if err != nil {
 		return fmt.Errorf("failed to delete autolink: %w", err)
 	}

@@ -30,6 +30,7 @@ type AutoLinkUpdateInput struct {
 
 func (s *Service) Update(
 	ctx context.Context,
+	scope Scope,
 	autolinkID int64,
 	principalID int64,
 	in *AutoLinkUpdateInput,
@@ -37,6 +38,10 @@ func (s *Service) Update(
 	autolink, err := s.autoLinkStore.Find(ctx, autolinkID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get autolink: %w", err)
+	}
+
+	if err := checkScope(autolink, scope); err != nil {
+		return nil, err
 	}
 
 	// Determine the effective values after update.

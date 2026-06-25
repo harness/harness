@@ -154,7 +154,7 @@ func ConvertPatternToRegex(linkType enum.AutoLinkType, pattern string) string {
 func (s *Service) Create(
 	ctx context.Context,
 	principalID int64,
-	spaceID, repoID *int64,
+	scope Scope,
 	in *AutoLinkInput,
 ) (*types.AutoLink, error) {
 	if err := in.Sanitize(); err != nil {
@@ -165,8 +165,8 @@ func (s *Service) Create(
 	regexPattern := ConvertPatternToRegex(in.Type, in.Pattern)
 
 	autolink := &types.AutoLink{
-		SpaceID:   spaceID,
-		RepoID:    repoID,
+		SpaceID:   scope.SpaceID,
+		RepoID:    scope.RepoID,
 		Type:      in.Type,
 		Pattern:   regexPattern,
 		TargetURL: in.TargetURL,

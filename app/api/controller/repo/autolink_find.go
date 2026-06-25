@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -29,12 +30,12 @@ func (c *Controller) AutolinkFind(
 	repoRef string,
 	autolinkID int64,
 ) (*types.AutoLink, error) {
-	_, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}
 
-	autolink, err := c.autolinkSvc.Find(ctx, autolinkID)
+	autolink, err := c.autolinkSvc.Find(ctx, autolink.Scope{RepoID: &repo.ID}, autolinkID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get autolink: %w", err)
 	}

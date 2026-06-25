@@ -16,19 +16,14 @@ package autolink
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/types"
 )
 
 func (s *Service) Find(
 	ctx context.Context,
+	scope Scope,
 	id int64,
 ) (*types.AutoLink, error) {
-	autolink, err := s.autoLinkStore.Find(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get autolink: %w", err)
-	}
-
-	return autolink, nil
+	return s.findAndCheck(ctx, scope, id)
 }

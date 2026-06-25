@@ -31,12 +31,13 @@ func (c *Controller) AutolinkUpdate(
 	autolinkIdentifier int64,
 	in *autolink.AutoLinkUpdateInput,
 ) (*types.AutoLink, error) {
-	_, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
-	autolink, err := c.autolinkSvc.Update(ctx, autolinkIdentifier, session.Principal.ID, in)
+	autolink, err := c.autolinkSvc.Update(
+		ctx, autolink.Scope{RepoID: &repo.ID}, autolinkIdentifier, session.Principal.ID, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update autolink: %w", err)
 	}

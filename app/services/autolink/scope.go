@@ -12,32 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package space
+package autolink
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/services/autolink"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) AutolinkFind(
-	ctx context.Context,
-	session *auth.Session,
-	spaceRef string,
-	autolinkIdentifier int64,
-) (*types.AutoLink, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
-	if err != nil {
-		return nil, err
+type Scope struct {
+	SpaceID *int64
+	RepoID  *int64
+}
+
+func checkScope(autolink *types.AutoLink, scope Scope) error {
+	if scope.RepoID != nil {
+		if autolink.RepoID != nil && *autolink.RepoID == *scope.RepoID {
+			return nil
+		}
+		return usererror.ErrNotFound
 	}
 
-	autolink, err := c.autolinkSvc.Find(ctx, autolink.Scope{SpaceID: &space.ID}, autolinkIdentifier)
+	if scope.SpaceID != nil {
+		if autolink.SpaceID != nil && *autolink.SpaceID == *scope.SpaceID {
+			return nil
+		}
+		return usererror.ErrNotFound
+	}
+
+	return usererror.ErrNotFound
+}
+
+func (s *Service) findAndCheck(
+	ctx context.Context,
+	scope Scope,
+	id int64,
+) (*types.AutoLink, error) {
+	autolink, err := s.autoLinkStore.Find(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find autolink: %w", err)
+		return nil, fmt.Errorf("failed to get autolink: %w", err)
+	}
+
+	if err := checkScope(autolink, scope); err != nil {
+		return nil, err
 	}
 
 	return autolink, nil
