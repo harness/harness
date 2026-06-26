@@ -191,7 +191,7 @@ type (
 		// GetRootSpace returns a space where space_parent_id is NULL.
 		GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error)
 
-		// GetRootSpaces returns all spaces where space_parent_id is NULL.
+		// GetAllRootSpaces returns all spaces where space_parent_id is NULL.
 		GetAllRootSpaces(ctx context.Context, opts *types.SpaceFilter) ([]*types.Space, error)
 
 		// GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.

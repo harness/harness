@@ -29,7 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-// NewS3Env returns a new S3 log store.
+// NewS3LogStore returns a new S3 log store.
 func NewS3LogStore(bucket, prefix, endpoint string, pathStyle bool) store.LogStore {
 	disableSSL := false
 
