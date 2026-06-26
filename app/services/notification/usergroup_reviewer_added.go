@@ -24,7 +24,9 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-type UserGroupReviewerAddedPayload struct {
+// ReviewersAddedPayload is used when multiple reviewers are added at once
+// (e.g., from user groups, code owners, or default reviewers on PR creation).
+type ReviewersAddedPayload struct {
 	Base          *BasePullReqPayload
 	ReviewerCount int
 	ReviewerNames string
@@ -54,7 +56,7 @@ func (s *Service) notifyUserGroupReviewerAdded(
 	}
 
 	// Send ONE email to the author listing all reviewers
-	authorPayload := &UserGroupReviewerAddedPayload{
+	authorPayload := &ReviewersAddedPayload{
 		Base:          base,
 		ReviewerCount: len(members),
 		ReviewerNames: strings.Join(reviewerNames, ", "),

@@ -17,10 +17,13 @@ package notification
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+
+	"golang.org/x/exp/maps"
 )
 
 func (s *Service) notifyPullReqCreated(
@@ -37,6 +40,37 @@ func (s *Service) notifyPullReqCreated(
 		return fmt.Errorf("failed to get principal infos from cache: %w", err)
 	}
 
+	// Filter out the author from reviewers
+	delete(reviewers, base.Author.ID)
+
+	if len(reviewers) == 0 {
+		return nil
+	}
+
+	// Send ONE batched email to the author listing all reviewers
+	reviewerList := maps.Values(reviewers)
+	reviewerNames := make([]string, 0, len(reviewerList))
+	for _, reviewer := range reviewerList {
+		reviewerNames = append(reviewerNames, reviewer.DisplayName)
+	}
+
+	authorPayload := &ReviewersAddedPayload{
+		Base:          base,
+		ReviewerCount: len(reviewers),
+		ReviewerNames: strings.Join(reviewerNames, ", "),
+	}
+
+	err = s.notificationClient.SendReviewersAdded(ctx, []*types.PrincipalInfo{base.Author}, authorPayload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to send batched email to author for event %s for pullReqID %d: %w",
+			pullreqevents.CreatedEvent,
+			event.Payload.PullReqID,
+			err,
+		)
+	}
+
+	// Send individual emails to each reviewer
 	for _, reviewer := range reviewers {
 		payload := &ReviewerAddedPayload{
 			Base:     base,
@@ -44,11 +78,11 @@ func (s *Service) notifyPullReqCreated(
 		}
 		if err := s.notificationClient.SendReviewerAdded(
 			ctx,
-			[]*types.PrincipalInfo{base.Author, reviewer},
+			[]*types.PrincipalInfo{reviewer},
 			payload,
 		); err != nil {
 			return fmt.Errorf(
-				"failed to send email for event %s for pullReqID %d: %w",
+				"failed to send email to reviewer for event %s for pullReqID %d: %w",
 				pullreqevents.CreatedEvent,
 				event.Payload.PullReqID,
 				err,

@@ -543,7 +543,7 @@ func TestNotifyCommentCreated_SendsToAllRecipients(t *testing.T) {
 
 	err := svc.notifyCommentCreated(context.Background(), event)
 	require.NoError(t, err)
-	require.Len(t, notifClient.userGroupReviewerAddedCalls, 0)
+	require.Len(t, notifClient.reviewersAddedCalls, 0)
 
 	// mentions, participants, author should all be notified
 	require.NotNil(t, notifClient)

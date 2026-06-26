@@ -44,7 +44,7 @@ func buildBasePayload() *BasePullReqPayload {
 	}
 }
 
-func TestSendUserGroupReviewerAdded_SendsEmailToRecipients(t *testing.T) {
+func TestSendReviewersAdded_SendsEmailToRecipients(t *testing.T) {
 	t.Parallel()
 
 	stub := &mailerStub{}
@@ -55,13 +55,13 @@ func TestSendUserGroupReviewerAdded_SendsEmailToRecipients(t *testing.T) {
 		{ID: 3, DisplayName: "Bob", Email: "bob@example.com"},
 	}
 
-	payload := &UserGroupReviewerAddedPayload{
+	payload := &ReviewersAddedPayload{
 		Base:          buildBasePayload(),
 		ReviewerCount: 2,
 		ReviewerNames: "Alice, Bob",
 	}
 
-	err := client.SendUserGroupReviewerAdded(context.Background(), recipients, payload)
+	err := client.SendReviewersAdded(context.Background(), recipients, payload)
 
 	require.NoError(t, err)
 	require.Len(t, stub.calls, 1)
@@ -72,7 +72,7 @@ func TestSendUserGroupReviewerAdded_SendsEmailToRecipients(t *testing.T) {
 	require.Equal(t, "space/my-repo", sent.RepoRef)
 }
 
-func TestSendUserGroupReviewerAdded_SubjectContainsRepoIdentifier(t *testing.T) {
+func TestSendReviewersAdded_SubjectContainsRepoIdentifier(t *testing.T) {
 	t.Parallel()
 
 	stub := &mailerStub{}
@@ -82,20 +82,20 @@ func TestSendUserGroupReviewerAdded_SubjectContainsRepoIdentifier(t *testing.T) 
 		{ID: 2, DisplayName: "Alice", Email: "alice@example.com"},
 	}
 
-	payload := &UserGroupReviewerAddedPayload{
+	payload := &ReviewersAddedPayload{
 		Base:          buildBasePayload(),
 		ReviewerCount: 1,
 		ReviewerNames: "Alice",
 	}
 
-	err := client.SendUserGroupReviewerAdded(context.Background(), recipients, payload)
+	err := client.SendReviewersAdded(context.Background(), recipients, payload)
 
 	require.NoError(t, err)
 	require.Len(t, stub.calls, 1)
 	require.Contains(t, stub.calls[0].Subject, "my-repo")
 }
 
-func TestSendUserGroupReviewerAdded_PropagatesMailerError(t *testing.T) {
+func TestSendReviewersAdded_PropagatesMailerError(t *testing.T) {
 	t.Parallel()
 
 	sendErr := errors.New("smtp unreachable")
@@ -106,19 +106,19 @@ func TestSendUserGroupReviewerAdded_PropagatesMailerError(t *testing.T) {
 		{ID: 2, DisplayName: "Alice", Email: "alice@example.com"},
 	}
 
-	payload := &UserGroupReviewerAddedPayload{
+	payload := &ReviewersAddedPayload{
 		Base:          buildBasePayload(),
 		ReviewerCount: 1,
 		ReviewerNames: "Alice",
 	}
 
-	err := client.SendUserGroupReviewerAdded(context.Background(), recipients, payload)
+	err := client.SendReviewersAdded(context.Background(), recipients, payload)
 
 	require.Error(t, err)
 	require.ErrorIs(t, err, sendErr)
 }
 
-func TestSendUserGroupReviewerAdded_SingleRecipient(t *testing.T) {
+func TestSendReviewersAdded_SingleRecipient(t *testing.T) {
 	t.Parallel()
 
 	stub := &mailerStub{}
@@ -126,13 +126,13 @@ func TestSendUserGroupReviewerAdded_SingleRecipient(t *testing.T) {
 
 	recipient := &types.PrincipalInfo{ID: 5, DisplayName: "Carol", Email: "carol@example.com"}
 
-	payload := &UserGroupReviewerAddedPayload{
+	payload := &ReviewersAddedPayload{
 		Base:          buildBasePayload(),
 		ReviewerCount: 1,
 		ReviewerNames: "Carol",
 	}
 
-	err := client.SendUserGroupReviewerAdded(context.Background(), []*types.PrincipalInfo{recipient}, payload)
+	err := client.SendReviewersAdded(context.Background(), []*types.PrincipalInfo{recipient}, payload)
 
 	require.NoError(t, err)
 	require.Len(t, stub.calls, 1)

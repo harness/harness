@@ -159,15 +159,15 @@ func TestProcessUserGroupReviewerAddedEvent_ReturnsErrorWhenReviewerLookupFails(
 }
 
 type testNotificationClient struct {
-	userGroupReviewerAddedCalls []*userGroupReviewerAddedCall
-	reviewerAddedCalls          []*reviewerAddedCall
-	userGroupReviewerAddedErr   error
-	reviewerAddedErr            error
+	reviewersAddedCalls []*reviewersAddedCall
+	reviewerAddedCalls  []*reviewerAddedCall
+	reviewersAddedErr   error
+	reviewerAddedErr    error
 }
 
-type userGroupReviewerAddedCall struct {
+type reviewersAddedCall struct {
 	recipients []*types.PrincipalInfo
-	payload    *UserGroupReviewerAddedPayload
+	payload    *ReviewersAddedPayload
 }
 
 type reviewerAddedCall struct {
@@ -175,14 +175,24 @@ type reviewerAddedCall struct {
 	payload    *ReviewerAddedPayload
 }
 
-func (c *testNotificationClient) SendUserGroupReviewerAdded(
-	_ context.Context, recipients []*types.PrincipalInfo, payload *UserGroupReviewerAddedPayload,
+func (c *testNotificationClient) SendReviewersAdded(
+	_ context.Context, recipients []*types.PrincipalInfo, payload *ReviewersAddedPayload,
 ) error {
-	c.userGroupReviewerAddedCalls = append(c.userGroupReviewerAddedCalls, &userGroupReviewerAddedCall{
+	c.reviewersAddedCalls = append(c.reviewersAddedCalls, &reviewersAddedCall{
 		recipients: recipients,
 		payload:    payload,
 	})
-	return c.userGroupReviewerAddedErr
+	return c.reviewersAddedErr
+}
+
+func (c *testNotificationClient) SendUserGroupReviewerAdded(
+	_ context.Context, recipients []*types.PrincipalInfo, payload *ReviewersAddedPayload,
+) error {
+	c.reviewersAddedCalls = append(c.reviewersAddedCalls, &reviewersAddedCall{
+		recipients: recipients,
+		payload:    payload,
+	})
+	return c.reviewersAddedErr
 }
 
 func (c *testNotificationClient) SendReviewerAdded(
@@ -263,8 +273,8 @@ func TestNotifyUserGroupReviewerAdded_SendsGroupedEmailToAuthorAndIndividualToMe
 	require.NoError(t, err)
 
 	// Author should get one email with all reviewers listed
-	require.Len(t, notifClient.userGroupReviewerAddedCalls, 1)
-	authorCall := notifClient.userGroupReviewerAddedCalls[0]
+	require.Len(t, notifClient.reviewersAddedCalls, 1)
+	authorCall := notifClient.reviewersAddedCalls[0]
 	require.Len(t, authorCall.recipients, 1)
 	require.Equal(t, author.ID, authorCall.recipients[0].ID)
 	require.Equal(t, 2, authorCall.payload.ReviewerCount)
@@ -314,7 +324,7 @@ func TestNotifyUserGroupReviewerAdded_ReturnsEarlyWhenNoMembers(t *testing.T) {
 	require.NoError(t, err)
 
 	// No emails should be sent
-	require.Empty(t, notifClient.userGroupReviewerAddedCalls)
+	require.Empty(t, notifClient.reviewersAddedCalls)
 	require.Empty(t, notifClient.reviewerAddedCalls)
 }
 
@@ -325,7 +335,7 @@ func TestNotifyUserGroupReviewerAdded_ReturnsErrorWhenAuthorEmailFails(t *testin
 	reviewerA := &types.PrincipalInfo{ID: 2, DisplayName: "Alice", Email: "alice@example.com"}
 
 	notifClient := &testNotificationClient{
-		userGroupReviewerAddedErr: errors.New("email service unavailable"),
+		reviewersAddedErr: errors.New("email service unavailable"),
 	}
 
 	svc := &Service{
@@ -358,7 +368,7 @@ func TestNotifyUserGroupReviewerAdded_ReturnsErrorWhenAuthorEmailFails(t *testin
 	require.Contains(t, err.Error(), "failed to send email")
 
 	// Only author email attempted, no individual reviewer emails sent
-	require.Len(t, notifClient.userGroupReviewerAddedCalls, 1)
+	require.Len(t, notifClient.reviewersAddedCalls, 1)
 	require.Empty(t, notifClient.reviewerAddedCalls)
 }
 
@@ -408,6 +418,6 @@ func TestNotifyUserGroupReviewerAdded_ReturnsErrorWhenReviewerEmailFails(t *test
 	require.Contains(t, err.Error(), "failed to send email")
 
 	// Author email succeeded, but first reviewer email failed
-	require.Len(t, notifClient.userGroupReviewerAddedCalls, 1)
+	require.Len(t, notifClient.reviewersAddedCalls, 1)
 	require.Len(t, notifClient.reviewerAddedCalls, 1) // Only first attempt
 }
