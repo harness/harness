@@ -27,13 +27,14 @@ func (c *Controller) GeneralFindSpace(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
+	inherited bool,
 ) (*settings.GeneralSettingsSpace, error) {
 	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, err
 	}
 
-	defaultBranch, err := c.settings.SpaceGetDefaultBranchRecursive(ctx, space.ID, space.ParentID)
+	defaultBranch, err := c.settings.SpaceGetDefaultBranch(ctx, space.ID, inherited)
 	if err != nil {
 		return nil, err
 	}

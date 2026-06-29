@@ -69,7 +69,7 @@ func TestSpaceUpdateGeneralSettingsRejectsInvalidBranch(t *testing.T) {
 	require.ErrorIs(t, findErr, basestore.ErrResourceNotFound)
 }
 
-func TestSpaceGetDefaultBranchRecursiveReturnsConfiguredBranch(t *testing.T) {
+func TestSpaceGetDefaultBranchReturnsConfiguredBranch(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
@@ -78,17 +78,17 @@ func TestSpaceGetDefaultBranchRecursiveReturnsConfiguredBranch(t *testing.T) {
 
 	require.NoError(t, service.Set(ctx, enum.SettingsScopeSpace, 1, DefaultBranchKey, ptrString("release/1.0")))
 
-	branch, err := service.SpaceGetDefaultBranchRecursive(ctx, 1, 0)
+	branch, err := service.SpaceGetDefaultBranch(ctx, 1, false)
 	require.NoError(t, err)
 	require.Equal(t, "release/1.0", branch)
 }
 
-func TestSpaceGetDefaultBranchRecursiveFallsBackToGlobalDefault(t *testing.T) {
+func TestSpaceGetDefaultBranchFallsBackToGlobalDefault(t *testing.T) {
 	t.Parallel()
 
 	service := NewService(newInMemorySettingsStore(), refcache.SpaceFinder{})
 
-	branch, err := service.SpaceGetDefaultBranchRecursive(context.Background(), 1, 0)
+	branch, err := service.SpaceGetDefaultBranch(context.Background(), 1, false)
 	require.NoError(t, err)
 	require.Equal(t, DefaultBranch, branch)
 }

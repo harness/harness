@@ -358,6 +358,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opSettingsGeneralFind.WithTags("space")
 	opSettingsGeneralFind.WithMapOfAnything(
 		map[string]any{"operationId": "findSpaceGeneralSettings"})
+	opSettingsGeneralFind.WithParameters(QueryParameterInherited)
 	_ = reflector.SetRequest(&opSettingsGeneralFind, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(settings.GeneralSettingsSpace), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusBadRequest)

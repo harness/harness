@@ -50,19 +50,46 @@ func (s *Service) SpaceDeleteMany(
 }
 
 // SpaceGet returns the value of the setting with the given key for the given space.
+// If inherited is true, walks up the parent chain to find the first configured value.
+// If inherited is false, returns only the space-specific value.
+// Returns (found, error). If not found and no error, the caller should apply a default.
 func (s *Service) SpaceGet(
 	ctx context.Context,
 	spaceID int64,
 	key Key,
+	inherited bool,
 	out any,
 ) (bool, error) {
-	return s.Get(
-		ctx,
-		enum.SettingsScopeSpace,
-		spaceID,
-		key,
-		out,
-	)
+	if !inherited {
+		return s.Get(
+			ctx,
+			enum.SettingsScopeSpace,
+			spaceID,
+			key,
+			out,
+		)
+	}
+
+	currentID := spaceID
+	for currentID > 0 {
+		found, err := s.Get(ctx, enum.SettingsScopeSpace, currentID, key, out)
+		if err != nil {
+			return false, fmt.Errorf("failed to find setting %s for space ID %d: %w", key, currentID, err)
+		}
+
+		if found {
+			return true, nil
+		}
+
+		space, err := s.spaceFinder.FindByID(ctx, currentID)
+		if err != nil {
+			return false, fmt.Errorf("failed to find space with id %d: %w", currentID, err)
+		}
+
+		currentID = space.ParentID
+	}
+
+	return false, nil
 }
 
 // SpaceMap maps all available settings using the provided handlers for the given space.
@@ -127,39 +154,23 @@ func SpaceUpdateWithDefaults[T any](
 	return old, out, nil
 }
 
-// SpaceGetDefaultBranchRecursive resolves default branch from a space, then walks up its parents.
-// It returns the first configured value or falls back to the global default.
-func (s *Service) SpaceGetDefaultBranchRecursive(
+// SpaceGetDefaultBranch resolves the default branch for a space.
+// If inherited is true, walks up the parent chain and returns the first configured value,
+// falling back to the global default if no ancestor has a value set.
+// If inherited is false, returns only the space-local value,
+// or the global default if no local value is set (parent settings are not consulted).
+func (s *Service) SpaceGetDefaultBranch(
 	ctx context.Context,
 	spaceID int64,
-	parentID int64,
+	inherited bool,
 ) (string, error) {
-	currentID := spaceID
-	currentParentID := parentID
-
-	for {
-		var defaultBranch string
-		found, err := s.SpaceGet(ctx, currentID, DefaultBranchKey, &defaultBranch)
-		if err != nil {
-			return "", fmt.Errorf("failed to find default branch setting for space ID %d: %w", currentID, err)
-		}
-
-		if found {
-			return defaultBranch, nil
-		}
-
-		if currentParentID <= 0 {
-			break
-		}
-
-		parent, err := s.spaceFinder.FindByID(ctx, currentParentID)
-		if err != nil {
-			return "", fmt.Errorf("failed to find parent space with id %d: %w", currentParentID, err)
-		}
-
-		currentID = parent.ID
-		currentParentID = parent.ParentID
+	var defaultBranch string
+	found, err := s.SpaceGet(ctx, spaceID, DefaultBranchKey, inherited, &defaultBranch)
+	if err != nil {
+		return "", err
 	}
-
-	return DefaultBranch, nil
+	if !found {
+		return DefaultBranch, nil
+	}
+	return defaultBranch, nil
 }

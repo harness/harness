@@ -32,7 +32,13 @@ func HandleGeneralFindSpace(repoSettingCtrl *reposettings.Controller) http.Handl
 			return
 		}
 
-		settings, err := repoSettingCtrl.GeneralFindSpace(ctx, session, spaceRef)
+		inherited, err := request.ParseInheritedFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		settings, err := repoSettingCtrl.GeneralFindSpace(ctx, session, spaceRef, inherited)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
