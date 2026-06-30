@@ -45,7 +45,7 @@ func NewStatefulLogger(logz livelog.LogStream) *StatefulLogger {
 	}
 }
 
-// GetLogStream returns an instance of LogStreamInstance tied to the given id.
+// CreateLogStream returns an instance of LogStreamInstance tied to the given id.
 func (s *StatefulLogger) CreateLogStream(ctx context.Context, id int64) (*LogStreamInstance, error) {
 	// TODO: As livelog.LogStreamInstance uses only a single id as key, conflicts are likely if pipelines and gitspaces
 	// are used in the same instance of Harness. We need to update the underlying implementation to use another unique

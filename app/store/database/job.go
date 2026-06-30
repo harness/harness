@@ -484,7 +484,7 @@ func (s *JobStore) DeleteOld(ctx context.Context, olderThan time.Time) (int64, e
 	return n, nil
 }
 
-// DeleteByID deletes a job by its unique identifier.
+// DeleteByUID deletes a job by its unique identifier.
 func (s *JobStore) DeleteByUID(ctx context.Context, jobUID string) error {
 	stmt := database.Builder.
 		Delete("jobs").
