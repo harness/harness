@@ -128,8 +128,16 @@ func IsAncesterOf(path string, other string) bool {
 	path = strings.Trim(path, types.PathSeparatorAsString)
 	other = strings.Trim(other, types.PathSeparatorAsString)
 
-	// add "/" to both to handle space1/inner and space1/in
-	return strings.Contains(
+	// the root space (empty path) is an ancestor of everything.
+	if path == "" {
+		return true
+	}
+
+	// append the separator to both sides so that an ancestor relation requires a
+	// full leading segment match: this rejects prefixes that aren't segment
+	// boundaries (space1 vs space10, space1/in vs space1/inner) as well as paths
+	// that merely appear as a trailing segment of other (space2 vs space1/space2).
+	return strings.HasPrefix(
 		other+types.PathSeparatorAsString,
 		path+types.PathSeparatorAsString,
 	)

@@ -414,6 +414,24 @@ func Test_IsAncesterOf(t *testing.T) {
 			other: "space1/inner",
 			want:  false,
 		},
+		// A path that is only a trailing segment of other is NOT an ancestor of it.
+		// IsAncesterOf guards an authorization scope in app/auth/authz/membership.go,
+		// so a false positive here would escape that scope.
+		{
+			path:  "space2",
+			other: "space1/space2",
+			want:  false,
+		},
+		{
+			path:  "a",
+			other: "b/a",
+			want:  false,
+		},
+		{
+			path:  "b/c",
+			other: "a/b/c",
+			want:  false,
+		},
 	}
 	for _, tt := range tests {
 		got := IsAncesterOf(tt.path, tt.other)
