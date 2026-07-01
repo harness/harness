@@ -62,27 +62,27 @@ func (c *Controller) ReviewSubmit(
 	repoRef string,
 	prNum int64,
 	in *ReviewSubmitInput,
-) (*types.PullReqReview, error) {
+) error {
 	if err := in.Validate(); err != nil {
-		return nil, err
+		return err
 	}
 
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
+		return fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
 	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
+		return fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
 	if pr.Merged != nil {
-		return nil, usererror.BadRequest("Can't submit a review for merged pull requests")
+		return usererror.BadRequest("Can't submit a review for merged pull requests")
 	}
 
 	if pr.CreatedBy == session.Principal.ID {
-		return nil, usererror.BadRequest("Can't submit review to own pull requests.")
+		return usererror.BadRequest("Can't submit review to own pull requests.")
 	}
 
 	commit, err := c.git.GetCommit(ctx, &git.GetCommitParams{
@@ -90,58 +90,105 @@ func (c *Controller) ReviewSubmit(
 		Revision:   in.CommitSHA,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get git branch sha: %w", err)
+		return fmt.Errorf("failed to get git branch sha: %w", err)
 	}
 
-	commitSHA := commit.Commit.SHA
+	commitSHA := commit.Commit.SHA.String()
+	now := time.Now().UnixMilli()
+	review := &types.PullReqReview{
+		ID:        0,
+		CreatedBy: session.Principal.ID,
+		Created:   now,
+		Updated:   now,
+		PullReqID: pr.ID,
+		Decision:  in.Decision,
+		SHA:       commitSHA,
+	}
 
-	var review *types.PullReqReview
+	reviewer, err := c.reviewerStore.Find(ctx, pr.ID, session.Principal.ID)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return fmt.Errorf("failed to fetch reviewer: %w", err)
+	}
+
+	if reviewer != nil && reviewer.ReviewDecision == review.Decision && reviewer.SHA == commitSHA {
+		return nil
+	}
+
+	var reviewerAdded bool
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		now := time.Now().UnixMilli()
-		review = &types.PullReqReview{
-			ID:        0,
-			CreatedBy: session.Principal.ID,
-			Created:   now,
-			Updated:   now,
-			PullReqID: pr.ID,
-			Decision:  in.Decision,
-			SHA:       commitSHA.String(),
+		if err := c.reviewStore.Create(ctx, review); err != nil {
+			return fmt.Errorf("failed to create review: %w", err)
 		}
 
-		err = c.reviewStore.Create(ctx, review)
-		if err != nil {
-			return err
-		}
-		c.eventReporter.ReviewSubmitted(ctx, &events.ReviewSubmittedPayload{
-			Base:       eventBase(pr, &session.Principal),
-			Decision:   review.Decision,
-			ReviewerID: review.CreatedBy,
-		})
+		if reviewer == nil {
+			reviewer = &types.PullReqReviewer{
+				PullReqID:      pr.ID,
+				PrincipalID:    session.Principal.ID,
+				CreatedBy:      session.Principal.ID,
+				Created:        now,
+				Updated:        now,
+				RepoID:         pr.TargetRepoID,
+				Type:           enum.PullReqReviewerTypeSelfAssigned,
+				LatestReviewID: &review.ID,
+				ReviewDecision: review.Decision,
+				SHA:            commitSHA,
+				Reviewer:       types.PrincipalInfo{},
+				AddedBy:        types.PrincipalInfo{},
+			}
 
-		_, err = c.updateReviewer(ctx, session, pr, review, commitSHA.String())
-		return err
+			if err := c.reviewerStore.Create(ctx, reviewer); err != nil {
+				return fmt.Errorf("failed to create reviewer: %w", err)
+			}
+
+			reviewerAdded = true
+		} else {
+			reviewer.LatestReviewID = &review.ID
+			reviewer.ReviewDecision = review.Decision
+			reviewer.SHA = commitSHA
+
+			if err := c.reviewerStore.Update(ctx, reviewer); err != nil {
+				return fmt.Errorf("failed to update reviewer: %w", err)
+			}
+		}
+
+		return nil
 	})
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to persist review: %w", err)
 	}
 
-	err = func() error {
+	err = func(pr *types.PullReq) error {
 		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
 			return fmt.Errorf("failed to increment pull request activity sequence: %w", err)
 		}
 
 		payload := &types.PullRequestActivityPayloadReviewSubmit{
-			CommitSHA: commitSHA.String(),
+			CommitSHA: commitSHA,
 			Decision:  in.Decision,
 		}
+
 		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil)
-		return err
-	}()
+		if err != nil {
+			return fmt.Errorf("failed to create pull request activity: %w", err)
+		}
+
+		return nil
+	}(pr)
 	if err != nil {
 		// non-critical error
-		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after review submit")
+		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity after review submit")
 	}
+
+	if reviewerAdded {
+		c.reportReviewerAddition(ctx, session, pr, reviewer)
+	}
+
+	c.eventReporter.ReviewSubmitted(ctx, &events.ReviewSubmittedPayload{
+		Base:       eventBase(pr, &session.Principal),
+		Decision:   review.Decision,
+		ReviewerID: review.CreatedBy,
+	})
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypeReviewPullRequest,
@@ -155,52 +202,9 @@ func (c *Controller) ReviewSubmit(
 		},
 	})
 	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for review pull request operation: %s", err)
+		log.Ctx(ctx).Warn().Err(err).
+			Msg("failed to insert instrumentation record for review pull request operation")
 	}
 
-	return review, nil
-}
-
-// updateReviewer updates pull request reviewer object.
-func (c *Controller) updateReviewer(
-	ctx context.Context,
-	session *auth.Session,
-	pr *types.PullReq,
-	review *types.PullReqReview,
-	sha string,
-) (*types.PullReqReviewer, error) {
-	reviewer, err := c.reviewerStore.Find(ctx, pr.ID, session.Principal.ID)
-	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
-		return nil, err
-	}
-
-	if reviewer != nil {
-		reviewer.LatestReviewID = &review.ID
-		reviewer.ReviewDecision = review.Decision
-		reviewer.SHA = sha
-		err = c.reviewerStore.Update(ctx, reviewer)
-	} else {
-		now := time.Now().UnixMilli()
-		reviewer = &types.PullReqReviewer{
-			PullReqID:      pr.ID,
-			PrincipalID:    session.Principal.ID,
-			CreatedBy:      session.Principal.ID,
-			Created:        now,
-			Updated:        now,
-			RepoID:         pr.TargetRepoID,
-			Type:           enum.PullReqReviewerTypeSelfAssigned,
-			LatestReviewID: &review.ID,
-			ReviewDecision: review.Decision,
-			SHA:            sha,
-			Reviewer:       types.PrincipalInfo{},
-			AddedBy:        types.PrincipalInfo{},
-		}
-		err = c.reviewerStore.Create(ctx, reviewer)
-		c.reportReviewerAddition(ctx, session, pr, reviewer)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to create/update reviewer")
-	}
-
-	return reviewer, nil
+	return nil
 }

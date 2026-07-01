@@ -48,7 +48,7 @@ func HandleReviewSubmit(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		_, err = pullreqCtrl.ReviewSubmit(ctx, session, repoRef, pullreqNumber, in)
+		err = pullreqCtrl.ReviewSubmit(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
