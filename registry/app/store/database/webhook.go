@@ -522,9 +522,14 @@ func triggersFromString(triggersString string) []gitnessenum.WebhookTrigger {
 	}
 
 	rawTriggers := strings.Split(triggersString, triggersSeparator)
-	triggers := make([]gitnessenum.WebhookTrigger, len(rawTriggers))
-	for i, rawTrigger := range rawTriggers {
-		triggers[i] = gitnessenum.WebhookTrigger(rawTrigger)
+	var triggers []gitnessenum.WebhookTrigger
+
+	for _, rawTrigger := range rawTriggers {
+		rawTrigger = strings.TrimSpace(rawTrigger)
+		if rawTrigger == "" {
+			continue
+		}
+		triggers = append(triggers, gitnessenum.WebhookTrigger(rawTrigger))
 	}
 
 	return triggers
