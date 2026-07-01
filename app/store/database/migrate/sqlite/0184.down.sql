@@ -1,0 +1,1 @@
+ALTER TABLE pullreq_file_groups DROP COLUMN pullreq_file_group_tags;

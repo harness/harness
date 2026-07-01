@@ -43,15 +43,18 @@ type PullReqViewCreateInput struct {
 }
 
 type PullReqViewCreateInputGroup struct {
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Files       []string `json:"files"`
+	Title       string            `json:"title"`
+	Description string            `json:"description"`
+	Tags        map[string]string `json:"tags"`
+	Files       []string          `json:"files"`
 }
 
 func (f *PullReqViewCreateInput) Validate() error {
 	seenTitles := make(map[string]struct{}, len(f.Groups))
 
-	for _, group := range f.Groups {
+	for i := range f.Groups {
+		group := &f.Groups[i]
+
 		if strings.TrimSpace(group.Title) == "" {
 			return usererror.BadRequest("group title can't be empty")
 		}
@@ -64,6 +67,13 @@ func (f *PullReqViewCreateInput) Validate() error {
 			return usererror.BadRequestf("duplicate group title %q in request", group.Title)
 		}
 		seenTitles[group.Title] = struct{}{}
+
+		// Validate tags (optional validation for reasonable constraints)
+		for key := range group.Tags {
+			if strings.TrimSpace(key) == "" {
+				return usererror.BadRequestf("group %q has empty tag key", group.Title)
+			}
+		}
 	}
 
 	return nil
@@ -139,6 +149,7 @@ func (c *Controller) PullReqViewCreate(
 					PullReqID:   pr.ID,
 					Title:       groupIn.Title,
 					Description: groupIn.Description,
+					Tags:        groupIn.Tags,
 					Created:     now,
 					Updated:     now,
 					CreatedBy:   session.Principal.ID,

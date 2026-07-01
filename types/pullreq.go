@@ -279,8 +279,9 @@ type PullReqFileGroup struct {
 
 	PullReqID int64 `json:"-"`
 
-	Title       string `json:"title"`
-	Description string `json:"description,omitempty"`
+	Title       string            `json:"title"`
+	Description string            `json:"description,omitempty"`
+	Tags        map[string]string `json:"tags,omitempty"`
 
 	Created   int64 `json:"created"`
 	Updated   int64 `json:"updated"`

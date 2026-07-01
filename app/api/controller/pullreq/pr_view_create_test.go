@@ -42,6 +42,7 @@ func TestPullReqViewCreateInput_Validate(t *testing.T) {
 			name: "empty title",
 			in: PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{{
 				Title: "   ",
+				Tags:  map[string]string{"type": "backend"},
 				Files: []string{"a.txt"},
 			}}},
 			errPart: "group title can't be empty",
@@ -50,6 +51,7 @@ func TestPullReqViewCreateInput_Validate(t *testing.T) {
 			name: "group without files",
 			in: PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{{
 				Title: "Backend",
+				Tags:  map[string]string{"component": "api"},
 				Files: nil,
 			}}},
 			errPart: "must contain at least one file",
@@ -57,16 +59,39 @@ func TestPullReqViewCreateInput_Validate(t *testing.T) {
 		{
 			name: "duplicate titles",
 			in: PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{
-				{Title: "Backend", Files: []string{"a.txt"}},
-				{Title: "Backend", Files: []string{"b.txt"}},
+				{Title: "Backend", Tags: map[string]string{"risk": "high"}, Files: []string{"a.txt"}},
+				{Title: "Backend", Tags: map[string]string{"risk": "low"}, Files: []string{"b.txt"}},
 			}},
 			errPart: "duplicate group title",
 		},
 		{
-			name: "valid input",
+			name: "empty tag key",
+			in: PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{{
+				Title: "Backend",
+				Tags:  map[string]string{"": "value"},
+				Files: []string{"a.txt"},
+			}}},
+			errPart: "has empty tag key",
+		},
+		{
+			name: "empty tag value is valid",
+			in: PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{{
+				Title: "Backend",
+				Tags:  map[string]string{"reviewed": "", "security": ""},
+				Files: []string{"a.txt"},
+			}}},
+		},
+		{
+			name: "valid input with tags",
 			in: PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{
-				{Title: "Backend", Files: []string{"a.txt"}},
-				{Title: "Frontend", Files: []string{"b.txt"}},
+				{Title: "Backend", Tags: map[string]string{"risk": "high", "component": "auth"}, Files: []string{"a.txt"}},
+				{Title: "Frontend", Tags: map[string]string{"type": "ui", "risk": "low"}, Files: []string{"b.txt"}},
+			}},
+		},
+		{
+			name: "valid input without tags",
+			in: PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{
+				{Title: "Docs", Tags: map[string]string{}, Files: []string{"readme.md"}},
 			}},
 		},
 	}
@@ -287,6 +312,7 @@ func TestPullReqViewCreate_InvalidInput(t *testing.T) {
 		1,
 		&PullReqViewCreateInput{Groups: []PullReqViewCreateInputGroup{{
 			Title: "",
+			Tags:  map[string]string{"type": "test"},
 			Files: []string{"a.txt"},
 		}}},
 	)

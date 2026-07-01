@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	appstore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -45,6 +46,7 @@ type pullReqFileGroupRow struct {
 	groupPullReqID   int64
 	groupTitle       string
 	groupDescription string
+	groupTags        []byte
 	groupCreated     int64
 	groupUpdated     int64
 	groupCreatedBy   int64
@@ -82,12 +84,18 @@ func (s *PullReqFileGroupStore) CreateMany(
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	for _, group := range groups {
+		tagsJSON, err := json.Marshal(group.Tags)
+		if err != nil {
+			return errors.Wrap(err, "failed to marshal tags to JSON")
+		}
+
 		insertGroupStmt := database.Builder.
 			Insert("pullreq_file_groups").
 			Columns(
 				"pullreq_file_group_pr_id",
 				"pullreq_file_group_title",
 				"pullreq_file_group_description",
+				"pullreq_file_group_tags",
 				"pullreq_file_group_created",
 				"pullreq_file_group_updated",
 				"pullreq_file_group_created_by",
@@ -97,6 +105,7 @@ func (s *PullReqFileGroupStore) CreateMany(
 				group.PullReqID,
 				group.Title,
 				group.Description,
+				string(tagsJSON),
 				group.Created,
 				group.Updated,
 				group.CreatedBy,
@@ -160,6 +169,7 @@ func (s *PullReqFileGroupStore) List(ctx context.Context, prID int64) ([]*types.
 			"g.pullreq_file_group_pr_id",
 			"g.pullreq_file_group_title",
 			"g.pullreq_file_group_description",
+			"g.pullreq_file_group_tags",
 			"g.pullreq_file_group_created",
 			"g.pullreq_file_group_updated",
 			"g.pullreq_file_group_created_by",
@@ -171,7 +181,10 @@ func (s *PullReqFileGroupStore) List(ctx context.Context, prID int64) ([]*types.
 		From("pullreq_file_groups g").
 		LeftJoin("pullreq_file_group_files f ON f.pullreq_file_group_file_pullreq_file_group_id = g.pullreq_file_group_id").
 		Where(squirrel.Eq{"g.pullreq_file_group_pr_id": prID}).
-		OrderBy("g.pullreq_file_group_id", "f.pullreq_file_group_file_path")
+		OrderBy(
+			"g.pullreq_file_group_id",
+			"f.pullreq_file_group_file_path",
+		)
 
 	query, args, err := stmt.ToSql()
 	if err != nil {
@@ -196,6 +209,7 @@ func (s *PullReqFileGroupStore) List(ctx context.Context, prID int64) ([]*types.
 			&row.groupPullReqID,
 			&row.groupTitle,
 			&row.groupDescription,
+			&row.groupTags,
 			&row.groupCreated,
 			&row.groupUpdated,
 			&row.groupCreatedBy,
@@ -209,12 +223,20 @@ func (s *PullReqFileGroupStore) List(ctx context.Context, prID int64) ([]*types.
 
 		group, ok := groupsByID[row.groupID]
 		if !ok {
+			var tags map[string]string
+			if len(row.groupTags) > 0 {
+				if err = json.Unmarshal(row.groupTags, &tags); err != nil {
+					return nil, errors.Wrap(err, "failed to unmarshal tags from JSON")
+				}
+			}
+
 			group = &types.PullReqFileGroupWithFiles{
 				PullReqFileGroup: types.PullReqFileGroup{
 					ID:          row.groupID,
 					PullReqID:   row.groupPullReqID,
 					Title:       row.groupTitle,
 					Description: row.groupDescription,
+					Tags:        tags,
 					Created:     row.groupCreated,
 					Updated:     row.groupUpdated,
 					CreatedBy:   row.groupCreatedBy,
