@@ -16,6 +16,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/harness/gitness/app/services/importer"
@@ -23,6 +24,8 @@ import (
 	storecache "github.com/harness/gitness/app/store/cache"
 	gitnessurl "github.com/harness/gitness/app/url"
 	gitpkg "github.com/harness/gitness/git"
+	gitgitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 	mockgit "github.com/harness/gitness/mocks/git"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -155,7 +158,7 @@ func TestRunSyncRefs_PassesConnectorRepoToGetAccessInfo(t *testing.T) {
 		testURLProvider{},
 		connectorSvc,
 		linkedRepo,
-		[]string{"refs/pull/8/head"},
+		[]RefSyncEntry{{RemoteRef: "refs/pull/8/head"}},
 	)
 	require.NoError(t, err)
 	assert.Equal(t, importer.ConnectorDef{
@@ -163,4 +166,125 @@ func TestRunSyncRefs_PassesConnectorRepoToGetAccessInfo(t *testing.T) {
 		Identifier:     "github_account_level_connector",
 		RepoIdentifier: "personalTest",
 	}, connectorSvc.lastDef)
+}
+
+// TestRunSyncRefs_WithMappings_RenamesRefs verifies the full rename path:
+// GetRef is called for the remote ref, then UpdateRefs creates the local alias
+// and deletes the temporary remote-named ref in one atomic call.
+func TestRunSyncRefs_WithMappings_RenamesRefs(t *testing.T) {
+	t.Parallel()
+
+	const (
+		remoteRef = "refs/pull/8/head"
+		localRef  = "refs/pullreq/8/head"
+		gitUID    = "git-uid-rename"
+	)
+	headSHA := sha.Must("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+	connectorSvc := &recordingConnectorService{}
+	gitClient := &mockgit.Interface{}
+	gitClient.On("SyncRefs", mock.Anything, mock.Anything).Return(&gitpkg.SyncRefsOutput{}, nil)
+	gitClient.On("GetRef", mock.Anything, gitpkg.GetRefParams{
+		ReadParams: gitpkg.ReadParams{RepoUID: gitUID},
+		Name:       remoteRef,
+		Type:       gitgitenum.RefTypeRaw,
+	}).Return(gitpkg.GetRefResponse{SHA: headSHA}, nil)
+	gitClient.On("UpdateRefs", mock.Anything, mock.MatchedBy(func(p gitpkg.UpdateRefsParams) bool {
+		// Expect exactly two updates: create the local alias then delete the temp remote ref.
+		return len(p.Refs) == 2 &&
+			p.Refs[0].Name == localRef && p.Refs[0].New == headSHA &&
+			p.Refs[1].Name == remoteRef && p.Refs[1].New == sha.None
+	})).Return(nil)
+
+	repoFinder := refcache.NewRepoFinder(
+		nil,
+		&spacePathCacheStub{},
+		&repoIDCacheStub{repo: &types.RepositoryCore{ID: 1, GitUID: gitUID}},
+		&repoRefCacheStub{},
+		storecache.Evictor[*types.RepositoryCore]{},
+	)
+
+	err := RunSyncRefs(
+		t.Context(),
+		gitClient,
+		repoFinder,
+		testURLProvider{},
+		connectorSvc,
+		&types.LinkedRepo{RepoID: 1},
+		[]RefSyncEntry{
+			{RemoteRef: "refs/heads/main"},
+			{RemoteRef: remoteRef, LocalRef: localRef},
+		},
+	)
+	require.NoError(t, err)
+	gitClient.AssertExpectations(t)
+}
+
+// TestRunSyncRefs_WithMappings_GetRefError_ReturnsError verifies that a GetRef
+// failure after a successful SyncRefs is surfaced as an error (not silently
+// skipped), since it indicates internal inconsistency.
+func TestRunSyncRefs_WithMappings_GetRefError_ReturnsError(t *testing.T) {
+	t.Parallel()
+
+	connectorSvc := &recordingConnectorService{}
+	gitClient := &mockgit.Interface{}
+	gitClient.On("SyncRefs", mock.Anything, mock.Anything).Return(&gitpkg.SyncRefsOutput{}, nil)
+	gitClient.On("GetRef", mock.Anything, mock.Anything).
+		Return(gitpkg.GetRefResponse{}, errors.New("ref not found"))
+
+	repoFinder := refcache.NewRepoFinder(
+		nil,
+		&spacePathCacheStub{},
+		&repoIDCacheStub{repo: &types.RepositoryCore{ID: 1, GitUID: "git-uid-err"}},
+		&repoRefCacheStub{},
+		storecache.Evictor[*types.RepositoryCore]{},
+	)
+
+	err := RunSyncRefs(
+		t.Context(),
+		gitClient,
+		repoFinder,
+		testURLProvider{},
+		connectorSvc,
+		&types.LinkedRepo{RepoID: 1},
+		[]RefSyncEntry{
+			{RemoteRef: "refs/heads/main"},
+			{RemoteRef: "refs/pull/5/head", LocalRef: "refs/pullreq/5/head"},
+		},
+	)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "GetRef")
+	gitClient.AssertNotCalled(t, "UpdateRefs")
+}
+
+// TestRunSyncRefs_VerbatimOnly_SkipsGetAndUpdateRefs verifies that when all
+// entries have an empty LocalRef (verbatim), neither GetRef nor UpdateRefs
+// is called.
+func TestRunSyncRefs_VerbatimOnly_SkipsGetAndUpdateRefs(t *testing.T) {
+	t.Parallel()
+
+	connectorSvc := &recordingConnectorService{}
+	gitClient := &mockgit.Interface{}
+	gitClient.On("SyncRefs", mock.Anything, mock.Anything).Return(&gitpkg.SyncRefsOutput{}, nil)
+
+	repoFinder := refcache.NewRepoFinder(
+		nil,
+		&spacePathCacheStub{},
+		&repoIDCacheStub{repo: &types.RepositoryCore{ID: 1, GitUID: "git-uid-nil"}},
+		&repoRefCacheStub{},
+		storecache.Evictor[*types.RepositoryCore]{},
+	)
+
+	err := RunSyncRefs(
+		t.Context(),
+		gitClient,
+		repoFinder,
+		testURLProvider{},
+		connectorSvc,
+		&types.LinkedRepo{RepoID: 1},
+		[]RefSyncEntry{{RemoteRef: "refs/pull/8/head"}},
+	)
+	require.NoError(t, err)
+	gitClient.AssertNotCalled(t, "GetRef")
+	gitClient.AssertNotCalled(t, "UpdateRefs")
 }

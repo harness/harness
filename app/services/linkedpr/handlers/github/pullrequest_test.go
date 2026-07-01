@@ -295,6 +295,11 @@ func configureGitMock(m *mockgit.Interface, opts ...func(*mockgit.Interface)) {
 	m.On("SyncRefs", mock.Anything, mock.Anything).Return(&gitpkg.SyncRefsOutput{}, nil)
 	m.On("MergeBase", mock.Anything, mock.Anything).Return(
 		gitpkg.MergeBaseOutput{MergeBaseSHA: sha.Must(stubMergeBaseSHA)}, nil)
+	// GetRef + UpdateRefs are called by RunSyncRefs to rename provider refs
+	// (refs/pull/<N>/head → refs/pullreq/<N>/head) after the initial fetch.
+	m.On("GetRef", mock.Anything, mock.Anything).Return(
+		gitpkg.GetRefResponse{SHA: sha.Must(stubMergeBaseSHA)}, nil)
+	m.On("UpdateRefs", mock.Anything, mock.Anything).Return(nil)
 	for _, opt := range opts {
 		opt(m)
 	}
@@ -790,6 +795,10 @@ func TestHandle_Update_SyncsRefsWhenSourceSHAChanged(t *testing.T) {
 			}).Return(&gitpkg.SyncRefsOutput{}, nil)
 			m.On("MergeBase", mock.Anything, mock.Anything).Return(
 				gitpkg.MergeBaseOutput{MergeBaseSHA: sha.Must(stubMergeBaseSHA)}, nil)
+			// RunSyncRefs renames refs/pull/<N>/head → refs/pullreq/<N>/head after fetching.
+			m.On("GetRef", mock.Anything, mock.Anything).Return(
+				gitpkg.GetRefResponse{SHA: sha.Must(stubMergeBaseSHA)}, nil)
+			m.On("UpdateRefs", mock.Anything, mock.Anything).Return(nil)
 		},
 	)
 	// payload has HeadSHA testHeadSHA by default; parent has testOldSHA → SHA moved.

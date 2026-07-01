@@ -107,7 +107,8 @@ func (h *PullRequestHandler) Handle(
 
 	if existing == nil {
 		if err := handlers.RunSyncRefs(
-			ctx, h.gitClient, h.repoFinder, h.urlProvider, h.connectorService, linkedRepo, refsToFetch(prPayload),
+			ctx, h.gitClient, h.repoFinder, h.urlProvider, h.connectorService,
+			linkedRepo, githubPRSyncSpec(prPayload),
 		); err != nil {
 			return fmt.Errorf("sync refs: %w", err)
 		}
@@ -154,7 +155,8 @@ func (h *PullRequestHandler) Handle(
 	mergeBaseSHA := parent.MergeBaseSHA
 	if shaChanged {
 		if err := handlers.RunSyncRefs(
-			ctx, h.gitClient, h.repoFinder, h.urlProvider, h.connectorService, linkedRepo, refsToFetch(prPayload),
+			ctx, h.gitClient, h.repoFinder, h.urlProvider, h.connectorService,
+			linkedRepo, githubPRSyncSpec(prPayload),
 		); err != nil {
 			return fmt.Errorf("sync refs: %w", err)
 		}
@@ -168,11 +170,19 @@ func (h *PullRequestHandler) Handle(
 	return h.update(ctx, prPayload, existing, parent, mergeBaseSHA, shaChanged)
 }
 
-func refsToFetch(p linkedpr.PullRequestPayload) []string {
-	return []string{
-		fmt.Sprintf("refs/pull/%d/head", p.Number),
-		fmt.Sprintf("refs/heads/%s", p.HeadRef),
-		fmt.Sprintf("refs/heads/%s", p.BaseRef),
+// githubPRSyncSpec returns the refs to sync for one GitHub PR event.
+//   - refs/heads/<base>: fetched verbatim so its objects are available for
+//     MergeBase computation.
+//   - refs/pull/<N>/head: fetched then renamed to refs/pullreq/<N>/head to
+//     align with the Gitness internal PR ref namespace.
+func githubPRSyncSpec(p linkedpr.PullRequestPayload) []handlers.RefSyncEntry {
+	return []handlers.RefSyncEntry{
+		{RemoteRef: fmt.Sprintf("refs/heads/%s", p.BaseRef)},
+		{RemoteRef: fmt.Sprintf("refs/heads/%s", p.HeadRef)},
+		{
+			RemoteRef: fmt.Sprintf("refs/pull/%d/head", p.Number),
+			LocalRef:  fmt.Sprintf("refs/pullreq/%d/head", p.Number),
+		},
 	}
 }
 
