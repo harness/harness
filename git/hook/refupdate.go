@@ -236,6 +236,17 @@ func (u *RefUpdater) UpdateRef(ctx context.Context) error {
 
 	cmd := command.New("update-ref", command.WithFlag("--stdin"), command.WithFlag("-z"))
 	if err := cmd.Run(ctx, command.WithStdin(input), command.WithDir(u.repoPath)); err != nil {
+		// Check for specific error conditions
+		if cErr := command.AsError(err); cErr != nil {
+			if cErr.IsSHAMismatchErr() {
+				// Include the git error which contains the actual SHAs
+				return errors.PreconditionFailedf(
+					"ref update failed: SHA mismatch (optimistic locking failure): %s",
+					cErr.Error(),
+				)
+			}
+		}
+
 		msg := err.Error()
 		if strings.Contains(msg, "reference already exists") {
 			return errors.Conflict("reference already exists")

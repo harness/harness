@@ -65,6 +65,17 @@ func (e *Error) IsInvalidRefErr() bool {
 	return strings.Contains(e.Error(), "not a valid ref")
 }
 
+// IsSHAMismatchErr checks if the error is a SHA mismatch error from git update-ref.
+// Git returns: "fatal: cannot lock ref '<ref>': is at <actual> but expected <old>"
+// This indicates an optimistic locking failure where the ref's current value doesn't
+// match the expected old value provided to update-ref.
+func (e *Error) IsSHAMismatchErr() bool {
+	msg := e.Error()
+	return strings.Contains(msg, "cannot lock ref") &&
+		strings.Contains(msg, "is at") &&
+		strings.Contains(msg, "but expected")
+}
+
 func (e *Error) Error() string {
 	if len(e.StdErr) != 0 {
 		return fmt.Sprintf("%s: %s", e.Err.Error(), e.StdErr)

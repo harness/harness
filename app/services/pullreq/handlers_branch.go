@@ -387,7 +387,9 @@ func (s *Service) forEveryOpenPR(ctx context.Context,
 
 	for _, pr := range pullreqList {
 		if err = fn(pr); err != nil {
-			log.Ctx(ctx).Err(err).Msg("failed to process pull req")
+			log.Ctx(ctx).Err(err).
+				Str("error_status", string(errors.AsStatus(err))).
+				Msg("failed to process pull req")
 		}
 	}
 }
