@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
 )
@@ -35,8 +36,10 @@ var WireSet = wire.NewSet(
 
 func ProvideService(
 	git git.Interface,
+	tx dbtx.Transactor,
 	eventReporter *pullreqevents.Reporter,
 	repoFinder refcache.RepoFinder,
+	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
 	checkStore store.CheckStore,
@@ -50,8 +53,10 @@ func ProvideService(
 ) *Service {
 	return NewService(
 		git,
+		tx,
 		eventReporter,
 		repoFinder,
+		repoStore,
 		pullreqStore,
 		activityStore,
 		checkStore,

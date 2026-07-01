@@ -273,7 +273,7 @@ func (s *Service) Merge(
 		CommitterDate: &now,
 		Author:        mergeInput.Author,
 		AuthorDate:    &now,
-		Refs:          mergeInput.RefUpdates,
+		Refs:          nil, // update no references yet, just create merge commit
 		Method:        gitenum.MergeMethod(input.MergeMethod),
 	})
 	if err != nil {
@@ -284,9 +284,12 @@ func (s *Service) Merge(
 		return nil, false, ErrConflict
 	}
 
-	// Update pull request in the database
-	pr, seqBranchDeleted, err := s.mergeService.DatabaseUpdate(
+	// Update pull request in the database and update git references
+	pr, seqBranchDeleted, err := s.mergeService.TxRefAndDatabaseUpdate(
 		ctx,
+		targetWriteParams,
+		mergeInput.SourceSHA,
+		mergeInput.RefUpdates,
 		pr,
 		input.MergeMethod,
 		mergeOutput,

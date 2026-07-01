@@ -298,9 +298,12 @@ func (c *Controller) Create(
 			return fmt.Errorf("failed to find repository: %w", err)
 		}
 
-		// Update the repository's pull request sequence number
+		// Update the repository's pull request sequence number and pull request counts
 
 		targetRepoFull.PullReqSeq++
+		targetRepoFull.NumPulls++
+		targetRepoFull.NumOpenPulls++
+
 		err = c.repoStore.Update(ctx, targetRepoFull)
 		if err != nil {
 			return fmt.Errorf("failed to update pullreq sequence number: %w", err)
@@ -372,7 +375,8 @@ func (c *Controller) Create(
 			return fmt.Errorf("failed to assign labels: %w", err)
 		}
 
-		// Create PR head reference in the git repository
+		// Create PR head reference in the git repository.
+		// The git operation to create pull request reference should be the last action in the DB transaction.
 
 		err = c.git.UpdateRef(ctx, git.UpdateRefParams{
 			WriteParams: targetWriteParams,

@@ -45,6 +45,7 @@ type PullRequestHandler struct {
 	pullReqStore       store.PullReqStore
 	linkedPullReqStore store.LinkedPullReqStore
 	activityStore      store.PullReqActivityStore
+	repoStore          store.RepoStore
 	authorResolver     linkedpr.AuthorResolver
 	reporter           *pullreqevents.Reporter
 	gitClient          git.Interface
@@ -58,6 +59,7 @@ func NewPullRequestHandler(
 	pullReqStore store.PullReqStore,
 	linkedPullReqStore store.LinkedPullReqStore,
 	activityStore store.PullReqActivityStore,
+	repoStore store.RepoStore,
 	authorResolver linkedpr.AuthorResolver,
 	reporter *pullreqevents.Reporter,
 	gitClient git.Interface,
@@ -70,6 +72,7 @@ func NewPullRequestHandler(
 		pullReqStore:       pullReqStore,
 		linkedPullReqStore: linkedPullReqStore,
 		activityStore:      activityStore,
+		repoStore:          repoStore,
 		authorResolver:     authorResolver,
 		reporter:           reporter,
 		gitClient:          gitClient,
@@ -267,6 +270,7 @@ func (h *PullRequestHandler) create(
 	})
 	switch {
 	case txErr == nil:
+		h.updateRepoPRCountersAfterCreate(ctx, parent)
 		h.publishCreated(ctx, parent)
 		return nil
 	case errors.Is(txErr, errLinkedDuplicate):
@@ -395,6 +399,8 @@ func (h *PullRequestHandler) update(
 		return err
 	}
 
+	h.updateRepoPRCountersAfterUpdate(ctx, parent, prevState)
+
 	if shaChanged {
 		// GitHub "synchronize" doesn't expose force-push; Forced=false is fine
 		// since the downstream merge-checker re-runs unconditionally.
@@ -411,6 +417,98 @@ func (h *PullRequestHandler) update(
 	h.writeActivities(ctx, parent, activitySeqBase, activityPayloads)
 	h.publishStateTransition(ctx, parent, prevState)
 	return nil
+}
+
+// updateRepoPRCountersAfterCreate increments the repository pull request
+// counters after a linked PR has been recorded for the first time.
+// Linked PRs can arrive in any terminal state (Open/Closed/Merged) because the
+// webhook delivery may be the first one we see for that PR.
+func (h *PullRequestHandler) updateRepoPRCountersAfterCreate(ctx context.Context, pr *types.PullReq) {
+	delta := repoPRCountersDelta{numPulls: 1}
+	switch pr.State {
+	case enum.PullReqStateOpen:
+		delta.numOpenPulls = 1
+	case enum.PullReqStateClosed:
+		delta.numClosedPulls = 1
+	case enum.PullReqStateMerged:
+		delta.numMergedPulls = 1
+	}
+	h.applyRepoPRCountersDelta(ctx, pr.TargetRepoID, delta)
+}
+
+// updateRepoPRCountersAfterUpdate adjusts the repository pull request counters
+// for a state transition between prevState and pr.State. No-op when state is
+// unchanged.
+func (h *PullRequestHandler) updateRepoPRCountersAfterUpdate(
+	ctx context.Context, pr *types.PullReq, prevState enum.PullReqState,
+) {
+	if pr.State == prevState {
+		return
+	}
+
+	delta := repoPRCountersDelta{}
+	switch prevState {
+	case enum.PullReqStateOpen:
+		delta.numOpenPulls--
+	case enum.PullReqStateClosed:
+		delta.numClosedPulls--
+	case enum.PullReqStateMerged:
+		delta.numMergedPulls--
+	}
+	switch pr.State {
+	case enum.PullReqStateOpen:
+		delta.numOpenPulls++
+	case enum.PullReqStateClosed:
+		delta.numClosedPulls++
+	case enum.PullReqStateMerged:
+		delta.numMergedPulls++
+	}
+	h.applyRepoPRCountersDelta(ctx, pr.TargetRepoID, delta)
+}
+
+type repoPRCountersDelta struct {
+	numPulls       int
+	numOpenPulls   int
+	numClosedPulls int
+	numMergedPulls int
+}
+
+// applyRepoPRCountersDelta bumps the repository PR counters using optimistic
+// locking. Mirrors the native flow's "best-effort, log-and-continue" semantics:
+// the pullreq has already been persisted, so a counter update failure must not
+// fail the webhook handler.
+func (h *PullRequestHandler) applyRepoPRCountersDelta(
+	ctx context.Context, repoID int64, delta repoPRCountersDelta,
+) {
+	if delta == (repoPRCountersDelta{}) {
+		return
+	}
+
+	ctxNoCancel := context.WithoutCancel(ctx)
+
+	repo, err := h.repoStore.Find(ctxNoCancel, repoID)
+	if err != nil {
+		log.Ctx(ctx).Err(err).
+			Int64("repo_id", repoID).
+			Msg("linkedpr: failed to find repository to update PR counters")
+		return
+	}
+
+	if _, err := h.repoStore.UpdateOptLock(ctxNoCancel, repo, func(repo *types.Repository) error {
+		repo.NumPulls += delta.numPulls
+		repo.NumOpenPulls += delta.numOpenPulls
+		repo.NumClosedPulls += delta.numClosedPulls
+		repo.NumMergedPulls += delta.numMergedPulls
+		return nil
+	}); err != nil {
+		log.Ctx(ctx).Err(err).
+			Int64("repo_id", repoID).
+			Int("num_pulls_delta", delta.numPulls).
+			Int("num_open_pulls_delta", delta.numOpenPulls).
+			Int("num_closed_pulls_delta", delta.numClosedPulls).
+			Int("num_merged_pulls_delta", delta.numMergedPulls).
+			Msg("linkedpr: failed to update repository PR counters")
+	}
 }
 
 // activityPayloadsFor builds the timeline rows for one update, in display order.

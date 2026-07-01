@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	errPRNotOpen = errors.New("PR is not open")
+	ErrPullReqNotOpen = errors.New("pull request is not open")
 )
 
 // triggerPREventOnBranchUpdate handles branch update events. For every open pull request
@@ -171,16 +171,19 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 			Ref2:       targetSHA.String(),
 		})
 		if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
-			in := NonUniqueMergeBaseInput{
-				PullReqStore:      s.pullreqStore,
-				ActivityStore:     s.activityStore,
-				PullReqEvReporter: s.pullreqEvReporter,
-				SSEStreamer:       s.sseStreamer,
+			err = s.CloseBecauseNonUniqueMergeBase(ctx, targetSHA, newSHA, pr)
+			if errors.Is(err, ErrPullReqNotOpen) {
+				return nil
 			}
-			err = CloseBecauseNonUniqueMergeBase(ctx, in, targetSHA, newSHA, pr)
 			if err != nil {
 				return fmt.Errorf("failed to close pull request after non-unique merge base: %w", err)
 			}
+
+			log.Ctx(ctx).Info().
+				Int64("pullreq", pr.Number).
+				Str("source_sha", event.Payload.NewSHA).
+				Str("target_sha", targetSHA.String()).
+				Msg("closed pull request after non-unique merge base")
 
 			return nil
 		}
@@ -196,7 +199,7 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 			// to avoid racing conditions with merge
 			if pr.State != enum.PullReqStateOpen {
-				return errPRNotOpen
+				return ErrPullReqNotOpen
 			}
 
 			pr.ActivitySeq++
@@ -219,7 +222,7 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 
 			return nil
 		})
-		if errors.Is(err, errPRNotOpen) {
+		if errors.Is(err, ErrPullReqNotOpen) {
 			return nil
 		}
 		if err != nil {
@@ -267,7 +270,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 	event *events.Event[*gitevents.BranchDeletedPayload],
 ) error {
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
-		targetRepo, err := s.repoFinder.FindByID(ctx, pr.TargetRepoID)
+		targetRepo, err := s.repoStore.Find(ctx, pr.TargetRepoID)
 		if err != nil {
 			return fmt.Errorf("failed to get repo info: %w", err)
 		}
@@ -276,7 +279,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 			// to avoid racing conditions with merge
 			if pr.State != enum.PullReqStateOpen {
-				return errPRNotOpen
+				return ErrPullReqNotOpen
 			}
 
 			// get sequence numbers for both activities (branch deletion should be first)
@@ -292,11 +295,22 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 
 			return nil
 		})
-		if errors.Is(err, errPRNotOpen) {
+		if errors.Is(err, ErrPullReqNotOpen) {
 			return nil
 		}
 		if err != nil {
 			return fmt.Errorf("failed to close pull request after branch delete: %w", err)
+		}
+
+		ctxNoCancel := context.WithoutCancel(ctx)
+
+		_, err = s.repoStore.UpdateOptLock(ctxNoCancel, targetRepo, func(repo *types.Repository) error {
+			repo.NumClosedPulls++
+			repo.NumOpenPulls--
+			return nil
+		})
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to update pull request numbers after PR close after branch delete")
 		}
 
 		// NOTE: We use the latest PR source sha for the branch deleted activity.

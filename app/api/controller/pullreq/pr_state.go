@@ -87,6 +87,11 @@ func (c *Controller) State(ctx context.Context,
 		return nil, usererror.BadRequest("Merged pull requests can't be modified.")
 	}
 
+	targetRepoFull, err := c.repoStore.Find(ctx, targetRepo.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find target repo by id: %w", err)
+	}
+
 	if c.mergeQueueService.IsEnqueued(pr) {
 		return nil, usererror.BadRequest(
 			"Changing pull request state is not allowed, because the pull request is in the merge queue.")
@@ -95,8 +100,6 @@ func (c *Controller) State(ctx context.Context,
 	if pr.State == in.State && in.IsDraft == pr.IsDraft {
 		return pr, nil // no changes are necessary: state is the same and is_draft hasn't change
 	}
-
-	id := pr.ID
 
 	var sourceRepo *types.RepositoryCore
 
@@ -214,15 +217,13 @@ func (c *Controller) State(ctx context.Context,
 		return pr, nil
 	}
 
-	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
-		if pr == nil {
-			pr, err = c.pullreqStore.Find(ctx, id)
-			if err != nil {
-				return fmt.Errorf("failed to find pull request by id: %w", err)
-			}
-		}
-
-		var clearAutoMerge bool
+	// Optimistic locking mechanism isn't used here, because re-trying the whole transaction would require
+	// rereading the pull request, and in case of fork PR fetching git objects again, and that could be
+	// very costly. It's safer to attempt only once and return 409 status code if pull request
+	// has been modified during the API call. This operation is usually rare and pull request
+	// typically isn't modified while its state is being changed.
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		pr.ActivitySeq++ // because we need to add the activity entry
 
 		switch stateChange {
 		case changeClose:
@@ -231,14 +232,23 @@ func (c *Controller) State(ctx context.Context,
 			pr.State = enum.PullReqStateClosed
 			pr.SubState = enum.PullReqSubStateNone
 			pr.IsDraft = in.IsDraft
-			clearAutoMerge = true
 
 			// clear all merge (check) related fields
 			pr.MergeSHA = nil
 			pr.Closed = &nowMilli
 			pr.MarkAsMergeUnchecked()
 
-			// delete the merge pull request reference
+			_, err = c.autoMergeStore.Delete(ctx, pr.ID)
+			if err != nil {
+				return fmt.Errorf("failed to delete auto merge: %w", err)
+			}
+
+			err = c.pullreqStore.Update(ctx, pr)
+			if err != nil {
+				return fmt.Errorf("failed to update pull request: %w", err)
+			}
+
+			// Delete the merge pull request reference. The git operation should be the last in the transaction.
 			err = c.git.UpdateRef(ctx, git.UpdateRefParams{
 				WriteParams: targetWriteParams,
 				Name:        strconv.FormatInt(pr.Number, 10),
@@ -246,6 +256,9 @@ func (c *Controller) State(ctx context.Context,
 				NewValue:    sha.Nil,
 				OldValue:    sha.None, // we don't care about the old value
 			})
+			if err != nil {
+				log.Ctx(ctx).Warn().Err(err).Msg("failed to delete pull request merge ref")
+			}
 
 		case changeReopen:
 			pr.State = enum.PullReqStateOpen
@@ -257,7 +270,12 @@ func (c *Controller) State(ctx context.Context,
 			pr.MergeBaseSHA = mergeBaseSHA.String()
 			pr.Closed = nil
 
-			// create the head pull request reference
+			err = c.pullreqStore.Update(ctx, pr)
+			if err != nil {
+				return fmt.Errorf("failed to update pull request: %w", err)
+			}
+
+			// Create the head pull request reference. The git operation should be the last in the transaction.
 			err = c.git.UpdateRef(ctx, git.UpdateRefParams{
 				WriteParams: targetWriteParams,
 				Name:        strconv.FormatInt(pr.Number, 10),
@@ -272,32 +290,65 @@ func (c *Controller) State(ctx context.Context,
 		case changeDraft:
 			pr.IsDraft = in.IsDraft
 			if pr.State == enum.PullReqStateOpen && in.IsDraft {
-				clearAutoMerge = true
+				_, err = c.autoMergeStore.Delete(ctx, pr.ID)
+				if err != nil {
+					return fmt.Errorf("failed to delete auto merge: %w", err)
+				}
+
 				pr.SubState = enum.PullReqSubStateNone
 			}
-		}
 
-		if clearAutoMerge {
-			_, err = c.autoMergeStore.Delete(ctx, pr.ID)
+			err = c.pullreqStore.Update(ctx, pr)
 			if err != nil {
-				return fmt.Errorf("failed to delete auto merge: %w", err)
+				return fmt.Errorf("failed to update pull request: %w", err)
 			}
-		}
-
-		pr.ActivitySeq++ // because we need to add the activity entry
-
-		err = c.pullreqStore.Update(ctx, pr)
-		if err != nil {
-			return fmt.Errorf("failed to update pull request: %w", err)
 		}
 
 		return nil
-	}, controller.TxOptionResetFunc(func() {
-		pr = nil // on the version conflict error force re-fetch of the pull request
-	}))
+	})
 	if err != nil {
+		if errors.Is(err, gitness_store.ErrVersionConflict) {
+			return nil, usererror.Conflict("Pull request has been modified during the API call.")
+		}
 		return nil, fmt.Errorf("failed to update pull request: %w", err)
 	}
+
+	// After the pull request's state has been changed, update the counters in the repository table.
+	// This is considered the best effort approach because the pull request has already been changed,
+	// and we shouldn't fail the API. Also, optimistic lock updates normally don't fail.
+
+	ctxNoCancel := context.WithoutCancel(ctx)
+
+	if stateChange == changeClose || stateChange == changeReopen {
+		var (
+			numOpenPullsDelta   int
+			numClosedPullsDelta int
+		)
+
+		if stateChange == changeClose {
+			numOpenPullsDelta = -1
+			numClosedPullsDelta = 1
+		} else {
+			numOpenPullsDelta = 1
+			numClosedPullsDelta = -1
+		}
+
+		_, err = c.repoStore.UpdateOptLock(ctxNoCancel, targetRepoFull, func(repo *types.Repository) error {
+			repo.NumOpenPulls += numOpenPullsDelta
+			repo.NumClosedPulls += numClosedPullsDelta
+			return nil
+		})
+		if err != nil {
+			log.Ctx(ctx).Err(err).
+				Int("num_open_pulls_delta", numOpenPullsDelta).
+				Int("num_closed_pulls_delta", numClosedPullsDelta).
+				Msg("failed to update number of pull requests in repository after PR state change")
+		}
+	}
+
+	// Create pull request activity for the pull request state change.
+
+	principalID := session.Principal.ID
 
 	payload := &types.PullRequestActivityPayloadStateChange{
 		Old:      oldState,
@@ -305,29 +356,30 @@ func (c *Controller) State(ctx context.Context,
 		OldDraft: oldDraft,
 		NewDraft: pr.IsDraft,
 	}
-	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil); errAct != nil {
+	if _, errAct := c.activityStore.CreateWithPayload(ctxNoCancel, pr, principalID, payload, nil); errAct != nil {
 		// non-critical error
 		log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after state change")
 	}
 
-	//nolint:exhaustive
 	switch stateChange {
 	case changeReopen:
-		c.eventReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
+		c.eventReporter.Reopened(ctxNoCancel, &pullreqevents.ReopenedPayload{
 			Base:         eventBase(pr, &session.Principal),
 			SourceBranch: pr.SourceBranch,
 			SourceSHA:    sourceSHA.String(),
 			MergeBaseSHA: mergeBaseSHA.String(),
 		})
 	case changeClose:
-		c.eventReporter.Closed(ctx, &pullreqevents.ClosedPayload{
+		c.eventReporter.Closed(ctxNoCancel, &pullreqevents.ClosedPayload{
 			Base:         eventBase(pr, &session.Principal),
 			SourceSHA:    pr.SourceSHA,
 			SourceBranch: pr.SourceBranch,
 		})
+	case changeDraft:
+		// Draft change isn't really the state change, so we don't publish events.
 	}
 
-	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
+	c.sseStreamer.Publish(ctxNoCancel, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	return pr, nil
 }

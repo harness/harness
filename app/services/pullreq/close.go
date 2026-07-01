@@ -20,9 +20,6 @@ import (
 
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
-	"github.com/harness/gitness/app/sse"
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -31,16 +28,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type NonUniqueMergeBaseInput struct {
-	PullReqStore      store.PullReqStore
-	ActivityStore     store.PullReqActivityStore
-	PullReqEvReporter *pullreqevents.Reporter
-	SSEStreamer       sse.Streamer
-}
-
-func CloseBecauseNonUniqueMergeBase(
+func (s *Service) CloseBecauseNonUniqueMergeBase(
 	ctx context.Context,
-	in NonUniqueMergeBaseInput,
 	targetSHA sha.SHA,
 	sourceSHA sha.SHA,
 	pr *types.PullReq,
@@ -48,11 +37,16 @@ func CloseBecauseNonUniqueMergeBase(
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
 	systemPrincipalID := systemPrincipal.ID
 
+	repo, err := s.repoStore.Find(ctx, pr.TargetRepoID)
+	if err != nil {
+		return fmt.Errorf("failed to find repository: %w", err)
+	}
+
 	var activitySeqMergeBase, activitySeqPRClosed int64
-	pr, err := in.PullReqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+	pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		// to avoid racing conditions with merge
 		if pr.State != enum.PullReqStateOpen {
-			return errPRNotOpen
+			return ErrPullReqNotOpen
 		}
 
 		pr.ActivitySeq += 2
@@ -70,11 +64,26 @@ func CloseBecauseNonUniqueMergeBase(
 
 		return nil
 	})
-	if errors.Is(err, errPRNotOpen) {
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("failed to close pull request after non-unique merge base: %w", err)
+	}
+
+	// The pull request has been closed. All subsequent operations are best-effort,
+	// so use a non-cancellable context to make sure they complete even if the caller's
+	// context gets canceled, and don't fail the function on their failures.
+
+	ctxNoCancel := context.WithoutCancel(ctx)
+
+	_, err = s.repoStore.UpdateOptLock(ctxNoCancel, repo, func(repo *types.Repository) error {
+		repo.NumClosedPulls++
+		repo.NumOpenPulls--
+		return nil
+	})
+	if err != nil {
+		log.Ctx(ctx).Err(err).
+			Int("num_open_pulls_delta", -1).
+			Int("num_closed_pulls_delta", 1).
+			Msg("failed to update number of pull requests in repository after PR close on non-unique merge base")
 	}
 
 	pr.ActivitySeq = activitySeqMergeBase
@@ -82,8 +91,9 @@ func CloseBecauseNonUniqueMergeBase(
 		TargetSHA: targetSHA,
 		SourceSHA: sourceSHA,
 	}
-	_, err = in.ActivityStore.CreateWithPayload(ctx, pr, systemPrincipalID, payloadNonUniqueMergeBase, nil)
-	if err != nil {
+	if _, err := s.activityStore.CreateWithPayload(
+		ctxNoCancel, pr, systemPrincipalID, payloadNonUniqueMergeBase, nil,
+	); err != nil {
 		// non-critical error
 		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity for non-unique merge-base")
 	}
@@ -95,14 +105,16 @@ func CloseBecauseNonUniqueMergeBase(
 		OldDraft: pr.IsDraft,
 		NewDraft: pr.IsDraft,
 	}
-	if _, err := in.ActivityStore.CreateWithPayload(ctx, pr, systemPrincipalID, payloadStateChange, nil); err != nil {
+	if _, err := s.activityStore.CreateWithPayload(
+		ctxNoCancel, pr, systemPrincipalID, payloadStateChange, nil,
+	); err != nil {
 		// non-critical error
 		log.Ctx(ctx).Err(err).Msg(
 			"failed to write pull request activity for pull request closure after non-unique merge-base",
 		)
 	}
 
-	in.PullReqEvReporter.Closed(ctx, &pullreqevents.ClosedPayload{
+	s.pullreqEvReporter.Closed(ctxNoCancel, &pullreqevents.ClosedPayload{
 		Base: pullreqevents.Base{
 			PullReqID:    pr.ID,
 			SourceRepoID: pr.SourceRepoID,
@@ -114,7 +126,7 @@ func CloseBecauseNonUniqueMergeBase(
 		SourceBranch: pr.SourceBranch,
 	})
 
-	in.SSEStreamer.Publish(ctx, pr.TargetRepoID, enum.SSETypePullReqUpdated, pr)
+	s.sseStreamer.Publish(ctxNoCancel, pr.TargetRepoID, enum.SSETypePullReqUpdated, pr)
 
 	return nil
 }

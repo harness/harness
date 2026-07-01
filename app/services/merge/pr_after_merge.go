@@ -19,11 +19,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller"
+	"github.com/harness/gitness/app/api/usererror"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -31,6 +34,95 @@ import (
 	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
+
+// TxRefAndDatabaseUpdate updates pull request in the database, git references, and
+// pull request counters in the repository database table.
+func (s *Service) TxRefAndDatabaseUpdate(
+	ctx context.Context,
+	writeParams git.WriteParams,
+	sourceSHA sha.SHA,
+	refUpdates []git.RefUpdate,
+	pr *types.PullReq,
+	mergeMethod enum.MergeMethod,
+	mergeOutput git.MergeOutput,
+	mergedBy *types.PrincipalInfo,
+	rulesBypassed bool,
+	rulesBypassMessage string,
+) (prOut *types.PullReq, seqBranchDeleted int64, err error) {
+	prID := pr.ID
+
+	for i := range refUpdates {
+		if refUpdates[i].New == sha.None {
+			refUpdates[i].New = mergeOutput.MergeSHA
+		}
+	}
+
+	repoFull, err := s.repoStore.Find(ctx, pr.TargetRepoID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find repo %d: %w", pr.TargetRepoID, err)
+	}
+
+	err = controller.TxOptLock(ctx, s.tx, func(ctx context.Context) error {
+		var err error
+
+		if pr == nil {
+			pr, err = s.pullreqStore.Find(ctx, prID)
+			if err != nil {
+				return fmt.Errorf("failed to find pull request %d: %w", prID, err)
+			}
+		}
+
+		if pr.SourceSHA != sourceSHA.String() {
+			return usererror.Conflict("Pull request source SHA is changed concurrently.")
+		}
+
+		pr, seqBranchDeleted, err = s.DatabaseUpdateNoOptLock(
+			ctx,
+			pr,
+			mergeMethod,
+			mergeOutput,
+			mergedBy,
+			rulesBypassed,
+			rulesBypassMessage,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to update database to mark pull request as merged: %w", err)
+		}
+
+		// After the pull request has been updated, update the git references.
+		// The git operation should be the last in the transaction.
+		err = s.git.UpdateRefs(ctx, git.UpdateRefsParams{
+			WriteParams: writeParams,
+			Refs:        refUpdates,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update references after merge pull request merge: %w", err)
+		}
+
+		return nil
+	}, controller.TxOptionResetFunc(func() {
+		pr = nil
+	}))
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to merge pull request: %w", err)
+	}
+
+	ctxNoCancel := context.WithoutCancel(ctx)
+
+	_, err = s.repoStore.UpdateOptLock(ctxNoCancel, repoFull, func(repo *types.Repository) error {
+		repo.NumOpenPulls--
+		repo.NumMergedPulls++
+		return nil
+	})
+	if err != nil {
+		log.Ctx(ctx).Err(err).
+			Int("num_open_pulls_delta", -1).
+			Int("num_merged_pulls_delta", 1).
+			Msg("failed to update number of pull requests in repository after PR merge")
+	}
+
+	return pr, seqBranchDeleted, nil
+}
 
 // DatabaseUpdate updates a merged pull request in the database using optimistic locking.
 // It also inserts pull request activity and removes auto-merge entry if any.

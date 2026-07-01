@@ -401,7 +401,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
 	autoMergeStore := database.ProvideAutoMergeStore(db)
-	mergeService := merge.ProvideService(gitInterface, reporter4, repoFinder, pullReqStore, pullReqActivityStore, checkStore, pullReqReviewerStore, autoMergeStore, codeownersService, usergroupService, provider, streamer, instrumentService)
+	mergeService := merge.ProvideService(gitInterface, transactor, reporter4, repoFinder, repoStore, pullReqStore, pullReqActivityStore, checkStore, pullReqReviewerStore, autoMergeStore, codeownersService, usergroupService, provider, streamer, instrumentService)
 	mergequeueService, err := mergequeue.ProvideService(ctx, config, gitInterface, transactor, reporter3, readerFactory, eventsReaderFactory, repoFinder, repoStore, pullReqStore, pullReqActivityStore, checkStore, mergeQueueStore, mergeQueueEntryStore, protectionManager, mergeService, provider, lockerLocker, jobScheduler, executor)
 	if err != nil {
 		return nil, err

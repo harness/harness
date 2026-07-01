@@ -320,9 +320,36 @@ func newPullRequestHandler(
 	configureGitMock(gitMock, gitOpts...)
 	repo := &types.RepositoryCore{ID: testRepoID, GitUID: "git-uid-test"}
 	return github.NewPullRequestHandler(
-		prStore, linkedStore, activity, author, reporter,
+		prStore, linkedStore, activity, &repoStoreStub{}, author, reporter,
 		gitMock, testRepoFinder(repo), testURLProvider{}, testConnectorService{}, tx,
 	)
+}
+
+// repoStoreStub is a minimal store.RepoStore that satisfies the embed contract
+// for Find/UpdateOptLock used by PR counter updates. It records the cumulative
+// delta applied across UpdateOptLock calls so tests can assert on it.
+type repoStoreStub struct {
+	store.RepoStore
+	repo  *types.Repository
+	calls int
+}
+
+func (s *repoStoreStub) Find(_ context.Context, id int64) (*types.Repository, error) {
+	if s.repo == nil {
+		s.repo = &types.Repository{ID: id}
+	}
+	return s.repo, nil
+}
+
+func (s *repoStoreStub) UpdateOptLock(
+	_ context.Context, repo *types.Repository, mutate func(*types.Repository) error,
+) (*types.Repository, error) {
+	if err := mutate(repo); err != nil {
+		return nil, err
+	}
+	s.repo = repo
+	s.calls++
+	return repo, nil
 }
 
 // noopTx executes txFn directly without any transaction semantics. The store
@@ -1064,4 +1091,157 @@ func TestHandle_Create_LinkedDuplicateFallsThroughToUpdate(t *testing.T) {
 	if len(linkedStore.UpdatedRows) != 1 {
 		t.Errorf("expected fall-through update on linked, got %d updates", len(linkedStore.UpdatedRows))
 	}
+}
+
+// ─── repository counter assertions ───────────────────────────────────────
+
+// newPullRequestHandlerWithRepoStore is like newPullRequestHandler but lets
+// the caller inject (and inspect) a repoStoreStub, so tests can assert the
+// resulting repo counter state after a create/update.
+func newPullRequestHandlerWithRepoStore(
+	t *testing.T,
+	prStore store.PullReqStore,
+	linkedStore store.LinkedPullReqStore,
+	activity store.PullReqActivityStore,
+	repoStore *repoStoreStub,
+	author linkedpr.AuthorResolver,
+	reporter *pullreqevents.Reporter,
+	tx noopTx,
+	gitOpts ...func(*mockgit.Interface),
+) *github.PullRequestHandler {
+	t.Helper()
+	gitMock := &mockgit.Interface{}
+	configureGitMock(gitMock, gitOpts...)
+	repo := &types.RepositoryCore{ID: testRepoID, GitUID: "git-uid-test"}
+	return github.NewPullRequestHandler(
+		prStore, linkedStore, activity, repoStore, author, reporter,
+		gitMock, testRepoFinder(repo), testURLProvider{}, testConnectorService{}, tx,
+	)
+}
+
+func runCreateCountersTest(t *testing.T, state enum.PullReqState, want types.Repository) {
+	t.Helper()
+	prStore := newPullReqStoreHarness(pullReqStoreConfig{})
+	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{findByFn: findNotFound(t)})
+	repoStore := &repoStoreStub{}
+	h := newPullRequestHandlerWithRepoStore(t, prStore, linkedStore, testActivityStore(t),
+		repoStore, &linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+
+	pl := basePayload(func(p *linkedpr.PullRequestPayload) { p.State = state })
+	if err := callHandle(t, h, eventWith(pl), testLinkedRepo()); err != nil {
+		t.Fatalf("Handle: %v", err)
+	}
+	if repoStore.calls != 1 {
+		t.Fatalf("expected exactly 1 repo counter update, got %d", repoStore.calls)
+	}
+	got := repoStore.repo
+	if got.NumPulls != want.NumPulls ||
+		got.NumOpenPulls != want.NumOpenPulls ||
+		got.NumClosedPulls != want.NumClosedPulls ||
+		got.NumMergedPulls != want.NumMergedPulls {
+		t.Errorf(
+			"counters after create(state=%s): "+
+				"got {pulls:%d open:%d closed:%d merged:%d}, "+
+				"want {pulls:%d open:%d closed:%d merged:%d}",
+			state,
+			got.NumPulls, got.NumOpenPulls, got.NumClosedPulls, got.NumMergedPulls,
+			want.NumPulls, want.NumOpenPulls, want.NumClosedPulls, want.NumMergedPulls,
+		)
+	}
+}
+
+func TestHandle_Create_CountersForOpen(t *testing.T) {
+	runCreateCountersTest(t, enum.PullReqStateOpen,
+		types.Repository{NumPulls: 1, NumOpenPulls: 1})
+}
+
+func TestHandle_Create_CountersForClosed(t *testing.T) {
+	runCreateCountersTest(t, enum.PullReqStateClosed,
+		types.Repository{NumPulls: 1, NumClosedPulls: 1})
+}
+
+func TestHandle_Create_CountersForMerged(t *testing.T) {
+	runCreateCountersTest(t, enum.PullReqStateMerged,
+		types.Repository{NumPulls: 1, NumMergedPulls: 1})
+}
+
+func runUpdateCountersTest(
+	t *testing.T, prevState, newState enum.PullReqState, want types.Repository, wantCalls int,
+) {
+	t.Helper()
+	prType := enum.PullReqTypeLinked
+	parentRow := &types.PullReq{
+		ID:           50,
+		Number:       testPRNumber,
+		State:        prevState,
+		Type:         &prType,
+		TargetRepoID: testRepoID,
+		SourceSHA:    testOldSHA,
+		Updated:      1_700_000_050_000,
+	}
+	prStore := newPullReqStoreHarness(pullReqStoreConfig{
+		findFn: func(_ context.Context, _ int64) (*types.PullReq, error) { return parentRow, nil },
+	})
+	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
+		findByFn: findExisting(t, &types.LinkedPullReq{
+			PullReqID:      50,
+			ProviderType:   string(linkedpr.ProviderGitHub),
+			ProviderRepoID: testRepoProviderID,
+		}),
+	})
+	repoStore := &repoStoreStub{}
+	h := newPullRequestHandlerWithRepoStore(t, prStore, linkedStore, testActivityStore(t),
+		repoStore, &linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+
+	pl := basePayload(func(p *linkedpr.PullRequestPayload) { p.State = newState })
+	if err := callHandle(t, h, eventWith(pl), testLinkedRepo()); err != nil {
+		t.Fatalf("Handle: %v", err)
+	}
+	if repoStore.calls != wantCalls {
+		t.Fatalf("expected %d repo counter update(s), got %d", wantCalls, repoStore.calls)
+	}
+	if wantCalls == 0 {
+		return
+	}
+	got := repoStore.repo
+	if got.NumPulls != want.NumPulls ||
+		got.NumOpenPulls != want.NumOpenPulls ||
+		got.NumClosedPulls != want.NumClosedPulls ||
+		got.NumMergedPulls != want.NumMergedPulls {
+		t.Errorf(
+			"counters after update(%s→%s): "+
+				"got {pulls:%d open:%d closed:%d merged:%d}, "+
+				"want {pulls:%d open:%d closed:%d merged:%d}",
+			prevState, newState,
+			got.NumPulls, got.NumOpenPulls, got.NumClosedPulls, got.NumMergedPulls,
+			want.NumPulls, want.NumOpenPulls, want.NumClosedPulls, want.NumMergedPulls,
+		)
+	}
+}
+
+func TestHandle_Update_CountersOpenToClosed(t *testing.T) {
+	runUpdateCountersTest(t, enum.PullReqStateOpen, enum.PullReqStateClosed,
+		types.Repository{NumOpenPulls: -1, NumClosedPulls: 1}, 1)
+}
+
+func TestHandle_Update_CountersOpenToMerged(t *testing.T) {
+	runUpdateCountersTest(t, enum.PullReqStateOpen, enum.PullReqStateMerged,
+		types.Repository{NumOpenPulls: -1, NumMergedPulls: 1}, 1)
+}
+
+func TestHandle_Update_CountersClosedToOpen(t *testing.T) {
+	runUpdateCountersTest(t, enum.PullReqStateClosed, enum.PullReqStateOpen,
+		types.Repository{NumOpenPulls: 1, NumClosedPulls: -1}, 1)
+}
+
+func TestHandle_Update_CountersMergedToOpen(t *testing.T) {
+	runUpdateCountersTest(t, enum.PullReqStateMerged, enum.PullReqStateOpen,
+		types.Repository{NumOpenPulls: 1, NumMergedPulls: -1}, 1)
+}
+
+// TestHandle_Update_CountersNoOpForSameState: same-state updates (e.g. a
+// synchronize event on an open PR) must not touch the repo counters.
+func TestHandle_Update_CountersNoOpForSameState(t *testing.T) {
+	runUpdateCountersTest(t, enum.PullReqStateOpen, enum.PullReqStateOpen,
+		types.Repository{}, 0)
 }

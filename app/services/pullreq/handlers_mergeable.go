@@ -194,7 +194,7 @@ func (s *Service) updateMergeData(
 	_, err = s.pullreqStore.UpdateMergeCheckMetadataOptLock(ctx, pr, func(pr *types.PullReq) error {
 		// to avoid racing conditions with merge
 		if pr.State != enum.PullReqStateOpen {
-			return errPRNotOpen
+			return ErrPullReqNotOpen
 		}
 
 		if pr.SourceSHA != newSHA {

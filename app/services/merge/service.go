@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/store/database/dbtx"
 )
 
 // Timeout is the max time we give a merge to succeed.
@@ -33,8 +34,10 @@ const Timeout = 3 * time.Minute
 
 type Service struct {
 	git              git.Interface
+	tx               dbtx.Transactor
 	eventReporter    *pullreqevents.Reporter
 	repoFinder       refcache.RepoFinder
+	repoStore        store.RepoStore
 	pullreqStore     store.PullReqStore
 	activityStore    store.PullReqActivityStore
 	checkStore       store.CheckStore
@@ -49,8 +52,10 @@ type Service struct {
 
 func NewService(
 	git git.Interface,
+	tx dbtx.Transactor,
 	eventReporter *pullreqevents.Reporter,
 	repoFinder refcache.RepoFinder,
+	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
 	checkStore store.CheckStore,
@@ -64,8 +69,10 @@ func NewService(
 ) *Service {
 	return &Service{
 		git:              git,
+		tx:               tx,
 		eventReporter:    eventReporter,
 		repoFinder:       repoFinder,
+		repoStore:        repoStore,
 		pullreqStore:     pullreqStore,
 		activityStore:    activityStore,
 		checkStore:       checkStore,

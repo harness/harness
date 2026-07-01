@@ -46,6 +46,7 @@ func ProvidePullRequestHandler(
 	pullReqStore store.PullReqStore,
 	linkedPullReqStore store.LinkedPullReqStore,
 	activityStore store.PullReqActivityStore,
+	repoStore store.RepoStore,
 	authorResolver linkedpr.AuthorResolver,
 	reporter *pullreqevents.Reporter,
 	gitClient git.Interface,
@@ -55,7 +56,7 @@ func ProvidePullRequestHandler(
 	tx dbtx.Transactor,
 ) *PullRequestHandler {
 	return NewPullRequestHandler(
-		pullReqStore, linkedPullReqStore, activityStore, authorResolver,
+		pullReqStore, linkedPullReqStore, activityStore, repoStore, authorResolver,
 		reporter, gitClient, repoFinder, urlProvider, connectorService, tx,
 	)
 }

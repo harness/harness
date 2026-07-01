@@ -332,15 +332,8 @@ func (c *Controller) Merge(
 				Method:      gitenum.MergeMethod(in.Method),
 			})
 			if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
-				inClose := pullreq.NonUniqueMergeBaseInput{
-					PullReqStore:      c.pullreqStore,
-					ActivityStore:     c.activityStore,
-					PullReqEvReporter: c.eventReporter,
-					SSEStreamer:       c.sseStreamer,
-				}
-
-				errClose := pullreq.CloseBecauseNonUniqueMergeBase(ctx, inClose, targetSHA, sourceSHA, pr)
-				if errClose != nil {
+				errClose := c.pullreqService.CloseBecauseNonUniqueMergeBase(ctx, targetSHA, sourceSHA, pr)
+				if errClose != nil && !errors.Is(errClose, pullreq.ErrPullReqNotOpen) {
 					return nil, nil,
 						fmt.Errorf("failed to close pull request after non-unique merge base: %w", errClose)
 				}
@@ -460,19 +453,12 @@ func (c *Controller) Merge(
 		CommitterDate: &now,
 		Author:        mergeInput.Author,
 		AuthorDate:    &now,
-		Refs:          mergeInput.RefUpdates,
+		Refs:          nil, // update no references yet, just create merge commit
 		Method:        gitenum.MergeMethod(in.Method),
 	})
 	if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
-		inClose := pullreq.NonUniqueMergeBaseInput{
-			PullReqStore:      c.pullreqStore,
-			ActivityStore:     c.activityStore,
-			PullReqEvReporter: c.eventReporter,
-			SSEStreamer:       c.sseStreamer,
-		}
-
-		errClose := pullreq.CloseBecauseNonUniqueMergeBase(ctx, inClose, targetSHA, sourceSHA, pr)
-		if errClose != nil {
+		errClose := c.pullreqService.CloseBecauseNonUniqueMergeBase(ctx, targetSHA, sourceSHA, pr)
+		if errClose != nil && !errors.Is(errClose, pullreq.ErrPullReqNotOpen) {
 			return nil, nil,
 				fmt.Errorf("failed to close pull request after non-unique merge base: %w", errClose)
 		}
@@ -482,6 +468,7 @@ func (c *Controller) Merge(
 	if err != nil {
 		return nil, nil, fmt.Errorf("merge execution failed: %w", err)
 	}
+
 	//nolint:nestif
 	if mergeOutput.MergeSHA.String() == "" || len(mergeOutput.ConflictFiles) > 0 {
 		_, err = c.pullreqStore.UpdateMergeCheckMetadataOptLock(ctx, pr, func(pr *types.PullReq) error {
@@ -527,8 +514,11 @@ func (c *Controller) Merge(
 	mergedBy := session.Principal.ToPrincipalInfo()
 
 	// Update pull request in the database
-	pr, seqBranchDeleted, err := c.mergeService.DatabaseUpdate(
+	pr, seqBranchDeleted, err := c.mergeService.TxRefAndDatabaseUpdate(
 		ctx,
+		targetWriteParams,
+		mergeInput.SourceSHA,
+		mergeInput.RefUpdates,
 		pr,
 		in.Method,
 		mergeOutput,
@@ -537,7 +527,7 @@ func (c *Controller) Merge(
 		in.BypassMessage,
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to do post merge operations: %w", err)
+		return nil, nil, fmt.Errorf("failed to update pull request after creating merge commit: %w", err)
 	}
 
 	// Try to delete the source branch and insert pull request activity for it.

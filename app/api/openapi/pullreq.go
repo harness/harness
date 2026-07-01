@@ -612,6 +612,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusConflict)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq/{pullreq_number}/state", statePullReq)
 
 	listPullReqActivities := openapi3.Operation{}

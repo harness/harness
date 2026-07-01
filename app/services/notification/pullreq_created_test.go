@@ -105,14 +105,21 @@ func TestNotifyPullReqCreated_SendsBatchedEmailToAuthorAndIndividualToReviewers(
 	require.Contains(t, authorCall.payload.ReviewerNames, "Bob")
 	require.Contains(t, authorCall.payload.ReviewerNames, "Charlie")
 
-	// Each reviewer should get an individual email
+	// Each reviewer should get an individual email. Order is non-deterministic
+	// because the producer iterates a map — assert by set membership.
 	require.Len(t, notifClient.reviewerAddedCalls, 3)
-	require.Equal(t, reviewerA.ID, notifClient.reviewerAddedCalls[0].recipients[0].ID)
-	require.Equal(t, reviewerA.ID, notifClient.reviewerAddedCalls[0].payload.Reviewer.ID)
-	require.Equal(t, reviewerB.ID, notifClient.reviewerAddedCalls[1].recipients[0].ID)
-	require.Equal(t, reviewerB.ID, notifClient.reviewerAddedCalls[1].payload.Reviewer.ID)
-	require.Equal(t, reviewerC.ID, notifClient.reviewerAddedCalls[2].recipients[0].ID)
-	require.Equal(t, reviewerC.ID, notifClient.reviewerAddedCalls[2].payload.Reviewer.ID)
+	gotRecipientIDs := make([]int64, 0, len(notifClient.reviewerAddedCalls))
+	gotPayloadIDs := make([]int64, 0, len(notifClient.reviewerAddedCalls))
+	for _, call := range notifClient.reviewerAddedCalls {
+		require.Len(t, call.recipients, 1)
+		require.Equal(t, call.recipients[0].ID, call.payload.Reviewer.ID,
+			"recipient and payload reviewer must reference the same principal")
+		gotRecipientIDs = append(gotRecipientIDs, call.recipients[0].ID)
+		gotPayloadIDs = append(gotPayloadIDs, call.payload.Reviewer.ID)
+	}
+	wantIDs := []int64{reviewerA.ID, reviewerB.ID, reviewerC.ID}
+	require.ElementsMatch(t, wantIDs, gotRecipientIDs)
+	require.ElementsMatch(t, wantIDs, gotPayloadIDs)
 }
 
 func TestNotifyPullReqCreated_SingleReviewer(t *testing.T) {

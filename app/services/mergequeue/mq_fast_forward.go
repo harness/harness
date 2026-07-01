@@ -70,22 +70,6 @@ func (s *Service) fastForward(
 	expectedTargetBranchSHA := mergeEntries[0].BaseCommitSHA
 	newTargetBranchSHA := entry.MergeCommitSHA
 
-	pullReqs := make([]*types.PullReq, len(mergeEntries))
-	for i, mergeEntry := range mergeEntries {
-		pullReqs[i], err = s.pullreqStore.Find(ctx, mergeEntry.PullReqID)
-		if err != nil {
-			return fmt.Errorf("failed to find pull request %d: %w", mergeEntry.PullReqID, err)
-		}
-
-		pullReq := pullReqs[i]
-
-		// Make sure the pull request source branch commit SHA matches the merge queue entry's head commit SHA.
-		// This should be the case because pull requests should be locked when in the merge queue.
-		if mergeEntry.HeadCommitSHA.String() != pullReq.SourceSHA {
-			return errIncompleteMergeQueue
-		}
-	}
-
 	systemSession := bootstrap.NewSystemServiceSession()
 	systemPrincipalInfo := systemSession.Principal.ToPrincipalInfo()
 
@@ -105,45 +89,25 @@ func (s *Service) fastForward(
 		Old:  expectedTargetBranchSHA,
 	})
 
+	repoFull, err := s.repoStore.Find(ctx, q.RepoID)
+	if err != nil {
+		return fmt.Errorf("failed to find repo %d: %w", q.RepoID, err)
+	}
+
+	entryCount := len(mergeEntries)
+	pullReqs := make([]*types.PullReq, entryCount)
+
 	err = s.tx.WithTx(ctx, func(ctx context.Context) error {
-		// Merge each of the pull requests.
-		for i, pr := range pullReqs {
-			mergeEntry := mergeEntries[i]
-
-			err = s.mergeQueueEntryStore.Delete(ctx, mergeEntry.PullReqID)
-			if err != nil && !errors.Is(err, ErrNotInQueue) {
-				return fmt.Errorf("failed to delete merge queue entry for merged PR: %w", err)
-			}
-
-			mergeOutput := git.MergeOutput{
-				BaseSHA:          mergeEntry.BaseCommitSHA,
-				HeadSHA:          mergeEntry.HeadCommitSHA,
-				MergeBaseSHA:     mergeEntry.MergeBaseSHA,
-				MergeSHA:         mergeEntry.MergeCommitSHA,
-				CommitCount:      mergeEntry.CommitCount,
-				ChangedFileCount: mergeEntry.ChangedFileCount,
-				Additions:        mergeEntry.Additions,
-				Deletions:        mergeEntry.Deletions,
-				ConflictFiles:    nil,
-			}
-
-			var seqSourceBranchDeleted int64
-
-			pullReqs[i], seqSourceBranchDeleted, err = s.mergeService.DatabaseUpdateNoOptLock(
-				ctx,
-				pr,
-				mergeEntry.MergeMethod,
-				mergeOutput,
-				systemPrincipalInfo,
-				false,
-				"",
-			)
+		for i, mergeEntry := range mergeEntries {
+			pr, err := s.pullreqStore.Find(ctx, mergeEntry.PullReqID)
 			if err != nil {
-				return fmt.Errorf("failed to mark pull request as merged: %w", err)
+				return fmt.Errorf("failed to find pull request %d: %w", mergeEntry.PullReqID, err)
 			}
 
-			if mergeEntries[i].DeleteSourceBranch {
-				deleteSourceBranchMap[mergeEntry.PullReqID] = seqSourceBranchDeleted
+			// Make sure the pull request source branch commit SHA matches the merge queue entry's head commit SHA.
+			// This should be the case because pull requests should be locked when in the merge queue.
+			if mergeEntry.HeadCommitSHA.String() != pr.SourceSHA {
+				return errIncompleteMergeQueue
 			}
 
 			prNumber := strconv.FormatInt(pr.Number, 10)
@@ -171,6 +135,44 @@ func (s *Service) fastForward(
 				Old:  sha.SHA{}, // don't care about the old value.
 				New:  sha.Nil,   // delete the reference
 			})
+
+			err = s.mergeQueueEntryStore.Delete(ctx, mergeEntry.PullReqID)
+			if err != nil && !errors.Is(err, ErrNotInQueue) {
+				return fmt.Errorf("failed to delete merge queue entry for merged PR: %w", err)
+			}
+
+			mergeOutput := git.MergeOutput{
+				BaseSHA:          mergeEntry.BaseCommitSHA,
+				HeadSHA:          mergeEntry.HeadCommitSHA,
+				MergeBaseSHA:     mergeEntry.MergeBaseSHA,
+				MergeSHA:         mergeEntry.MergeCommitSHA,
+				CommitCount:      mergeEntry.CommitCount,
+				ChangedFileCount: mergeEntry.ChangedFileCount,
+				Additions:        mergeEntry.Additions,
+				Deletions:        mergeEntry.Deletions,
+				ConflictFiles:    nil,
+			}
+
+			var seqSourceBranchDeleted int64
+
+			pr, seqSourceBranchDeleted, err = s.mergeService.DatabaseUpdateNoOptLock(
+				ctx,
+				pr,
+				mergeEntry.MergeMethod,
+				mergeOutput,
+				systemPrincipalInfo,
+				false,
+				"",
+			)
+			if err != nil {
+				return fmt.Errorf("failed to mark pull request as merged: %w", err)
+			}
+
+			if mergeEntry.DeleteSourceBranch {
+				deleteSourceBranchMap[mergeEntry.PullReqID] = seqSourceBranchDeleted
+			}
+
+			pullReqs[i] = pr
 		}
 
 		// This is a deliberate git call to update git references during a DB transaction.
@@ -189,6 +191,24 @@ func (s *Service) fastForward(
 	}, dbtx.TxRepeatableRead)
 	if err != nil {
 		return fmt.Errorf("failed to fast-forward merge queue branch to merge commit: %w", err)
+	}
+
+	// The number of pull requests in the repository table should be updated.
+	// This is considered the best effort approach because the pull requests have already been merged.
+	// Also, optimistic lock updates normally don't fail.
+
+	ctxNoCancel := context.WithoutCancel(ctx)
+
+	_, err = s.repoStore.UpdateOptLock(ctxNoCancel, repoFull, func(repo *types.Repository) error {
+		repo.NumOpenPulls -= entryCount
+		repo.NumMergedPulls += entryCount
+		return nil
+	})
+	if err != nil {
+		log.Ctx(ctx).Err(err).
+			Int("num_open_pulls_delta", -entryCount).
+			Int("num_merged_pulls_delta", entryCount).
+			Msg("failed to update number of pull requests in repository after merge queue fast forward")
 	}
 
 	// At this point pull requests are merged (in the DB and in the git repository).
