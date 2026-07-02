@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/store/database/migrate"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/pool"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -102,12 +103,23 @@ func migrator(ctx context.Context, db *sqlx.DB) error {
 
 // ProvideDatabase provides a database connection.
 func ProvideDatabase(ctx context.Context, config database.Config) (*sqlx.DB, error) {
-	return database.ConnectAndMigrate(
+	dbx, err := database.ConnectAndMigrate(
 		ctx,
 		config.Driver,
 		config.Datasource,
 		migrator,
 	)
+	if err != nil {
+		return nil, err
+	}
+	if err := pool.Apply(dbx.DB, pool.Config{
+		MaxOpenConns:    config.MaxOpenConns,
+		MaxIdleConns:    config.MaxIdleConns,
+		ConnMaxLifetime: config.ConnMaxLifetime,
+	}); err != nil {
+		return nil, err
+	}
+	return dbx, nil
 }
 
 // ProvidePrincipalStore provides a principal store.

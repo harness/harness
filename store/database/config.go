@@ -14,8 +14,15 @@
 
 package database
 
+import "time"
+
 // Config specifies the config for the database package.
 type Config struct {
 	Driver     string
 	Datasource string
+
+	// Connection pool sizing. Values <= 0 fall back to the pool package defaults.
+	MaxOpenConns    int
+	MaxIdleConns    int
+	ConnMaxLifetime time.Duration
 }

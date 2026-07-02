@@ -180,6 +180,13 @@ type Config struct {
 	Database struct {
 		Driver     string `envconfig:"GITNESS_DATABASE_DRIVER" default:"sqlite3"`
 		Datasource string `envconfig:"GITNESS_DATABASE_DATASOURCE" default:"database.sqlite3"`
+
+		// MaxOpenConns bounds the total open connections to the database.
+		MaxOpenConns int `envconfig:"GITNESS_DATABASE_MAX_OPEN_CONNS" default:"25"`
+		// MaxIdleConns bounds the idle connections kept in the pool.
+		MaxIdleConns int `envconfig:"GITNESS_DATABASE_MAX_IDLE_CONNS" default:"5"`
+		// ConnMaxLifetime is the maximum age of a connection before it is recycled.
+		ConnMaxLifetime time.Duration `envconfig:"GITNESS_DATABASE_CONN_MAX_LIFETIME" default:"5m"`
 	}
 
 	// BlobStore defines the blob storage configuration parameters.
