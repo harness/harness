@@ -573,7 +573,7 @@ func triggersFromString(triggersString string) []enum.WebhookTrigger {
 	}
 
 	rawTriggers := strings.Split(triggersString, triggersSeparator)
-	var triggers []enum.WebhookTrigger
+	triggers := make([]enum.WebhookTrigger, 0, len(rawTriggers))
 
 	for _, rawTrigger := range rawTriggers {
 		rawTrigger = strings.TrimSpace(rawTrigger)
