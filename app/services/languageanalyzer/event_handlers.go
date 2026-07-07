@@ -23,6 +23,7 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/stream"
+	"github.com/harness/gitness/types"
 )
 
 func RegisterEventListeners(
@@ -31,13 +32,14 @@ func RegisterEventListeners(
 	repoEvReaderFactory *events.ReaderFactory[*repoevents.Reader],
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	analyzer Analyzer,
+	config *types.Config,
 ) error {
 	const groupRepo = "gitness:language-analyzer:repo"
 	_, err := repoEvReaderFactory.Launch(ctx, groupRepo, instanceID,
 		func(r *repoevents.Reader) error {
 			const idleTimeout = 15 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.LanguageAnalyzer.RepoEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(3),
@@ -56,7 +58,7 @@ func RegisterEventListeners(
 		func(r *gitevents.Reader) error {
 			const idleTimeout = 15 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.LanguageAnalyzer.GitEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(3),

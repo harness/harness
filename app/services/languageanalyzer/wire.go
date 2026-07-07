@@ -52,6 +52,7 @@ func ProvideAnalyzer(
 		repoEvReaderFactory,
 		gitReaderFactory,
 		a,
+		config,
 	)
 	if err != nil {
 		return Analyzer{}, fmt.Errorf(

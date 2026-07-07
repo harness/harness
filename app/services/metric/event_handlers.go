@@ -60,7 +60,7 @@ func registerEventListeners(
 		func(r *userevents.Reader) error {
 			const idleTimeout = 10 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.Metric.UserEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(2),
@@ -86,7 +86,7 @@ func registerEventListeners(
 		func(r *repoevents.Reader) error {
 			const idleTimeout = 10 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.Metric.RepoEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(2),
@@ -114,7 +114,7 @@ func registerEventListeners(
 		func(r *pullreqevents.Reader) error {
 			const idleTimeout = 10 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.Metric.PullReqEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(2),
@@ -145,7 +145,7 @@ func registerEventListeners(
 		func(r *ruleevents.Reader) error {
 			const idleTimeout = 10 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.Metric.RuleEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(2),

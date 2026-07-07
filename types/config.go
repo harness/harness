@@ -376,7 +376,30 @@ type Config struct {
 		CodeCommentsConcurrency int `envconfig:"GITNESS_PULLREQ_CODE_COMMENTS_CONCURRENCY" default:"3"`
 	}
 
+	AutoMerge struct {
+		// CheckEventsConcurrency controls the number of concurrent workers processing check events for auto-merge.
+		CheckEventsConcurrency int `envconfig:"GITNESS_AUTOMERGE_CHECK_EVENTS_CONCURRENCY" default:"1"`
+		// PullReqEventsConcurrency controls the number of concurrent workers processing PR events for auto-merge.
+		PullReqEventsConcurrency int `envconfig:"GITNESS_AUTOMERGE_PULLREQ_EVENTS_CONCURRENCY" default:"3"`
+	}
+
+	MergeQueue struct {
+		// CheckEventsConcurrency controls the number of concurrent workers processing check events for merge queue.
+		CheckEventsConcurrency int `envconfig:"GITNESS_MERGE_QUEUE_CHECK_EVENTS_CONCURRENCY" default:"1"`
+		// QueueEventsConcurrency controls the number of concurrent workers processing merge queue events.
+		QueueEventsConcurrency int `envconfig:"GITNESS_MERGE_QUEUE_EVENTS_CONCURRENCY" default:"1"`
+	}
+
 	Metric struct {
+		// UserEventsConcurrency controls the number of concurrent workers processing user events for metrics.
+		UserEventsConcurrency int `envconfig:"GITNESS_METRIC_USER_EVENTS_CONCURRENCY" default:"1"`
+		// RepoEventsConcurrency controls the number of concurrent workers processing repo events for metrics.
+		RepoEventsConcurrency int `envconfig:"GITNESS_METRIC_REPO_EVENTS_CONCURRENCY" default:"1"`
+		// PullReqEventsConcurrency controls the number of concurrent workers processing PR events for metrics.
+		PullReqEventsConcurrency int `envconfig:"GITNESS_METRIC_PULLREQ_EVENTS_CONCURRENCY" default:"1"`
+		// RuleEventsConcurrency controls the number of concurrent workers processing rule events for metrics.
+		RuleEventsConcurrency int `envconfig:"GITNESS_METRIC_RULE_EVENTS_CONCURRENCY" default:"1"`
+
 		Enabled  bool   `envconfig:"GITNESS_METRIC_ENABLED" default:"true"`
 		Endpoint string `envconfig:"GITNESS_METRIC_ENDPOINT" default:"https://stats.drone.ci/api/v1/gitness"`
 		Token    string `envconfig:"GITNESS_METRIC_TOKEN"`
@@ -388,6 +411,13 @@ type Config struct {
 		// PostHogPersonalAPIKey (starts with "phx_") is sensitive. It's used to access private access points.
 		// It's not required for submitting events.
 		PostHogPersonalAPIKey string `envconfig:"GITNESS_METRIC_POSTHOG_PERSONAL_APIKEY"`
+	}
+
+	LanguageAnalyzer struct {
+		// RepoEventsConcurrency controls the number of concurrent workers processing repo events for language analysis.
+		RepoEventsConcurrency int `envconfig:"GITNESS_LANGUAGE_ANALYZER_REPO_EVENTS_CONCURRENCY" default:"1"`
+		// GitEventsConcurrency controls the number of concurrent workers processing git events for language analysis.
+		GitEventsConcurrency int `envconfig:"GITNESS_LANGUAGE_ANALYZER_GIT_EVENTS_CONCURRENCY" default:"1"`
 	}
 
 	RepoSize struct {

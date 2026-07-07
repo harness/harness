@@ -91,7 +91,7 @@ func NewService(
 		func(r *checkevents.Reader) error {
 			const idleTimeout = 15 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.AutoMerge.CheckEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(3),
@@ -109,7 +109,7 @@ func NewService(
 		func(r *pullreqevents.Reader) error {
 			const idleTimeout = 30 * time.Second
 			r.Configure(
-				stream.WithConcurrency(3),
+				stream.WithConcurrency(config.AutoMerge.PullReqEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(2),
