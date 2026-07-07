@@ -364,6 +364,18 @@ type Config struct {
 		MaxRetries  int `envconfig:"GITNESS_BRANCH_MAX_RETRIES" default:"3"`
 	}
 
+	PullReq struct {
+		// GitEventsConcurrency controls the number of concurrent workers processing git branch events
+		// (branch updates/deletes) that trigger PR updates. This is the main bottleneck for PR updates.
+		GitEventsConcurrency int `envconfig:"GITNESS_PULLREQ_GIT_EVENTS_CONCURRENCY" default:"1"`
+		// FileViewedConcurrency controls the number of concurrent workers processing file viewed events.
+		FileViewedConcurrency int `envconfig:"GITNESS_PULLREQ_FILE_VIEWED_CONCURRENCY" default:"3"`
+		// MergeabilityConcurrency controls the number of concurrent workers processing mergeability checks.
+		MergeabilityConcurrency int `envconfig:"GITNESS_PULLREQ_MERGEABILITY_CONCURRENCY" default:"3"`
+		// CodeCommentsConcurrency controls the number of concurrent workers processing code comment updates.
+		CodeCommentsConcurrency int `envconfig:"GITNESS_PULLREQ_CODE_COMMENTS_CONCURRENCY" default:"3"`
+	}
+
 	Metric struct {
 		Enabled  bool   `envconfig:"GITNESS_METRIC_ENABLED" default:"true"`
 		Endpoint string `envconfig:"GITNESS_METRIC_ENDPOINT" default:"https://stats.drone.ci/api/v1/gitness"`

@@ -118,7 +118,7 @@ func New(ctx context.Context,
 		func(r *gitevents.Reader) error {
 			const idleTimeout = 15 * time.Second
 			r.Configure(
-				stream.WithConcurrency(1),
+				stream.WithConcurrency(config.PullReq.GitEventsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(3),
@@ -140,7 +140,7 @@ func New(ctx context.Context,
 		func(r *pullreqevents.Reader) error {
 			const idleTimeout = 30 * time.Second
 			r.Configure(
-				stream.WithConcurrency(3),
+				stream.WithConcurrency(config.PullReq.FileViewedConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(1),
@@ -160,7 +160,7 @@ func New(ctx context.Context,
 		func(r *pullreqevents.Reader) error {
 			const idleTimeout = 30 * time.Second
 			r.Configure(
-				stream.WithConcurrency(3),
+				stream.WithConcurrency(config.PullReq.MergeabilityConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(2),
@@ -204,7 +204,7 @@ func New(ctx context.Context,
 		func(r *pullreqevents.Reader) error {
 			const idleTimeout = 10 * time.Second
 			r.Configure(
-				stream.WithConcurrency(3),
+				stream.WithConcurrency(config.PullReq.CodeCommentsConcurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
 					stream.WithMaxRetries(2),
