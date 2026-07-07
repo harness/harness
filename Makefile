@@ -5,7 +5,7 @@ ifndef GOBIN # derive value from gopath (default to first entry, similar to 'go 
 	GOBIN := $(shell go env GOPATH | sed 's/:.*//')/bin
 endif
 
-tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck protoc-gen-go protoc-gen-go-grpc gci)
+tools = $(addprefix $(GOBIN)/, goimports govulncheck protoc-gen-go protoc-gen-go-grpc gci)
 deps = $(addprefix $(GOBIN)/, wire dbmate)
 
 ifneq (,$(wildcard ./.local.env))
@@ -117,17 +117,17 @@ sec:
 	@echo "Vulnerability detection $(1)"
 	@govulncheck ./...
 
-lint: tools # lint the golang code - CI
+lint: # lint the golang code - CI
 	@echo "Linting $(1)"
-	@golangci-lint run --timeout=5m --verbose --new-from-rev=HEAD~ --whole-files
+	@go tool -modfile=go.tool.mod golangci-lint run --timeout=5m --verbose --new-from-rev=HEAD~ --whole-files
 
-lint-full: tools # full linting the golang code
+lint-full: # full linting the golang code
 	@echo "Linting $(1)"
-	@golangci-lint run --timeout=5m --verbose
+	@go tool -modfile=go.tool.mod golangci-lint run --timeout=5m --verbose
 
-lint-local: tools # lint the golang code - only untracked and staged changes
+lint-local: # lint the golang code - only untracked and staged changes
 	@echo "Linting $(1)"
-	@golangci-lint run --new-from-merge-base=main --new --timeout=5m --verbose --whole-files
+	@go tool -modfile=go.tool.mod golangci-lint run --new-from-merge-base=main --new --timeout=5m --verbose --whole-files
 
 
 ###############################################################################
@@ -162,11 +162,6 @@ update-tools: delete-tools $(tools) ## Update the tools by deleting and re-insta
 
 delete-tools: ## Delete the tools
 	@rm $(tools) || true
-
-# Install golangci-lint
-$(GOBIN)/golangci-lint:
-	@echo "🔘 Installing golangci-lint... (`date '+%H:%M:%S'`)"
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v2.4.0
 
 # Install goimports to format code
 $(GOBIN)/goimports:
