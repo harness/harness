@@ -34,7 +34,7 @@ func TestParseUserAttr(t *testing.T) {
 	for _, test := range tests {
 		got, want := ParseUserAttr(test.text), test.want
 		if got != want {
-			t.Errorf("Want user attribute %q parsed as %q, got %q", test.text, want, got)
+			t.Errorf("Want user attribute %q parsed as %v, got %v", test.text, want, got)
 		}
 	}
 }

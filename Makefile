@@ -166,7 +166,7 @@ delete-tools: ## Delete the tools
 # Install goimports to format code
 $(GOBIN)/goimports:
 	@echo "🔘 Installing goimports ... (`date '+%H:%M:%S'`)"
-	@go install golang.org/x/tools/cmd/goimports
+	@go install golang.org/x/tools/cmd/goimports@v0.47.0
 
 # Install wire to generate dependency injection
 $(GOBIN)/wire:
