@@ -295,6 +295,79 @@ func TestFileSystemStore_Download(t *testing.T) {
 	}
 }
 
+func TestFileSystemStore_PathTraversal(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "blob-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a base path under the temp dir so there is somewhere to escape to.
+	basePath := filepath.Join(tempDir, "blobstore")
+	if err := os.MkdirAll(basePath, 0755); err != nil {
+		t.Fatalf("failed to create base path: %v", err)
+	}
+
+	// Create a secret file outside the base path that traversal would target.
+	secretPath := filepath.Join(tempDir, "secret.txt")
+	if err := os.WriteFile(secretPath, []byte("top secret"), 0600); err != nil {
+		t.Fatalf("failed to create secret file: %v", err)
+	}
+
+	store := &FileSystemStore{basePath: basePath}
+	ctx := context.Background()
+
+	traversalPaths := []struct {
+		name     string
+		filePath string
+	}{
+		{name: "relative parent traversal", filePath: "../secret.txt"},
+		{name: "decoded traversal chain", filePath: "1/../../secret.txt"},
+		{name: "deep traversal to etc", filePath: "../../../../../../etc/passwd"},
+	}
+
+	for _, test := range traversalPaths {
+		t.Run("Download/"+test.name, func(t *testing.T) {
+			reader, err := store.Download(ctx, test.filePath)
+			if reader != nil {
+				_ = reader.Close()
+			}
+			if !errors.Is(err, ErrNotFound) {
+				t.Errorf("expected ErrNotFound for traversal path %q, got %v", test.filePath, err)
+			}
+		})
+
+		t.Run("Upload/"+test.name, func(t *testing.T) {
+			err := store.Upload(ctx, strings.NewReader("attacker"), test.filePath)
+			if !errors.Is(err, ErrNotFound) {
+				t.Errorf("expected ErrNotFound for traversal path %q, got %v", test.filePath, err)
+			}
+		})
+
+		t.Run("Delete/"+test.name, func(t *testing.T) {
+			err := store.Delete(ctx, test.filePath)
+			if !errors.Is(err, ErrNotFound) {
+				t.Errorf("expected ErrNotFound for traversal path %q, got %v", test.filePath, err)
+			}
+		})
+
+		t.Run("Move/"+test.name, func(t *testing.T) {
+			// Traversal in either source or destination must be rejected.
+			if err := store.Move(ctx, test.filePath, "dst.txt"); !errors.Is(err, ErrNotFound) {
+				t.Errorf("expected ErrNotFound for traversal src %q, got %v", test.filePath, err)
+			}
+			if err := store.Move(ctx, "src.txt", test.filePath); !errors.Is(err, ErrNotFound) {
+				t.Errorf("expected ErrNotFound for traversal dst %q, got %v", test.filePath, err)
+			}
+		})
+	}
+
+	// The secret file outside the base path must remain untouched and unreadable.
+	if data, err := os.ReadFile(secretPath); err != nil || string(data) != "top secret" {
+		t.Errorf("secret file was modified or removed by traversal: data=%q err=%v", string(data), err)
+	}
+}
+
 func TestFileSystemStore_GetSignedURL(t *testing.T) {
 	store := &FileSystemStore{basePath: "/tmp"}
 	ctx := context.Background()

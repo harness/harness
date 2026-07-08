@@ -22,6 +22,8 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -41,11 +43,37 @@ func NewFileSystemStore(cfg Config) (Store, error) {
 	}, nil
 }
 
+// safeDiskPath joins filePath onto the store's base path and verifies that the
+// resolved location stays within basePath. This guards against path traversal
+// (e.g. "../../etc/passwd") even if the caller fails to sanitize filePath.
+func (c *FileSystemStore) safeDiskPath(filePath string) (string, error) {
+	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
+
+	absBase, err := filepath.Abs(c.basePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve base path: %w", err)
+	}
+	absFile, err := filepath.Abs(fileDiskPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve file path: %w", err)
+	}
+
+	rel, err := filepath.Rel(absBase, absFile)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return "", ErrNotFound
+	}
+
+	return fileDiskPath, nil
+}
+
 func (c FileSystemStore) Upload(ctx context.Context,
 	file io.Reader,
 	filePath string,
 ) error {
-	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
+	fileDiskPath, err := c.safeDiskPath(filePath)
+	if err != nil {
+		return err
+	}
 
 	dir, _ := path.Split(fileDiskPath)
 	if _, err := os.Stat(dir); errors.Is(err, fs.ErrNotExist) {
@@ -91,7 +119,10 @@ func (c *FileSystemStore) GetSignedURL(
 }
 
 func (c *FileSystemStore) Download(_ context.Context, filePath string) (io.ReadCloser, error) {
-	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
+	fileDiskPath, err := c.safeDiskPath(filePath)
+	if err != nil {
+		return nil, err
+	}
 
 	file, err := os.Open(fileDiskPath)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -104,8 +135,14 @@ func (c *FileSystemStore) Download(_ context.Context, filePath string) (io.ReadC
 }
 
 func (c *FileSystemStore) Move(_ context.Context, srcPath, dstPath string) error {
-	srcDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, srcPath)
-	dstDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, dstPath)
+	srcDiskPath, err := c.safeDiskPath(srcPath)
+	if err != nil {
+		return err
+	}
+	dstDiskPath, err := c.safeDiskPath(dstPath)
+	if err != nil {
+		return err
+	}
 
 	// Ensure destination directory exists
 	dstDir, _ := path.Split(dstDiskPath)
@@ -122,7 +159,10 @@ func (c *FileSystemStore) Move(_ context.Context, srcPath, dstPath string) error
 }
 
 func (c *FileSystemStore) Delete(_ context.Context, filePath string) error {
-	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
+	fileDiskPath, err := c.safeDiskPath(filePath)
+	if err != nil {
+		return err
+	}
 
 	if err := os.Remove(fileDiskPath); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
