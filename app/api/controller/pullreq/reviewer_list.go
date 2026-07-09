@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
@@ -41,6 +42,44 @@ func (c *Controller) ReviewerList(
 	}
 
 	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	return reviewers, err
+	sortReviewersByDecision(reviewers)
+
+	return reviewers, nil
+}
+
+// reviewDecisionRank ranks a review decision for sorting; lower sorts first
+// (changereq > approved > reviewed > pending), matching getHighestOrderDecision.
+func reviewDecisionRank(decision enum.PullReqReviewDecision) int {
+	switch decision {
+	case enum.PullReqReviewDecisionChangeReq:
+		return 0
+	case enum.PullReqReviewDecisionApproved:
+		return 1
+	case enum.PullReqReviewDecisionReviewed:
+		return 2
+	case enum.PullReqReviewDecisionPending:
+		return 3
+	default:
+		return 4
+	}
+}
+
+// sortReviewersByDecision stably orders reviewers by decision priority, keeping
+// creation order among equal decisions.
+func sortReviewersByDecision(reviewers []*types.PullReqReviewer) {
+	sort.SliceStable(reviewers, func(i, j int) bool {
+		return reviewDecisionRank(reviewers[i].ReviewDecision) < reviewDecisionRank(reviewers[j].ReviewDecision)
+	})
+}
+
+// sortUserGroupReviewersByDecision stably orders user group reviewers by their
+// compound decision priority.
+func sortUserGroupReviewersByDecision(reviewers []*types.UserGroupReviewer) {
+	sort.SliceStable(reviewers, func(i, j int) bool {
+		return reviewDecisionRank(reviewers[i].Decision) < reviewDecisionRank(reviewers[j].Decision)
+	})
 }

@@ -52,6 +52,8 @@ func (c *Controller) ReviewersListCombined(
 		return nil, fmt.Errorf("failed to list reviewers: %w", err)
 	}
 
+	sortReviewersByDecision(reviewers)
+
 	userGroupReviewers, err := c.userGroupReviewerStore.List(ctx, pr.ID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return nil, fmt.Errorf("failed to list user group reviewers: %w", err)
@@ -117,6 +119,8 @@ func (c *Controller) ReviewersListCombined(
 			userGroupReviewerDecisions, pr.SourceSHA,
 		)
 	}
+
+	sortUserGroupReviewersByDecision(userGroupReviewers)
 
 	return &CombinedListResponse{
 		Reviewers:          reviewers,
