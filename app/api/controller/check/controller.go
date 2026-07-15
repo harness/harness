@@ -34,16 +34,17 @@ import (
 )
 
 type Controller struct {
-	tx            dbtx.Transactor
-	authorizer    authz.Authorizer
-	spaceStore    store.SpaceStore
-	checkStore    store.CheckStore
-	spaceFinder   refcache.SpaceFinder
-	repoFinder    refcache.RepoFinder
-	git           git.Interface
-	sanitizers    map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
-	sseStreamer   sse.Streamer
-	eventReporter *checkevents.Reporter
+	tx             dbtx.Transactor
+	authorizer     authz.Authorizer
+	spaceStore     store.SpaceStore
+	checkStore     store.CheckStore
+	principalStore store.PrincipalStore
+	spaceFinder    refcache.SpaceFinder
+	repoFinder     refcache.RepoFinder
+	git            git.Interface
+	sanitizers     map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
+	sseStreamer    sse.Streamer
+	eventReporter  *checkevents.Reporter
 }
 
 func NewController(
@@ -51,6 +52,7 @@ func NewController(
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
 	checkStore store.CheckStore,
+	principalStore store.PrincipalStore,
 	spaceFinder refcache.SpaceFinder,
 	repoFinder refcache.RepoFinder,
 	git git.Interface,
@@ -59,16 +61,17 @@ func NewController(
 	eventReporter *checkevents.Reporter,
 ) *Controller {
 	return &Controller{
-		tx:            tx,
-		authorizer:    authorizer,
-		spaceStore:    spaceStore,
-		checkStore:    checkStore,
-		spaceFinder:   spaceFinder,
-		repoFinder:    repoFinder,
-		git:           git,
-		sanitizers:    sanitizers,
-		sseStreamer:   sseStreamer,
-		eventReporter: eventReporter,
+		tx:             tx,
+		authorizer:     authorizer,
+		spaceStore:     spaceStore,
+		checkStore:     checkStore,
+		principalStore: principalStore,
+		spaceFinder:    spaceFinder,
+		repoFinder:     repoFinder,
+		git:            git,
+		sanitizers:     sanitizers,
+		sseStreamer:    sseStreamer,
+		eventReporter:  eventReporter,
 	}
 }
 

@@ -35,6 +35,8 @@ type Check struct {
 	Started    int64            `json:"started,omitempty"`
 	Ended      int64            `json:"ended,omitempty"`
 
+	BypassedBy *int64 `json:"bypassed_by,omitempty"`
+
 	Payload    CheckPayload   `json:"payload"`
 	ReportedBy *PrincipalInfo `json:"reported_by,omitempty"`
 }
@@ -55,6 +57,7 @@ func (c Check) MarshalJSON() ([]byte, error) {
 type CheckResult struct {
 	Identifier string           `json:"identifier" db:"check_uid"`
 	Status     enum.CheckStatus `json:"status" db:"check_status"`
+	BypassedBy *int64           `json:"bypassed_by,omitempty" db:"check_bypassed_by"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.

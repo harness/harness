@@ -66,7 +66,8 @@ const (
 		,check_payload_kind
 		,check_payload_version
 		,check_started
-		,check_ended`
+		,check_ended
+		,check_bypassed_by`
 
 	//nolint:goconst
 	checkSelectBase = `
@@ -91,6 +92,7 @@ type check struct {
 	PayloadVersion string                `db:"check_payload_version"`
 	Started        int64                 `db:"check_started"`
 	Ended          int64                 `db:"check_ended"`
+	BypassedBy     *int64                `db:"check_bypassed_by"`
 }
 
 // FindByIdentifier returns status check result for given unique key.
@@ -132,6 +134,7 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,check_payload_version
 		,check_started
 		,check_ended
+		,check_bypassed_by
 	) VALUES (
 		 :check_created_by
 		,:check_created
@@ -148,6 +151,7 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,:check_payload_version
 		,:check_started
 		,:check_ended
+		,:check_bypassed_by
 	)
 	ON CONFLICT (check_repo_id, check_commit_sha, check_uid) DO
 	UPDATE SET
@@ -161,6 +165,7 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,check_payload_version = :check_payload_version
 	    	,check_started = :check_started
 	    	,check_ended = :check_ended
+		,check_bypassed_by = :check_bypassed_by
 	RETURNING check_id, check_created_by, check_created`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -308,7 +313,7 @@ func (s *CheckStore) ListResults(ctx context.Context,
 	repoID int64,
 	commitSHA string,
 ) ([]types.CheckResult, error) {
-	const checkColumns = "check_uid, check_status"
+	const checkColumns = "check_uid, check_status, check_bypassed_by"
 	stmt := database.Builder.
 		Select(checkColumns).
 		From("checks").
@@ -428,6 +433,7 @@ func mapInternalCheck(c *types.Check) *check {
 		PayloadVersion: c.Payload.Version,
 		Started:        c.Started,
 		Ended:          c.Ended,
+		BypassedBy:     c.BypassedBy,
 	}
 
 	return m
@@ -454,6 +460,7 @@ func mapCheck(c *check) types.Check {
 		ReportedBy: nil,
 		Started:    c.Started,
 		Ended:      c.Ended,
+		BypassedBy: c.BypassedBy,
 	}
 }
 

@@ -353,7 +353,7 @@ func (v *DefPullReq) MergeVerify(
 		var succeeded bool
 		for i := range in.CheckResults {
 			if in.CheckResults[i].Identifier == requiredIdentifier {
-				succeeded = in.CheckResults[i].Status.IsSuccess()
+				succeeded = in.CheckResults[i].Status.IsSuccess() || in.CheckResults[i].BypassedBy != nil
 				break
 			}
 		}

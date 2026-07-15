@@ -129,7 +129,7 @@ func (s *Service) handlerCheckFinished(
 
 	completedChecks := make([]string, 0, len(checks))
 	for _, check := range checks {
-		if check.Status == enum.CheckStatusSuccess {
+		if check.Status == enum.CheckStatusSuccess || check.BypassedBy != nil {
 			completedChecks = append(completedChecks, check.Identifier)
 		}
 	}

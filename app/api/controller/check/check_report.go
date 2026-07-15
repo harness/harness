@@ -41,6 +41,8 @@ type ReportInput struct {
 	Link       string             `json:"link"`
 	Payload    types.CheckPayload `json:"payload"`
 
+	BypassedBy *int64 `json:"bypassed_by,omitempty"`
+
 	Started int64 `json:"started,omitempty"`
 	Ended   int64 `json:"ended,omitempty"`
 }
@@ -98,6 +100,10 @@ func (in *ReportInput) Sanitize(
 		return usererror.BadRequest("Started time reported after ended time")
 	}
 
+	if in.BypassedBy != nil && *in.BypassedBy <= 0 {
+		return usererror.BadRequest("bypassed_by must be a valid (positive) principal id")
+	}
+
 	return nil
 }
 
@@ -153,6 +159,15 @@ func (c *Controller) Report(
 		return nil, usererror.BadRequest("Invalid commit SHA provided")
 	}
 
+	if in.BypassedBy != nil {
+		if _, err := c.principalStore.Find(ctx, *in.BypassedBy); err != nil {
+			if errors.Is(err, store.ErrResourceNotFound) {
+				return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
+			}
+			return nil, fmt.Errorf("failed to look up bypassed_by principal: %w", err)
+		}
+	}
+
 	_, err = c.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
 		Revision:   commitSHA,
@@ -185,6 +200,7 @@ func (c *Controller) Report(
 		Summary:    in.Summary,
 		Link:       in.Link,
 		Payload:    in.Payload,
+		BypassedBy: in.BypassedBy,
 		Metadata:   metadataJSON,
 		ReportedBy: session.Principal.ToPrincipalInfo(),
 		Started:    started,

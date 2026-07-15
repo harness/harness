@@ -589,7 +589,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, spaceFinder, repoFinder, gitInterface, v2, streamer, reporter11)
+	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, principalStore, spaceFinder, repoFinder, gitInterface, v2, streamer, reporter11)
 	systemController := system.NewController(principalStore, config)
 	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore, config)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
