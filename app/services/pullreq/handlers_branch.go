@@ -264,6 +264,23 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 	return nil
 }
 
+// handleBranchDeleted handles branch delete events.
+func (s *Service) handleBranchDeleted(ctx context.Context,
+	event *events.Event[*gitevents.BranchDeletedPayload],
+) error {
+	// First, close PRs where the source branch was deleted
+	if err := s.closePullReqOnBranchDelete(ctx, event); err != nil {
+		return err
+	}
+
+	// Then, update PRs where the target branch was deleted (to point to default branch)
+	if err := s.updatePullReqTargetOnBranchDelete(ctx, event); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // closePullReqOnBranchDelete handles branch delete events.
 // It closes every open pull request for the branch and triggers the pull request BranchDeleted event.
 func (s *Service) closePullReqOnBranchDelete(ctx context.Context,

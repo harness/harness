@@ -119,6 +119,7 @@ const (
 	PullReqActivityTypeAutoMergeUnsupportedMergeMethod PullReqActivityType = "auto-merge-unsupported-merge-method"
 	PullReqActivityTypeMergeQueueAdd                   PullReqActivityType = "merge-queue-added"
 	PullReqActivityTypeMergeQueueRemove                PullReqActivityType = "merge-queue-removed"
+	PullReqActivityTypeTargetBranchDeleted             PullReqActivityType = "target-branch-deleted"
 )
 
 var pullReqActivityTypes = sortEnum([]PullReqActivityType{
@@ -141,6 +142,7 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeAutoMergeUnsupportedMergeMethod,
 	PullReqActivityTypeMergeQueueAdd,
 	PullReqActivityTypeMergeQueueRemove,
+	PullReqActivityTypeTargetBranchDeleted,
 })
 
 // PullReqActivityKind defines kind of pull request activity system message.

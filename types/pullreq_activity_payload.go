@@ -62,6 +62,7 @@ var allPullReqActivityPayloads = func(
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchUpdate{} },
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchDelete{} },
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchRestore{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadTargetBranchDeleted{} },
 })
 
 // newPayloadForActivity returns a new payload instance for the requested activity type.
@@ -205,6 +206,17 @@ type PullRequestActivityPayloadBranchChangeTarget struct {
 
 func (a *PullRequestActivityPayloadBranchChangeTarget) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeTargetBranchChange
+}
+
+type PullRequestActivityPayloadTargetBranchDeleted struct {
+	OldTargetBranch string `json:"old_target_branch"`
+	NewTargetBranch string `json:"new_target_branch"`
+	OldMergeBaseSHA string `json:"old_merge_base_sha"`
+	NewMergeBaseSHA string `json:"new_merge_base_sha"`
+}
+
+func (a *PullRequestActivityPayloadTargetBranchDeleted) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeTargetBranchDeleted
 }
 
 type PullRequestActivityLabelBase struct {

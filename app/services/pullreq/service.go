@@ -125,7 +125,7 @@ func New(ctx context.Context,
 				))
 
 			_ = r.RegisterBranchUpdated(service.updatePullReqOnBranchUpdate)
-			_ = r.RegisterBranchDeleted(service.closePullReqOnBranchDelete)
+			_ = r.RegisterBranchDeleted(service.handleBranchDeleted)
 
 			return nil
 		})
