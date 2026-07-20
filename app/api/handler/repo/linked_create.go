@@ -15,7 +15,6 @@
 package repo
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/repo"
@@ -29,7 +28,7 @@ func HandleLinkedCreate(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 
 		in := new(repo.LinkedCreateInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err := request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

@@ -15,7 +15,6 @@
 package space
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/space"
@@ -36,7 +35,7 @@ func HandleAutolinkCreate(spaceCtrl *space.Controller) http.HandlerFunc {
 		}
 
 		in := new(autolink.AutoLinkInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

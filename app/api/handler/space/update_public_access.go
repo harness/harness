@@ -15,7 +15,6 @@
 package space
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/space"
@@ -35,7 +34,7 @@ func HandleUpdatePublicAccess(spaceCtrl *space.Controller) http.HandlerFunc {
 		}
 
 		in := new(space.UpdatePublicAccessInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return

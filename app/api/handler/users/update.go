@@ -15,7 +15,6 @@
 package users
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/user"
@@ -36,7 +35,7 @@ func HandleUpdate(userCtrl *user.Controller) http.HandlerFunc {
 		}
 
 		in := new(user.UpdateInput)
-		if err = json.NewDecoder(r.Body).Decode(in); err != nil {
+		if err = request.DecodeBody(r, in); err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return
 		}

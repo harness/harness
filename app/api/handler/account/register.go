@@ -15,7 +15,6 @@
 package account
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/system"
@@ -24,8 +23,6 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleRegister returns an http.HandlerFunc that processes an http.Request
-// to register the named user account with the system.
 func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller, cookieName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -37,7 +34,7 @@ func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller, cooki
 		}
 
 		in := new(user.RegisterInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return

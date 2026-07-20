@@ -15,7 +15,6 @@
 package pullreq
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/pullreq"
@@ -42,7 +41,7 @@ func HandleSuggestLabels(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		}
 
 		var in label.CreatePullReqLabelSuggestionsRequest
-		err = json.NewDecoder(r.Body).Decode(&in)
+		err = request.DecodeBody(r, &in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return

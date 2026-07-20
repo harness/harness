@@ -15,7 +15,6 @@
 package repo
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/repo"
@@ -35,7 +34,7 @@ func HandleUpdateDefaultBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 		}
 
 		in := new(repo.UpdateDefaultBranchInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

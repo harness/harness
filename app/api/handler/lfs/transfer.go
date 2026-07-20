@@ -15,7 +15,6 @@
 package lfs
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -37,7 +36,7 @@ func HandleLFSTransfer(lfsCtrl *lfs.Controller, urlProvider url.Provider) http.H
 		}
 
 		in := new(lfs.TransferInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

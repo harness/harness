@@ -15,7 +15,6 @@
 package repo
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/repo"
@@ -48,7 +47,7 @@ func HandleUpdateLabelValue(repoCtrl *repo.Controller) http.HandlerFunc {
 		}
 
 		in := new(types.UpdateValueInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return

@@ -15,7 +15,6 @@
 package githook
 
 import (
-	"encoding/json"
 	"net/http"
 
 	controllergithook "github.com/harness/gitness/app/api/controller/githook"
@@ -37,7 +36,7 @@ func HandlePreReceive(
 		session, _ := request.AuthSessionFrom(ctx)
 
 		in := types.GithookPreReceiveInput{}
-		err := json.NewDecoder(r.Body).Decode(&in)
+		err := request.DecodeBody(r, &in)
 		if err != nil {
 			log.Ctx(ctx).Error().Err(err).Msg("internal request body in pre-receive githook")
 			render.BadRequest(ctx, w)

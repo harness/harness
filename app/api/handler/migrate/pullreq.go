@@ -15,7 +15,6 @@
 package migrate
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/migrate"
@@ -36,7 +35,7 @@ func HandlePullRequests(migCtrl *migrate.Controller) http.HandlerFunc {
 		}
 
 		in := new(migrate.PullreqsInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

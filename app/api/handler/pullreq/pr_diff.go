@@ -15,7 +15,6 @@
 package pullreq
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
@@ -53,7 +52,7 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodPost:
-			if err = json.NewDecoder(r.Body).Decode(&files); err != nil && !errors.Is(err, io.EOF) {
+			if err = request.DecodeBody(r, &files); err != nil && !errors.Is(err, io.EOF) {
 				render.TranslatedUserError(ctx, w, err)
 				return
 			}

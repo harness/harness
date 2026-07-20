@@ -15,7 +15,6 @@
 package gitspace
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/gitspace"
@@ -28,7 +27,7 @@ func HandleLookupRepo(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 		in := new(gitspace.LookupRepoInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err := request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

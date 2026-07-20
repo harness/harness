@@ -15,7 +15,6 @@
 package pullreq
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/pullreq"
@@ -48,7 +47,7 @@ func HandleCommentStatus(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		}
 
 		in := new(pullreq.CommentStatusInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

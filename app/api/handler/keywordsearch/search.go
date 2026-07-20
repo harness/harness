@@ -15,7 +15,6 @@
 package keywordsearch
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/keywordsearch"
@@ -31,7 +30,7 @@ func HandleSearch(ctrl *keywordsearch.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 
 		searchInput := types.SearchInput{}
-		err := json.NewDecoder(r.Body).Decode(&searchInput)
+		err := request.DecodeBody(r, &searchInput)
 		if err != nil {
 			render.BadRequestf(ctx, w, "invalid Request Body: %s.", err)
 			return

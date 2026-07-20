@@ -15,7 +15,6 @@
 package pullreq
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/pullreq"
@@ -42,7 +41,7 @@ func HandleUserGroupReviewerAdd(pullreqCtrl *pullreq.Controller) http.HandlerFun
 		}
 
 		in := new(pullreq.UserGroupReviewerAddInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

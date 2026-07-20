@@ -15,7 +15,6 @@
 package pullreq
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -38,7 +37,7 @@ func HandleMerge(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		}
 
 		in := new(pullreq.MergeInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil && !errors.Is(err, io.EOF) { // allow empty body
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

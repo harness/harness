@@ -15,21 +15,19 @@
 package account
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/render"
+	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleLogin returns an http.HandlerFunc that authenticates
-// the user and returns an authentication token on success.
 func HandleLogin(userCtrl *user.Controller, cookieName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		in := new(user.LoginInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err := request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return

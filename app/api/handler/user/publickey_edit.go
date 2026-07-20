@@ -15,7 +15,6 @@
 package user
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/user"
@@ -36,7 +35,7 @@ func HandleUpdatePublicKey(userCtrl *user.Controller) http.HandlerFunc {
 		}
 
 		in := new(user.UpdatePublicKeyInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

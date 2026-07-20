@@ -15,7 +15,6 @@
 package migrate
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/migrate"
@@ -30,7 +29,7 @@ func HandleCreateRepo(migCtrl *migrate.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 
 		in := new(migrate.CreateRepoInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err := request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

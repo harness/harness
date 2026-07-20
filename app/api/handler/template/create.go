@@ -15,7 +15,6 @@
 package template
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/template"
@@ -30,7 +29,7 @@ func HandleCreate(templateCtrl *template.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 
 		in := new(template.CreateInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err := request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

@@ -15,7 +15,6 @@
 package connector
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -30,7 +29,7 @@ func HandleCreate(connectorCtrl *connector.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 
 		in := new(connector.CreateInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err := request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

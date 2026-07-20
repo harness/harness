@@ -15,7 +15,6 @@
 package repo
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/repo"
@@ -36,7 +35,7 @@ func HandleSquash(repoCtrl *repo.Controller) http.HandlerFunc {
 		}
 
 		in := new(repo.SquashInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err = request.DecodeBody(r, in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return

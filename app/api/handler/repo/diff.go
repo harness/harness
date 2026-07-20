@@ -15,7 +15,6 @@
 package repo
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
@@ -44,7 +43,7 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		files := gittypes.FileDiffRequests{}
 		switch r.Method {
 		case http.MethodPost:
-			if err = json.NewDecoder(r.Body).Decode(&files); err != nil && !errors.Is(err, io.EOF) {
+			if err = request.DecodeBody(r, &files); err != nil && !errors.Is(err, io.EOF) {
 				render.TranslatedUserError(ctx, w, err)
 				return
 			}
