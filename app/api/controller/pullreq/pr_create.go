@@ -332,6 +332,7 @@ func (c *Controller) Create(
 			SourceSHA:         sourceSHA.String(),
 			TargetRepoID:      targetRepo.ID,
 			TargetBranch:      in.TargetBranch,
+			RootSpaceID:       targetRepoFull.RootSpaceID,
 			ActivitySeq:       0,
 			MergedBy:          nil,
 			Merged:            nil,

@@ -68,6 +68,8 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		&session.Principal,
 	)
 
+	repo.RootSpaceID = parentSpace.RootSpaceID
+
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, parentSpace.ID, 1); err != nil {
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)

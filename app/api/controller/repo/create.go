@@ -134,6 +134,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		repo = &types.Repository{
 			Version:       0,
 			ParentID:      parentSpace.ID,
+			RootSpaceID:   parentSpace.RootSpaceID,
 			Identifier:    in.Identifier,
 			GitUID:        gitResp.UID,
 			Description:   in.Description,

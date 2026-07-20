@@ -82,7 +82,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
 
-		space, err = c.createSpaceInnerInTX(ctx, session, parentSpace.ID, &in.CreateInput)
+		space, err = c.createSpaceInnerInTX(ctx, session, parentSpace, &in.CreateInput)
 		if err != nil {
 			return err
 		}
@@ -95,6 +95,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 				"",
 				&session.Principal,
 			)
+			repo.RootSpaceID = space.RootSpaceID
 
 			err = c.repoStore.Create(ctx, repo)
 			if err != nil {

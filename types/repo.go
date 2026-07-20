@@ -32,6 +32,7 @@ type RepositoryCore struct {
 	ForkID        int64          `json:"fork_id" yaml:"fork_id"`
 	State         enum.RepoState `json:"-" yaml:"-"`
 	Type          enum.RepoType  `json:"type,omitempty" yaml:"type,omitempty"`
+	RootSpaceID   int64          `json:"root_space_id" yaml:"root_space_id"`
 }
 
 func (r *RepositoryCore) GetGitUID() string {
@@ -47,6 +48,7 @@ type Repository struct {
 	Identifier  string `json:"identifier" yaml:"identifier"`
 	Path        string `json:"path" yaml:"path"`
 	Description string `json:"description" yaml:"description"`
+	RootSpaceID int64  `json:"root_space_id" yaml:"root_space_id"`
 	CreatedBy   int64  `json:"created_by" yaml:"created_by"`
 	Created     int64  `json:"created" yaml:"created"`
 	Updated     int64  `json:"updated" yaml:"updated"`
@@ -95,6 +97,7 @@ func (r *Repository) Core() *RepositoryCore {
 		DefaultBranch: r.DefaultBranch,
 		State:         r.State,
 		Type:          r.Type,
+		RootSpaceID:   r.RootSpaceID,
 	}
 }
 

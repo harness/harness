@@ -210,6 +210,11 @@ func (h *PullRequestHandler) create(
 	// SourceRepoID intentionally equals TargetRepoID.
 	srcRepoID := linkedRepo.RepoID
 
+	repo, err := h.repoFinder.FindByID(ctx, linkedRepo.RepoID)
+	if err != nil {
+		return fmt.Errorf("failed to find repo for linked PR: %w", err)
+	}
+
 	prType := enum.PullReqTypeLinked
 	parent := &types.PullReq{
 		Number:           int64(prPayload.Number),
@@ -226,6 +231,7 @@ func (h *PullRequestHandler) create(
 		SourceSHA:        prPayload.HeadSHA,
 		TargetRepoID:     linkedRepo.RepoID,
 		TargetBranch:     prPayload.BaseRef,
+		RootSpaceID:      repo.RootSpaceID,
 		MergeTargetSHA:   ptr.String(prPayload.BaseSHA),
 		MergeBaseSHA:     mergeBaseSHA,
 		MergeCheckStatus: enum.MergeCheckStatusUnchecked,

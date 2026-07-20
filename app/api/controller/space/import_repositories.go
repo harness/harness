@@ -79,6 +79,7 @@ func (c *Controller) ImportRepositories(
 			"",
 			&session.Principal,
 		)
+		repo.RootSpaceID = space.RootSpaceID
 
 		if err := c.repoIdentifierCheck(repo.Identifier, session); err != nil {
 			return ImportRepositoriesOutput{}, fmt.Errorf("failed to sanitize the repo %s: %w", repo.Identifier, err)

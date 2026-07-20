@@ -322,6 +322,7 @@ func (r *repoImportState) convertPullReq(
 		SourceSHA:       extPullReq.Head.SHA,
 		TargetRepoID:    repo.ID,
 		TargetBranch:    extPullReq.Base.Name,
+		RootSpaceID:     repo.RootSpaceID,
 		ActivitySeq:     0,
 		// Merge related fields are all left unset and will be set depending on the PR state
 	}

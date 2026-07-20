@@ -115,6 +115,7 @@ func (c *Controller) CreateRepo(
 		repo = &types.Repository{
 			Version:       0,
 			ParentID:      parentSpace.ID,
+			RootSpaceID:   parentSpace.RootSpaceID,
 			Identifier:    in.Identifier,
 			GitUID:        gitResp.UID,
 			CreatedBy:     session.Principal.ID,

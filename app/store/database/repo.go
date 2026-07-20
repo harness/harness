@@ -67,6 +67,7 @@ type repository struct {
 	ParentID    int64    `db:"repo_parent_id"`
 	Identifier  string   `db:"repo_uid"`
 	Description string   `db:"repo_description"`
+	RootSpaceID int64    `db:"repo_root_space_id"`
 	CreatedBy   int64    `db:"repo_created_by"`
 	Created     int64    `db:"repo_created"`
 	Updated     int64    `db:"repo_updated"`
@@ -106,6 +107,7 @@ const (
 		,repo_parent_id
 		,repo_uid
 		,repo_description
+		,repo_root_space_id
 		,repo_created_by
 		,repo_created
 		,repo_updated
@@ -251,6 +253,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_tags
 			,repo_type
 			,repo_language
+			,repo_root_space_id
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -278,6 +281,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_tags
 			,:repo_type
 			,:repo_language
+			,:repo_root_space_id
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -902,6 +906,7 @@ func (s *RepoStore) mapToRepo(
 		ParentID:       in.ParentID,
 		Identifier:     in.Identifier,
 		Description:    in.Description,
+		RootSpaceID:    in.RootSpaceID,
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
@@ -994,6 +999,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		ParentID:       in.ParentID,
 		Identifier:     in.Identifier,
 		Description:    in.Description,
+		RootSpaceID:    in.RootSpaceID,
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,

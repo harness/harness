@@ -19,10 +19,11 @@ import (
 )
 
 type SpaceCore struct {
-	ID         int64  `json:"id"`
-	ParentID   int64  `json:"parent_id"`
-	Path       string `json:"path"`
-	Identifier string `json:"identifier"`
+	ID          int64  `json:"id"`
+	ParentID    int64  `json:"parent_id"`
+	Path        string `json:"path"`
+	Identifier  string `json:"identifier"`
+	RootSpaceID int64  `json:"root_space_id"`
 }
 
 /*
@@ -44,6 +45,7 @@ type Space struct {
 	Path        string `json:"path"`
 	Identifier  string `json:"identifier"`
 	Description string `json:"description"`
+	RootSpaceID int64  `json:"root_space_id"`
 	CreatedBy   int64  `json:"created_by"`
 	Created     int64  `json:"created"`
 	Updated     int64  `json:"updated"`
@@ -52,10 +54,11 @@ type Space struct {
 
 func (s *Space) Core() *SpaceCore {
 	return &SpaceCore{
-		ID:         s.ID,
-		ParentID:   s.ParentID,
-		Path:       s.Path,
-		Identifier: s.Identifier,
+		ID:          s.ID,
+		ParentID:    s.ParentID,
+		Path:        s.Path,
+		Identifier:  s.Identifier,
+		RootSpaceID: s.RootSpaceID,
 	}
 }
 

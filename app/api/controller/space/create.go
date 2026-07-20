@@ -76,7 +76,7 @@ func (c *Controller) Create(
 
 	var space *types.Space
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err = c.createSpaceInnerInTX(ctx, session, parentSpace.ID, in)
+		space, err = c.createSpaceInnerInTX(ctx, session, parentSpace, in)
 		return err
 	})
 	if err != nil {
@@ -103,9 +103,10 @@ func (c *Controller) Create(
 func (c *Controller) createSpaceInnerInTX(
 	ctx context.Context,
 	session *auth.Session,
-	parentID int64,
+	parentSpace *types.SpaceCore,
 	in *CreateInput,
 ) (*types.Space, error) {
+	parentID := parentSpace.ID
 	spacePath := in.Identifier
 	if parentID > 0 {
 		// (re-)read parent path in transaction to ensure correctness
@@ -126,6 +127,7 @@ func (c *Controller) createSpaceInnerInTX(
 	space := &types.Space{
 		Version:     0,
 		ParentID:    parentID,
+		RootSpaceID: parentSpace.RootSpaceID,
 		Identifier:  in.Identifier,
 		Description: in.Description,
 		Path:        spacePath,
@@ -133,9 +135,18 @@ func (c *Controller) createSpaceInnerInTX(
 		Created:     now,
 		Updated:     now,
 	}
+
 	err := c.spaceStore.Create(ctx, space)
 	if err != nil {
 		return nil, fmt.Errorf("space creation failed: %w", err)
+	}
+
+	// for root spaces, root_space_id equals own ID which is only known after insert
+	if parentID == 0 {
+		space.RootSpaceID = space.ID
+		if err = c.spaceStore.Update(ctx, space); err != nil {
+			return nil, fmt.Errorf("failed to set root_space_id on root space: %w", err)
+		}
 	}
 
 	pathSegment := &types.SpacePathSegment{

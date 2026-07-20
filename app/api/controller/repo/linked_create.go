@@ -128,6 +128,7 @@ func (c *Controller) LinkedCreate(
 		&session.Principal,
 		access.DefaultBranch,
 	)
+	repo.RootSpaceID = parentSpace.RootSpaceID
 
 	repo.Type = enum.RepoTypeLinked
 

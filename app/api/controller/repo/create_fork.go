@@ -162,6 +162,7 @@ func (c *Controller) CreateFork(
 		repoFork = &types.Repository{
 			Version:       0,
 			ParentID:      parentSpace.ID,
+			RootSpaceID:   parentSpace.RootSpaceID,
 			Identifier:    in.Identifier,
 			GitUID:        gitForkRepo.UID,
 			Description:   repoUpstream.Description,

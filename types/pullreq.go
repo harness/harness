@@ -23,9 +23,10 @@ import (
 
 // PullReq represents a pull request.
 type PullReq struct {
-	ID      int64 `json:"-"` // not returned, it's an internal field
-	Version int64 `json:"-"` // not returned, it's an internal field
-	Number  int64 `json:"number"`
+	ID          int64 `json:"-"` // not returned, it's an internal field
+	Version     int64 `json:"-"` // not returned, it's an internal field
+	Number      int64 `json:"number"`
+	RootSpaceID int64 `json:"root_space_id"`
 
 	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
 	Created   int64  `json:"created"`

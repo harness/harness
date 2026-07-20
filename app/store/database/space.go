@@ -65,6 +65,7 @@ type space struct {
 	ParentID    null.Int `db:"space_parent_id"`
 	Identifier  string   `db:"space_uid"`
 	Description string   `db:"space_description"`
+	RootSpaceID int64    `db:"space_root_space_id"`
 	CreatedBy   int64    `db:"space_created_by"`
 	Created     int64    `db:"space_created"`
 	Updated     int64    `db:"space_updated"`
@@ -78,6 +79,7 @@ const (
 		,space_parent_id
 		,space_uid
 		,space_description
+		,space_root_space_id
 		,space_created_by
 		,space_created
 		,space_updated
@@ -453,6 +455,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			,space_parent_id
 			,space_uid
 			,space_description
+			,space_root_space_id
 			,space_created_by
 			,space_created
 			,space_updated
@@ -462,6 +465,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			,:space_parent_id
 			,:space_uid
 			,:space_description
+			,:space_root_space_id
 			,:space_created_by
 			,:space_created
 			,:space_updated
@@ -496,6 +500,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 			,space_parent_id	= :space_parent_id
 			,space_uid			= :space_uid
 			,space_description	= :space_description
+			,space_root_space_id	= :space_root_space_id
 			,space_deleted 		= :space_deleted
 		WHERE space_id = :space_id AND space_version = :space_version - 1`
 
@@ -940,6 +945,7 @@ func mapToSpace(
 		Version:     in.Version,
 		Identifier:  in.Identifier,
 		Description: in.Description,
+		RootSpaceID: in.RootSpaceID,
 		Created:     in.Created,
 		CreatedBy:   in.CreatedBy,
 		Updated:     in.Updated,
@@ -1000,6 +1006,7 @@ func mapToInternalSpace(s *types.Space) *space {
 		Version:     s.Version,
 		Identifier:  s.Identifier,
 		Description: s.Description,
+		RootSpaceID: s.RootSpaceID,
 		Created:     s.Created,
 		CreatedBy:   s.CreatedBy,
 		Updated:     s.Updated,
