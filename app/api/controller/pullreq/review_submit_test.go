@@ -53,13 +53,14 @@ func (noopInstrumentation) Close(context.Context) error                   { retu
 // reviewSubmitFixture bundles the mocks a ReviewSubmit test cares about so a
 // single-line assertion at the end of the test can verify every expectation.
 type reviewSubmitFixture struct {
-	ctrl          *Controller
-	tx            *txAssertStub
-	pullreqStore  *mockstore.PullReqStore
-	reviewStore   *mockstore.PullReqReviewStore
-	reviewerStore *mockstore.PullReqReviewerStore
-	activityStore *mockstore.PullReqActivityStore
-	gitClient     *mockgit.Interface
+	ctrl                    *Controller
+	tx                      *txAssertStub
+	pullreqStore            *mockstore.PullReqStore
+	reviewStore             *mockstore.PullReqReviewStore
+	reviewerStore           *mockstore.PullReqReviewerStore
+	reviewerSuggestionStore *mockstore.PullReqReviewerSuggestionStore
+	activityStore           *mockstore.PullReqActivityStore
+	gitClient               *mockgit.Interface
 }
 
 func (f *reviewSubmitFixture) assertExpectations(t *testing.T) {
@@ -67,6 +68,7 @@ func (f *reviewSubmitFixture) assertExpectations(t *testing.T) {
 	f.pullreqStore.AssertExpectations(t)
 	f.reviewStore.AssertExpectations(t)
 	f.reviewerStore.AssertExpectations(t)
+	f.reviewerSuggestionStore.AssertExpectations(t)
 	f.activityStore.AssertExpectations(t)
 	f.gitClient.AssertExpectations(t)
 }
@@ -88,6 +90,7 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 	pullreqStore := &mockstore.PullReqStore{}
 	reviewStore := &mockstore.PullReqReviewStore{}
 	reviewerStore := &mockstore.PullReqReviewerStore{}
+	reviewerSuggestionStore := &mockstore.PullReqReviewerSuggestionStore{}
 	activityStore := &mockstore.PullReqActivityStore{}
 	gitClient := &mockgit.Interface{}
 
@@ -101,26 +104,28 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 		}, nil).Maybe()
 
 	ctrl := &Controller{
-		tx:              tx,
-		authorizer:      &allowAuthorizer{},
-		repoFinder:      testRepoFinder(repo),
-		pullreqStore:    pullreqStore,
-		reviewStore:     reviewStore,
-		reviewerStore:   reviewerStore,
-		activityStore:   activityStore,
-		git:             gitClient,
-		eventReporter:   mockpullreq.NewStubReporter(t),
-		instrumentation: noopInstrumentation{},
+		tx:                      tx,
+		authorizer:              &allowAuthorizer{},
+		repoFinder:              testRepoFinder(repo),
+		pullreqStore:            pullreqStore,
+		reviewStore:             reviewStore,
+		reviewerStore:           reviewerStore,
+		reviewerSuggestionStore: reviewerSuggestionStore,
+		activityStore:           activityStore,
+		git:                     gitClient,
+		eventReporter:           mockpullreq.NewStubReporter(t),
+		instrumentation:         noopInstrumentation{},
 	}
 
 	return &reviewSubmitFixture{
-		ctrl:          ctrl,
-		tx:            tx,
-		pullreqStore:  pullreqStore,
-		reviewStore:   reviewStore,
-		reviewerStore: reviewerStore,
-		activityStore: activityStore,
-		gitClient:     gitClient,
+		ctrl:                    ctrl,
+		tx:                      tx,
+		pullreqStore:            pullreqStore,
+		reviewStore:             reviewStore,
+		reviewerStore:           reviewerStore,
+		reviewerSuggestionStore: reviewerSuggestionStore,
+		activityStore:           activityStore,
+		gitClient:               gitClient,
 	}
 }
 
@@ -170,6 +175,9 @@ func TestReviewSubmit_NewReviewer_CreatesReviewAndReviewer(t *testing.T) {
 		require.Equal(t, enum.PullReqReviewDecisionApproved, reviewer.ReviewDecision)
 		require.Equal(t, reviewSubmitResolvedSHA, reviewer.SHA)
 	}).Return(nil).Once()
+
+	f.reviewerSuggestionStore.On("Delete", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(basestore.ErrResourceNotFound).Once()
 
 	f.pullreqStore.On("UpdateActivitySeq", mock.Anything).
 		Return(reviewSubmitPR(), nil).Once()
@@ -254,6 +262,9 @@ func TestReviewSubmit_ExistingReviewer_DecisionChange_UpdatesReviewer(t *testing
 		require.Equal(t, enum.PullReqReviewDecisionChangeReq, reviewer.ReviewDecision)
 	}).Return(nil).Once()
 
+	f.reviewerSuggestionStore.On("Delete", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(basestore.ErrResourceNotFound).Once()
+
 	f.pullreqStore.On("UpdateActivitySeq", mock.Anything).
 		Return(reviewSubmitPR(), nil).Once()
 	f.activityStore.On("CreateWithPayload", mock.Anything, reviewSubmitReviewerID, mock.Anything, mock.Anything).
@@ -300,6 +311,9 @@ func TestReviewSubmit_ExistingReviewer_SHAChange_UpdatesReviewer(t *testing.T) {
 		require.Equal(t, reviewSubmitResolvedSHA, reviewer.SHA)
 	}).Return(nil).Once()
 
+	f.reviewerSuggestionStore.On("Delete", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(basestore.ErrResourceNotFound).Once()
+
 	f.pullreqStore.On("UpdateActivitySeq", mock.Anything).
 		Return(reviewSubmitPR(), nil).Once()
 	f.activityStore.On("CreateWithPayload", mock.Anything, reviewSubmitReviewerID, mock.Anything, mock.Anything).
@@ -333,6 +347,8 @@ func TestReviewSubmit_ActivityWriteFailure_IsSwallowed(t *testing.T) {
 		}).
 		Return(nil).Once()
 	f.reviewerStore.On("Create", mock.Anything).Return(nil).Once()
+	f.reviewerSuggestionStore.On("Delete", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(basestore.ErrResourceNotFound).Once()
 	// Return (nil, err) — the store's real failure shape. If the controller
 	// re-uses the outer pr after this call, we'd panic on eventBase(pr, ...).
 	f.pullreqStore.On("UpdateActivitySeq", mock.Anything).
@@ -440,8 +456,9 @@ func TestReviewSubmit_ReviewStoreCreateError_RollsBack(t *testing.T) {
 		Return(nil, basestore.ErrResourceNotFound).Once()
 	f.reviewStore.On("Create", mock.Anything).
 		Return(errors.New("constraint violation")).Once()
-	// Deliberately no reviewerStore.Create expectation — asserting it isn't
-	// called (strict mocks fail on unexpected calls).
+	// Deliberately no reviewerStore.Create / reviewerSuggestionStore.Delete
+	// expectation — asserting they are never called (strict mocks fail on
+	// unexpected calls).
 
 	err := f.ctrl.ReviewSubmit(
 		context.Background(), testSession(), "1", reviewSubmitPRNum,
@@ -449,6 +466,69 @@ func TestReviewSubmit_ReviewStoreCreateError_RollsBack(t *testing.T) {
 	)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to create review")
+	require.True(t, f.tx.called)
+	f.assertExpectations(t)
+}
+
+// TestReviewSubmit_SuggestionDeleted_ReviewCompletes: the principal is in the
+// suggestion table when they submit a review — Delete returns nil and the
+// review still completes successfully.
+func TestReviewSubmit_SuggestionDeleted_ReviewCompletes(t *testing.T) {
+	t.Parallel()
+
+	f := newReviewSubmitFixture(t, reviewSubmitPR())
+
+	f.reviewerStore.On("Find", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(nil, basestore.ErrResourceNotFound).Once()
+	f.reviewStore.On("Create", mock.Anything).Run(func(args mock.Arguments) {
+		review, ok := args.Get(0).(*types.PullReqReview)
+		require.True(t, ok)
+		review.ID = 505
+	}).Return(nil).Once()
+	f.reviewerStore.On("Create", mock.Anything).Return(nil).Once()
+	f.reviewerSuggestionStore.On("Delete", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(nil).Once()
+
+	f.pullreqStore.On("UpdateActivitySeq", mock.Anything).
+		Return(reviewSubmitPR(), nil).Once()
+	f.activityStore.On("CreateWithPayload", mock.Anything, reviewSubmitReviewerID, mock.Anything, mock.Anything).
+		Return(&types.PullReqActivity{}, nil).Once()
+
+	err := f.ctrl.ReviewSubmit(
+		context.Background(), testSession(), "1", reviewSubmitPRNum,
+		reviewSubmitInput(enum.PullReqReviewDecisionApproved),
+	)
+	require.NoError(t, err)
+	require.True(t, f.tx.called)
+	f.assertExpectations(t)
+}
+
+// TestReviewSubmit_SuggestionDeleteError_RollsBack: a non-NotFound error from
+// Delete rolls back the entire transaction — no activity is written and the
+// caller receives an error.
+func TestReviewSubmit_SuggestionDeleteError_RollsBack(t *testing.T) {
+	t.Parallel()
+
+	f := newReviewSubmitFixture(t, reviewSubmitPR())
+
+	f.reviewerStore.On("Find", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(nil, basestore.ErrResourceNotFound).Once()
+	f.reviewStore.On("Create", mock.Anything).Run(func(args mock.Arguments) {
+		review, ok := args.Get(0).(*types.PullReqReview)
+		require.True(t, ok)
+		review.ID = 506
+	}).Return(nil).Once()
+	f.reviewerStore.On("Create", mock.Anything).Return(nil).Once()
+	f.reviewerSuggestionStore.On("Delete", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(errors.New("db gone")).Once()
+	// No UpdateActivitySeq / CreateWithPayload — transaction rolls back.
+
+	err := f.ctrl.ReviewSubmit(
+		context.Background(), testSession(), "1", reviewSubmitPRNum,
+		reviewSubmitInput(enum.PullReqReviewDecisionApproved),
+	)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "failed to delete reviewer suggestion")
 	require.True(t, f.tx.called)
 	f.assertExpectations(t)
 }

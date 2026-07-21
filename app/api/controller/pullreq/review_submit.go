@@ -152,6 +152,11 @@ func (c *Controller) ReviewSubmit(
 			}
 		}
 
+		deleteErr := c.reviewerSuggestionStore.Delete(ctx, pr.ID, session.Principal.ID)
+		if deleteErr != nil && !errors.Is(deleteErr, store.ErrResourceNotFound) {
+			return fmt.Errorf("failed to delete reviewer suggestion: %w", deleteErr)
+		}
+
 		return nil
 	})
 	if err != nil {
