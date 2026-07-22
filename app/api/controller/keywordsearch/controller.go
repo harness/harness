@@ -15,29 +15,51 @@
 package keywordsearch
 
 import (
+	"context"
+
 	"github.com/harness/gitness/app/api/controller/repo"
-	"github.com/harness/gitness/app/api/controller/space"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/keywordsearch"
+	"github.com/harness/gitness/types"
 )
 
 type Controller struct {
-	authorizer authz.Authorizer
-	repoCtrl   *repo.Controller
-	searcher   keywordsearch.Searcher
-	spaceCtrl  *space.Controller
+	authorizer       authz.Authorizer
+	searcher         keywordsearch.Searcher
+	repositoryFinder RepositoryFinder
+	repositoryLister RepositoryLister
+}
+
+// RepositoryFinder is the interface that the keyword search controller uses to fetch a single repository by ref.
+// The method should check if user has view permission to the repository.
+// Currently, this is normally wired to repository controller.
+type RepositoryFinder interface {
+	Find(ctx context.Context, session *auth.Session, repoRef string) (*repo.RepositoryOutput, error)
+}
+
+// RepositoryLister is the interface that the keyword search controller uses to fetch a list repositories by space ref.
+// The method should check if user has view permission to each of the repositories.
+// Currently, this is normally wired to spaces controller.
+type RepositoryLister interface {
+	ListRepositories(
+		ctx context.Context,
+		session *auth.Session,
+		spaceRef string,
+		filter *types.RepoFilter,
+	) ([]*repo.RepositoryOutput, int64, error)
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	searcher keywordsearch.Searcher,
-	repoCtrl *repo.Controller,
-	spaceCtrl *space.Controller,
+	repositoryFinder RepositoryFinder,
+	repositoryLister RepositoryLister,
 ) *Controller {
 	return &Controller{
-		authorizer: authorizer,
-		searcher:   searcher,
-		repoCtrl:   repoCtrl,
-		spaceCtrl:  spaceCtrl,
+		authorizer:       authorizer,
+		searcher:         searcher,
+		repositoryFinder: repositoryFinder,
+		repositoryLister: repositoryLister,
 	}
 }

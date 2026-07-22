@@ -96,7 +96,7 @@ func (c *Controller) getReposByPath(
 			continue
 		}
 
-		repo, err := c.repoCtrl.Find(ctx, session, repoPath)
+		repo, err := c.repositoryFinder.Find(ctx, session, repoPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find repository: %w", err)
 		}
@@ -142,7 +142,7 @@ func (c *Controller) getReposBySpacePath(
 		Sort:      enum.RepoAttrNone,
 		Recursive: recursive,
 	}
-	repos, _, err := c.spaceCtrl.ListRepositories(ctx, session, spacePath, filter)
+	repos, _, err := c.repositoryLister.ListRepositories(ctx, session, spacePath, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list space repositories: %w", err)
 	}
