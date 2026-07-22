@@ -104,7 +104,8 @@ func (c *Controller) LinkedCreate(
 
 	access, err := c.verifyConnectorAccess(ctx, connector)
 	if err != nil {
-		return nil, errors.InvalidArgument("Failed to use connector to access the remote repository.")
+		return nil, errors.InvalidArgumentf(
+			"Failed to use connector to access the remote repository: %s", err)
 	}
 
 	// Register the provider-side webhook before creating any gitness state.
