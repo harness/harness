@@ -324,7 +324,7 @@ func LoadRepositoriesFromProviderSpace(
 		optsv2 = scm.RepoListOptions{
 			ListOptions: opts,
 			RepoSearchTerm: scm.RepoSearchTerm{
-				User: spaceSlug,
+				User: spaceSlug + "+fork:true",
 			},
 		}
 	case ProviderTypeGitLab:
