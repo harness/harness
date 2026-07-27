@@ -13,8 +13,8 @@ import (
 	connector2 "github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
 	"github.com/harness/gitness/app/api/controller/githook"
-	gitspace2 "github.com/harness/gitness/app/api/controller/gitspace"
-	infraprovider3 "github.com/harness/gitness/app/api/controller/infraprovider"
+	"github.com/harness/gitness/app/api/controller/gitspace"
+	infraprovider2 "github.com/harness/gitness/app/api/controller/infraprovider"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -86,14 +86,14 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/app/services/exporter"
-	"github.com/harness/gitness/app/services/gitspace"
+	"github.com/harness/gitness/app/services/gitspace/gitspacewire"
 	"github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/gitspaceinfraevent"
 	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/importer"
-	infraprovider2 "github.com/harness/gitness/app/services/infraprovider"
+	"github.com/harness/gitness/app/services/infraprovider/infraproviderwire"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -132,6 +132,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/cli/operations/server"
+	"github.com/harness/gitness/cli/operations/server/gitspaceconfig"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
@@ -445,7 +446,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db, spaceIDCache)
 	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db, spaceIDCache)
 	infraProviderTemplateStore := database.ProvideInfraProviderTemplateStore(db)
-	dockerConfig, err := server.ProvideDockerConfig(config)
+	dockerConfig, err := gitspaceconfig.ProvideDockerConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -457,7 +458,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory, reporter6)
 	factory := infraprovider.ProvideFactory(dockerProvider)
 	cdeGatewayStore := database.ProvideCDEGatewayStore(db)
-	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, gitspaceConfigStore, infraProviderResourceStore, infraProviderConfigStore, infraProviderTemplateStore, factory, spaceFinder, cdeGatewayStore)
+	infraproviderService := infraproviderwire.ProvideInfraProvider(transactor, gitspaceConfigStore, infraProviderResourceStore, infraProviderConfigStore, infraProviderTemplateStore, factory, spaceFinder, cdeGatewayStore)
 	gitnessSCM := scm.ProvideGitnessSCM(repoStore, repoFinder, gitInterface, tokenStore, principalStore, provider)
 	genericSCM := scm.ProvideGenericSCM()
 	scmFactory := scm.ProvideFactory(gitnessSCM, genericSCM)
@@ -465,7 +466,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	platformConnector := platformconnector.ProvideGitnessPlatformConnector()
 	platformSecret := platformsecret.ProvideGitnessPlatformSecret()
 	infraProvisionedStore := database.ProvideInfraProvisionedStore(db)
-	infrastructureConfig := server.ProvideGitspaceInfraProvisionerConfig(config)
+	infrastructureConfig := gitspaceconfig.ProvideGitspaceInfraProvisionerConfig(config)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory, infraProviderTemplateStore, infraProvisionedStore, infrastructureConfig)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	runargResolver, err := runarg.ProvideResolver()
@@ -482,16 +483,16 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	embeddedDockerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, runargProvider, reporter7)
 	containerFactory := container.ProvideContainerOrchestratorFactory(embeddedDockerOrchestrator)
-	orchestratorConfig := server.ProvideGitspaceOrchestratorConfig(config)
-	vsCodeConfig := server.ProvideIDEVSCodeConfig(config)
+	orchestratorConfig := gitspaceconfig.ProvideGitspaceOrchestratorConfig(config)
+	vsCodeConfig := gitspaceconfig.ProvideIDEVSCodeConfig(config)
 	vsCode := ide.ProvideVSCodeService(vsCodeConfig)
-	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
+	vsCodeWebConfig := gitspaceconfig.ProvideIDEVSCodeWebConfig(config)
 	vsCodeWeb := ide.ProvideVSCodeWebService(vsCodeWebConfig)
-	jetBrainsIDEConfig := server.ProvideIDEJetBrainsConfig(config)
+	jetBrainsIDEConfig := gitspaceconfig.ProvideIDEJetBrainsConfig(config)
 	v := ide.ProvideJetBrainsIDEsService(jetBrainsIDEConfig)
-	cursorConfig := server.ProvideIDECursorConfig(config)
+	cursorConfig := gitspaceconfig.ProvideIDECursorConfig(config)
 	cursor := ide.ProvideCursorService(cursorConfig)
-	windsurfConfig := server.ProvideIDEWindsurfConfig(config)
+	windsurfConfig := gitspaceconfig.ProvideIDEWindsurfConfig(config)
 	windsurf := ide.ProvideWindsurfService(windsurfConfig)
 	ideFactory := ide.ProvideIDEFactory(vsCode, vsCodeWeb, v, cursor, windsurf)
 	passwordResolver := secret.ProvidePasswordResolver()
@@ -507,7 +508,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	tokenGenerator := tokengenerator.ProvideTokenGenerator()
-	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter5, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter8, ideFactory, spaceStore, tokenGenerator)
+	gitspaceService := gitspacewire.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter5, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter8, ideFactory, spaceStore, tokenGenerator)
 	usageMetricStore := database.ProvideUsageMetricStore(db)
 	resourceMover := space.ProvideNoopResourceMover()
 	spaceService, err := space.ProvideService(transactor, jobScheduler, executor, encrypter, repoStore, spaceStore, spacePathStore, ruleStore, resourceMover, spaceFinder, gitspaceService, infraproviderService, repoController)
@@ -594,9 +595,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore, config)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
-	infraproviderController := infraprovider3.ProvideController(authorizer, spaceFinder, infraproviderService)
+	infraproviderController := infraprovider2.ProvideController(authorizer, spaceFinder, infraproviderService)
 	limiterGitspace := limiter.ProvideGitspaceLimiter()
-	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, spaceStore, spaceFinder, gitspaceEventStore, statefulLogger, scmSCM, gitspaceService, limiterGitspace, repoFinder, gitspacesettingsService)
+	gitspaceController := gitspace.ProvideController(transactor, authorizer, infraproviderService, spaceStore, spaceFinder, gitspaceEventStore, statefulLogger, scmSCM, gitspaceService, limiterGitspace, repoFinder, gitspacesettingsService)
 	rule := migrate.ProvideRuleImporter(ruleStore, transactor, principalStore)
 	migrateWebhook := migrate.ProvideWebhookImporter(webhookConfig, transactor, webhookStore)
 	migrateLabel := migrate.ProvideLabelImporter(transactor, labelStore, labelValueStore, spaceStore)

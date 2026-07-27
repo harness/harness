@@ -12,22 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspaceservice
+package aitaskevent
 
 import (
-	"github.com/harness/gitness/app/services/aitaskevent"
-	"github.com/harness/gitness/app/services/gitspace/gitspacewire"
-	"github.com/harness/gitness/app/services/gitspaceinfraevent"
-	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
-	"github.com/harness/gitness/app/services/infraprovider/infraproviderwire"
+	"context"
 
-	"github.com/google/wire"
+	"github.com/harness/gitness/types"
 )
 
-var WireSet = wire.NewSet(
-	gitspacewire.WireSet,
-	gitspaceinfraevent.WireSet,
-	infraproviderwire.WireSet,
-	gitspaceoperationsevent.WireSet,
-	aitaskevent.WireSet,
-)
+// Orchestrator is the subset of the gitspace orchestrator used by this service.
+// Depending on this narrow interface (instead of the concrete, docker/oras-heavy
+// orchestrator) keeps that package out of this service's import graph. The
+// concrete orchestrator.Orchestrator satisfies it structurally.
+type Orchestrator interface {
+	TriggerAITask(ctx context.Context, aiTask types.AITask, gitspaceConfig types.GitspaceConfig) error
+}

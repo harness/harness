@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+// Package gitspacewire holds the wire providers that construct a
+// *gitspace.Service from the concrete (docker/oras-heavy) orchestrator and ide
+// implementations. It is kept separate from the gitspace package so that
+// consumers of *gitspace.Service (e.g. code-api, which wires the service to
+// nil) do not transitively import the heavy orchestrator/ide packages.
+package gitspacewire
 
 import (
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
@@ -20,12 +25,14 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/google/wire"
 )
@@ -49,9 +56,19 @@ func ProvideGitspace(
 	ideFactory ide.Factory,
 	spaceStore store.SpaceStore,
 	tokenGenerator tokengenerator.TokenGenerator,
-) *Service {
-	return NewService(tx, gitspaceStore, gitspaceInstanceStore, eventReporter,
+) *gitspace.Service {
+	return gitspace.NewService(tx, gitspaceStore, gitspaceInstanceStore, eventReporter,
 		gitspaceEventStore, spaceFinder, infraProviderSvc, orchestrator, scm, config,
-		gitspaceDeleteEventReporter, ideFactory, spaceStore, tokenGenerator,
+		gitspaceDeleteEventReporter, ideFactoryAdapter{ideFactory}, spaceStore, tokenGenerator,
 	)
+}
+
+// ideFactoryAdapter adapts the concrete ide.Factory (whose GetIDE returns the
+// heavy ide.IDE) to the narrow gitspace.IDEFactory interface used by the service.
+type ideFactoryAdapter struct {
+	factory ide.Factory
+}
+
+func (a ideFactoryAdapter) GetIDE(ideType enum.IDEType) (gitspace.PluginURLGenerator, error) {
+	return a.factory.GetIDE(ideType)
 }

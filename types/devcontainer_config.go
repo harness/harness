@@ -20,12 +20,77 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/harness/gitness/types/enum"
 
-	"oras.land/oras-go/v2/registry"
+	"github.com/opencontainers/go-digest"
 )
+
+// ociReference parsing below is a local, dependency-light equivalent of
+// oras.land/oras-go/v2/registry.ParseReference. It is inlined here so that
+// gitness/types (imported by virtually every binary) does not pull the whole
+// oras-go module into the build graph just to classify a feature source string.
+// The accept/reject behaviour matches oras ParseReference for this use case.
+var (
+	// ociRepositoryRegexp is adapted from the distribution implementation,
+	// matching oras-go's registry.repositoryRegexp.
+	ociRepositoryRegexp = regexp.MustCompile(
+		`^[a-z0-9]+(?:(?:[._]|__|[-]*)[a-z0-9]+)*(?:/[a-z0-9]+(?:(?:[._]|__|[-]*)[a-z0-9]+)*)*$`)
+	// ociTagRegexp matches oras-go's registry.tagRegexp.
+	ociTagRegexp = regexp.MustCompile(`^[\w][\w.-]{0,127}$`)
+)
+
+// parseOCIReference reports whether artifact is a valid OCI reference of the
+// form <registry>/<repository>[:<tag>|@<digest>]. It mirrors
+// oras registry.ParseReference (returning an error on invalid input).
+func parseOCIReference(artifact string) error {
+	parts := strings.SplitN(artifact, "/", 2)
+	if len(parts) == 1 {
+		return fmt.Errorf("invalid reference: missing registry or repository")
+	}
+	reg, path := parts[0], parts[1]
+
+	var isTag bool
+	var repository, reference string
+	if index := strings.Index(path, "@"); index != -1 {
+		repository = path[:index]
+		reference = path[index+1:]
+		if i := strings.Index(repository, ":"); i != -1 {
+			repository = repository[:i]
+		}
+	} else if index = strings.Index(path, ":"); index != -1 {
+		isTag = true
+		repository = path[:index]
+		reference = path[index+1:]
+	} else {
+		repository = path
+	}
+
+	// validate registry (matches oras ValidateRegistry).
+	if uri, err := url.ParseRequestURI("dummy://" + reg); err != nil || uri.Host == "" || uri.Host != reg {
+		return fmt.Errorf("invalid registry %q", reg)
+	}
+	// validate repository.
+	if !ociRepositoryRegexp.MatchString(repository) {
+		return fmt.Errorf("invalid repository %q", repository)
+	}
+	// validate reference (tag or digest), if present.
+	if len(reference) == 0 {
+		return nil
+	}
+	if isTag {
+		if !ociTagRegexp.MatchString(reference) {
+			return fmt.Errorf("invalid tag %q", reference)
+		}
+		return nil
+	}
+	if _, err := digest.Parse(reference); err != nil {
+		return fmt.Errorf("invalid digest %q: %w", reference, err)
+	}
+	return nil
+}
 
 const FeatureDefaultTag = "latest"
 
@@ -218,7 +283,7 @@ func (f *Features) UnmarshalJSON(data []byte) error {
 }
 
 func validateFeatureSource(source string) (string, enum.FeatureSourceType, error) {
-	if _, err := registry.ParseReference(source); err == nil {
+	if err := parseOCIReference(source); err == nil {
 		indexOfSeparator := strings.Index(source, ":")
 		if indexOfSeparator == -1 {
 			source += ":" + FeatureDefaultTag

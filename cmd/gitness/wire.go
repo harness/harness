@@ -88,6 +88,7 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	aitaskeventservice "github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/automerge"
 	"github.com/harness/gitness/app/services/branch"
@@ -98,6 +99,8 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	gitspacedeleteeventservice "github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
+	gitspaceinfraeventservice "github.com/harness/gitness/app/services/gitspaceinfraevent"
+	gitspaceoperationseventservice "github.com/harness/gitness/app/services/gitspaceoperationsevent"
 	"github.com/harness/gitness/app/services/gitspaceservice"
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/importer"
@@ -139,6 +142,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/blob"
 	cliserver "github.com/harness/gitness/cli/operations/server"
+	"github.com/harness/gitness/cli/operations/server/gitspaceconfig"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
@@ -308,24 +312,32 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		platformsecret.WireSet,
 		gitspacesecret.WireSet,
 		orchestrator.WireSet,
+		// Bind the concrete orchestrator to the narrow, per-consumer Orchestrator
+		// interfaces declared by the gitspace event services (in their deps.go).
+		// The bind lives here, alongside orchestrator.WireSet, so the concrete
+		// (docker/oras-heavy) orchestrator stays out of the event services' own
+		// import graphs.
+		wire.Bind(new(gitspaceinfraeventservice.Orchestrator), new(orchestrator.Orchestrator)),
+		wire.Bind(new(gitspaceoperationseventservice.Orchestrator), new(orchestrator.Orchestrator)),
+		wire.Bind(new(aitaskeventservice.Orchestrator), new(orchestrator.Orchestrator)),
 		containerorchestrator.WireSet,
-		cliserver.ProvideIDEVSCodeWebConfig,
-		cliserver.ProvideDockerConfig,
+		gitspaceconfig.ProvideIDEVSCodeWebConfig,
+		gitspaceconfig.ProvideDockerConfig,
 		cliserver.ProvideGitspaceEventConfig,
 		cliserver.ProvideGitspaceDeleteEventConfig,
 		logutil.WireSet,
-		cliserver.ProvideGitspaceOrchestratorConfig,
+		gitspaceconfig.ProvideGitspaceOrchestratorConfig,
 		ide.WireSet,
 		gitspaceinfraevents.WireSet,
 		aitaskevent.WireSet,
 		gitspaceservice.WireSet,
 		gitspacesettings.WireSet,
 		gitspaceoperationsevents.WireSet,
-		cliserver.ProvideGitspaceInfraProvisionerConfig,
-		cliserver.ProvideIDEVSCodeConfig,
-		cliserver.ProvideIDECursorConfig,
-		cliserver.ProvideIDEWindsurfConfig,
-		cliserver.ProvideIDEJetBrainsConfig,
+		gitspaceconfig.ProvideGitspaceInfraProvisionerConfig,
+		gitspaceconfig.ProvideIDEVSCodeConfig,
+		gitspaceconfig.ProvideIDECursorConfig,
+		gitspaceconfig.ProvideIDEWindsurfConfig,
+		gitspaceconfig.ProvideIDEJetBrainsConfig,
 		instrument.WireSet,
 		docker.ProvideReporter,
 		secretservice.WireSet,

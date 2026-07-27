@@ -20,10 +20,7 @@ import (
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspacedeleteevents "github.com/harness/gitness/app/events/gitspacedelete"
-	"github.com/harness/gitness/app/gitspace/orchestrator"
-	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
-	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/store"
@@ -40,12 +37,12 @@ func NewService(
 	eventReporter *gitspaceevents.Reporter,
 	gitspaceEventStore store.GitspaceEventStore,
 	spaceFinder refcache.SpaceFinder,
-	infraProviderSvc *infraprovider.Service,
-	orchestrator orchestrator.Orchestrator,
+	infraProviderSvc InfraProviderFinder,
+	orchestrator Orchestrator,
 	scm *scm.SCM,
 	config *types.Config,
 	gitspaceDeleteEventReporter *gitspacedeleteevents.Reporter,
-	ideFactory ide.Factory,
+	ideFactory IDEFactory,
 	spaceStore store.SpaceStore,
 	tokenGenerator tokengenerator.TokenGenerator,
 ) *Service {
@@ -75,11 +72,11 @@ type Service struct {
 	gitspaceEventStore          store.GitspaceEventStore
 	spaceFinder                 refcache.SpaceFinder
 	tx                          dbtx.Transactor
-	infraProviderSvc            *infraprovider.Service
-	orchestrator                orchestrator.Orchestrator
+	infraProviderSvc            InfraProviderFinder
+	orchestrator                Orchestrator
 	scm                         *scm.SCM
 	config                      *types.Config
-	ideFactory                  ide.Factory
+	ideFactory                  IDEFactory
 	spaceStore                  store.SpaceStore
 	tokenGenerator              tokengenerator.TokenGenerator
 }

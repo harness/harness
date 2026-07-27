@@ -17,7 +17,6 @@ package infraprovider
 import (
 	"context"
 
-	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
@@ -32,7 +31,7 @@ func (c *Service) CreateTemplate(
 
 func (c *Service) validateTemplates(
 	ctx context.Context,
-	infraProvider infraprovider.InfraProvider,
+	infraProvider Provider,
 	res types.InfraProviderResource,
 ) error {
 	templateParams := infraProvider.TemplateParams()

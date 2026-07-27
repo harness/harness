@@ -20,7 +20,6 @@ import (
 	"time"
 
 	aitaskevents "github.com/harness/gitness/app/events/aitask"
-	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/store"
@@ -32,7 +31,7 @@ const groupAITaskEvents = "gitness:aitask"
 
 type Service struct {
 	config       *gitspaceevent.Config
-	orchestrator orchestrator.Orchestrator
+	orchestrator Orchestrator
 	gitspaceSvc  *gitspace.Service
 	aiTaskStore  store.AITaskStore
 }
@@ -41,7 +40,7 @@ func NewService(
 	ctx context.Context,
 	config *gitspaceevent.Config,
 	aiTaskEventReaderFactory *events.ReaderFactory[*aitaskevents.Reader],
-	orchestrator orchestrator.Orchestrator,
+	orchestrator Orchestrator,
 	gitspaceSvc *gitspace.Service,
 	aiTaskStore store.AITaskStore,
 ) (*Service, error) {

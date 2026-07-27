@@ -19,7 +19,6 @@ import (
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspaceoperationsevents "github.com/harness/gitness/app/events/gitspaceoperations"
-	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/events"
@@ -36,7 +35,7 @@ func ProvideService(
 	ctx context.Context,
 	config *gitspaceevent.Config,
 	gitspaceInfraEventReaderFactory *events.ReaderFactory[*gitspaceoperationsevents.Reader],
-	orchestrator orchestrator.Orchestrator,
+	orchestrator Orchestrator,
 	gitspaceSvc *gitspace.Service,
 	eventReporter *gitspaceevents.Reporter,
 ) (*Service, error) {

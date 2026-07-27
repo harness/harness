@@ -21,7 +21,6 @@ import (
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
-	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/events"
@@ -32,7 +31,7 @@ const groupGitspaceInfraEvents = "gitness:gitspaceinfra"
 
 type Service struct {
 	config        *gitspaceevent.Config
-	orchestrator  orchestrator.Orchestrator
+	orchestrator  Orchestrator
 	gitspaceSvc   *gitspace.Service
 	eventReporter *gitspaceevents.Reporter
 }
@@ -41,7 +40,7 @@ func NewService(
 	ctx context.Context,
 	config *gitspaceevent.Config,
 	gitspaceInfraEventReaderFactory *events.ReaderFactory[*gitspaceinfraevents.Reader],
-	orchestrator orchestrator.Orchestrator,
+	orchestrator Orchestrator,
 	gitspaceSvc *gitspace.Service,
 	eventReporter *gitspaceevents.Reporter,
 ) (*Service, error) {
