@@ -24,26 +24,12 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/app/services/refcache"
 	storecache "github.com/harness/gitness/app/store/cache"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
-
-// alwaysAllowAuthorizer is a test authorizer that grants every permission check.
-type alwaysAllowAuthorizer struct{}
-
-func (alwaysAllowAuthorizer) Check(
-	_ context.Context, _ *auth.Session, _ *types.Scope, _ *types.Resource, _ enum.Permission,
-) (bool, error) {
-	return true, nil
-}
-
-func (alwaysAllowAuthorizer) CheckAll(
-	_ context.Context, _ *auth.Session, _ ...types.PermissionCheck,
-) (bool, error) {
-	return true, nil
-}
 
 // staticRepoIDCache is an in-memory cache.Cache[int64, *types.RepositoryCore] for tests.
 type staticRepoIDCache struct {
@@ -95,7 +81,7 @@ func newTestController(repos map[int64]*types.RepositoryCore) *Controller {
 	)
 	return &Controller{
 		repoFinder:   repoFinder,
-		authorizer:   alwaysAllowAuthorizer{},
+		authorizer:   authztest.AllowAuthorizer{},
 		publicAccess: errPublicAccess{},
 	}
 }

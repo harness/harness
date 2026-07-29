@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/refcache"
 	storecache "github.com/harness/gitness/app/store/cache"
@@ -32,28 +32,6 @@ import (
 
 	"github.com/stretchr/testify/mock"
 )
-
-type allowAuthorizer struct{}
-
-func (a *allowAuthorizer) Check(
-	_ context.Context,
-	_ *auth.Session,
-	_ *types.Scope,
-	_ *types.Resource,
-	_ enum.Permission,
-) (bool, error) {
-	return true, nil
-}
-
-func (a *allowAuthorizer) CheckAll(
-	_ context.Context,
-	_ *auth.Session,
-	_ ...types.PermissionCheck,
-) (bool, error) {
-	return true, nil
-}
-
-var _ authz.Authorizer = (*allowAuthorizer)(nil)
 
 type repoIDCacheStub struct {
 	repo *types.RepositoryCore
@@ -145,7 +123,7 @@ func TestReviewerSuggestDelete_NotFound(t *testing.T) {
 	suggestionStore.On("Delete", int64(55), int64(123)).Return(basestore.ErrResourceNotFound).Once()
 
 	ctrl := &Controller{
-		authorizer:              &allowAuthorizer{},
+		authorizer:              authztest.AllowAuthorizer{},
 		repoFinder:              testRepoFinder(repo),
 		pullreqStore:            pullreqStore,
 		reviewerSuggestionStore: suggestionStore,
@@ -178,7 +156,7 @@ func TestReviewerSuggestBatch_AuthorCannotBeSuggested(t *testing.T) {
 	reviewerStore.On("List", int64(55)).Return([]*types.PullReqReviewer{}, nil).Once()
 
 	ctrl := &Controller{
-		authorizer:              &allowAuthorizer{},
+		authorizer:              authztest.AllowAuthorizer{},
 		repoFinder:              testRepoFinder(repo),
 		pullreqStore:            pullreqStore,
 		reviewerStore:           reviewerStore,
@@ -219,7 +197,7 @@ func TestReviewerSuggestBatch_AllAlreadyReviewersStillCreateMany(t *testing.T) {
 	suggestionStore.On("CreateMany", mock.AnythingOfType("[]*types.PullReqReviewerSuggestion")).Return(nil).Once()
 
 	ctrl := &Controller{
-		authorizer:              &allowAuthorizer{},
+		authorizer:              authztest.AllowAuthorizer{},
 		repoFinder:              testRepoFinder(repo),
 		pullreqStore:            pullreqStore,
 		reviewerStore:           reviewerStore,
@@ -256,7 +234,7 @@ func TestReviewerSuggestApply_NotFoundSuggestion(t *testing.T) {
 		Once()
 
 	ctrl := &Controller{
-		authorizer:              &allowAuthorizer{},
+		authorizer:              authztest.AllowAuthorizer{},
 		repoFinder:              testRepoFinder(repo),
 		pullreqStore:            pullreqStore,
 		reviewerSuggestionStore: suggestionStore,
@@ -288,7 +266,7 @@ func TestReviewerSuggestApply_FindSuggestionError(t *testing.T) {
 		Once()
 
 	ctrl := &Controller{
-		authorizer:              &allowAuthorizer{},
+		authorizer:              authztest.AllowAuthorizer{},
 		repoFinder:              testRepoFinder(repo),
 		pullreqStore:            pullreqStore,
 		reviewerSuggestionStore: suggestionStore,

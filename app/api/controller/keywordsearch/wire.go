@@ -15,10 +15,11 @@
 package keywordsearch
 
 import (
-	"github.com/harness/gitness/app/api/controller/repo"
-	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/keywordsearch"
+	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
 )
@@ -30,9 +31,17 @@ var WireSet = wire.NewSet(
 
 func ProvideController(
 	authorizer authz.Authorizer,
+	publicAccess publicaccess.Service,
 	searcher keywordsearch.Searcher,
-	repoCtrl *repo.Controller,
-	spaceCtrl *space.Controller,
+	repoStore store.RepoStore,
+	spaceFinder refcache.SpaceFinder,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
-	return NewController(authorizer, searcher, repoCtrl, spaceCtrl)
+	return NewController(
+		searcher,
+		repoStore,
+		spaceFinder,
+		repoFinder,
+		membershipViewAccessFilter{authorizer: authorizer, publicAccess: publicAccess},
+	)
 }

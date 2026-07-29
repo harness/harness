@@ -18,6 +18,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/refcache"
 	mockstore "github.com/harness/gitness/mocks/store"
@@ -92,7 +93,7 @@ func TestAssignLabel_DeleteSuggestionNotFound_InsideTransaction(t *testing.T) {
 
 	ctrl := &Controller{
 		tx:                   tx,
-		authorizer:           &allowAuthorizer{},
+		authorizer:           authztest.AllowAuthorizer{},
 		repoFinder:           testRepoFinder(repo),
 		pullreqStore:         pullreqStore,
 		labelSvc:             labelSvc,

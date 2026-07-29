@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	mockstore "github.com/harness/gitness/mocks/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -50,7 +51,7 @@ func TestPullReqViewGet_SuccessFiltersEmptyGroups(t *testing.T) {
 	}, nil).Once()
 
 	ctrl := &Controller{
-		authorizer:     &allowAuthorizer{},
+		authorizer:     authztest.AllowAuthorizer{},
 		repoFinder:     testRepoFinder(repo),
 		pullreqStore:   pullreqStore,
 		fileGroupStore: fileGroupStore,
@@ -78,7 +79,7 @@ func TestPullReqViewGet_FindByNumberError(t *testing.T) {
 	pullreqStore.On("FindByNumber", int64(1), int64(7)).Return((*types.PullReq)(nil), errors.New("boom")).Once()
 
 	ctrl := &Controller{
-		authorizer:     &allowAuthorizer{},
+		authorizer:     authztest.AllowAuthorizer{},
 		repoFinder:     testRepoFinder(repo),
 		pullreqStore:   pullreqStore,
 		fileGroupStore: fileGroupStore,
@@ -103,7 +104,7 @@ func TestPullReqViewGet_ListError(t *testing.T) {
 	fileGroupStore.On("List", int64(55)).Return(([]*types.PullReqFileGroupWithFiles)(nil), errors.New("boom")).Once()
 
 	ctrl := &Controller{
-		authorizer:     &allowAuthorizer{},
+		authorizer:     authztest.AllowAuthorizer{},
 		repoFinder:     testRepoFinder(repo),
 		pullreqStore:   pullreqStore,
 		fileGroupStore: fileGroupStore,
@@ -163,7 +164,7 @@ func TestPullReqViewGet_ReturnsTags(t *testing.T) {
 	}, nil).Once()
 
 	ctrl := &Controller{
-		authorizer:     &allowAuthorizer{},
+		authorizer:     authztest.AllowAuthorizer{},
 		repoFinder:     testRepoFinder(repo),
 		pullreqStore:   pullreqStore,
 		fileGroupStore: fileGroupStore,

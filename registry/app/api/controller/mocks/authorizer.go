@@ -63,3 +63,31 @@ func (m *Authorizer) CheckAll(ctx context.Context, session *auth.Session, permis
 
 	return r0, r1
 }
+
+// CheckMany provides a mock function with given fields: ctx, session, permissionChecks
+func (m *Authorizer) CheckMany(ctx context.Context, session *auth.Session, permissionChecks ...types.PermissionCheck) ([]bool, error) {
+	var args []interface{}
+	args = append(args, ctx, session)
+	for _, check := range permissionChecks {
+		args = append(args, check)
+	}
+	ret := m.Called(args...)
+
+	var r0 []bool
+	if rf, ok := ret.Get(0).(func(context.Context, *auth.Session, ...types.PermissionCheck) []bool); ok {
+		r0 = rf(ctx, session, permissionChecks...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]bool)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *auth.Session, ...types.PermissionCheck) error); ok {
+		r1 = rf(ctx, session, permissionChecks...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

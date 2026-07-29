@@ -142,6 +142,16 @@ func (m *RepoStore) List(_ context.Context, parentID int64, opts *types.RepoFilt
 	return v, args.Error(1)
 }
 
+func (m *RepoStore) MapOfAllRepos(
+	_ context.Context,
+	spaceID int64,
+	recursive bool,
+) (map[int64]string, error) {
+	args := m.Called(spaceID, recursive)
+	v, _ := args.Get(0).(map[int64]string)
+	return v, args.Error(1)
+}
+
 func (m *RepoStore) ListAll(_ context.Context, filter *types.RepoFilter) ([]*types.Repository, error) {
 	args := m.Called(filter)
 	v, _ := args.Get(0).([]*types.Repository)

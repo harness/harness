@@ -20,8 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	appstore "github.com/harness/gitness/app/store"
 	mockstore "github.com/harness/gitness/mocks/store"
 	"github.com/harness/gitness/store"
@@ -56,28 +55,6 @@ func (t *testPrincipalStore) Find(ctx context.Context, id int64) (*types.Princip
 	}
 	return nil, errors.New("not implemented")
 }
-
-type denyAuthorizer struct{}
-
-func (d *denyAuthorizer) Check(
-	_ context.Context,
-	_ *auth.Session,
-	_ *types.Scope,
-	_ *types.Resource,
-	_ enum.Permission,
-) (bool, error) {
-	return false, nil
-}
-
-func (d *denyAuthorizer) CheckAll(
-	_ context.Context,
-	_ *auth.Session,
-	_ ...types.PermissionCheck,
-) (bool, error) {
-	return false, nil
-}
-
-var _ authz.Authorizer = (*denyAuthorizer)(nil)
 
 func TestAddReviewer_Validation(t *testing.T) {
 	t.Parallel()
@@ -336,7 +313,7 @@ func TestAddReviewer_ReviewerWithoutRepoPermission(t *testing.T) {
 
 	svc := &Service{
 		principalStore: principalStore,
-		authorizer:     &denyAuthorizer{},
+		authorizer:     authztest.DenyAuthorizer{},
 	}
 
 	ctx := context.Background()

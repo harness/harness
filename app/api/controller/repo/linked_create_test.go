@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/refcache"
 	storecache "github.com/harness/gitness/app/store/cache"
@@ -238,7 +239,7 @@ func newLinkedCreateTestController(
 	)
 	return &Controller{
 		spaceFinder:      spaceFinder,
-		authorizer:       alwaysAllowAuthorizer{},
+		authorizer:       authztest.AllowAuthorizer{},
 		publicAccess:     errPublicAccess{},
 		identifierCheck:  func(_ string, _ *auth.Session) error { return nil },
 		connectorService: connSvc,

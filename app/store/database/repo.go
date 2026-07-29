@@ -706,76 +706,64 @@ GROUP BY root_space_id, s.space_uid
 // With "DeletedBeforeOrAt" filter, lists deleted repos by opts.DeletedBeforeOrAt.
 func (s *RepoStore) List(
 	ctx context.Context,
-	parentID int64,
+	spaceID int64,
 	filter *types.RepoFilter,
 ) ([]*types.Repository, error) {
-	if filter.Recursive {
-		return s.listRecursive(ctx, parentID, filter)
-	}
-	return s.list(ctx, parentID, filter)
-}
-
-func (s *RepoStore) list(
-	ctx context.Context,
-	parentID int64,
-	filter *types.RepoFilter,
-) ([]*types.Repository, error) {
-	stmt := database.Builder.
-		Select(repoColumnsForJoin).
-		From("repositories").
-		Where("repo_parent_id = ?", fmt.Sprint(parentID))
-
-	stmt = applyQueryFilter(stmt, filter, s.db.DriverName())
-	stmt = applySortFilter(stmt, filter)
-
-	sql, args, err := stmt.ToSql()
+	sql, args, err := s.getListSQL(ctx, spaceID, repoColumnsForJoin, filter)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
+		return nil, fmt.Errorf("failed to prepare query to list repos: %w", err)
 	}
 
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	dst := []*repository{}
-	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	var dst []*repository
+	if err := dbtx.GetAccessor(ctx, s.db).SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed executing custom list query")
 	}
 
 	return s.mapToRepos(ctx, dst)
 }
 
-func (s *RepoStore) listRecursive(
+func (s *RepoStore) getListSQL(
 	ctx context.Context,
-	parentID int64,
+	spaceID int64,
+	repoColumns string,
 	filter *types.RepoFilter,
-) ([]*types.Repository, error) {
+) (string, []any, error) {
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	spaceIDs, err := getSpaceDescendantsIDs(ctx, db, parentID)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to get space descendants ids for %d: %w",
-			parentID, err,
-		)
+	var spaceIDs []int64
+	var err error
+
+	if filter.Recursive {
+		spaceIDs, err = getSpaceDescendantsIDs(ctx, db, spaceID)
+		if err != nil {
+			return "", nil, fmt.Errorf(
+				"failed to get space descendants ids for %d: %w",
+				spaceID, err,
+			)
+		}
+	} else {
+		spaceIDs = []int64{spaceID}
 	}
 
 	stmt := database.Builder.
-		Select(repoColumnsForJoin).
-		From("repositories").
-		Where(squirrel.Eq{"repo_parent_id": spaceIDs})
+		Select(repoColumns).
+		From("repositories")
+
+	if len(spaceIDs) == 1 {
+		stmt = stmt.Where("repo_parent_id = ?", spaceIDs[0])
+	} else {
+		stmt = stmt.Where(squirrel.Eq{"repo_parent_id": spaceIDs})
+	}
 
 	stmt = applyQueryFilter(stmt, filter, s.db.DriverName())
 	stmt = applySortFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
-	}
-	repos := []*repository{}
-	if err := db.SelectContext(ctx, &repos, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to count repositories")
+		return "", nil, fmt.Errorf("failed to convert query to sql: %w", err)
 	}
 
-	return s.mapToRepos(ctx, repos)
+	return sql, args, nil
 }
 
 type repoSize struct {
@@ -831,12 +819,121 @@ func (s *RepoStore) ListAll(
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []*repository{}
+	var dst []*repository
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "failed executing custom list query")
 	}
 
 	return s.mapToRepos(ctx, dst)
+}
+
+// MapOfAllRepos returns a map of all repository paths per repository ID in the given space.
+func (s *RepoStore) MapOfAllRepos(
+	ctx context.Context,
+	spaceID int64,
+	recursive bool,
+) (map[int64]string, error) {
+	//nolint:lll
+	sql := `
+		WITH RECURSIVE ascendants(ascendant_space_path_id, ascendant_parent_path_id, ascendant_uid, ascendant_rank) AS (
+			SELECT space_path_id, space_path_parent_id, space_path_uid, 0
+			FROM space_paths
+			WHERE space_path_space_id = $1 AND space_path_is_primary = TRUE
+
+			UNION
+
+			SELECT space_path_id, space_path_parent_id, space_path_uid, ascendant_rank + 1
+			FROM space_paths
+			INNER JOIN ascendants ON ascendant_parent_path_id = space_path_space_id
+			WHERE space_path_is_primary = TRUE
+		)
+		SELECT ascendant_uid
+		FROM ascendants
+		ORDER BY ascendant_rank DESC`
+
+	resultAscendants, err := dbtx.GetAccessor(ctx, s.db).QueryContext(ctx, sql, spaceID)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to query space path ascendants")
+	}
+
+	defer func() {
+		_ = resultAscendants.Close()
+	}()
+
+	var spacePath string
+
+	for resultAscendants.Next() {
+		var spaceIdentifier string
+
+		if err := resultAscendants.Scan(&spaceIdentifier); err != nil {
+			return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan space ascendants")
+		}
+
+		spacePath = paths.Concatenate(spacePath, spaceIdentifier)
+	}
+	if err := resultAscendants.Err(); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed go over query space ascendant results")
+	}
+
+	sql = `
+		SELECT repo_id, '' as "relative_path", repo_uid
+		FROM repositories
+		WHERE repo_parent_id = $1 AND repo_deleted IS NULL`
+
+	if recursive {
+		//nolint:lll
+		sql = `
+		WITH RECURSIVE descendants(descendant_space_path_id, descendant_space_id, descendant_parent_path_id, descendant_path) AS (
+			SELECT space_path_id, space_path_space_id, space_path_parent_id, ''
+			FROM space_paths
+			WHERE space_path_space_id = $1 AND space_path_is_primary = TRUE
+
+			UNION
+
+			SELECT space_path_id, space_path_space_id, space_path_parent_id, concat(descendant_path, '` + types.PathSeparatorAsString + `', space_path_uid)
+			FROM space_paths
+			INNER JOIN descendants ON space_path_parent_id = descendant_space_id
+			WHERE space_path_is_primary = TRUE
+		)
+		SELECT repo_id, descendant_path as "relative_path", repo_uid
+		FROM descendants
+		INNER JOIN repositories ON descendant_space_id = repo_parent_id
+		WHERE repo_deleted IS NULL`
+	}
+
+	result, err := dbtx.GetAccessor(ctx, s.db).QueryContext(ctx, sql, spaceID)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to query repositories for path")
+	}
+
+	defer func() {
+		_ = result.Close()
+	}()
+
+	mapRepos := make(map[int64]string)
+
+	for result.Next() {
+		var repoID int64
+		var relativePath string
+		var repoIdentifier string
+
+		if err := result.Scan(&repoID, &relativePath, &repoIdentifier); err != nil {
+			return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan")
+		}
+
+		repoPath := paths.Concatenate(
+			spacePath,
+			strings.Trim(relativePath, types.PathSeparatorAsString),
+			repoIdentifier,
+		)
+
+		mapRepos[repoID] = repoPath
+	}
+	if err := result.Err(); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed go over query results")
+	}
+
+	return mapRepos, nil
 }
 
 func (s *RepoStore) UpdateNumForks(ctx context.Context, repoID int64, delta int64) error {

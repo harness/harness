@@ -21,25 +21,12 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/app/services/refcache"
 	storecache "github.com/harness/gitness/app/store/cache"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
-
-type createTestAuthorizer struct{}
-
-func (createTestAuthorizer) Check(
-	_ context.Context, _ *auth.Session, _ *types.Scope, _ *types.Resource, _ enum.Permission,
-) (bool, error) {
-	return true, nil
-}
-
-func (createTestAuthorizer) CheckAll(
-	_ context.Context, _ *auth.Session, _ ...types.PermissionCheck,
-) (bool, error) {
-	return true, nil
-}
 
 type createTestRepoCache struct {
 	repos map[int64]*types.RepositoryCore
@@ -64,7 +51,7 @@ func newCreateLinkedTestController(repos map[int64]*types.RepositoryCore) *Contr
 	)
 	return &Controller{
 		repoFinder: repoFinder,
-		authorizer: createTestAuthorizer{},
+		authorizer: authztest.AllowAuthorizer{},
 	}
 }
 

@@ -310,6 +310,9 @@ type (
 		// List returns a list of repos in a space. With "DeletedBeforeOrAt" filter, lists deleted repos.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
+		// MapOfAllRepos returns a map of all repository paths per repository ID in the given space.
+		MapOfAllRepos(ctx context.Context, spaceID int64, recursive bool) (map[int64]string, error)
+
 		// ListAll returns a list of all repos across spaces with the provided filters.
 		ListAll(ctx context.Context, filter *types.RepoFilter) ([]*types.Repository, error)
 

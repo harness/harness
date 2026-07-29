@@ -162,7 +162,8 @@ func (a *MembershipAuthorizer) Check(
 }
 
 func (a *MembershipAuthorizer) CheckAll(
-	ctx context.Context, session *auth.Session,
+	ctx context.Context,
+	session *auth.Session,
 	permissionChecks ...types.PermissionCheck,
 ) (bool, error) {
 	for i := range permissionChecks {
@@ -174,6 +175,26 @@ func (a *MembershipAuthorizer) CheckAll(
 	}
 
 	return true, nil
+}
+
+func (a *MembershipAuthorizer) CheckMany(
+	ctx context.Context,
+	session *auth.Session,
+	permissionChecks ...types.PermissionCheck,
+) ([]bool, error) {
+	result := make([]bool, len(permissionChecks))
+
+	for i := range permissionChecks {
+		p := permissionChecks[i]
+		check, err := a.Check(ctx, session, &p.Scope, &p.Resource, p.Permission)
+		if err != nil {
+			return nil, err
+		}
+
+		result[i] = check
+	}
+
+	return result, nil
 }
 
 // checkWithMembershipMetadata checks access using the ephemeral membership provided in the metadata.

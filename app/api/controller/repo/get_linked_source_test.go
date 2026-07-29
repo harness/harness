@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
@@ -105,7 +106,7 @@ func newLinkedSourceTestController(
 	)
 	return &Controller{
 		repoFinder:       repoFinder,
-		authorizer:       alwaysAllowAuthorizer{},
+		authorizer:       authztest.AllowAuthorizer{},
 		linkedRepoStore:  linkedStore,
 		connectorService: connService,
 	}

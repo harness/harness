@@ -19,6 +19,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/sha"
@@ -105,7 +106,7 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 
 	ctrl := &Controller{
 		tx:                      tx,
-		authorizer:              &allowAuthorizer{},
+		authorizer:              authztest.AllowAuthorizer{},
 		repoFinder:              testRepoFinder(repo),
 		pullreqStore:            pullreqStore,
 		reviewStore:             reviewStore,

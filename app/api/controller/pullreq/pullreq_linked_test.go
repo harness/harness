@@ -19,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/errors"
 	mockstore "github.com/harness/gitness/mocks/store"
 	"github.com/harness/gitness/types"
@@ -57,7 +58,7 @@ func newLinkedPullReqController(pr *types.PullReq) (*Controller, *mockstore.Pull
 		Once()
 
 	return &Controller{
-		authorizer:   &allowAuthorizer{},
+		authorizer:   authztest.AllowAuthorizer{},
 		repoFinder:   testRepoFinder(repo),
 		pullreqStore: pullreqStore,
 	}, pullreqStore
