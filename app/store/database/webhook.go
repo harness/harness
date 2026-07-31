@@ -573,11 +573,15 @@ func triggersFromString(triggersString string) []enum.WebhookTrigger {
 	}
 
 	rawTriggers := strings.Split(triggersString, triggersSeparator)
+	triggers := make([]enum.WebhookTrigger, 0, len(rawTriggers))
 
-	triggers := make([]enum.WebhookTrigger, len(rawTriggers))
-	for i, rawTrigger := range rawTriggers {
+	for _, rawTrigger := range rawTriggers {
+		rawTrigger = strings.TrimSpace(rawTrigger)
+		if rawTrigger == "" {
+			continue
+		}
 		// ASSUMPTION: trigger is valid value (as we wrote it to DB)
-		triggers[i] = enum.WebhookTrigger(rawTrigger)
+		triggers = append(triggers, enum.WebhookTrigger(rawTrigger))
 	}
 
 	return triggers
