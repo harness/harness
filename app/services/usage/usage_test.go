@@ -183,8 +183,7 @@ func BenchmarkMediator_MillionRequests(b *testing.B) {
 		},
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := b.Context()
 
 	mediator := NewMediator(
 		ctx,
@@ -248,8 +247,7 @@ func BenchmarkMediator_MillionRequests_MultiSpace(b *testing.B) {
 		},
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := b.Context()
 
 	mediator := NewMediator(
 		ctx,
