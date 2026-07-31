@@ -143,7 +143,7 @@ func QueryParamOrError(r *http.Request, paramName string) (string, error) {
 	return val, nil
 }
 
-// QueryParamAsPositiveInt64 extracts an integer parameter from the request query.
+// QueryParamAsPositiveInt64OrDefault extracts an integer parameter from the request query.
 // If the parameter doesn't exist the provided default value is returned.
 func QueryParamAsPositiveInt64OrDefault(r *http.Request, paramName string, deflt int64) (int64, error) {
 	value, ok := QueryParam(r, paramName)

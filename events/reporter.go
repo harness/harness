@@ -34,7 +34,7 @@ type GenericReporter struct {
 	category string
 }
 
-// ReportEvent reports an event using the provided GenericReporter.
+// ReporterSendEvent reports an event using the provided GenericReporter.
 // Returns the reported event's ID in case of success.
 // NOTE: This call is blocking until the event was send (not until it was processed).
 //

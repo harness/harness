@@ -224,7 +224,7 @@ func ProvideInfraProviderConfigStore(
 	return NewInfraProviderConfigStore(db, spaceIDCache)
 }
 
-// ProvideGitspaceInstanceStore provides a infraprovider resource store.
+// ProvideInfraProviderResourceStore provides a infraprovider resource store.
 func ProvideInfraProviderResourceStore(
 	db *sqlx.DB,
 	spaceIDCache store.SpaceIDCache,

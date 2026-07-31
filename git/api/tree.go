@@ -225,7 +225,7 @@ func lsTree(
 	return list, nil
 }
 
-// lsFile returns all tree node entries in the requested directory.
+// lsDirectory returns all tree node entries in the requested directory.
 func lsDirectory(
 	ctx context.Context,
 	repoPath string,
