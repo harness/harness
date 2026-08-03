@@ -40,6 +40,7 @@ func ProvideService(
 	spaceStore store.SpaceStore,
 	spacePathStore store.SpacePathStore,
 	rulesStore store.RuleStore,
+	pullreqStore store.PullReqStore,
 	// resourceMover is nil for gitness standalone
 	resourceMover ResourceMover,
 	spaceFinder refcache.SpaceFinder,
@@ -55,6 +56,7 @@ func ProvideService(
 		spaceStore,
 		spacePathStore,
 		rulesStore,
+		pullreqStore,
 		resourceMover,
 		spaceFinder,
 		gitspaceSvs,

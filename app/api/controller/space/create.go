@@ -153,10 +153,13 @@ func (c *Controller) createSpaceInnerInTX(
 		return nil, fmt.Errorf("space creation failed: %w", err)
 	}
 
-	// for root spaces, root_space_id equals own ID which is only known after insert
+	// A root space's root_space_id points at its own ID, which only exists after the
+	// insert above, so it's set here in a second step.
 	if parentID == 0 {
 		space.RootSpaceID = space.ID
-		if err = c.spaceStore.Update(ctx, space); err != nil {
+		if err = c.spaceStore.UpdateRootSpace(
+			ctx, []int64{space.ID}, space.ID, space.RootSpaceIdentifier,
+		); err != nil {
 			return nil, fmt.Errorf("failed to set root_space_id on root space: %w", err)
 		}
 	}

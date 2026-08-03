@@ -187,14 +187,76 @@ func (s *Service) MoveNoAuth(
 			return fmt.Errorf("failed to clean up stale space resources: %w", err)
 		}
 
-		// update space itself
+		// update space itself (identifier/parent). The root space columns are not
+		// persisted by Update; they are set below via propagateRootSpace.
 		err = s.spaceStore.Update(ctx, space)
 		if err != nil {
 			return fmt.Errorf("failed to update the space in the db: %w", err)
 		}
 
+		// the moved space inherits the root space of its new parent. Root spaces
+		// (moved to become a child) are handled the same way as any other child.
+		// propagateRootSpace persists this for the whole moved subtree - the space
+		// itself (GetDescendantsIDs includes the anchor), its descendant spaces,
+		// their repos, and those repos' pull requests. Skip it on a rename or a
+		// move within the same root space, where the root space doesn't change.
+		if space.RootSpaceID != parentSpace.RootSpaceID {
+			if err := s.propagateRootSpace(
+				ctx, space.ID, parentSpace.RootSpaceID, parentSpace.RootSpaceIdentifier,
+			); err != nil {
+				return fmt.Errorf("failed to propagate root space to moved subtree: %w", err)
+			}
+
+			// reflect the new root space on the returned in-memory object.
+			space.RootSpaceID = parentSpace.RootSpaceID
+			space.RootSpaceIdentifier = parentSpace.RootSpaceIdentifier
+		}
+
 		return nil
 	})
+}
+
+// propagateRootSpace updates the root space id and identifier on all descendant
+// spaces of the given space, all repositories directly parented by any space in
+// the moved subtree (the space itself and its descendants), and all pull
+// requests targeting those repositories.
+func (s *Service) propagateRootSpace(
+	ctx context.Context,
+	spaceID int64,
+	rootSpaceID int64,
+	rootSpaceIdentifier string,
+) error {
+	descendantSpaceIDs, err := s.spaceStore.GetDescendantsIDs(ctx, spaceID)
+	if err != nil {
+		return fmt.Errorf("failed to get descendant space IDs: %w", err)
+	}
+
+	// GetDescendantsIDs includes the space itself, so this also stamps the moved
+	// space's own row (SpaceStore.Update no longer persists the root space).
+	if err := s.spaceStore.UpdateRootSpace(
+		ctx, descendantSpaceIDs, rootSpaceID, rootSpaceIdentifier,
+	); err != nil {
+		return fmt.Errorf("failed to update descendant spaces root space: %w", err)
+	}
+
+	repoIDs, err := s.repoStore.ListIDsByParentSpaceIDs(ctx, descendantSpaceIDs)
+	if err != nil {
+		return fmt.Errorf("failed to list repos in moved subtree: %w", err)
+	}
+
+	if err := s.repoStore.UpdateRootSpace(
+		ctx, repoIDs, rootSpaceID, rootSpaceIdentifier,
+	); err != nil {
+		return fmt.Errorf("failed to update repos root space: %w", err)
+	}
+
+	if err := s.pullreqStore.UpdateRootSpace(
+		ctx, repoIDs, rootSpaceID, rootSpaceIdentifier,
+	); err != nil {
+		return fmt.Errorf("failed to update pull requests root space: %w", err)
+	}
+
+	return nil
 }
 
 type MoveResourcesOutput struct {
@@ -241,10 +303,35 @@ func (s *Service) moveSpaceResourcesInTx(
 			return fmt.Errorf("failed to lock the space for update: %w", err)
 		}
 
+		// capture the repos being moved before re-parenting: MoveResources
+		// re-parents the source space's direct repos into the target space, so
+		// afterwards they can no longer be found by the source space ID.
+		movedRepoIDs, err := s.repoStore.ListIDsByParentSpaceIDs(ctx, []int64{sourceSpace.ID})
+		if err != nil {
+			return fmt.Errorf("failed to list repos in source space: %w", err)
+		}
+
 		// Delegate to service-specific resource mover
 		output, err = s.resourceMover.MoveResources(ctx, sourceSpace.ID, targetSpace.ID)
 		if err != nil {
 			return err
+		}
+
+		// the moved repos (and their pull requests) inherit the root space of the
+		// target space they were re-parented into. Skip when source and target
+		// share a root space, where nothing changes.
+		if sourceSpace.RootSpaceID != targetSpace.RootSpaceID {
+			if err := s.repoStore.UpdateRootSpace(
+				ctx, movedRepoIDs, targetSpace.RootSpaceID, targetSpace.RootSpaceIdentifier,
+			); err != nil {
+				return fmt.Errorf("failed to update moved repos root space: %w", err)
+			}
+
+			if err := s.pullreqStore.UpdateRootSpace(
+				ctx, movedRepoIDs, targetSpace.RootSpaceID, targetSpace.RootSpaceIdentifier,
+			); err != nil {
+				return fmt.Errorf("failed to update moved pull requests root space: %w", err)
+			}
 		}
 
 		if err := s.cleanUpStaleSpaceResources(ctx, sourceSpace); err != nil {

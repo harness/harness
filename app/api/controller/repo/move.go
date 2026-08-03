@@ -89,7 +89,20 @@ func (c *Controller) Move(ctx context.Context,
 		return GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repo)
 	}
 
-	movedRepo, err := c.MoveNoAuth(ctx, repo, in.Identifier, targetParentSpace.ID)
+	// the moved repo inherits the root space of its new parent space.
+	targetParentSpaceFull, err := c.spaceStore.Find(ctx, targetParentSpace.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find target parent space '%d': %w", targetParentSpace.ID, err)
+	}
+
+	movedRepo, err := c.MoveNoAuth(
+		ctx,
+		repo,
+		in.Identifier,
+		targetParentSpaceFull.ID,
+		targetParentSpaceFull.RootSpaceID,
+		targetParentSpaceFull.RootSpaceIdentifier,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to move repo: %w", err)
 	}
@@ -110,11 +123,21 @@ func (c *Controller) MoveNoAuth(
 	repo *types.Repository,
 	newIdentifier *string,
 	targetParentSpaceID int64,
+	rootSpaceID int64,
+	rootSpaceIdentifier string,
 ) (*types.Repository, error) {
 	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo public access: %w", err)
 	}
+
+	// remember the original root space so it can be restored if the move fails
+	origRootSpaceID := repo.RootSpaceID
+	origRootSpaceIdentifier := repo.RootSpaceIdentifier
+
+	// the root space only changes on a cross-root move; a rename or a move within
+	// the same root space leaves it untouched
+	rootSpaceChanged := origRootSpaceID != rootSpaceID
 
 	// remove public access from old repo path to avoid leaking it
 	if err := c.publicAccess.Delete(
@@ -126,18 +149,57 @@ func (c *Controller) MoveNoAuth(
 	}
 
 	// TODO add a repo level lock here to avoid racing condition or partial repo update w/o setting repo public access
-	movedRepo, err := c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
-		if newIdentifier != nil {
-			r.Identifier = *newIdentifier
+	//
+	// Update the repo's identifier/parent and its root space columns (on the repo
+	// and its pull requests) in one transaction, so a failure rolls back the whole
+	// move. NB: RepoStore.Update doesn't touch the root space columns.
+	var movedRepo *types.Repository
+	if err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		var err error
+		movedRepo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+			if newIdentifier != nil {
+				r.Identifier = *newIdentifier
+			}
+			if targetParentSpaceID != r.ParentID {
+				r.ParentID = targetParentSpaceID
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update repo: %w", err)
 		}
-		if targetParentSpaceID != r.ParentID {
-			r.ParentID = targetParentSpaceID
+
+		if rootSpaceChanged {
+			if err := c.repoStore.UpdateRootSpace(
+				ctx, []int64{movedRepo.ID}, rootSpaceID, rootSpaceIdentifier,
+			); err != nil {
+				return fmt.Errorf("failed to update repo root space: %w", err)
+			}
+
+			if err := c.pullReqStore.UpdateRootSpace(
+				ctx, []int64{movedRepo.ID}, rootSpaceID, rootSpaceIdentifier,
+			); err != nil {
+				return fmt.Errorf("failed to update pull requests root space: %w", err)
+			}
 		}
+
 		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to update repo: %w", err)
+	}); err != nil {
+		// public access isn't part of the transaction (its set on the new path can
+		// only run post-commit, so both halves stay outside), so the rollback didn't
+		// undo the delete above - manually restore it so we don't leave it stripped.
+		if dErr := c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic); dErr != nil {
+			return nil, fmt.Errorf(
+				"failed to move repo (and restoring public access on the original path: %w): %w",
+				dErr,
+				err,
+			)
+		}
+		return nil, err
 	}
+
+	movedRepo.RootSpaceID = rootSpaceID
+	movedRepo.RootSpaceIdentifier = rootSpaceIdentifier
 
 	// clear old repo from cache
 	c.repoFinder.MarkChanged(ctx, repo.Core())
@@ -149,20 +211,46 @@ func (c *Controller) MoveNoAuth(
 			return nil, fmt.Errorf("failed to set repo public access (and public access cleanup: %w): %w", dErr, err)
 		}
 
-		// revert identifier and parent changes first
+		// revert identifier/parent and the root space of the repo and its pull
+		// requests in a single transaction, or they'd keep the target's root
+		// space while the repo lives under its old parent.
 		var dErr error
-		_, dErr = c.repoStore.UpdateOptLock(ctx, movedRepo, func(r *types.Repository) error {
-			r.Identifier = repo.Identifier
-			r.ParentID = repo.ParentID
+		if dErr = c.tx.WithTx(ctx, func(ctx context.Context) error {
+			movedRepo, dErr = c.repoStore.UpdateOptLock(ctx, movedRepo, func(r *types.Repository) error {
+				r.Identifier = repo.Identifier
+				r.ParentID = repo.ParentID
+				return nil
+			})
+			if dErr != nil {
+				return fmt.Errorf("failed to revert repo identifier and parent: %w", dErr)
+			}
+
+			// only revert the root space if the move actually changed it.
+			if rootSpaceChanged {
+				if err := c.repoStore.UpdateRootSpace(
+					ctx, []int64{movedRepo.ID}, origRootSpaceID, origRootSpaceIdentifier,
+				); err != nil {
+					return fmt.Errorf("failed to revert repo root space: %w", err)
+				}
+
+				if err := c.pullReqStore.UpdateRootSpace(
+					ctx, []int64{movedRepo.ID}, origRootSpaceID, origRootSpaceIdentifier,
+				); err != nil {
+					return fmt.Errorf("failed to revert pull requests root space: %w", err)
+				}
+			}
+
 			return nil
-		})
-		if dErr != nil {
+		}); dErr != nil {
 			return nil, fmt.Errorf(
 				"failed to set public access for new path (and reverting of move: %w): %w",
 				dErr,
 				err,
 			)
 		}
+
+		movedRepo.RootSpaceID = origRootSpaceID
+		movedRepo.RootSpaceIdentifier = origRootSpaceIdentifier
 
 		// clear updated repo from cache
 		c.repoFinder.MarkChanged(ctx, movedRepo.Core())

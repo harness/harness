@@ -377,6 +377,37 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	return nil
 }
 
+// UpdateRootSpace sets the root space id and identifier for all pull requests
+// whose target repository is any of the given repos.
+func (s *PullReqStore) UpdateRootSpace(
+	ctx context.Context,
+	targetRepoIDs []int64,
+	rootSpaceID int64,
+	rootSpaceIdentifier string,
+) error {
+	if len(targetRepoIDs) == 0 {
+		return nil
+	}
+
+	stmt := database.Builder.
+		Update("pullreqs").
+		Set("pullreq_root_space_id", rootSpaceID).
+		Set("pullreq_root_space_identifier", rootSpaceIdentifier).
+		Where(squirrel.Eq{"pullreq_target_repo_id": targetRepoIDs})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "failed to update root space for pull requests")
+	}
+
+	return nil
+}
+
 // updateMergeCheckMetadata updates the pull request merge check metadata only without updating updated time stamp.
 func (s *PullReqStore) updateMergeCheckMetadata(ctx context.Context, pr *types.PullReq) error {
 	const sqlQuery = `

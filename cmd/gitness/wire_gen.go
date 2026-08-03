@@ -511,7 +511,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	gitspaceService := gitspacewire.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, reporter5, gitspaceEventStore, spaceFinder, infraproviderService, orchestratorOrchestrator, scmSCM, config, reporter8, ideFactory, spaceStore, tokenGenerator)
 	usageMetricStore := database.ProvideUsageMetricStore(db)
 	resourceMover := space.ProvideNoopResourceMover()
-	spaceService, err := space.ProvideService(transactor, jobScheduler, executor, encrypter, repoStore, spaceStore, spacePathStore, ruleStore, resourceMover, spaceFinder, gitspaceService, infraproviderService, repoController)
+	spaceService, err := space.ProvideService(transactor, jobScheduler, executor, encrypter, repoStore, spaceStore, spacePathStore, ruleStore, pullReqStore, resourceMover, spaceFinder, gitspaceService, infraproviderService, repoController)
 	if err != nil {
 		return nil, err
 	}

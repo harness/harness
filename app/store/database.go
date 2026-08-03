@@ -248,6 +248,9 @@ type (
 
 		// GetRootSpacesSize returns the size of the root spaces
 		GetRootSpacesSize(ctx context.Context) ([]types.SpaceStorage, error)
+
+		// UpdateRootSpace sets the root space id and identifier for all given spaces.
+		UpdateRootSpace(ctx context.Context, spaceIDs []int64, rootSpaceID int64, rootSpaceIdentifier string) error
 	}
 
 	// RepoStore defines the repository data storage.
@@ -327,6 +330,12 @@ type (
 
 		// UpdateParent updates parent_id for all repos with currentParentID to newParentID.
 		UpdateParent(ctx context.Context, currentParentID, newParentID int64) (int64, error)
+
+		// ListIDsByParentSpaceIDs returns the IDs of all repos directly parented by any of the given spaces.
+		ListIDsByParentSpaceIDs(ctx context.Context, spaceIDs []int64) ([]int64, error)
+
+		// UpdateRootSpace sets the root space id and identifier for all given repos.
+		UpdateRootSpace(ctx context.Context, repoIDs []int64, rootSpaceID int64, rootSpaceIdentifier string) error
 	}
 
 	RepoLangStore interface {
@@ -528,6 +537,10 @@ type (
 			repoID int64,
 			branchNames []string,
 		) (map[string][]*types.PullReq, error)
+
+		// UpdateRootSpace sets the root space id and identifier for all pull requests
+		// whose target repository is any of the given repos.
+		UpdateRootSpace(ctx context.Context, targetRepoIDs []int64, rootSpaceID int64, rootSpaceIdentifier string) error
 	}
 
 	PullReqActivityStore interface {

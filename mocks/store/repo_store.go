@@ -179,3 +179,18 @@ func (m *RepoStore) UpdateParent(_ context.Context, currentParentID, newParentID
 	}
 	return 0, args.Error(1)
 }
+
+func (m *RepoStore) ListIDsByParentSpaceIDs(_ context.Context, spaceIDs []int64) ([]int64, error) {
+	args := m.Called(spaceIDs)
+	v, _ := args.Get(0).([]int64)
+	return v, args.Error(1)
+}
+
+func (m *RepoStore) UpdateRootSpace(
+	_ context.Context,
+	repoIDs []int64,
+	rootSpaceID int64,
+	rootSpaceIdentifier string,
+) error {
+	return m.Called(repoIDs, rootSpaceID, rootSpaceIdentifier).Error(0)
+}

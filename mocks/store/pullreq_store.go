@@ -140,3 +140,12 @@ func (m *PullReqStore) ListOpenByBranchName(
 	}
 	return nil, args.Error(1)
 }
+
+func (m *PullReqStore) UpdateRootSpace(
+	_ context.Context,
+	targetRepoIDs []int64,
+	rootSpaceID int64,
+	rootSpaceIdentifier string,
+) error {
+	return m.Called(targetRepoIDs, rootSpaceID, rootSpaceIdentifier).Error(0)
+}

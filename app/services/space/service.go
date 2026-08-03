@@ -33,6 +33,7 @@ type Service struct {
 	spaceStore     store.SpaceStore
 	spacePathStore store.SpacePathStore
 	rulesStore     store.RuleStore
+	pullreqStore   store.PullReqStore
 
 	// - nil for gitness standalone (as move feature not supported in it)
 	// - provided by harness-code services (registry, cde, gitness-server) to enable move feature
@@ -51,6 +52,7 @@ func NewService(
 	spaceStore store.SpaceStore,
 	spacePathStore store.SpacePathStore,
 	rulesStore store.RuleStore,
+	pullreqStore store.PullReqStore,
 	resourceMover ResourceMover,
 	spaceFinder refcache.SpaceFinder,
 	gitspaceSvs *gitspace.Service,
@@ -65,6 +67,7 @@ func NewService(
 		spaceStore:       spaceStore,
 		spacePathStore:   spacePathStore,
 		rulesStore:       rulesStore,
+		pullreqStore:     pullreqStore,
 		resourceMover:    resourceMover,
 		spaceFinder:      spaceFinder,
 		gitspaceSvs:      gitspaceSvs,

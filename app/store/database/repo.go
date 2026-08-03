@@ -990,6 +990,64 @@ func (s *RepoStore) UpdateParent(ctx context.Context, currentParentID, newParent
 	return rows, nil
 }
 
+// ListIDsByParentSpaceIDs returns the IDs of all repos directly parented by any of the given spaces.
+func (s *RepoStore) ListIDsByParentSpaceIDs(ctx context.Context, spaceIDs []int64) ([]int64, error) {
+	if len(spaceIDs) == 0 {
+		return []int64{}, nil
+	}
+
+	stmt := database.Builder.
+		Select("repo_id").
+		From("repositories").
+		Where(squirrel.Eq{"repo_parent_id": spaceIDs})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var ids []int64
+	if err := db.SelectContext(ctx, &ids, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to list repo IDs by parent spaces")
+	}
+
+	return ids, nil
+}
+
+// UpdateRootSpace sets the root space id and identifier for all given repos.
+func (s *RepoStore) UpdateRootSpace(
+	ctx context.Context,
+	repoIDs []int64,
+	rootSpaceID int64,
+	rootSpaceIdentifier string,
+) error {
+	if len(repoIDs) == 0 {
+		return nil
+	}
+
+	// deliberately not touching repo_updated: this is a bulk propagation, and
+	// stamping every row with the same timestamp would collapse their sort order.
+	stmt := database.Builder.
+		Update("repositories").
+		Set("repo_root_space_id", rootSpaceID).
+		Set("repo_root_space_identifier", rootSpaceIdentifier).
+		Where(squirrel.Eq{"repo_id": repoIDs})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "failed to update root space for repos")
+	}
+
+	return nil
+}
+
 func (s *RepoStore) mapToRepo(
 	ctx context.Context,
 	in *repository,

@@ -496,6 +496,9 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 		return errors.New("space is nil")
 	}
 
+	// NOTE: the root space columns are deliberately not updated here. They are a
+	// derived, structural value that must only change during a move, through the
+	// dedicated UpdateRootSpace method - never as a side effect of a generic Update.
 	const sqlQuery = `
 		UPDATE spaces
 		SET
@@ -504,8 +507,6 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 			,space_parent_id				= :space_parent_id
 			,space_uid						= :space_uid
 			,space_description				= :space_description
-			,space_root_space_id			= :space_root_space_id
-			,space_root_space_identifier	= :space_root_space_identifier
 			,space_deleted					= :space_deleted
 		WHERE space_id = :space_id AND space_version = :space_version - 1`
 
@@ -543,6 +544,38 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	space.Path, err = getSpacePath(ctx, s.db, s.spacePathStore, space.ID)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// UpdateRootSpace sets the root space id and identifier for all given spaces.
+func (s *SpaceStore) UpdateRootSpace(
+	ctx context.Context,
+	spaceIDs []int64,
+	rootSpaceID int64,
+	rootSpaceIdentifier string,
+) error {
+	if len(spaceIDs) == 0 {
+		return nil
+	}
+
+	// deliberately not touching space_updated: this is a bulk propagation, and
+	// stamping every row with the same timestamp would collapse their sort order.
+	stmt := database.Builder.
+		Update("spaces").
+		Set("space_root_space_id", rootSpaceID).
+		Set("space_root_space_identifier", rootSpaceIdentifier).
+		Where(squirrel.Eq{"space_id": spaceIDs})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "failed to update root space for spaces")
 	}
 
 	return nil
