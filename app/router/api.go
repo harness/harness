@@ -217,9 +217,10 @@ func setupRoutesV1WithAuth(r chi.Router,
 	usageSender usage.Sender,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
-	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, repoSettingsCtrl, userGroupCtrl, webhookCtrl, checkCtrl)
+	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, repoSettingsCtrl, userGroupCtrl, webhookCtrl, checkCtrl,
+		searchCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
-		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, usageSender)
+		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, searchCtrl, usageSender)
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
@@ -245,6 +246,7 @@ func setupSpaces(
 	userGroupCtrl *usergroup.Controller,
 	webhookCtrl *webhook.Controller,
 	checkCtrl *check.Controller,
+	searchCtrl *keywordsearch.Controller,
 ) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -267,6 +269,7 @@ func setupSpaces(
 			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
 			r.Get("/executions", handlerspace.HandleListExecutions(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
+			r.Get("/search", handlerkeywordsearch.HandleSearchSpace(searchCtrl))
 			r.Get("/usergroups", handlerUserGroup.HandleList(userGroupCtrl))
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
@@ -389,6 +392,7 @@ func setupRepos(r chi.Router,
 	webhookCtrl *webhook.Controller,
 	checkCtrl *check.Controller,
 	uploadCtrl *upload.Controller,
+	searchCtrl *keywordsearch.Controller,
 	usageSender usage.Sender,
 ) {
 	r.Route("/repos", func(r chi.Router) {
@@ -420,6 +424,7 @@ func setupRepos(r chi.Router,
 
 			r.Get("/summary", handlerrepo.HandleSummary(repoCtrl))
 			r.Get("/activities", handlerrepo.HandleListActivities(repoCtrl))
+			r.Get("/search", handlerkeywordsearch.HandleSearchRepo(searchCtrl))
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))

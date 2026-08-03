@@ -28,10 +28,16 @@ const (
 	PathParamRepoRef        = "repo_ref"
 	QueryParamOnlyFavorites = "only_favorites"
 	QueryParamTag           = "tag"
+	QueryParamRepoPath      = "repo_path"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamRepoRef)
+}
+
+func GetRepoPathsFromQuery(r *http.Request) []string {
+	repoRefs, _ := QueryParamList(r, QueryParamRepoPath)
+	return repoRefs
 }
 
 // ParseSortRepo extracts the repo sort parameter from the url.

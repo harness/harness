@@ -18,7 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 
@@ -101,9 +101,7 @@ func (s *fakeSearcher) Search(
 	_ int,
 ) (types.SearchResult, error) {
 	s.calledWithRepoIDs = append([]int64(nil), repoIDs...)
-	sort.Slice(s.calledWithRepoIDs, func(i, j int) bool {
-		return s.calledWithRepoIDs[i] < s.calledWithRepoIDs[j]
-	})
+	slices.Sort(s.calledWithRepoIDs)
 	if s.err != nil {
 		return types.SearchResult{}, s.err
 	}
@@ -120,7 +118,7 @@ func (filterAll) ViewAccessFilter(
 	for id := range repoMap {
 		ids = append(ids, id)
 	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	slices.Sort(ids)
 	return ids, nil
 }
 
@@ -144,7 +142,7 @@ func (f filterOnly) ViewAccessFilter(
 			ids = append(ids, id)
 		}
 	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	slices.Sort(ids)
 	return ids, nil
 }
 
@@ -381,7 +379,8 @@ func TestSearch_SpacePathRecursiveExpandsDescendants(t *testing.T) {
 	}
 
 	want := []int64{1, 2, 3}
-	if !equalSortedInt64s(searcher.calledWithRepoIDs, want) {
+
+	if !slices.Equal(searcher.calledWithRepoIDs, want) {
 		t.Fatalf("expected searcher called with %v, got %v", want, searcher.calledWithRepoIDs)
 	}
 	repoStore.AssertExpectations(t)
@@ -434,7 +433,7 @@ func TestSearch_DedupsAcrossRepoAndSpacePaths(t *testing.T) {
 	}
 
 	want := []int64{1, 2}
-	if !equalSortedInt64s(searcher.calledWithRepoIDs, want) {
+	if !slices.Equal(searcher.calledWithRepoIDs, want) {
 		t.Fatalf("expected searcher called with %v, got %v", want, searcher.calledWithRepoIDs)
 	}
 }
@@ -584,7 +583,7 @@ func TestSearch_OnlyAccessibleReposPassedToSearcher(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	want := []int64{1, 3}
-	if !equalSortedInt64s(searcher.calledWithRepoIDs, want) {
+	if !slices.Equal(searcher.calledWithRepoIDs, want) {
 		t.Fatalf("expected searcher called with %v, got %v", want, searcher.calledWithRepoIDs)
 	}
 }
@@ -718,22 +717,8 @@ func TestSearch_EmptyPathEntriesAreSkipped(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	want := []int64{1, 2}
-	if !equalSortedInt64s(searcher.calledWithRepoIDs, want) {
+	if !slices.Equal(searcher.calledWithRepoIDs, want) {
 		t.Fatalf("expected searcher called with %v, got %v", want, searcher.calledWithRepoIDs)
 	}
 	repoStore.AssertExpectations(t)
-}
-
-// ---------- shared helpers ----------
-
-func equalSortedInt64s(a, b []int64) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }

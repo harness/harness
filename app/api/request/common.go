@@ -33,6 +33,7 @@ const (
 	QueryParamRecursive = "recursive"
 	QueryParamLabelID   = "label_id"
 	QueryParamValueID   = "value_id"
+	QueryParamRegex     = "regex"
 
 	QueryParamState = "state"
 	QueryParamKind  = "kind"
@@ -208,6 +209,11 @@ func GetContentEncodingFromHeadersOrDefault(r *http.Request, dflt string) string
 // ParseRecursiveFromQuery extracts the recursive option from the URL query.
 func ParseRecursiveFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamRecursive, false)
+}
+
+// ParseRegexFromQuery extracts the regex option from the URL query.
+func ParseRegexFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamRegex, false)
 }
 
 // ParseInheritedFromQuery extracts the inherited option from the URL query.
