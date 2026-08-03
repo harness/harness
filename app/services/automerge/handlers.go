@@ -78,7 +78,7 @@ func (s *Service) mergePRsOnCheckSucceeded(
 	ctx context.Context,
 	event *events.Event[*checkevents.ReportedPayload],
 ) error {
-	if event.Payload.Status != enum.CheckStatusSuccess {
+	if !event.Payload.Status.IsSuccess() {
 		return nil
 	}
 

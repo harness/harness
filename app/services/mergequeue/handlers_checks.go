@@ -41,7 +41,7 @@ func (s *Service) handlerCheckFinished(
 ) error {
 	status := event.Payload.Status
 
-	if status != enum.CheckStatusSuccess && status != enum.CheckStatusFailure {
+	if !status.IsCompleted() {
 		return nil
 	}
 
@@ -97,7 +97,7 @@ func (s *Service) handlerCheckFinished(
 	}
 
 	// One failure is enough to remove the PR from the merge queue.
-	if status == enum.CheckStatusFailure {
+	if !status.IsSuccess() {
 		err = s.remove(ctx, entry.PullReqID, types.PullRequestActivityPayloadMergeQueueRemove{
 			Reason:          enum.MergeQueueRemovalReasonCheckFail,
 			MergeQueueCheck: event.Payload.Identifier,
@@ -135,7 +135,7 @@ func (s *Service) handlerCheckFinished(
 
 	completedChecks := make([]string, 0, len(checks))
 	for _, check := range checks {
-		if check.Status == enum.CheckStatusSuccess || check.BypassedBy != nil {
+		if check.Status.IsSuccess() || check.BypassedBy != nil {
 			completedChecks = append(completedChecks, check.Identifier)
 		}
 	}
