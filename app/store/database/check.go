@@ -347,7 +347,8 @@ func (s *CheckStore) ResultSummary(ctx context.Context,
 			COUNT(*) FILTER (WHERE check_status = 'running') as "count_running",
 			COUNT(*) FILTER (WHERE check_status = 'success') as "count_success",
 			COUNT(*) FILTER (WHERE check_status = 'failure') as "count_failure",
-			COUNT(*) FILTER (WHERE check_status = 'error') as "count_error"`
+			COUNT(*) FILTER (WHERE check_status = 'error') as "count_error",
+			COUNT(*) FILTER (WHERE check_status = 'failure_ignored') as "count_failure_ignored"`
 
 	stmt := database.Builder.
 		Select(selectColumns).
@@ -381,7 +382,16 @@ func (s *CheckStore) ResultSummary(ctx context.Context,
 		var countSuccess int
 		var countFailure int
 		var countError int
-		err := rows.Scan(&commitSHAStr, &countPending, &countRunning, &countSuccess, &countFailure, &countError)
+		var countFailureIgnored int
+		err := rows.Scan(
+			&commitSHAStr,
+			&countPending,
+			&countRunning,
+			&countSuccess,
+			&countFailure,
+			&countError,
+			&countFailureIgnored,
+		)
 		if err != nil {
 			return nil, database.ProcessSQLErrorf(ctx, err, "Failed to scan values of status check summary query")
 		}
@@ -392,11 +402,12 @@ func (s *CheckStore) ResultSummary(ctx context.Context,
 		}
 
 		result[commitSHA] = types.CheckCountSummary{
-			Pending: countPending,
-			Running: countRunning,
-			Success: countSuccess,
-			Failure: countFailure,
-			Error:   countError,
+			Pending:        countPending,
+			Running:        countRunning,
+			Success:        countSuccess,
+			Failure:        countFailure,
+			Error:          countError,
+			FailureIgnored: countFailureIgnored,
 		}
 	}
 

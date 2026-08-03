@@ -114,9 +114,10 @@ type PullReqCheck struct {
 }
 
 type CheckCountSummary struct {
-	Pending int `json:"pending"`
-	Running int `json:"running"`
-	Success int `json:"success"`
-	Failure int `json:"failure"`
-	Error   int `json:"error"`
+	Pending        int `json:"pending"`
+	Running        int `json:"running"`
+	Success        int `json:"success"`
+	Failure        int `json:"failure"`
+	Error          int `json:"error"`
+	FailureIgnored int `json:"failure_ignored"`
 }
