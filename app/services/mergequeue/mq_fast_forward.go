@@ -183,8 +183,11 @@ func (s *Service) fastForward(
 			WriteParams: writeParams,
 			Refs:        updateRefs,
 		})
+		if errors.IsPreconditionFailed(err) {
+			return fastForwardError{internal: err}
+		}
 		if err != nil {
-			return fmt.Errorf("failed to fast-forward merge queue branch to merge commit: %w", err)
+			return fmt.Errorf("failed to update git references in merge queue: %w", err)
 		}
 
 		return nil
@@ -264,4 +267,21 @@ func (s *Service) findEntriesToMerge(
 	}
 
 	return nil, errIncompleteMergeQueue
+}
+
+type fastForwardError struct {
+	internal error
+}
+
+func (ffe fastForwardError) Error() string {
+	const message = "failed to fast-forward merge queue branch to merge commit"
+	if ffe.internal == nil {
+		return message
+	}
+	return message + ": " + ffe.internal.Error()
+}
+
+func isFastForwardError(err error) bool {
+	var ffe fastForwardError
+	return errors.As(err, &ffe)
 }

@@ -27,6 +27,7 @@ import (
 	gitevents "github.com/harness/gitness/app/events/git"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -96,7 +97,12 @@ func (c *Controller) PostReceive(
 
 	err = c.postReceiveExtender.Extend(ctx, rgit, session, repo.Core(), in, &out)
 	if err != nil {
-		return hook.Output{}, fmt.Errorf("failed to extend post-receive hook: %w", err)
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to extend post-receive hook")
+	}
+
+	err = c.triggerMergeQueueEvents(ctx, repoCore, in.RefUpdates, in.OperationType)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to trigger merge queue events")
 	}
 
 	c.logForcePush(ctx, repo, in.PrincipalID, in.RefUpdates, forcePushStatus)
@@ -533,6 +539,89 @@ func (c *Controller) updateLastGITPushTime(
 	}
 
 	*repo = *newRepo
+}
+
+// triggerMergeQueueEvents triggers the merge queue branch updated and the merge queue branch deleted events
+// for every updated/deleted branch that has a merge queue defined.
+func (c *Controller) triggerMergeQueueEvents(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	refUpdates []hook.ReferenceUpdate,
+	operationType enum.GitOpType,
+) error {
+	if operationType == enum.GitOpTypeMergeQueue {
+		// This is reference update triggered by a merge queue, so skip all checks.
+		return nil
+	}
+
+	var deletedBranches []string
+	var updatedBranches []string
+
+	for i := range refUpdates {
+		branchName, ok := strings.CutPrefix(refUpdates[i].Ref, gitReferenceNamePrefixBranch)
+		if !ok {
+			continue
+		}
+
+		if refUpdates[i].New.IsNil() {
+			deletedBranches = append(deletedBranches, branchName)
+		} else if !refUpdates[i].Old.IsNil() {
+			updatedBranches = append(updatedBranches, branchName)
+		}
+	}
+
+	if len(deletedBranches) == 0 && len(updatedBranches) == 0 {
+		return nil
+	}
+
+	repoLevelBranchRules, err := c.protectionManager.ListOnlyRepoBranchRules(ctx, repo)
+	if err != nil {
+		return fmt.Errorf("failed to fetch repo-level rules for the repository: %w", err)
+	}
+
+	for _, deletedBranch := range deletedBranches {
+		setup, err := repoLevelBranchRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+			Repo:         repo,
+			TargetBranch: deletedBranch,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to get MQ setup for deleted branch %q: %w", deletedBranch, err)
+		}
+
+		if !setup.IsActive() {
+			continue
+		}
+
+		log.Ctx(ctx).Info().
+			Int64("repo_id", repo.ID).
+			Str("branch", deletedBranch).
+			Msg("branch protected by MQ is deleted")
+
+		c.mergeQueueService.TriggerBranchDeleted(ctx, repo.ID, deletedBranch)
+	}
+
+	for _, updatedBranch := range updatedBranches {
+		setup, err := repoLevelBranchRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+			Repo:         repo,
+			TargetBranch: updatedBranch,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to get MQ setup for updated branch %q: %w", updatedBranch, err)
+		}
+
+		if !setup.IsActive() {
+			continue
+		}
+
+		log.Ctx(ctx).Info().
+			Int64("repo_id", repo.ID).
+			Str("branch", updatedBranch).
+			Msg("branch protected by MQ updated outside MQ")
+
+		c.mergeQueueService.TriggerBranchUpdated(ctx, repo.ID, updatedBranch)
+	}
+
+	return nil
 }
 
 // logForcePush detects and logs force pushes to the default branch.

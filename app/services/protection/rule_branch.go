@@ -124,16 +124,8 @@ func (v *Branch) RefChangeVerify(
 		return nil, fmt.Errorf("lifecycle error: %w", err)
 	}
 
-	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
-	bypassed := in.AllowBypass && bypassable
-	for i := range violations {
-		violations[i].Bypassable = bypassable
-		violations[i].Bypassed = bypassed
-	}
-
 	if in.RefAction == RefActionUpdate || in.RefAction == RefActionUpdateForce || in.RefAction == RefActionDelete {
 		for _, refName := range in.RefNames {
-			// merge queue settings can't be bypassed
 			mqv, err := v.MergeQueueBranchUpdateVerify(MergeQueueBranchUpdateInput{
 				Repo:         in.Repo,
 				TargetBranch: refName,
@@ -144,6 +136,13 @@ func (v *Branch) RefChangeVerify(
 
 			violations = append(violations, mqv...)
 		}
+	}
+
+	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
+	bypassed := in.AllowBypass && bypassable
+	for i := range violations {
+		violations[i].Bypassable = bypassable
+		violations[i].Bypassed = bypassed
 	}
 
 	return violations, nil

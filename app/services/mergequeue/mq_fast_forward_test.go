@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	gitnesserrors "github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 )
@@ -180,4 +181,80 @@ func TestFindEntriesToMerge(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIsFastForwardError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{
+			name: "nil-error",
+			err:  nil,
+			want: false,
+		},
+		{
+			name: "plain-error",
+			err:  errors.New("some other failure"),
+			want: false,
+		},
+		{
+			name: "bare-fast-forward-error",
+			err:  fastForwardError{},
+			want: true,
+		},
+		{
+			name: "fast-forward-error-with-internal",
+			err:  fastForwardError{internal: errors.New("non-fast-forward")},
+			want: true,
+		},
+		{
+			// The self-heal branch in handlerCheckFinished only fires if detection
+			// survives fmt.Errorf("%w") wrapping, which is how fastForward returns it.
+			name: "wrapped-fast-forward-error",
+			err:  fmt.Errorf("failed to fast-forward: %w", fastForwardError{internal: errors.New("boom")}),
+			want: true,
+		},
+		{
+			name: "double-wrapped-fast-forward-error",
+			err: fmt.Errorf("outer: %w",
+				fmt.Errorf("inner: %w", fastForwardError{})),
+			want: true,
+		},
+		{
+			// A precondition-failed status error on its own must NOT be treated as a
+			// fast-forward error - only the typed wrapper produced by fastForward is.
+			name: "precondition-failed-not-wrapped",
+			err:  gitnesserrors.PreconditionFailed("non fast forward"),
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isFastForwardError(tt.err); got != tt.want {
+				t.Errorf("isFastForwardError(%v) = %v, want %v", tt.err, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFastForwardErrorMessage(t *testing.T) {
+	const base = "failed to fast-forward merge queue branch to merge commit"
+
+	t.Run("without-internal", func(t *testing.T) {
+		got := fastForwardError{}.Error()
+		if got != base {
+			t.Errorf("want %q, got %q", base, got)
+		}
+	})
+
+	t.Run("with-internal", func(t *testing.T) {
+		got := fastForwardError{internal: errors.New("non-fast-forward")}.Error()
+		want := base + ": non-fast-forward"
+		if got != want {
+			t.Errorf("want %q, got %q", want, got)
+		}
+	})
 }

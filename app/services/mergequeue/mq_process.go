@@ -41,6 +41,17 @@ func (s *Service) reprocess(
 	mergeQueueSetup protection.MergeQueueSetup,
 ) error {
 	targetSHA, err := s.getLastCommitSHA(ctx, repo, q.Branch)
+	if errors.IsNotFound(err) {
+		// The target branch no longer exists (e.g. somebody bypassed the merge queue and deleted it).
+		// There's nothing to merge onto, so clear the queue and release the queued pull requests.
+		if err := s.RemoveAll(ctx, repo, q.Branch, types.PullRequestActivityPayloadMergeQueueRemove{
+			Reason: enum.MergeQueueRemovalReasonTargetDeleted,
+		}); err != nil {
+			return fmt.Errorf("failed to clear merge queue after target branch %q was deleted: %w", q.Branch, err)
+		}
+
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("failed to get last commit SHA for branch %q: %w", q.Branch, err)
 	}

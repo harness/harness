@@ -671,6 +671,106 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 				},
 			},
 		},
+		{
+			// The bypass-marking loop runs after MergeQueueBranchUpdateVerify, so a
+			// merge-queue violation must be marked bypassable/bypassed for an actor
+			// that can bypass. This is what allows updating an MQ-protected branch.
+			name: "merge-queue-update-owner-bypass",
+			branch: Branch{
+				Bypass: DefBypass{RepoOwners: true},
+				PullReq: DefPullReq{
+					MergeQueue: &DefMergeQueue{
+						StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+						GroupSize:               5,
+						ChecksConcurrency:       3,
+						MaxCheckDurationSeconds: 600,
+					},
+				},
+			},
+			in: RefChangeVerifyInput{
+				Actor:       user,
+				AllowBypass: true,
+				IsRepoOwner: true,
+				RefAction:   RefActionUpdate,
+				RefType:     RefTypeBranch,
+				RefNames:    []string{"main"},
+				Repo:        &types.RepositoryCore{ID: 1},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: true,
+					Bypassed:   true,
+					Violations: []types.Violation{
+						{Code: codeMergeQueueBranchUpdateVerify},
+					},
+				},
+			},
+		},
+		{
+			// Deleting an MQ-protected branch is bypassable by a listed bypass user.
+			name: "merge-queue-delete-user-bypass",
+			branch: Branch{
+				Bypass: DefBypass{UserIDs: []int64{user.ID}},
+				PullReq: DefPullReq{
+					MergeQueue: &DefMergeQueue{
+						StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+						GroupSize:               5,
+						ChecksConcurrency:       3,
+						MaxCheckDurationSeconds: 600,
+					},
+				},
+			},
+			in: RefChangeVerifyInput{
+				Actor:       user,
+				AllowBypass: true,
+				RefAction:   RefActionDelete,
+				RefType:     RefTypeBranch,
+				RefNames:    []string{"main"},
+				Repo:        &types.RepositoryCore{ID: 1},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: true,
+					Bypassed:   true,
+					Violations: []types.Violation{
+						{Code: codeMergeQueueBranchUpdateVerify},
+					},
+				},
+			},
+		},
+		{
+			// A bypass-capable actor that did not request a bypass (AllowBypass=false)
+			// leaves the MQ violation bypassable but not bypassed - so it still blocks.
+			name: "merge-queue-update-bypassable-not-bypassed",
+			branch: Branch{
+				Bypass: DefBypass{UserIDs: []int64{user.ID}},
+				PullReq: DefPullReq{
+					MergeQueue: &DefMergeQueue{
+						StatusChecks:            DefStatusChecks{RequireIdentifiers: []string{"ci"}},
+						GroupSize:               5,
+						ChecksConcurrency:       3,
+						MaxCheckDurationSeconds: 600,
+					},
+				},
+			},
+			in: RefChangeVerifyInput{
+				Actor:       user,
+				AllowBypass: false,
+				RefAction:   RefActionUpdate,
+				RefType:     RefTypeBranch,
+				RefNames:    []string{"main"},
+				Repo:        &types.RepositoryCore{ID: 1},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: true,
+					Bypassed:   false,
+					Violations: []types.Violation{
+						{Code: codeMergeQueueBranchUpdateVerify},
+					},
+				},
+			},
+		},
 	}
 
 	ctx := context.Background()

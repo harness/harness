@@ -69,6 +69,8 @@ const (
 	MergeQueueRemovalReasonCheckTimeout MergeQueueRemovalReason = "check_timeout"
 	// MergeQueueRemovalReasonNoQueue indicates the entry was removed because merge queue isn't configured.
 	MergeQueueRemovalReasonNoQueue MergeQueueRemovalReason = "no_queue"
+	// MergeQueueRemovalReasonTargetDeleted indicates the entry was removed because the target branch was deleted.
+	MergeQueueRemovalReasonTargetDeleted MergeQueueRemovalReason = "target_deleted"
 	// MergeQueueRemovalReasonError indicates the entry was removed due to an unexpected error.
 	MergeQueueRemovalReasonError MergeQueueRemovalReason = "error"
 )
@@ -79,5 +81,6 @@ var mergeQueueRemovalReasons = sortEnum([]MergeQueueRemovalReason{
 	MergeQueueRemovalReasonCheckFail,
 	MergeQueueRemovalReasonCheckTimeout,
 	MergeQueueRemovalReasonNoQueue,
+	MergeQueueRemovalReasonTargetDeleted,
 	MergeQueueRemovalReasonError,
 })

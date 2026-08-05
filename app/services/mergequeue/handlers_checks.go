@@ -151,7 +151,14 @@ func (s *Service) handlerCheckFinished(
 
 	err = s.fastForward(ctx, q, entry)
 	if err != nil {
-		return fmt.Errorf("failed to fast forward target branch to the merge commit: %w", err)
+		if isFastForwardError(err) {
+			// Somebody bypassed the merge queue and changed the protected branch directly, so we reset and reprocess.
+			// reset is best-effort: reprocess re-reads the live target SHA and recreates merge commits for any entry
+			// whose base no longer matches, so the queue self-heals even if this reset fails.
+			s.reset(ctx, repo, q)
+		} else {
+			return fmt.Errorf("failed to fast forward target branch to the merge commit: %w", err)
+		}
 	}
 
 	err = s.reprocess(ctx, repo, q, mergeQueueSetup)

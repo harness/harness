@@ -136,6 +136,7 @@ func NewService(
 				))
 
 			_ = r.RegisterUpdated(service.handlerUpdated)
+			_ = r.RegisterBranchDeleted(service.handlerBranchDeleted)
 
 			return nil
 		})

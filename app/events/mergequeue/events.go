@@ -111,3 +111,30 @@ func (r *Reader) RegisterChecksCanceled(
 ) error {
 	return events.ReaderRegisterEvent(r.innerReader, ChecksCanceledEvent, fn, opts...)
 }
+
+const BranchDeletedEvent events.EventType = "mq_branch_deleted"
+
+type BranchDeletedPayload struct {
+	Base
+}
+
+func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayload) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchDeletedEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to send merge queue branch deleted event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported merge queue branch deleted event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterBranchDeleted(
+	fn events.HandlerFunc[*BranchDeletedPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, BranchDeletedEvent, fn, opts...)
+}

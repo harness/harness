@@ -85,6 +85,9 @@ func (s *Service) RemoveAll(
 		var err error
 
 		q, err = s.mergeQueueStore.FindByRepoAndBranch(ctx, repo.ID, branch)
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return nil // nothing queued for this branch, nothing to clear
+		}
 		if err != nil {
 			return fmt.Errorf("failed to find merge queue by repo ID and branch: %w", err)
 		}
@@ -137,6 +140,10 @@ func (s *Service) RemoveAll(
 	}, dbtx.TxRepeatableRead)
 	if err != nil {
 		return fmt.Errorf("failed to remove all entries from merge queue: %w", err)
+	}
+
+	if q == nil {
+		return nil
 	}
 
 	s.deleteReference(ctx, repo, q.Branch)
