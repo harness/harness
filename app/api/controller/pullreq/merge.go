@@ -248,6 +248,16 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
+	// Block the merge if the target branch has a pull request sitting in the merge queue.
+	// Merging into it would move the target branch reference that the merge queue needs to
+	// keep stable while it validates the queued pull request. This mirrors the protection
+	// applied to direct pushes and the commit API.
+	mqViolations, err := c.mergeQueueService.BranchInQueueViolations(ctx, targetRepo.ID, pr.TargetBranch)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to check for merge queue existence: %w", err)
+	}
+	violations = append(violations, mqViolations...)
+
 	// Validate bypass message if required and bypassing rules
 	if !in.DryRunRules && !in.DryRun && in.BypassRules && ruleOut.RequiresBypassMessage && in.BypassMessage == "" {
 		return nil, nil, usererror.BadRequest("Bypass message is required when bypassing protection rules")
