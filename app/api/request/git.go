@@ -50,11 +50,12 @@ const (
 	QueryParamService      = "service"
 	QueryParamCommitSHA    = "commit_sha"
 
-	QueryParamIncludeGitStats = "include_git_stats"
-	QueryParamIncludeChecks   = "include_checks"
-	QueryParamIncludeRules    = "include_rules"
-	QueryParamIncludePullReqs = "include_pullreqs"
-	QueryParamMaxDivergence   = "max_divergence"
+	QueryParamIncludeGitStats   = "include_git_stats"
+	QueryParamIncludeChecks     = "include_checks"
+	QueryParamIncludeRules      = "include_rules"
+	QueryParamIncludePullReqs   = "include_pullreqs"
+	QueryParamIncludeMergeQueue = "include_merge_queue"
+	QueryParamMaxDivergence     = "max_divergence"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -83,6 +84,10 @@ func GetIncludeRulesFromQueryOrDefault(r *http.Request, deflt bool) (bool, error
 
 func GetIncludePullReqsFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludePullReqs, deflt)
+}
+
+func GetIncludeMergeQueueFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludeMergeQueue, deflt)
 }
 
 func GetMaxDivergenceFromQueryOrDefault(r *http.Request, deflt int64) (int64, error) {
@@ -124,16 +129,22 @@ func ParseBranchMetadataOptions(r *http.Request) (types.BranchMetadataOptions, e
 		return types.BranchMetadataOptions{}, err
 	}
 
+	includeMergeQueue, err := GetIncludeMergeQueueFromQueryOrDefault(r, false)
+	if err != nil {
+		return types.BranchMetadataOptions{}, err
+	}
+
 	maxDivergence, err := GetMaxDivergenceFromQueryOrDefault(r, 0)
 	if err != nil {
 		return types.BranchMetadataOptions{}, err
 	}
 
 	return types.BranchMetadataOptions{
-		IncludeChecks:   includeChecks,
-		IncludeRules:    includeRules,
-		IncludePullReqs: includePullReqs,
-		MaxDivergence:   int(maxDivergence),
+		IncludeChecks:     includeChecks,
+		IncludeRules:      includeRules,
+		IncludePullReqs:   includePullReqs,
+		IncludeMergeQueue: includeMergeQueue,
+		MaxDivergence:     int(maxDivergence),
 	}, nil
 }
 

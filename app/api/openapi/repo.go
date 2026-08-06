@@ -406,6 +406,22 @@ var queryParameterIncludePullReqs = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterIncludeMergeQueue = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamIncludeMergeQueue,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String(
+			"If true, the merge queue setup for the branch would be included in the response."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 var queryParameterMaxDivergence = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamMaxDivergence,
@@ -1088,7 +1104,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opGetBranch.WithMapOfAnything(map[string]any{"operationId": "getBranch"})
 	opGetBranch.WithParameters(
 		queryParameterIncludeChecks, queryParameterIncludeRules, queryParameterIncludePullReqs,
-		queryParameterMaxDivergence,
+		queryParameterIncludeMergeQueue, queryParameterMaxDivergence,
 	)
 	_ = reflector.SetRequest(&opGetBranch, new(getBranchRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opGetBranch, new(types.BranchExtended), http.StatusOK)
@@ -1119,7 +1135,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		QueryParameterPage, QueryParameterLimit,
 		queryParameterIncludeCommit,
 		queryParameterIncludeChecks, queryParameterIncludeRules, queryParameterIncludePullReqs,
-		queryParameterMaxDivergence,
+		queryParameterIncludeMergeQueue, queryParameterMaxDivergence,
 	)
 	_ = reflector.SetRequest(&opListBranches, new(listBranchesRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListBranches, []types.BranchExtended{}, http.StatusOK)

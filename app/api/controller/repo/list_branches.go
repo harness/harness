@@ -88,6 +88,7 @@ func (c *Controller) collectBranchMetadata(
 		checkSummary  map[sha.SHA]types.CheckCountSummary
 		branchRuleMap map[string][]types.RuleInfo
 		pullReqMap    map[string][]*types.PullReq
+		mergeQueueMap map[string]*types.MergeQueueBranchInfo
 		divergences   *git.GetCommitDivergencesOutput
 		err           error
 	)
@@ -142,6 +143,33 @@ func (c *Controller) collectBranchMetadata(
 		}
 	}
 
+	if options.IncludeMergeQueue {
+		// Fetch the repo-level branch rules once and derive the merge queue setup for each branch
+		// in memory - GetMergeQueueSetup does no I/O, so this stays a single query for the whole list.
+		repoLevelBranchRules, err := c.protectionManager.ListOnlyRepoBranchRules(ctx, repo)
+		if err != nil {
+			return branchMetadataOutput{}, fmt.Errorf("failed to fetch repo-level rules for the repository: %w", err)
+		}
+
+		mergeQueueMap = make(map[string]*types.MergeQueueBranchInfo, len(branches))
+		for i := range branches {
+			branchName := branches[i].Name
+
+			setup, err := repoLevelBranchRules.GetMergeQueueSetup(protection.MergeQueueSetupInput{
+				Repo:         repo,
+				TargetBranch: branchName,
+			})
+			if err != nil {
+				return branchMetadataOutput{}, fmt.Errorf("failed to get merge queue setup for branch %q: %w",
+					branchName, err)
+			}
+
+			mergeQueueMap[branchName] = &types.MergeQueueBranchInfo{
+				Active: setup.IsActive(),
+			}
+		}
+	}
+
 	if options.MaxDivergence > 0 {
 		readParams := git.CreateReadParams(repo)
 
@@ -165,6 +193,7 @@ func (c *Controller) collectBranchMetadata(
 		checkSummary:  checkSummary,
 		branchRuleMap: branchRuleMap,
 		pullReqMap:    pullReqMap,
+		mergeQueueMap: mergeQueueMap,
 		divergences:   divergences,
 	}, nil
 }
@@ -173,6 +202,7 @@ type branchMetadataOutput struct {
 	checkSummary  map[sha.SHA]types.CheckCountSummary
 	branchRuleMap map[string][]types.RuleInfo
 	pullReqMap    map[string][]*types.PullReq
+	mergeQueueMap map[string]*types.MergeQueueBranchInfo
 	divergences   *git.GetCommitDivergencesOutput
 }
 
@@ -190,6 +220,10 @@ func (metadata branchMetadataOutput) apply(
 
 	if metadata.pullReqMap != nil {
 		branch.PullRequests = metadata.pullReqMap[branch.Name]
+	}
+
+	if metadata.mergeQueueMap != nil {
+		branch.MergeQueue = metadata.mergeQueueMap[branch.Name]
 	}
 
 	if metadata.divergences != nil {

@@ -45,10 +45,11 @@ type CommitFilter struct {
 }
 
 type BranchMetadataOptions struct {
-	IncludeChecks   bool `json:"include_checks"`
-	IncludeRules    bool `json:"include_rules"`
-	IncludePullReqs bool `json:"include_pullreqs"`
-	MaxDivergence   int  `json:"max_divergence"`
+	IncludeChecks     bool `json:"include_checks"`
+	IncludeRules      bool `json:"include_rules"`
+	IncludePullReqs   bool `json:"include_pullreqs"`
+	IncludeMergeQueue bool `json:"include_merge_queue"`
+	MaxDivergence     int  `json:"max_divergence"`
 }
 
 // BranchFilter stores branch query parameters.

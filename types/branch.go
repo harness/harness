@@ -35,11 +35,12 @@ type BranchTable struct {
 
 type BranchExtended struct {
 	Branch
-	IsDefault        bool               `json:"is_default"`
-	CheckSummary     *CheckCountSummary `json:"check_summary,omitempty"`
-	Rules            []RuleInfo         `json:"rules,omitempty"`
-	PullRequests     []*PullReq         `json:"pull_requests,omitempty"`
-	CommitDivergence *CommitDivergence  `json:"commit_divergence,omitempty"`
+	IsDefault        bool                  `json:"is_default"`
+	CheckSummary     *CheckCountSummary    `json:"check_summary,omitempty"`
+	Rules            []RuleInfo            `json:"rules,omitempty"`
+	PullRequests     []*PullReq            `json:"pull_requests,omitempty"`
+	MergeQueue       *MergeQueueBranchInfo `json:"merge_queue,omitempty"`
+	CommitDivergence *CommitDivergence     `json:"commit_divergence,omitempty"`
 }
 
 type CreateBranchOutput struct {
@@ -49,6 +50,11 @@ type CreateBranchOutput struct {
 
 type DeleteBranchOutput struct {
 	DryRunRulesOutput
+}
+
+// MergeQueueBranchInfo holds basic merge queue info that would be included get branch response.
+type MergeQueueBranchInfo struct {
+	Active bool `json:"active"`
 }
 
 // CommitDivergence contains the information of the count of converging commits between two refs.
