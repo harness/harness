@@ -954,6 +954,8 @@ importRepo:
   passTokenPlaceholder: Enter Token
   appPassword: App Password
   appPasswordPlaceholder: Enter App Password
+  email: Email
+  emailPlaceholder: Enter the Account Email
   failedToImportRepo: Failed to import repository. Please try again.
   validation: Invalid GitHub or GitLab URL
   required: Repository URL is required

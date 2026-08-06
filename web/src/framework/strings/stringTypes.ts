@@ -431,6 +431,8 @@ export interface StringsMap {
   importProgress: string
   'importRepo.appPassword': string
   'importRepo.appPasswordPlaceholder': string
+  'importRepo.email': string
+  'importRepo.emailPlaceholder': string
   'importRepo.failedToImportRepo': string
   'importRepo.group': string
   'importRepo.groupPlaceholder': string
