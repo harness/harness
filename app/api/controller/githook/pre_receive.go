@@ -287,12 +287,8 @@ func (c *Controller) checkPushProtection(
 ) ([]types.RuleViolations, *repoSettingsViolations, error) {
 	pushProtection := c.protectionManager.FilterPushProtection(protectionRules)
 
-	// TODO: Once push rule violations are returned to the API layer,
-	// allow bypass only for operations that explicitly support it.
-	// Specifically:
-	//   - GitOpTypeAPIContentBypassRules: API operations that intentionally bypass rules
-	//   - GitOpTypeGitPush: direct git pushes from clients
-	allowBypass := true
+	allowBypass := in.OperationType == enum.GitOpTypeAPIContentBypassRules ||
+		in.OperationType == enum.GitOpTypeGitPush
 
 	pushVerifyOut, _, err := pushProtection.PushVerify(
 		ctx,
