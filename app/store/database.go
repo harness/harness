@@ -1641,7 +1641,7 @@ type (
 			principalID int64,
 			cutOffTime int64,
 			limit uint64,
-			sha string,
+			defaultBranch string,
 		) ([]types.BranchTable, error)
 
 		// Find finds a branch by repo ID and branch name.
