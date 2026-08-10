@@ -88,6 +88,7 @@ func (*OpenAPI) Generate() *openapi3.Spec {
 	uploadOperations(&reflector)
 	gitspaceOperations(&reflector)
 	infraProviderOperations(&reflector)
+	searchOperations(&reflector)
 
 	//
 	// define security scheme

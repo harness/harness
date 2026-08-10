@@ -230,7 +230,6 @@ func setupRoutesV1WithAuth(r chi.Router,
 	setupInternal(r, githookCtrl, git)
 	setupAdmin(r, userCtrl)
 	setupPlugins(r, pluginCtrl)
-	setupKeywordSearch(r, searchCtrl)
 	setupInfraProviders(r, infraProviderCtrl)
 	setupGitspaces(r, gitspaceCtrl)
 	setupMigrate(r, migrateCtrl)
@@ -269,7 +268,7 @@ func setupSpaces(
 			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
 			r.Get("/executions", handlerspace.HandleListExecutions(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
-			r.Get("/search", handlerkeywordsearch.HandleSearchSpace(searchCtrl))
+			r.Get("/code-search", handlerkeywordsearch.HandleSearchSpace(searchCtrl))
 			r.Get("/usergroups", handlerUserGroup.HandleList(userGroupCtrl))
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
@@ -424,7 +423,7 @@ func setupRepos(r chi.Router,
 
 			r.Get("/summary", handlerrepo.HandleSummary(repoCtrl))
 			r.Get("/activities", handlerrepo.HandleListActivities(repoCtrl))
-			r.Get("/search", handlerkeywordsearch.HandleSearchRepo(searchCtrl))
+			r.Get("/code-search", handlerkeywordsearch.HandleSearchRepo(searchCtrl))
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
@@ -960,10 +959,6 @@ func setupPrincipals(r chi.Router, principalCtrl principal.Controller) {
 		r.Get(fmt.Sprintf("/{%s}", request.PathParamPrincipalID), handlerprincipal.HandleFind(principalCtrl))
 		r.Post("/check-emails", handlerprincipal.HandleCheckExistenceByEmail(principalCtrl))
 	})
-}
-
-func setupKeywordSearch(r chi.Router, searchCtrl *keywordsearch.Controller) {
-	r.Post("/search", handlerkeywordsearch.HandleSearch(searchCtrl))
 }
 
 func setupGitspaces(r chi.Router, gitspacesCtrl *gitspace.Controller) {

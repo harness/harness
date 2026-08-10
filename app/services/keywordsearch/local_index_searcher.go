@@ -23,20 +23,14 @@ import (
 type LocalIndexSearcher struct {
 }
 
-func NewLocalIndexSearcher() *LocalIndexSearcher {
-	return &LocalIndexSearcher{}
+func NewLocalIndexSearcher() LocalIndexSearcher {
+	return LocalIndexSearcher{}
 }
 
-func (s *LocalIndexSearcher) Search(
-	_ context.Context,
-	_ []int64,
-	_ string,
-	_ bool,
-	_ int,
-) (types.SearchResult, error) {
+func (s LocalIndexSearcher) Search(context.Context, []int64, string, bool, int) (types.SearchResult, error) {
 	return types.SearchResult{}, nil
 }
 
-func (s *LocalIndexSearcher) Index(_ context.Context, _ *types.Repository) error {
+func (s LocalIndexSearcher) Index(context.Context, *types.Repository) error {
 	return nil
 }

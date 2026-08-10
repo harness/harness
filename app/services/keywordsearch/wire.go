@@ -48,14 +48,6 @@ func ProvideService(ctx context.Context,
 		indexer)
 }
 
-func ProvideLocalIndexSearcher() *LocalIndexSearcher {
-	return NewLocalIndexSearcher()
-}
-
-func ProvideIndexer(l *LocalIndexSearcher) Indexer {
-	return l
-}
-
-func ProvideSearcher(l *LocalIndexSearcher) Searcher {
-	return l
-}
+func ProvideLocalIndexSearcher() LocalIndexSearcher { return NewLocalIndexSearcher() }
+func ProvideIndexer(l LocalIndexSearcher) Indexer   { return l }
+func ProvideSearcher(l LocalIndexSearcher) Searcher { return l }
