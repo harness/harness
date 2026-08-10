@@ -57,7 +57,11 @@ var descriptions = map[string]builder{
 				if strings.HasPrefix(arg, "-") {
 					// check if the argument is a level of compression
 					if _, err := strconv.Atoi(arg[1:]); err == nil {
-						return nil
+						// accept this single compression-level arg and keep
+						// validating the rest; returning here would disable
+						// validation for every subsequent argument and allow
+						// flag smuggling (e.g. --add-file, --output, --remote).
+						continue
 					}
 				}
 				if err := validatePositionalArg(arg); err != nil {

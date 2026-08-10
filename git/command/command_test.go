@@ -55,6 +55,64 @@ func TestCreateBareRepository(t *testing.T) {
 	}
 }
 
+func TestArchiveValidatePositionalArgs(t *testing.T) {
+	b := descriptions["archive"]
+
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr bool
+	}{
+		{
+			name:    "plain paths",
+			args:    []string{"README.md", "docs"},
+			wantErr: false,
+		},
+		{
+			name:    "leading compression level then paths",
+			args:    []string{"-9", "README.md", "docs"},
+			wantErr: false,
+		},
+		{
+			name:    "compression level only",
+			args:    []string{"-9"},
+			wantErr: false,
+		},
+		{
+			name:    "flag smuggled after compression level is rejected",
+			args:    []string{"-9", "--add-file=/etc/passwd"},
+			wantErr: true,
+		},
+		{
+			name:    "output flag smuggled after compression level is rejected",
+			args:    []string{"-9", "--output=/tmp/pwned"},
+			wantErr: true,
+		},
+		{
+			name:    "remote flag smuggled after compression level is rejected",
+			args:    []string{"-9", "--remote=git://attacker/x"},
+			wantErr: true,
+		},
+		{
+			name:    "flag as first arg is rejected",
+			args:    []string{"--add-file=/etc/passwd"},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := b.validatePositionalArgs(tt.args)
+			if tt.wantErr && err == nil {
+				t.Errorf("expected error for args %v, got nil", tt.args)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("expected no error for args %v, got %v", tt.args, err)
+			}
+		})
+	}
+}
+
 func TestCommandContextTimeout(t *testing.T) {
 	cmd := New("init", WithFlag("--bare"), WithArg("samplerepo"))
 
