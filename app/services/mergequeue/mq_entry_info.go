@@ -156,6 +156,7 @@ func (s *Service) buildEntryInfo(
 		State:             entry.State,
 		MergeCommitSHA:    entry.MergeCommitSHA,
 		ChecksCommitSHA:   entry.ChecksCommitSHA,
+		MergeMethod:       entry.MergeMethod,
 		Checks:            prChecks,
 		PullRequestsAhead: prsAhead,
 	}, nil

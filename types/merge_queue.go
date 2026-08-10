@@ -26,6 +26,7 @@ type MergeQueueInfo struct {
 	State             enum.MergeQueueEntryState `json:"state"`
 	MergeCommitSHA    sha.SHA                   `json:"merge_commit_sha"`
 	ChecksCommitSHA   sha.SHA                   `json:"checks_commit_sha"`
+	MergeMethod       enum.MergeMethod          `json:"merge_method"`
 	Checks            []PullReqCheck            `json:"checks"`
 	PullRequestsAhead int                       `json:"pull_requests_ahead"`
 }
