@@ -192,7 +192,7 @@ func (c *Controller) Merge(
 			usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
 	}
 
-	if c.mergeQueueService.IsEnqueued(pr) {
+	if c.mergeQueueService.IsEnqueued(pr) && !in.DryRunRules { // Allow dry running rules for PRs in MQ.
 		return nil, nil, usererror.BadRequest(
 			"Direct merge is not allowed. The pull request would be merged through the merge queue.")
 	}
