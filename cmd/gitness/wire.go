@@ -92,6 +92,7 @@ import (
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/automerge"
 	"github.com/harness/gitness/app/services/branch"
+	"github.com/harness/gitness/app/services/checkreq"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -202,6 +203,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		reposettings.WireSet,
 		pullreq.WireSet,
 		merge.WireSet,
+		checkreq.WireSet,
 		automerge.WireSet,
 		mergequeue.WireSet,
 		mergequeueevents.WireSet,

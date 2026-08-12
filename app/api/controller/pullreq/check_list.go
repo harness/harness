@@ -59,6 +59,13 @@ func (c *Controller) ListChecks(
 		return types.PullReqChecks{}, fmt.Errorf("failed to get identifiers of required checks: %w", err)
 	}
 
+	// Checks required outside of the protection rules - the requirement lives with
+	// the owner of the check, not with a repository rule.
+	extReqChecks, err := c.mergeService.RequiredChecks(ctx, repo, pr)
+	if err != nil {
+		return types.PullReqChecks{}, fmt.Errorf("failed to get externally required checks: %w", err)
+	}
+
 	commitSHA := pr.SourceSHA
 
 	checks, err := c.checkStore.List(ctx, repo.ID, commitSHA, types.CheckListOptions{})
@@ -69,6 +76,11 @@ func (c *Controller) ListChecks(
 	result := types.PullReqChecks{
 		CommitSHA: commitSHA,
 		Checks:    nil,
+	}
+
+	reported := make(map[string]bool, len(checks))
+	for _, check := range checks {
+		reported[check.Identifier] = true
 	}
 
 	for _, check := range checks {
@@ -82,10 +94,47 @@ func (c *Controller) ListChecks(
 			delete(reqChecks.BypassableIdentifiers, check.Identifier)
 		}
 
+		extRequired, extBypassable := extReqChecks.Requirement(check.Identifier)
+
+		// A non-bypassable requirement wins over a bypassable one, no matter
+		// which side declared it: `required` is the rule-side non-bypassable set,
+		// and `extRequired && !extBypassable` is its external counterpart.
+		isBypassable := bypassable || extBypassable
+		if required || (extRequired && !extBypassable) {
+			isBypassable = false
+		}
+
 		result.Checks = append(result.Checks, types.PullReqCheck{
-			Required:   required || bypassable,
-			Bypassable: bypassable,
+			Required:   required || bypassable || extRequired,
+			Bypassable: isBypassable,
 			Check:      check,
+		})
+	}
+
+	// Requirements whose check has not been reported yet are surfaced as pending,
+	// the same way rule-required identifiers are below.
+	for _, identifier := range extReqChecks.Identifiers() {
+		if reported[identifier] {
+			continue
+		}
+		if _, ok := reqChecks.RequiredIdentifiers[identifier]; ok {
+			continue
+		}
+		if _, ok := reqChecks.BypassableIdentifiers[identifier]; ok {
+			continue
+		}
+
+		_, extBypassable := extReqChecks.Requirement(identifier)
+		result.Checks = append(result.Checks, types.PullReqCheck{
+			Required:   true,
+			Bypassable: extBypassable,
+			Check: types.Check{
+				RepoID:     repo.ID,
+				CommitSHA:  commitSHA,
+				Identifier: identifier,
+				Status:     enum.CheckStatusPending,
+				Metadata:   json.RawMessage("{}"),
+			},
 		})
 	}
 
@@ -104,9 +153,13 @@ func (c *Controller) ListChecks(
 	}
 
 	for bypassableID := range reqChecks.BypassableIdentifiers {
+		// Same invariant as above: an external non-bypassable requirement on a
+		// rule-bypassable identifier makes it non-bypassable.
+		extRequired, extBypassable := extReqChecks.Requirement(bypassableID)
+		extNonBypassable := extRequired && !extBypassable
 		result.Checks = append(result.Checks, types.PullReqCheck{
 			Required:   true,
-			Bypassable: true,
+			Bypassable: !extNonBypassable,
 			Check: types.Check{
 				RepoID:     repo.ID,
 				CommitSHA:  commitSHA,

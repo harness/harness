@@ -16,6 +16,7 @@ package merge
 
 import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/checkreq"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/refcache"
@@ -50,6 +51,7 @@ func ProvideService(
 	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
 	instrumentation instrument.Service,
+	checkRequirements checkreq.Provider,
 ) *Service {
 	return NewService(
 		git,
@@ -67,5 +69,6 @@ func ProvideService(
 		urlProvider,
 		sseStreamer,
 		instrumentation,
+		checkRequirements,
 	)
 }

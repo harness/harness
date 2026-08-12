@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/services/checkreq"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
@@ -50,6 +51,16 @@ func (s *Service) CheckRulesForMergeQueue(
 	in CheckRulesInput,
 ) (protection.MergeVerifyOutput, []types.RuleViolations, error) {
 	return s.checkRules(ctx, protectionRules, true, in)
+}
+
+// RequiredChecks returns the checks required for the pull request by an owner
+// outside of gitness, independently of the branch protection rules.
+func (s *Service) RequiredChecks(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	pr *types.PullReq,
+) (checkreq.Resolved, error) {
+	return checkreq.Resolve(ctx, s.checkRequirements, repo, pr)
 }
 
 func (s *Service) checkRules(
@@ -92,6 +103,14 @@ func (s *Service) checkRules(
 	if err != nil {
 		return protection.MergeVerifyOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
+
+	// Checks required by an external owner are verified separately from the
+	// protection rules, so that a rule's bypass list cannot waive them.
+	requirements, err := checkreq.Resolve(ctx, s.checkRequirements, in.TargetRepo, in.PullReq)
+	if err != nil {
+		return protection.MergeVerifyOutput{}, nil, fmt.Errorf("failed to resolve external checks: %w", err)
+	}
+	violations = append(violations, checkreq.Violations(requirements.Unsatisfied(checkResults))...)
 
 	return ruleOut, violations, nil
 }

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/checkreq"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/refcache"
@@ -33,21 +34,22 @@ import (
 const Timeout = 3 * time.Minute
 
 type Service struct {
-	git              git.Interface
-	tx               dbtx.Transactor
-	eventReporter    *pullreqevents.Reporter
-	repoFinder       refcache.RepoFinder
-	repoStore        store.RepoStore
-	pullreqStore     store.PullReqStore
-	activityStore    store.PullReqActivityStore
-	checkStore       store.CheckStore
-	reviewerStore    store.PullReqReviewerStore
-	autoMergeStore   store.AutoMergeStore
-	codeOwners       *codeowners.Service
-	userGroupService usergroup.Service
-	urlProvider      url.Provider
-	sseStreamer      sse.Streamer
-	instrumentation  instrument.Service
+	git               git.Interface
+	tx                dbtx.Transactor
+	eventReporter     *pullreqevents.Reporter
+	repoFinder        refcache.RepoFinder
+	repoStore         store.RepoStore
+	pullreqStore      store.PullReqStore
+	activityStore     store.PullReqActivityStore
+	checkStore        store.CheckStore
+	reviewerStore     store.PullReqReviewerStore
+	autoMergeStore    store.AutoMergeStore
+	codeOwners        *codeowners.Service
+	userGroupService  usergroup.Service
+	urlProvider       url.Provider
+	sseStreamer       sse.Streamer
+	instrumentation   instrument.Service
+	checkRequirements checkreq.Provider
 }
 
 func NewService(
@@ -66,22 +68,24 @@ func NewService(
 	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
 	instrumentation instrument.Service,
+	checkRequirements checkreq.Provider,
 ) *Service {
 	return &Service{
-		git:              git,
-		tx:               tx,
-		eventReporter:    eventReporter,
-		repoFinder:       repoFinder,
-		repoStore:        repoStore,
-		pullreqStore:     pullreqStore,
-		activityStore:    activityStore,
-		checkStore:       checkStore,
-		reviewerStore:    reviewerStore,
-		autoMergeStore:   autoMergeStore,
-		codeOwners:       codeOwners,
-		userGroupService: userGroupService,
-		urlProvider:      urlProvider,
-		sseStreamer:      sseStreamer,
-		instrumentation:  instrumentation,
+		git:               git,
+		tx:                tx,
+		eventReporter:     eventReporter,
+		repoFinder:        repoFinder,
+		repoStore:         repoStore,
+		pullreqStore:      pullreqStore,
+		activityStore:     activityStore,
+		checkStore:        checkStore,
+		reviewerStore:     reviewerStore,
+		autoMergeStore:    autoMergeStore,
+		codeOwners:        codeOwners,
+		userGroupService:  userGroupService,
+		urlProvider:       urlProvider,
+		sseStreamer:       sseStreamer,
+		instrumentation:   instrumentation,
+		checkRequirements: checkRequirements,
 	}
 }
