@@ -76,7 +76,7 @@ storage:
     # Additional annotations to apply to the created PersistentVolumeClaims.
     annotations: {}
 
-env: 
+env:
   # Examples
   # GITNESS_PRINCIPAL_ADMIN_PASSWORD: gitness
   # GITNESS_USER_SIGNUP_ENABLED: "false"

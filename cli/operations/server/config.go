@@ -400,8 +400,10 @@ func ProvidePubsubConfig(config *types.Config) pubsub.Config {
 // ProvideCleanupConfig loads the cleanup service config from the main config.
 func ProvideCleanupConfig(config *types.Config) cleanup.Config {
 	return cleanup.Config{
-		WebhookExecutionsRetentionTime:   config.Webhook.RetentionTime,
-		DeletedRepositoriesRetentionTime: config.Repos.DeletedRetentionTime,
+		WebhookExecutionsRetentionTime:        config.Webhook.RetentionTime,
+		DeletedRepositoriesRetentionTime:      config.Repos.DeletedRetentionTime,
+		DeletedRepositoriesCleanupCron:        config.Repos.DeletedCleanupCron,
+		DeletedRepositoriesCleanupMaxDuration: config.Repos.DeletedCleanupMaxDuration,
 	}
 }
 

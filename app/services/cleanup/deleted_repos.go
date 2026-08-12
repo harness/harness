@@ -30,10 +30,8 @@ import (
 )
 
 const (
-	jobTypeDeletedRepos        = "gitness:cleanup:deleted-repos"
-	jobCronDeletedRepos        = "50 0 * * *" // At minute 50 past midnight every day.
-	jobMaxDurationDeletedRepos = 1 * time.Hour
-	maxDeletedRepoRetrival     = 1000 // to avoid loading all deleted repos in memory at once
+	jobTypeDeletedRepos    = "gitness:cleanup:deleted-repos"
+	maxDeletedRepoRetrival = 1000 // to avoid loading all deleted repos in memory at once
 )
 
 type deletedReposCleanupJob struct {

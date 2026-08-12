@@ -457,6 +457,10 @@ type Config struct {
 	Repos struct {
 		// DeletedRetentionTime is the duration after which deleted repositories will be purged.
 		DeletedRetentionTime time.Duration `envconfig:"GITNESS_REPOS_DELETED_RETENTION_TIME" default:"2160h"` // 90 days
+		// DeletedCleanupCron is the cron schedule on which the deleted repository purge job runs.
+		DeletedCleanupCron string `envconfig:"GITNESS_REPOS_DELETED_CLEANUP_CRON" default:"50 0 * * *"`
+		// DeletedCleanupMaxDuration is the max duration the deleted repository purge job is allowed to run for.
+		DeletedCleanupMaxDuration time.Duration `envconfig:"GITNESS_REPOS_DELETED_CLEANUP_MAX_DURATION" default:"1h"`
 	}
 
 	Docker struct {

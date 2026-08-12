@@ -26,8 +26,10 @@ import (
 )
 
 type Config struct {
-	WebhookExecutionsRetentionTime   time.Duration
-	DeletedRepositoriesRetentionTime time.Duration
+	WebhookExecutionsRetentionTime        time.Duration
+	DeletedRepositoriesRetentionTime      time.Duration
+	DeletedRepositoriesCleanupCron        string
+	DeletedRepositoriesCleanupMaxDuration time.Duration
 }
 
 func (c *Config) Prepare() error {
@@ -40,6 +42,14 @@ func (c *Config) Prepare() error {
 
 	if c.DeletedRepositoriesRetentionTime <= 0 {
 		return errors.New("config.DeletedRepositoriesRetentionTime has to be provided")
+	}
+
+	if c.DeletedRepositoriesCleanupCron == "" {
+		return errors.New("config.DeletedRepositoriesCleanupCron has to be provided")
+	}
+
+	if c.DeletedRepositoriesCleanupMaxDuration <= 0 {
+		return errors.New("config.DeletedRepositoriesCleanupMaxDuration has to be provided")
 	}
 	return nil
 }
@@ -120,8 +130,8 @@ func (s *Service) scheduleRecurringCleanupJobs(ctx context.Context) error {
 		ctx,
 		jobTypeDeletedRepos,
 		jobTypeDeletedRepos,
-		jobCronDeletedRepos,
-		jobMaxDurationDeletedRepos,
+		s.config.DeletedRepositoriesCleanupCron,
+		s.config.DeletedRepositoriesCleanupMaxDuration,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to schedule deleted repo cleanup job: %w", err)
