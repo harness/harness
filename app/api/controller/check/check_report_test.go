@@ -302,3 +302,76 @@ func Test_Sanitize_SummaryAndLink(t *testing.T) {
 		})
 	}
 }
+
+func Test_Sanitize_BypassedBy(t *testing.T) {
+	noopSanitizer := func(_ *ReportInput, _ *auth.Session) error { return nil }
+	sanitizers := map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error{
+		enum.CheckPayloadKindEmpty: noopSanitizer,
+	}
+	bypassedBy := func(id int64) *int64 { return &id }
+	session := func(t enum.PrincipalType) *auth.Session {
+		return &auth.Session{Principal: types.Principal{ID: 1, Type: t}}
+	}
+
+	tests := []struct {
+		name    string
+		input   *ReportInput
+		session *auth.Session
+		errMsg  string
+	}{
+		{
+			name: "service principal can report a bypass",
+			input: &ReportInput{
+				Identifier: "check1",
+				Status:     enum.CheckStatusFailure,
+				BypassedBy: bypassedBy(7),
+				Payload:    types.CheckPayload{Kind: enum.CheckPayloadKindEmpty},
+			},
+			session: session(enum.PrincipalTypeService),
+		},
+		{
+			name: "user can't report a bypass",
+			input: &ReportInput{
+				Identifier: "check1",
+				Status:     enum.CheckStatusFailure,
+				BypassedBy: bypassedBy(7),
+				Payload:    types.CheckPayload{Kind: enum.CheckPayloadKindEmpty},
+			},
+			session: session(enum.PrincipalTypeUser),
+			errMsg:  "Only service principals can report bypassed_by",
+		},
+		{
+			name: "user can report without a bypass",
+			input: &ReportInput{
+				Identifier: "check1",
+				Status:     enum.CheckStatusFailure,
+				Payload:    types.CheckPayload{Kind: enum.CheckPayloadKindEmpty},
+			},
+			session: session(enum.PrincipalTypeUser),
+		},
+		{
+			name: "non positive bypass principal id is rejected",
+			input: &ReportInput{
+				Identifier: "check1",
+				Status:     enum.CheckStatusFailure,
+				BypassedBy: bypassedBy(0),
+				Payload:    types.CheckPayload{Kind: enum.CheckPayloadKindEmpty},
+			},
+			session: session(enum.PrincipalTypeService),
+			errMsg:  "bypassed_by must be a valid",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.input.Sanitize(sanitizers, tt.session)
+			switch {
+			case tt.errMsg == "" && err != nil:
+				t.Fatalf("Sanitize() error = %v, want nil", err)
+			case tt.errMsg != "" && err == nil:
+				t.Fatalf("Sanitize() error = nil, want it to contain %q", tt.errMsg)
+			case tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg):
+				t.Errorf("Sanitize() error = %q, want it to contain %q", err.Error(), tt.errMsg)
+			}
+		})
+	}
+}

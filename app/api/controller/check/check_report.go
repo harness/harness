@@ -100,8 +100,15 @@ func (in *ReportInput) Sanitize(
 		return usererror.BadRequest("Started time reported after ended time")
 	}
 
-	if in.BypassedBy != nil && *in.BypassedBy <= 0 {
-		return usererror.BadRequest("bypassed_by must be a valid (positive) principal id")
+	if in.BypassedBy != nil {
+		// Only service principals are allowed to report a bypass.
+		if session.Principal.Type != enum.PrincipalTypeService {
+			return usererror.Forbidden("Only service principals can report bypassed_by")
+		}
+
+		if *in.BypassedBy <= 0 {
+			return usererror.BadRequest("bypassed_by must be a valid (positive) principal id")
+		}
 	}
 
 	return nil
