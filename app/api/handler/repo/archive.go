@@ -52,6 +52,8 @@ func HandleArchive(repoCtrl *repo.Controller) http.HandlerFunc {
 			contentType = "application/zip"
 		}
 
+		render.UserContentSecurityHeaders(w)
+
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 		w.Header().Set("Content-Type", contentType)
 

@@ -63,6 +63,8 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
+		render.UserContentSecurityHeaders(w)
+
 		w.Header().Add("Content-Length", fmt.Sprint(resp.Size))
 		w.Header().Add(request.HeaderETag, resp.SHA.String())
 

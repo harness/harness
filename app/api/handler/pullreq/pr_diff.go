@@ -62,6 +62,9 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		}
 
 		if strings.HasPrefix(r.Header.Get("Accept"), "text/plain") {
+			render.UserContentSecurityHeaders(w)
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
 			err := pullreqCtrl.RawDiff(ctx, w, session, repoRef, pullreqNumber, setSHAs, files...)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusOK)

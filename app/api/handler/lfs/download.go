@@ -59,6 +59,8 @@ func HandleLFSDownload(controller *lfs.Controller, urlProvider url.Provider) htt
 			}
 		}()
 
+		render.UserContentSecurityHeaders(w)
+
 		w.Header().Add("Content-Length", fmt.Sprint(resp.Size))
 		// apply max byte size
 		render.Reader(ctx, w, http.StatusOK, resp.Data)

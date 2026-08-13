@@ -15,7 +15,9 @@
 package upload
 
 import (
+	"mime"
 	"net/http"
+	"path"
 
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/render"
@@ -23,6 +25,22 @@ import (
 
 	"github.com/rs/zerolog/log"
 )
+
+// defaultContentType is used when the stored file's extension is unknown. Without an
+// explicit content type the standard library sniffs the body, which combined with
+// nosniff would leave the browser guessing.
+const defaultContentType = "application/octet-stream"
+
+// contentTypeForFile derives the content type from the stored file's extension. Uploads
+// are stored as "<uuid><extension>" where the extension is derived from the sniffed mime
+// type at upload time, so the extension is trustworthy here.
+func contentTypeForFile(filename string) string {
+	if contentType := mime.TypeByExtension(path.Ext(filename)); contentType != "" {
+		return contentType
+	}
+
+	return defaultContentType
+}
 
 func HandleDownoad(controller *upload.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +64,9 @@ func HandleDownoad(controller *upload.Controller) http.HandlerFunc {
 			return
 		}
 		if file != nil {
+			render.UserContentSecurityHeaders(w)
+			w.Header().Set("Content-Type", contentTypeForFile(filename))
+
 			render.Reader(ctx, w, http.StatusOK, file)
 			err = file.Close()
 			if err != nil {
