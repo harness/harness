@@ -23,6 +23,7 @@ import (
 	"path"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
@@ -85,17 +86,19 @@ type Config struct {
 }
 
 type Service struct {
-	config                Config
-	notificationClient    Client
-	prReaderFactory       *events.ReaderFactory[*pullreqevents.Reader]
-	pullReqStore          store.PullReqStore
-	repoStore             store.RepoStore
-	principalInfoView     store.PrincipalInfoView
-	principalInfoCache    store.PrincipalInfoCache
-	pullReqReviewersStore store.PullReqReviewerStore
-	pullReqActivityStore  store.PullReqActivityStore
-	spacePathStore        store.SpacePathStore
-	urlProvider           url.Provider
+	config                 Config
+	notificationClient     Client
+	prReaderFactory        *events.ReaderFactory[*pullreqevents.Reader]
+	pullReqStore           store.PullReqStore
+	repoStore              store.RepoStore
+	principalInfoView      store.PrincipalInfoView
+	principalInfoCache     store.PrincipalInfoCache
+	pullReqReviewersStore  store.PullReqReviewerStore
+	userGroupReviewerStore store.UserGroupReviewerStore
+	userGroupService       usergroup.Service
+	pullReqActivityStore   store.PullReqActivityStore
+	spacePathStore         store.SpacePathStore
+	urlProvider            url.Provider
 }
 
 func NewService(
@@ -108,22 +111,26 @@ func NewService(
 	principalInfoView store.PrincipalInfoView,
 	principalInfoCache store.PrincipalInfoCache,
 	pullReqReviewersStore store.PullReqReviewerStore,
+	userGroupReviewerStore store.UserGroupReviewerStore,
+	userGroupService usergroup.Service,
 	pullReqActivityStore store.PullReqActivityStore,
 	spacePathStore store.SpacePathStore,
 	urlProvider url.Provider,
 ) (*Service, error) {
 	service := &Service{
-		config:                config,
-		notificationClient:    notificationClient,
-		prReaderFactory:       prReaderFactory,
-		pullReqStore:          pullReqStore,
-		repoStore:             repoStore,
-		principalInfoView:     principalInfoView,
-		principalInfoCache:    principalInfoCache,
-		pullReqReviewersStore: pullReqReviewersStore,
-		pullReqActivityStore:  pullReqActivityStore,
-		spacePathStore:        spacePathStore,
-		urlProvider:           urlProvider,
+		config:                 config,
+		notificationClient:     notificationClient,
+		prReaderFactory:        prReaderFactory,
+		pullReqStore:           pullReqStore,
+		repoStore:              repoStore,
+		principalInfoView:      principalInfoView,
+		principalInfoCache:     principalInfoCache,
+		pullReqReviewersStore:  pullReqReviewersStore,
+		userGroupReviewerStore: userGroupReviewerStore,
+		userGroupService:       userGroupService,
+		pullReqActivityStore:   pullReqActivityStore,
+		spacePathStore:         spacePathStore,
+		urlProvider:            urlProvider,
 	}
 
 	_, err := service.prReaderFactory.Launch(

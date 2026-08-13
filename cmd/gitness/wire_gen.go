@@ -797,7 +797,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	mailerMailer := mailer.ProvideMailClient(config)
 	notificationClient := notification.ProvideMailClient(mailerMailer)
 	notificationConfig := server.ProvideNotificationConfig(config)
-	notificationService, err := notification.ProvideNotificationService(ctx, notificationClient, notificationConfig, readerFactory3, pullReqStore, repoStore, principalInfoView, principalInfoCache, pullReqReviewerStore, pullReqActivityStore, spacePathStore, provider)
+	notificationService, err := notification.ProvideNotificationService(ctx, notificationClient, notificationConfig, readerFactory3, pullReqStore, repoStore, principalInfoView, principalInfoCache, pullReqReviewerStore, userGroupReviewerStore, usergroupService, pullReqActivityStore, spacePathStore, provider)
 	if err != nil {
 		return nil, err
 	}

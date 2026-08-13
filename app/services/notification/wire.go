@@ -19,6 +19,7 @@ import (
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/notification/mailer"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
@@ -41,6 +42,8 @@ func ProvideNotificationService(
 	principalInfoView store.PrincipalInfoView,
 	principalInfoCache store.PrincipalInfoCache,
 	pullReqReviewersStore store.PullReqReviewerStore,
+	userGroupReviewerStore store.UserGroupReviewerStore,
+	userGroupService usergroup.Service,
 	pullReqActivityStore store.PullReqActivityStore,
 	spacePathStore store.SpacePathStore,
 	urlProvider url.Provider,
@@ -55,6 +58,8 @@ func ProvideNotificationService(
 		principalInfoView,
 		principalInfoCache,
 		pullReqReviewersStore,
+		userGroupReviewerStore,
+		userGroupService,
 		pullReqActivityStore,
 		spacePathStore,
 		urlProvider,

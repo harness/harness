@@ -162,12 +162,59 @@ func (s *Service) processPullReqStateChangedEvent(
 		)
 	}
 
-	recipients := make([]*types.PrincipalInfo, len(reviewers)+1)
-	for i := range reviewers {
-		recipients[i] = &reviewers[i].Reviewer
+	userGroupReviewers, err := s.userGroupReviewerStore.List(ctx, baseEvent.PullReqID)
+	if err != nil {
+		return nil, nil, fmt.Errorf(
+			"failed to get user group reviewers from userGroupReviewerStore for pullReqID %d: %w",
+			baseEvent.PullReqID,
+			err,
+		)
 	}
 
-	recipients[len(reviewers)] = author
+	seen := make(map[int64]struct{}, len(reviewers)+1)
+	recipients := make([]*types.PrincipalInfo, 0, len(reviewers)+1)
+
+	addRecipient := func(p *types.PrincipalInfo) {
+		if _, ok := seen[p.ID]; !ok {
+			seen[p.ID] = struct{}{}
+			recipients = append(recipients, p)
+		}
+	}
+
+	for i := range reviewers {
+		addRecipient(&reviewers[i].Reviewer)
+	}
+
+	if len(userGroupReviewers) > 0 {
+		groupIDs := make([]int64, len(userGroupReviewers))
+		for i, ugr := range userGroupReviewers {
+			groupIDs[i] = ugr.UserGroupID
+		}
+
+		memberIDs, err := s.userGroupService.ListUserIDsByGroupIDs(ctx, groupIDs)
+		if err != nil {
+			return nil, nil, fmt.Errorf(
+				"failed to list user group member IDs for pullReqID %d: %w",
+				baseEvent.PullReqID,
+				err,
+			)
+		}
+
+		memberInfos, err := s.principalInfoCache.Map(ctx, memberIDs)
+		if err != nil {
+			return nil, nil, fmt.Errorf(
+				"failed to load principal infos for user group members for pullReqID %d: %w",
+				baseEvent.PullReqID,
+				err,
+			)
+		}
+
+		for _, info := range memberInfos {
+			addRecipient(info)
+		}
+	}
+
+	addRecipient(author)
 
 	return &PullReqStateChangedPayload{
 		Base:      basePayload,
