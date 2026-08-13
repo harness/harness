@@ -372,9 +372,7 @@ func (s *Service) Diff(
 
 	pr, pw := io.Pipe()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		defer pw.Close()
 
 		if err := params.Validate(); err != nil {
@@ -387,11 +385,9 @@ func (s *Service) Diff(
 			cherr <- err
 			return
 		}
-	}()
+	})
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		defer pr.Close()
 
 		parser := diff.Parser{
@@ -419,7 +415,7 @@ func (s *Service) Diff(
 			cherr <- err
 			return
 		}
-	}()
+	})
 
 	go func() {
 		wg.Wait()

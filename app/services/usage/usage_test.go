@@ -120,9 +120,7 @@ func TestMediator_basic(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	for range numBandwidthRoutines {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			_ = mediator.Send(context.Background(), Metric{
 				SpaceRef: space.Identifier,
 				Bandwidth: Bandwidth{
@@ -130,7 +128,7 @@ func TestMediator_basic(t *testing.T) {
 					In:  int64(defaultSize),
 				},
 			})
-		}()
+		})
 	}
 
 	wg.Wait()
