@@ -21,6 +21,7 @@ import (
 	"time"
 )
 
+// LockPR is used for PR mergeability tests.
 func (l Locker) LockPR(
 	ctx context.Context,
 	repoID int64,

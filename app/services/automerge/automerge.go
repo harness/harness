@@ -145,9 +145,13 @@ func (s *Service) Merge(
 
 	var sourceRepo *types.RepositoryCore
 
-	unlock, err := s.locker.LockPR(ctx, targetRepo.ID, 0, merge.Timeout) // 0 means locking repo level for prs
+	unlock, err := s.locker.LockBranch(ctx, targetRepo.ID, pr.TargetBranch, merge.Timeout)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to lock repository for pull request merge: %w", err)
+		return nil, false, fmt.Errorf(
+			"failed to lock branch %q for pull request automerge attempt: %w",
+			pr.TargetBranch,
+			err,
+		)
 	}
 	defer unlock()
 

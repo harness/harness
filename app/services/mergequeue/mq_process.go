@@ -81,10 +81,10 @@ func (s *Service) process(
 	entries []*types.MergeQueueEntry,
 	setup protection.MergeQueueSetup,
 ) error {
-	unlock, err := s.locker.LockPR(
+	unlock, err := s.locker.LockBranch(
 		ctx,
-		data.repo.ID,
-		0,                            // repo level lock
+		data.queue.RepoID,
+		data.queue.Branch,
 		merge.Timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
 	)
 	if err != nil {

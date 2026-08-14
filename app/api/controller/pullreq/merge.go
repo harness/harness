@@ -146,29 +146,6 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
-	// lock the repo only if actual git merge would be attempted
-	if !in.DryRunRules {
-		var lockID int64 // 0 means locking repo level for prs (for actual merging)
-		if in.DryRun {
-			lockID = pullreqNum // dryrun doesn't need repo level lock
-		}
-
-		// if two requests for merging comes at the same time then unlock will lock
-		// first one and second one will wait, when first one is done then second one
-		// continue with latest data from db with state merged and return error that
-		// pr is already merged.
-		unlock, err := c.locker.LockPR(
-			ctx,
-			targetRepo.ID,
-			lockID,
-			merge.Timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
-		)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to lock repository for pull request merge: %w", err)
-		}
-		defer unlock()
-	}
-
 	pr, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get pull request by number: %w", err)
@@ -282,6 +259,28 @@ func (c *Controller) Merge(
 			MergeVerifyOutput: types.MergeVerifyOutput(ruleOut),
 		}, nil, nil
 	}
+
+	// Global level locking. No locking for dry running rules. PR scope lock for dry run, branch scope for full merge.
+	// Lock duration includes merge timeout and adds 30s to the lock to give enough time for pre + post merge.
+	const lockDuration = merge.Timeout + 30*time.Second
+	var unlock func()
+	switch {
+	case in.DryRun:
+		// Dry running merge uses PR level lock and not branch level lock to reduce lock convoy risk on busy branches.
+		unlock, err = c.locker.LockPR(ctx, targetRepo.ID, pr.Number, lockDuration)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf("failed to lock PR %d for pull request merge dry-run: %w", pr.Number, err)
+		}
+	default:
+		// Actual merge uses branch level lock on the target branch.
+		unlock, err = c.locker.LockBranch(ctx, targetRepo.ID, pr.TargetBranch, lockDuration)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf("failed to lock branch %q for pull request merge: %w", pr.TargetBranch, err)
+		}
+	}
+	defer unlock()
 
 	// we want to complete the merge independent of request cancel - start with new, time restricted context.
 	// TODO: This is a small change to reduce likelihood of dirty state.
@@ -437,6 +436,21 @@ func (c *Controller) Merge(
 			RuleViolations: violations,
 			Message:        protection.GenerateErrorMessageForBlockingViolations(violations),
 		}, nil
+	}
+
+	// Now that the lock is held, re-check that the PR wasn't merged (or closed) by a concurrent
+	// merge that completed while we were waiting to acquire the lock. Without this a racing second
+	// request would proceed on stale data, create a throwaway merge commit, and only fail later at
+	// the target-branch ref compare-and-swap with an opaque error. This gives it a clean early exit.
+	latestPR, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to re-fetch pull request after acquiring lock: %w", err)
+	}
+	if latestPR.Merged != nil {
+		return nil, nil, usererror.BadRequest("Pull request already merged")
+	}
+	if latestPR.State != enum.PullReqStateOpen {
+		return nil, nil, usererror.BadRequest("Pull request must be open")
 	}
 
 	// commit details: author, committer and message

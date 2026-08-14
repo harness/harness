@@ -22,7 +22,6 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/bootstrap"
-	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -43,11 +42,11 @@ func (s *Service) fastForward(
 		return fmt.Errorf("failed to find repo %d: %w", q.RepoID, err)
 	}
 
-	unlock, err := s.locker.LockPR(
+	unlock, err := s.locker.LockBranch(
 		ctx,
-		repo.ID,
-		0,
-		merge.Timeout+30*time.Second,
+		q.RepoID,
+		q.Branch,
+		30*time.Second, // This function doesn't create any merge commits, it just fast forwards references.
 	)
 	if err != nil {
 		return fmt.Errorf("failed to lock repository for merge queue fast forward: %w", err)

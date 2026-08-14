@@ -17,26 +17,21 @@ package locker
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
-
-	"github.com/rs/zerolog/log"
 )
 
-// LockDefaultBranch is used to lock changing of a repository's default branch.
-func (l Locker) LockDefaultBranch(
+// LockBranch is used by merge service and API to lock changing of a PR's target branch.
+func (l Locker) LockBranch(
 	ctx context.Context,
 	repoID int64,
-	branchName string,
+	branch string,
 	expiry time.Duration,
 ) (func(), error) {
-	key := strconv.FormatInt(repoID, 10) + "/defaultBranch"
-
-	log.Ctx(ctx).Info().Msg("attempting to lock to update the repo default branch")
+	key := fmt.Sprintf("%d/branch/%s", repoID, branch)
 
 	unlockFn, err := l.lock(ctx, namespaceRepo, key, expiry)
 	if err != nil {
-		return nil, fmt.Errorf("failed to lock repo to update default branch to %s: %w", branchName, err)
+		return nil, fmt.Errorf("failed to lock mutex for branch %q in repo %d: %w", branch, repoID, err)
 	}
 
 	return unlockFn, nil

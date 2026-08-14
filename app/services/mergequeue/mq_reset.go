@@ -25,10 +25,10 @@ import (
 
 // reset resets all merge queue entries (sets state of the entries to "merge pending").
 func (s *Service) reset(ctx context.Context, repo *types.RepositoryCore, q *types.MergeQueue) {
-	unlock, err := s.locker.LockPR(
+	unlock, err := s.locker.LockBranch(
 		ctx,
 		q.RepoID,
-		0, // repo level lock
+		q.Branch,
 		30*time.Second,
 	)
 	if err != nil {
