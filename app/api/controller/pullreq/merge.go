@@ -153,15 +153,15 @@ func (c *Controller) Merge(
 
 	if pr.IsLinked() {
 		return nil, nil, errors.Forbidden(
-			"Merging a linked pull request is not allowed")
+			"Merging a linked pull request is not allowed.")
 	}
 
 	if pr.Merged != nil {
-		return nil, nil, usererror.BadRequest("Pull request already merged")
+		return nil, nil, usererror.BadRequest("Pull request already merged.")
 	}
 
 	if pr.State != enum.PullReqStateOpen {
-		return nil, nil, usererror.BadRequest("Pull request must be open")
+		return nil, nil, usererror.BadRequest("Pull request must be open.")
 	}
 
 	if pr.SourceSHA != in.SourceSHA {
@@ -199,6 +199,30 @@ func (c *Controller) Merge(
 		}
 	default:
 		sourceRepo = targetRepo
+	}
+
+	// Global level locking. No locking for dry running rules. PR scope lock for dry run, branch scope for full merge.
+	// Lock duration includes merge timeout and adds 30s to the lock to give enough time for pre + post merge.
+	const lockDuration = merge.Timeout + 30*time.Second
+	switch {
+	case in.DryRunRules:
+		// No locking for dry running rules.
+	case in.DryRun:
+		// Dry running merge uses PR level lock and not branch level lock to reduce lock convoy risk on busy branches.
+		unlock, err := c.locker.LockPR(ctx, targetRepo.ID, pr.Number, lockDuration)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf("failed to lock PR %d for pull request merge dry-run: %w", pr.Number, err)
+		}
+		defer unlock()
+	default:
+		// Actual merge uses branch level lock on the target branch.
+		unlock, err := c.locker.LockBranch(ctx, targetRepo.ID, pr.TargetBranch, lockDuration)
+		if err != nil {
+			return nil, nil,
+				fmt.Errorf("failed to lock branch %q for pull request merge: %w", pr.TargetBranch, err)
+		}
+		defer unlock()
 	}
 
 	targetSHA, sourceSHA, isAncestor, err := c.mergeService.GetTargetSourceSHAs(ctx, targetRepo, pr)
@@ -259,28 +283,6 @@ func (c *Controller) Merge(
 			MergeVerifyOutput: types.MergeVerifyOutput(ruleOut),
 		}, nil, nil
 	}
-
-	// Global level locking. No locking for dry running rules. PR scope lock for dry run, branch scope for full merge.
-	// Lock duration includes merge timeout and adds 30s to the lock to give enough time for pre + post merge.
-	const lockDuration = merge.Timeout + 30*time.Second
-	var unlock func()
-	switch {
-	case in.DryRun:
-		// Dry running merge uses PR level lock and not branch level lock to reduce lock convoy risk on busy branches.
-		unlock, err = c.locker.LockPR(ctx, targetRepo.ID, pr.Number, lockDuration)
-		if err != nil {
-			return nil, nil,
-				fmt.Errorf("failed to lock PR %d for pull request merge dry-run: %w", pr.Number, err)
-		}
-	default:
-		// Actual merge uses branch level lock on the target branch.
-		unlock, err = c.locker.LockBranch(ctx, targetRepo.ID, pr.TargetBranch, lockDuration)
-		if err != nil {
-			return nil, nil,
-				fmt.Errorf("failed to lock branch %q for pull request merge: %w", pr.TargetBranch, err)
-		}
-	}
-	defer unlock()
 
 	// we want to complete the merge independent of request cancel - start with new, time restricted context.
 	// TODO: This is a small change to reduce likelihood of dirty state.
@@ -446,12 +448,24 @@ func (c *Controller) Merge(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to re-fetch pull request after acquiring lock: %w", err)
 	}
+
 	if latestPR.Merged != nil {
-		return nil, nil, usererror.BadRequest("Pull request already merged")
+		return nil, nil, usererror.BadRequest("Pull request already merged.")
 	}
+
 	if latestPR.State != enum.PullReqStateOpen {
-		return nil, nil, usererror.BadRequest("Pull request must be open")
+		return nil, nil, usererror.BadRequest("Pull request must be open.")
 	}
+
+	if latestPR.TargetBranch != pr.TargetBranch {
+		return nil, nil, usererror.Conflict("Pull request target branch is changed concurrently.")
+	}
+
+	if latestPR.SourceSHA != in.SourceSHA {
+		return nil, nil, usererror.Conflict("Pull request source SHA is changed concurrently.")
+	}
+
+	pr = latestPR
 
 	// commit details: author, committer and message
 	mergeInput, err := c.mergeService.PreparePullReqMergeInput(
@@ -542,6 +556,7 @@ func (c *Controller) Merge(
 		ctx,
 		targetWriteParams,
 		mergeInput.SourceSHA,
+		mergeInput.TargetBranch,
 		mergeInput.RefUpdates,
 		pr,
 		in.Method,

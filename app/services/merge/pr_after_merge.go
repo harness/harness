@@ -40,7 +40,8 @@ import (
 func (s *Service) TxRefAndDatabaseUpdate(
 	ctx context.Context,
 	writeParams git.WriteParams,
-	sourceSHA sha.SHA,
+	expectedSourceSHA sha.SHA,
+	expectedTargetBranch string,
 	refUpdates []git.RefUpdate,
 	pr *types.PullReq,
 	mergeMethod enum.MergeMethod,
@@ -72,7 +73,19 @@ func (s *Service) TxRefAndDatabaseUpdate(
 			}
 		}
 
-		if pr.SourceSHA != sourceSHA.String() {
+		if pr.Merged != nil {
+			return usererror.BadRequest("Pull request already merged.")
+		}
+
+		if pr.State != enum.PullReqStateOpen {
+			return usererror.BadRequest("Pull request must be open.")
+		}
+
+		if pr.TargetBranch != expectedTargetBranch {
+			return usererror.Conflict("Pull request target branch is changed concurrently.")
+		}
+
+		if pr.SourceSHA != expectedSourceSHA.String() {
 			return usererror.Conflict("Pull request source SHA is changed concurrently.")
 		}
 

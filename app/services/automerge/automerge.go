@@ -293,6 +293,7 @@ func (s *Service) Merge(
 		ctx,
 		targetWriteParams,
 		mergeInput.SourceSHA,
+		mergeInput.TargetBranch,
 		mergeInput.RefUpdates,
 		pr,
 		input.MergeMethod,

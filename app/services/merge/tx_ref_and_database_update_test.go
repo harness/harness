@@ -142,7 +142,10 @@ func buildTestService(
 	}
 }
 
-const testSourceSHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+const (
+	testSourceSHA    = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	testTargetBranch = "main"
+)
 
 func basePR() *types.PullReq {
 	return &types.PullReq{
@@ -151,6 +154,7 @@ func basePR() *types.PullReq {
 		State:        enum.PullReqStateOpen,
 		SubState:     enum.PullReqSubStateNone,
 		TargetRepoID: 100,
+		TargetBranch: testTargetBranch,
 		SourceSHA:    testSourceSHA,
 		ActivitySeq:  5,
 	}
@@ -186,7 +190,8 @@ func TestTxRefAndDatabaseUpdate_HappyPath(t *testing.T) {
 	_, _, err := svc.TxRefAndDatabaseUpdate(
 		context.Background(),
 		git.WriteParams{RepoUID: "test-repo"},
-		sha.Must("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+		sha.Must(testSourceSHA),
+		testTargetBranch,
 		refUpdates,
 		pr,
 		enum.MergeMethodMerge,
@@ -233,7 +238,8 @@ func TestTxRefAndDatabaseUpdate_SourceSHAConflict(t *testing.T) {
 	_, _, err := svc.TxRefAndDatabaseUpdate(
 		context.Background(),
 		git.WriteParams{RepoUID: "test-repo"},
-		sha.Must("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), // expected sourceSHA
+		sha.Must(testSourceSHA), // expected sourceSHA
+		testTargetBranch,
 		nil,
 		pr,
 		enum.MergeMethodMerge,
@@ -273,7 +279,8 @@ func TestTxRefAndDatabaseUpdate_CounterUpdateFails(t *testing.T) {
 	_, _, err := svc.TxRefAndDatabaseUpdate(
 		context.Background(),
 		git.WriteParams{RepoUID: "test-repo"},
-		sha.Must("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+		sha.Must(testSourceSHA),
+		testTargetBranch,
 		nil,
 		pr,
 		enum.MergeMethodMerge,
@@ -301,7 +308,8 @@ func TestTxRefAndDatabaseUpdate_RepoFindFails(t *testing.T) {
 	_, _, err := svc.TxRefAndDatabaseUpdate(
 		context.Background(),
 		git.WriteParams{RepoUID: "test-repo"},
-		sha.Must("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+		sha.Must(testSourceSHA),
+		testTargetBranch,
 		nil,
 		basePR(),
 		enum.MergeMethodMerge,
@@ -315,5 +323,191 @@ func TestTxRefAndDatabaseUpdate_RepoFindFails(t *testing.T) {
 	}
 	if n := len(gitClient.updateRefsArgs); n != 0 {
 		t.Errorf("git refs must not be updated when repo find fails, got %d calls", n)
+	}
+}
+
+// TestTxRefAndDatabaseUpdate_AlreadyMerged: the PR is already merged (e.g. a
+// concurrent merge won the race after the lock expired) → return a 400
+// BadRequest, do NOT bump counters, do NOT update refs.
+func TestTxRefAndDatabaseUpdate_AlreadyMerged(t *testing.T) {
+	repoStore := &stubRepoStore{repo: &types.Repository{ID: 100, NumOpenPulls: 3}}
+	prStore := &stubPullReqStore{}
+	gitClient := &stubGit{}
+	svc := buildTestService(repoStore, prStore, gitClient)
+
+	merged := int64(1234)
+	pr := basePR()
+	pr.State = enum.PullReqStateMerged
+	pr.Merged = &merged
+
+	_, _, err := svc.TxRefAndDatabaseUpdate(
+		context.Background(),
+		git.WriteParams{RepoUID: "test-repo"},
+		sha.Must(testSourceSHA),
+		testTargetBranch,
+		nil,
+		pr,
+		enum.MergeMethodMerge,
+		baseMergeOutput(),
+		&types.PrincipalInfo{ID: 42},
+		false,
+		"",
+	)
+	if err == nil {
+		t.Fatal("expected error when PR is already merged, got nil")
+	}
+	var ue *usererror.Error
+	if !errors.As(err, &ue) || ue.Status != 400 {
+		t.Errorf("expected usererror with 400 status, got: %v", err)
+	}
+	if repoStore.captured != nil {
+		t.Errorf("counters must not be updated when PR already merged, got: %+v", repoStore.captured)
+	}
+	if n := len(gitClient.updateRefsArgs); n != 0 {
+		t.Errorf("git refs must not be updated when PR already merged, got %d calls", n)
+	}
+	if n := len(prStore.updated); n != 0 {
+		t.Errorf("PR must not be updated when already merged, got %d updates", n)
+	}
+}
+
+// TestTxRefAndDatabaseUpdate_NotOpen: the PR is no longer open (e.g. closed
+// concurrently) → return a 400 BadRequest and touch nothing.
+func TestTxRefAndDatabaseUpdate_NotOpen(t *testing.T) {
+	repoStore := &stubRepoStore{repo: &types.Repository{ID: 100, NumOpenPulls: 3}}
+	prStore := &stubPullReqStore{}
+	gitClient := &stubGit{}
+	svc := buildTestService(repoStore, prStore, gitClient)
+
+	pr := basePR()
+	pr.State = enum.PullReqStateClosed
+
+	_, _, err := svc.TxRefAndDatabaseUpdate(
+		context.Background(),
+		git.WriteParams{RepoUID: "test-repo"},
+		sha.Must(testSourceSHA),
+		testTargetBranch,
+		nil,
+		pr,
+		enum.MergeMethodMerge,
+		baseMergeOutput(),
+		&types.PrincipalInfo{ID: 42},
+		false,
+		"",
+	)
+	if err == nil {
+		t.Fatal("expected error when PR is not open, got nil")
+	}
+	var ue *usererror.Error
+	if !errors.As(err, &ue) || ue.Status != 400 {
+		t.Errorf("expected usererror with 400 status, got: %v", err)
+	}
+	if repoStore.captured != nil {
+		t.Errorf("counters must not be updated when PR is not open, got: %+v", repoStore.captured)
+	}
+	if n := len(gitClient.updateRefsArgs); n != 0 {
+		t.Errorf("git refs must not be updated when PR is not open, got %d calls", n)
+	}
+}
+
+// TestTxRefAndDatabaseUpdate_TargetBranchConflict: the PR was retargeted to a
+// different branch after the caller captured its snapshot → return 409 Conflict
+// and touch nothing.
+func TestTxRefAndDatabaseUpdate_TargetBranchConflict(t *testing.T) {
+	repoStore := &stubRepoStore{repo: &types.Repository{ID: 100, NumOpenPulls: 3}}
+	prStore := &stubPullReqStore{}
+	gitClient := &stubGit{}
+	svc := buildTestService(repoStore, prStore, gitClient)
+
+	pr := basePR()
+	pr.TargetBranch = "some-other-branch"
+
+	_, _, err := svc.TxRefAndDatabaseUpdate(
+		context.Background(),
+		git.WriteParams{RepoUID: "test-repo"},
+		sha.Must(testSourceSHA),
+		testTargetBranch, // expected target branch differs from the PR's current one
+		nil,
+		pr,
+		enum.MergeMethodMerge,
+		baseMergeOutput(),
+		&types.PrincipalInfo{ID: 42},
+		false,
+		"",
+	)
+	if err == nil {
+		t.Fatal("expected error on target branch mismatch, got nil")
+	}
+	var ue *usererror.Error
+	if !errors.As(err, &ue) || ue.Status != 409 {
+		t.Errorf("expected usererror with 409 status, got: %v", err)
+	}
+	if repoStore.captured != nil {
+		t.Errorf("counters must not be updated when target branch conflicts, got: %+v", repoStore.captured)
+	}
+	if n := len(gitClient.updateRefsArgs); n != 0 {
+		t.Errorf("git refs must not be updated when target branch conflicts, got %d calls", n)
+	}
+}
+
+// TestTxRefAndDatabaseUpdate_ReloadAfterVersionConflict: the caller starts with
+// a stale (still-open) snapshot, but the row was merged concurrently. The first
+// Update hits the optimistic-lock version check (ErrVersionConflict), which
+// makes TxOptLock reset the cached PR and retry. On the retry the fresh row is
+// loaded from the store, the "already merged" guard fires, and we get a clean
+// 400 instead of an opaque ref-update failure.
+func TestTxRefAndDatabaseUpdate_ReloadAfterVersionConflict(t *testing.T) {
+	repoStore := &stubRepoStore{repo: &types.Repository{ID: 100, NumOpenPulls: 3}}
+
+	merged := int64(1234)
+	var updateCalls int
+	prStore := &stubPullReqStore{
+		// The fresh row reflects the concurrent merge that already completed.
+		findFn: func(int64) (*types.PullReq, error) {
+			fresh := basePR()
+			fresh.State = enum.PullReqStateMerged
+			fresh.Merged = &merged
+			return fresh, nil
+		},
+		// The first (stale) Update loses the optimistic lock.
+		updateFn: func(*types.PullReq) error {
+			updateCalls++
+			return gitness_store.ErrVersionConflict
+		},
+	}
+	gitClient := &stubGit{}
+	svc := buildTestService(repoStore, prStore, gitClient)
+
+	// Stale snapshot: the caller still thinks the PR is open.
+	pr := basePR()
+
+	_, _, err := svc.TxRefAndDatabaseUpdate(
+		context.Background(),
+		git.WriteParams{RepoUID: "test-repo"},
+		sha.Must(testSourceSHA),
+		testTargetBranch,
+		nil,
+		pr,
+		enum.MergeMethodMerge,
+		baseMergeOutput(),
+		&types.PrincipalInfo{ID: 42},
+		false,
+		"",
+	)
+	if err == nil {
+		t.Fatal("expected error after reload shows the PR already merged, got nil")
+	}
+	var ue *usererror.Error
+	if !errors.As(err, &ue) || ue.Status != 400 {
+		t.Errorf("expected usererror with 400 status after reload, got: %v", err)
+	}
+	if updateCalls != 1 {
+		t.Errorf("expected exactly one (failed) Update before reload, got %d", updateCalls)
+	}
+	if repoStore.captured != nil {
+		t.Errorf("counters must not be updated when reload shows merged, got: %+v", repoStore.captured)
+	}
+	if n := len(gitClient.updateRefsArgs); n != 0 {
+		t.Errorf("git refs must not be updated when reload shows merged, got %d calls", n)
 	}
 }

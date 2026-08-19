@@ -32,6 +32,7 @@ type PullReqGitInput struct {
 	RefUpdates    []git.RefUpdate
 	CommitMessage string
 	SourceSHA     sha.SHA
+	TargetBranch  string
 }
 
 func (s *Service) PreparePullReqMergeInput(
@@ -151,5 +152,6 @@ func (*Service) PreparePullReqMergeInputNoRefUpdates(
 		RefUpdates:    nil,
 		CommitMessage: git.CommitMessage(title, message),
 		SourceSHA:     sha.None,
+		TargetBranch:  pr.TargetBranch,
 	}
 }
