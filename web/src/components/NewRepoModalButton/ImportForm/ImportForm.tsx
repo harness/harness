@@ -228,8 +228,16 @@ const ImportForm = (props: ImportFormProps) => {
                 {[GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider) && (
                   <FormInput.Text
                     name="username"
-                    label={getString('userName')}
-                    placeholder={getString('importRepo.userPlaceholder')}
+                    label={
+                      values.gitProvider === GitProviders.BITBUCKET
+                        ? getString('importRepo.email')
+                        : getString('userName')
+                    }
+                    placeholder={
+                      values.gitProvider === GitProviders.BITBUCKET
+                        ? getString('importRepo.emailPlaceholder')
+                        : getString('importRepo.userPlaceholder')
+                    }
                     tooltipProps={{
                       dataTooltipId: 'repositoryUserTextField'
                     }}
@@ -239,12 +247,12 @@ const ImportForm = (props: ImportFormProps) => {
                   inputGroup={{ type: 'password' }}
                   name="password"
                   label={
-                    [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
+                    values.gitProvider === GitProviders.AZURE
                       ? getString('importRepo.appPassword')
                       : getString('importRepo.passToken')
                   }
                   placeholder={
-                    [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
+                    values.gitProvider === GitProviders.AZURE
                       ? getString('importRepo.appPasswordPlaceholder')
                       : getString('importRepo.passTokenPlaceholder')
                   }
