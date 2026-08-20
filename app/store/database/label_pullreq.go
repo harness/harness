@@ -109,18 +109,24 @@ func (s *pullReqLabelStore) Assign(ctx context.Context, label *types.PullReqLabe
 	return nil
 }
 
-func (s *pullReqLabelStore) Unassign(ctx context.Context, pullreqID int64, labelID int64) error {
+func (s *pullReqLabelStore) Unassign(ctx context.Context, pullreqID int64, labelID int64) (bool, error) {
 	const sqlQuery = `
 		DELETE FROM pullreq_labels
 		WHERE pullreq_label_pullreq_id = $1 AND pullreq_label_label_id = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, sqlQuery, pullreqID, labelID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "failed to delete pullreq label")
+	result, err := db.ExecContext(ctx, sqlQuery, pullreqID, labelID)
+	if err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err, "failed to delete pullreq label")
 	}
 
-	return nil
+	n, err := result.RowsAffected()
+	if err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err, "failed to get number of deleted pullreq labels")
+	}
+
+	return n > 0, nil
 }
 
 func (s *pullReqLabelStore) FindByLabelID(

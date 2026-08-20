@@ -28,8 +28,9 @@ func (m *PullReqLabelAssignmentStore) Assign(_ context.Context, label *types.Pul
 	return m.Called(label).Error(0)
 }
 
-func (m *PullReqLabelAssignmentStore) Unassign(_ context.Context, pullreqID, labelID int64) error {
-	return m.Called(pullreqID, labelID).Error(0)
+func (m *PullReqLabelAssignmentStore) Unassign(_ context.Context, pullreqID, labelID int64) (bool, error) {
+	args := m.Called(pullreqID, labelID)
+	return args.Bool(0), args.Error(1)
 }
 
 func (m *PullReqLabelAssignmentStore) ListAssigned(

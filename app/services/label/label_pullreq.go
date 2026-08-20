@@ -272,22 +272,32 @@ func (s *Service) getOrDefineValue(
 
 func (s *Service) UnassignFromPullReq(
 	ctx context.Context, repoID, repoParentID, pullreqID, labelID int64,
-) (*types.Label, *types.LabelValue, error) {
+) (*types.Label, *types.LabelValue, enum.PullReqLabelActivityType, error) {
 	label, err := s.labelStore.FindByID(ctx, labelID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find label by id: %w", err)
+		return nil, nil, enum.LabelActivityNoop, fmt.Errorf("failed to find label by id: %w", err)
 	}
 
 	if err := s.checkLabelInScope(ctx, repoParentID, repoID, label); err != nil {
-		return nil, nil, err
+		return nil, nil, enum.LabelActivityNoop, err
 	}
 
 	value, err := s.pullReqLabelAssignmentStore.FindValueByLabelID(ctx, pullreqID, labelID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
-		return nil, nil, fmt.Errorf("failed to find label value: %w", err)
+		return nil, nil, enum.LabelActivityNoop, fmt.Errorf("failed to find label value: %w", err)
 	}
 
-	return label, value, s.pullReqLabelAssignmentStore.Unassign(ctx, pullreqID, labelID)
+	deleted, err := s.pullReqLabelAssignmentStore.Unassign(ctx, pullreqID, labelID)
+	if err != nil {
+		return nil, nil, enum.LabelActivityNoop, err
+	}
+
+	// if the label wasn't assigned, unassigning is a no-op and shouldn't produce an activity.
+	if !deleted {
+		return label, value, enum.LabelActivityNoop, nil
+	}
+
+	return label, value, enum.LabelActivityUnassign, nil
 }
 
 func (s *Service) ListPullReqLabels(

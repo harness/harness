@@ -1554,7 +1554,8 @@ type (
 		Assign(ctx context.Context, label *types.PullReqLabel) error
 
 		// Unassign removes a label from a pullreq with a specified id.
-		Unassign(ctx context.Context, pullreqID int64, labelID int64) error
+		// It reports whether a label assignment was actually removed.
+		Unassign(ctx context.Context, pullreqID int64, labelID int64) (bool, error)
 
 		// ListAssigned list labels assigned to a specified pullreq.
 		ListAssigned(

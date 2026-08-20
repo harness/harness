@@ -43,10 +43,14 @@ func (c *Controller) UnassignLabel(
 		return fmt.Errorf("failed to find pullreq: %w", err)
 	}
 
-	label, labelValue, err := c.labelSvc.UnassignFromPullReq(
+	label, labelValue, activityType, err := c.labelSvc.UnassignFromPullReq(
 		ctx, repo.ID, repo.ParentID, pullreq.ID, labelID)
 	if err != nil {
 		return fmt.Errorf("failed to delete pullreq label: %w", err)
+	}
+
+	if activityType == enum.LabelActivityNoop {
+		return nil
 	}
 
 	pullreq, err = c.pullreqStore.UpdateActivitySeq(ctx, pullreq)
