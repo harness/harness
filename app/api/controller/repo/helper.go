@@ -33,6 +33,19 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// transientStates are states with no restorable data behind them.
+// Deleting a repository in one of these states purges it immediately
+// instead of soft-deleting it into a (non-restorable) trash.
+var transientStates = []enum.RepoState{
+	enum.RepoStateGitImport,
+	enum.RepoStateMigrateDataImport,
+	enum.RepoStateMigrateGitPush,
+	enum.RepoStateImportFailed,
+}
+
+// importingStates are the states that represent an in-progress import.
+// They drive the `importing` output flag. A failed import is terminal, not
+// in-progress, so it's deliberately excluded here (see RepoStateImportFailed).
 var importingStates = []enum.RepoState{
 	enum.RepoStateGitImport,
 	enum.RepoStateMigrateDataImport,
@@ -141,11 +154,12 @@ func GetRepoOutput(
 	}
 
 	return &RepositoryOutput{
-		Repository: repoClone,
-		IsPublic:   isPublic,
-		Importing:  slices.Contains(importingStates, repo.State),
-		Archived:   repo.State == enum.RepoStateArchived,
-		Upstream:   upstreamRepo,
+		Repository:   repoClone,
+		IsPublic:     isPublic,
+		Importing:    slices.Contains(importingStates, repo.State),
+		ImportFailed: repo.State == enum.RepoStateImportFailed,
+		Archived:     repo.State == enum.RepoStateArchived,
+		Upstream:     upstreamRepo,
 	}, nil
 }
 
@@ -166,11 +180,12 @@ func GetRepoOutputWithAccess(
 	}
 
 	return &RepositoryOutput{
-		Repository: *repo,
-		IsPublic:   isPublic,
-		Importing:  slices.Contains(importingStates, repo.State),
-		Archived:   repo.State == enum.RepoStateArchived,
-		Upstream:   upstreamRepo,
+		Repository:   *repo,
+		IsPublic:     isPublic,
+		Importing:    slices.Contains(importingStates, repo.State),
+		ImportFailed: repo.State == enum.RepoStateImportFailed,
+		Archived:     repo.State == enum.RepoStateArchived,
+		Upstream:     upstreamRepo,
 	}, nil
 }
 

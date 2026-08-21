@@ -108,7 +108,7 @@ func (c *Controller) SoftDeleteNoAuth(
 		return fmt.Errorf("failed to delete public access for repo: %w", err)
 	}
 
-	if slices.Contains(importingStates, repo.State) {
+	if slices.Contains(transientStates, repo.State) {
 		c.repoFinder.MarkChanged(ctx, repo.Core())
 		return c.PurgeNoAuth(ctx, session, repo)
 	}

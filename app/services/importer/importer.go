@@ -266,12 +266,32 @@ func (r *Importer) Import(ctx context.Context, input Input) error {
 	if err != nil {
 		log.Error().Err(err).Msg("failed repository import - cleanup git repository")
 
+		ctxNoCancel := context.WithoutCancel(ctx)
+
 		repo.GitUID = gitUID // make sure to delete the correct directory
 
-		if errDel := r.deleteGitRepository(context.WithoutCancel(ctx), &systemPrincipal, repo); errDel != nil {
+		if errDel := r.deleteGitRepository(ctxNoCancel, &systemPrincipal, repo); errDel != nil {
 			log.Warn().Err(errDel).
 				Msg("failed to delete git repository after failed import")
 		}
+
+		_, errRepoUpdate := r.repoStore.UpdateOptLock(ctxNoCancel, repo, func(repo *types.Repository) error {
+			if repo.State != enum.RepoStateGitImport {
+				return errors.New("repository has already finished importing")
+			}
+
+			repo.State = enum.RepoStateImportFailed
+
+			return nil
+		})
+		if errRepoUpdate != nil {
+			log.Warn().Err(errRepoUpdate).
+				Msg("failed to update repository after failed import")
+		}
+
+		r.repoFinder.MarkChanged(ctxNoCancel, repo.Core())
+
+		r.sseStreamer.Publish(ctxNoCancel, repo.ParentID, enum.SSETypeRepositoryImportCompleted, repo)
 
 		return fmt.Errorf("failed to import repository: %w", err)
 	}

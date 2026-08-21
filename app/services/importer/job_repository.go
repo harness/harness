@@ -33,7 +33,7 @@ import (
 
 const (
 	importJobMaxRetries  = 0
-	importJobMaxDuration = 45 * time.Minute
+	importJobMaxDuration = 60 * time.Minute
 )
 
 var (
@@ -202,7 +202,7 @@ func (r *JobRepository) Handle(ctx context.Context, data string, _ job.ProgressR
 func (r *JobRepository) GetProgress(ctx context.Context, repo *types.RepositoryCore) (job.Progress, error) {
 	progress, err := r.scheduler.GetJobProgress(ctx, r.jobIDFromRepoID(repo.ID))
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		if repo.State == enum.RepoStateGitImport {
+		if repo.State == enum.RepoStateGitImport || repo.State == enum.RepoStateImportFailed {
 			// if the job is not found but repo is marked as importing, return state=failed
 			return job.FailProgress(), nil
 		}

@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 const (
@@ -178,6 +179,68 @@ func TestDatabase_ListAll(t *testing.T) {
 	}
 }
 
+func TestDatabase_ListSizeInfos(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+
+	// States whose repos must be reported by ListSizeInfos. Note that
+	// RepoStateMigrateDataImport is intentionally included - only git-import,
+	// migrate-git-push and import-failed repos are excluded.
+	includedStates := []enum.RepoState{
+		enum.RepoStateActive,
+		enum.RepoStateMigrateDataImport,
+		enum.RepoStateArchived,
+	}
+	// States whose repos hold no meaningful size and must be excluded.
+	excludedStates := []enum.RepoState{
+		enum.RepoStateGitImport,
+		enum.RepoStateMigrateGitPush,
+		enum.RepoStateImportFailed,
+	}
+
+	var id int64
+	wantIDs := map[int64]bool{}
+	for _, state := range includedStates {
+		id++
+		wantIDs[createRepoWithState(ctx, t, repoStore, id, 1, state)] = true
+	}
+	for _, state := range excludedStates {
+		id++
+		createRepoWithState(ctx, t, repoStore, id, 1, state)
+	}
+
+	infos, err := repoStore.ListSizeInfos(ctx)
+	if err != nil {
+		t.Fatalf("ListSizeInfos() error = %v", err)
+	}
+
+	gotIDs := map[int64]bool{}
+	for _, info := range infos {
+		gotIDs[info.ID] = true
+	}
+
+	if len(gotIDs) != len(wantIDs) {
+		t.Errorf("ListSizeInfos() returned %d repos, want %d", len(gotIDs), len(wantIDs))
+	}
+	for wantID := range wantIDs {
+		if !gotIDs[wantID] {
+			t.Errorf("repo %d is expected in size infos but is missing", wantID)
+		}
+	}
+	for gotID := range gotIDs {
+		if !wantIDs[gotID] {
+			t.Errorf("repo %d must be excluded from size infos but is present", gotID)
+		}
+	}
+}
+
 func createRepo(
 	ctx context.Context,
 	t *testing.T,
@@ -198,6 +261,33 @@ func createRepo(
 	if err := repoStore.Create(ctx, &repo); err != nil {
 		t.Fatalf("failed to create repo %v", err)
 	}
+}
+
+// createRepoWithState creates a repo in the given state and returns the ID
+// assigned by the store.
+func createRepoWithState(
+	ctx context.Context,
+	t *testing.T,
+	repoStore *database.RepoStore,
+	id int64,
+	spaceID int64,
+	state enum.RepoState,
+) int64 {
+	t.Helper()
+
+	identifier := "repo_" + strconv.FormatInt(id, 10)
+	repo := types.Repository{
+		Identifier: identifier, GitUID: identifier,
+		ParentID: spaceID,
+		State:    state,
+		Size:     repoSize,
+		Tags:     json.RawMessage{},
+	}
+	if err := repoStore.Create(ctx, &repo); err != nil {
+		t.Fatalf("failed to create repo %v", err)
+	}
+
+	return repo.ID
 }
 
 func createRepos(

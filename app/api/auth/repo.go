@@ -105,6 +105,7 @@ func CheckRepoState(
 		enum.RepoStateGitImport:         {},
 		enum.RepoStateMigrateDataImport: {},
 		enum.RepoStateMigrateGitPush:    {},
+		enum.RepoStateImportFailed:      {},
 	}
 
 	if len(additionalAllowedRepoStates) > 0 && slices.Contains(additionalAllowedRepoStates, repo.State) {

@@ -88,6 +88,7 @@ const (
 	RepoStateMigrateGitPush
 	RepoStateMigrateDataImport
 	RepoStateArchived
+	RepoStateImportFailed
 )
 
 // String returns the string representation of the RepoState.
@@ -103,6 +104,8 @@ func (state RepoState) String() string {
 		return "migrate-data-import"
 	case RepoStateArchived:
 		return "archived"
+	case RepoStateImportFailed:
+		return "import-failed"
 	default:
 		return undefined
 	}

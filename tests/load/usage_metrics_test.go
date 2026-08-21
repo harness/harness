@@ -365,7 +365,7 @@ func waitForRepositoryReady(
 			resp.Body.Close()
 
 			// Check if import is complete (importing should be false)
-			if !repo.Importing {
+			if !repo.Importing && !repo.ImportFailed {
 				return nil
 			}
 		} else {
