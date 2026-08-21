@@ -16,6 +16,7 @@ package checkreq
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -36,8 +37,10 @@ const (
 
 // Resolved is the requirement set of a pull request, indexed for lookup.
 type Resolved struct {
-	required   map[string]struct{}
-	bypassable map[string]struct{}
+	required    map[string]struct{}
+	bypassable  map[string]struct{}
+	payloadKind enum.CheckPayloadKind
+	payloadData map[string]json.RawMessage
 }
 
 // Resolve asks the provider for the requirements of the given pull request.
@@ -57,8 +60,10 @@ func Resolve(
 	}
 
 	out := Resolved{
-		required:   make(map[string]struct{}, len(requirements.Required)),
-		bypassable: make(map[string]struct{}, len(requirements.Bypassable)),
+		required:    make(map[string]struct{}, len(requirements.Required)),
+		bypassable:  make(map[string]struct{}, len(requirements.Bypassable)),
+		payloadKind: requirements.PayloadKind,
+		payloadData: requirements.PayloadData,
 	}
 	for _, identifier := range requirements.Required {
 		out.required[identifier] = struct{}{}
@@ -86,6 +91,19 @@ func (r Resolved) Identifiers() []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// Payload is the payload the provider would report the given check with. It
+// describes a requirement that has no reported check yet.
+func (r Resolved) Payload(identifier string) types.CheckPayload {
+	data := r.payloadData[identifier]
+	if len(data) == 0 {
+		data = json.RawMessage("{}")
+	}
+	return types.CheckPayload{
+		Kind: r.payloadKind,
+		Data: data,
+	}
 }
 
 // Requirement reports how the given check identifier is required, if at all.

@@ -25,8 +25,10 @@ package checkreq
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // Requirements is the set of checks a provider requires for a single pull request.
@@ -37,6 +39,11 @@ type Requirements struct {
 	// Bypassable checks must have reported success, or carry an explicit
 	// bypass on the check (Check.BypassedBy).
 	Bypassable []string
+	// PayloadKind is the payload kind the provider reports its checks with.
+	PayloadKind enum.CheckPayloadKind
+	// PayloadData holds the payload data of a requirement, keyed by check
+	// identifier.
+	PayloadData map[string]json.RawMessage
 }
 
 func (r Requirements) IsEmpty() bool {

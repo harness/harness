@@ -134,6 +134,7 @@ func (c *Controller) ListChecks(
 				Identifier: identifier,
 				Status:     enum.CheckStatusPending,
 				Metadata:   json.RawMessage("{}"),
+				Payload:    extReqChecks.Payload(identifier),
 			},
 		})
 	}

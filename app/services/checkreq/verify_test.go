@@ -16,6 +16,7 @@ package checkreq
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/harness/gitness/types"
@@ -172,5 +173,26 @@ func TestResolveNilProvider(t *testing.T) {
 	}
 	if got := resolved.Identifiers(); len(got) != 0 {
 		t.Errorf("Identifiers() = %v, want empty", got)
+	}
+}
+
+// The payload of a requirement describes the check the provider would report,
+// so that a pending placeholder is not mistaken for a payload-less check.
+func TestResolvedPayload(t *testing.T) {
+	resolved := resolve(t, Requirements{
+		Required:    []string{"a", "b"},
+		PayloadKind: "agent_report",
+		PayloadData: map[string]json.RawMessage{"a": json.RawMessage(`{"criterion_id":7}`)},
+	})
+
+	got := resolved.Payload("a")
+	if got.Kind != "agent_report" || string(got.Data) != `{"criterion_id":7}` {
+		t.Errorf("Payload(\"a\") = %+v", got)
+	}
+
+	// A requirement without payload data keeps the kind and an empty object.
+	got = resolved.Payload("b")
+	if got.Kind != "agent_report" || string(got.Data) != "{}" {
+		t.Errorf("Payload(\"b\") = %+v", got)
 	}
 }
