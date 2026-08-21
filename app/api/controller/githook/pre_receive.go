@@ -287,12 +287,9 @@ func (c *Controller) checkPushProtection(
 ) ([]types.RuleViolations, *repoSettingsViolations, error) {
 	pushProtection := c.protectionManager.FilterPushProtection(protectionRules)
 
-	// TODO: Once push rule violations are returned to the API layer,
-	// allow bypass only for operations that explicitly support it.
-	// Specifically:
-	//   - GitOpTypeAPIContentBypassRules: API operations that intentionally bypass rules
-	//   - GitOpTypeGitPush: direct git pushes from clients
-	allowBypass := true
+	// Only direct git pushes and API operations that explicitly request bypass
+	// semantics may bypass push protection rules.
+	allowBypass := allowPushProtectionBypass(in.OperationType)
 
 	pushVerifyOut, _, err := pushProtection.PushVerify(
 		ctx,
@@ -366,6 +363,15 @@ func (c *Controller) checkPushProtection(
 	}
 
 	return rulesViolations, &settingsViolations, nil
+}
+
+func allowPushProtectionBypass(opType enum.GitOpType) bool {
+	switch opType {
+	case enum.GitOpTypeGitPush, enum.GitOpTypeAPIContentBypassRules:
+		return true
+	default:
+		return false
+	}
 }
 
 func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state enum.RepoState) bool {
