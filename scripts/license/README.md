@@ -1,4 +1,4 @@
-# Backfil license headers
+# Backfill license headers
 The script in this folder can be used to backfill license headers on existing files.
 To run the script, execute:
 ```bash
