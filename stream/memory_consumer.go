@@ -135,11 +135,9 @@ func (c *MemoryConsumer) Start(ctx context.Context) error {
 
 	// start workers
 	for i := 0; i < c.Config.Concurrency; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			c.consume(ctx)
-		}()
+		})
 	}
 
 	// start cleanup routing
