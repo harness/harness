@@ -20,6 +20,7 @@ import (
 	"time"
 
 	checkevents "github.com/harness/gitness/app/events/check"
+	gitevents "github.com/harness/gitness/app/events/git"
 	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
@@ -48,6 +49,7 @@ var (
 type Service struct {
 	git                       git.Interface
 	tx                        dbtx.Transactor
+	gitEventReporter          *gitevents.Reporter
 	mergeQueueEventReporter   *mergequeueevents.Reporter
 	mergeQueueEvReaderFactory *events.ReaderFactory[*mergequeueevents.Reader]
 	repoFinder                refcache.RepoFinder
@@ -68,6 +70,7 @@ func NewService(
 	config *types.Config,
 	git git.Interface,
 	tx dbtx.Transactor,
+	gitEventReporter *gitevents.Reporter,
 	mergeQueueEventReporter *mergequeueevents.Reporter,
 	statusCheckFactory *events.ReaderFactory[*checkevents.Reader],
 	mergeQueueEvReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
@@ -88,6 +91,7 @@ func NewService(
 	service := &Service{
 		git:                       git,
 		tx:                        tx,
+		gitEventReporter:          gitEventReporter,
 		mergeQueueEventReporter:   mergeQueueEventReporter,
 		mergeQueueEvReaderFactory: mergeQueueEvReaderFactory,
 		repoFinder:                repoFinder,

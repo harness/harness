@@ -18,6 +18,7 @@ import (
 	"context"
 
 	checkevents "github.com/harness/gitness/app/events/check"
+	gitevents "github.com/harness/gitness/app/events/git"
 	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
@@ -44,6 +45,7 @@ func ProvideService(
 	config *types.Config,
 	git git.Interface,
 	tx dbtx.Transactor,
+	gitEventReporter *gitevents.Reporter,
 	mergeQueueEventReporter *mergequeueevents.Reporter,
 	statusCheckFactory *events.ReaderFactory[*checkevents.Reader],
 	mergeQueueEvReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
@@ -66,6 +68,7 @@ func ProvideService(
 		config,
 		git,
 		tx,
+		gitEventReporter,
 		mergeQueueEventReporter,
 		statusCheckFactory,
 		mergeQueueEvReaderFactory,

@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/bootstrap"
+	gitevents "github.com/harness/gitness/app/events/git"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -77,13 +78,15 @@ func (s *Service) fastForward(
 		return fmt.Errorf("failed to create rpc system references write params: %w", err)
 	}
 
+	targetBranchRef := git.GetBranchRefPath(q.Branch)
+
 	var updateRefs []git.RefUpdate
 
 	deleteSourceBranchMap := make(map[int64]int64) // map[pullReqID]->seqSourceBranchDeleted
 
 	// Need to update the target branch
 	updateRefs = append(updateRefs, git.RefUpdate{
-		Name: git.GetBranchRefPath(q.Branch),
+		Name: targetBranchRef,
 		New:  newTargetBranchSHA,
 		Old:  expectedTargetBranchSHA,
 	})
@@ -200,6 +203,20 @@ func (s *Service) fastForward(
 	// Also, optimistic lock updates normally don't fail.
 
 	ctxNoCancel := context.WithoutCancel(ctx)
+
+	// The merge queue advances the target branch with git hooks disabled, so the git
+	// branch-updated event that normally reconciles other pull requests never fires. Emit an event
+	// so the pull request service can drive those reactions: reset the mergeability
+	// of pull requests targeting the branch, and update pull requests whose source branch is the one
+	// that was just fast-forwarded.
+	s.gitEventReporter.BranchUpdated(ctxNoCancel, &gitevents.BranchUpdatedPayload{
+		RepoID:      q.RepoID,
+		PrincipalID: systemPrincipalInfo.ID,
+		Ref:         targetBranchRef,
+		OldSHA:      expectedTargetBranchSHA.String(),
+		NewSHA:      newTargetBranchSHA.String(),
+		Forced:      false, // fast-forward is never forced
+	})
 
 	_, err = s.repoStore.UpdateOptLock(ctxNoCancel, repoFull, func(repo *types.Repository) error {
 		repo.NumOpenPulls -= entryCount
