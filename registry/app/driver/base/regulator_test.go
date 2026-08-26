@@ -55,13 +55,11 @@ func TestRegulatorEnterExit(t *testing.T) {
 		var secondGroupDone sync.WaitGroup
 		for range 50 {
 			secondGroupReady.Add(1)
-			secondGroupDone.Add(1)
-			go func() {
+			secondGroupDone.Go(func() {
 				secondGroupReady.Done()
 				r.enter()
 				r.exit()
-				secondGroupDone.Done()
-			}()
+			})
 		}
 		secondGroupReady.Wait()
 

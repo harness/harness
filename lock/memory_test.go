@@ -33,9 +33,7 @@ func Test_inMemMutex_Lock(t *testing.T) {
 		RetryDelay: 300 * time.Millisecond,
 	})
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		time.Sleep(500 * time.Millisecond)
 		mx, err := manager.NewMutex("key1")
 		if err != nil {
@@ -48,7 +46,7 @@ func Test_inMemMutex_Lock(t *testing.T) {
 		}
 		err = mx.Unlock(context.Background())
 		require.NoError(t, err)
-	}()
+	})
 
 	mx, err := manager.NewMutex("key1")
 	if err != nil {
@@ -73,9 +71,7 @@ func Test_inMemMutex_MaxTries(t *testing.T) {
 		RetryDelay: 300 * time.Millisecond,
 	})
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		time.Sleep(500 * time.Millisecond)
 		mx, err := manager.NewMutex("key1")
 		if err != nil {
@@ -97,7 +93,7 @@ func Test_inMemMutex_MaxTries(t *testing.T) {
 			t.Errorf("expected lock.MaxRetriesExceeded, got: %v", err)
 			return
 		}
-	}()
+	})
 
 	mx, err := manager.NewMutex("key1")
 	if err != nil {

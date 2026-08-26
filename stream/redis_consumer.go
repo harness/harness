@@ -148,32 +148,26 @@ func (c *RedisConsumer) Start(ctx context.Context) error {
 
 	wg := &sync.WaitGroup{}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		c.removeStaleConsumers(ctx, time.Hour)
 		// launch redis reader, it will finish when the ctx is done
 		c.reader(ctx)
-	}()
+	})
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		// launch redis message reclaimer, it will finish when the ctx is done.
 		// IMPORTANT: Keep reclaim interval small for now to support faster retries => higher load on redis!
 		// TODO: Make retries local by default with opt-in cross-instance retries.
 		// https://harness.atlassian.net/browse/SCM-83
 		const reclaimInterval = 10 * time.Second
 		c.reclaimer(ctx, reclaimInterval)
-	}()
+	})
 
 	for i := 0; i < c.Config.Concurrency; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			// launch redis message consumer, it will finish when the ctx is done
 			c.consumer(ctx)
-		}()
+		})
 	}
 
 	go func() {
