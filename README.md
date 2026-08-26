@@ -169,7 +169,7 @@ $ ./gitness user pat "my-pat-uid" 2592000
 ```
 
 The command outputs a valid PAT that has been granted full access as the user.
-The token can then be send as part of the `Authorization` header with Postman or curl:
+The token can then be sent as part of the `Authorization` header with Postman or curl:
 
 ```bash
 $ curl http://localhost:3000/api/v1/user \
