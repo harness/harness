@@ -53,7 +53,8 @@ func ValidateUsers(
 
 	if len(missing) > 0 {
 		return usererror.BadRequestf(
-			"unknown users in bypass and/or reviewer list: %v", missing,
+			"The following users could not be found: %v. "+
+				"Remove or replace them in the bypass or default reviewer list.", missing,
 		)
 	}
 
