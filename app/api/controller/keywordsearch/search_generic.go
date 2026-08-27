@@ -108,6 +108,16 @@ func (c *Controller) Search(
 		result.FileMatches[idx].RepoPath = repoPath
 	}
 
+	for idx, repoMatch := range result.Stats.PerRepoMatches {
+		repoPath, ok := repoIDToPathMap[repoMatch.RepoID]
+		if !ok {
+			log.Ctx(ctx).Warn().Msgf("repo path not found for repo ID %d, repo mapping: %v",
+				repoMatch.RepoID, repoIDToPathMap)
+			continue
+		}
+		result.Stats.PerRepoMatches[idx].RepoPath = repoPath
+	}
+
 	return result, nil
 }
 

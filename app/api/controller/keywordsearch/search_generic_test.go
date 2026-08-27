@@ -339,6 +339,67 @@ func TestSearch_SpacePathNonRecursive(t *testing.T) {
 	repoStore.AssertExpectations(t)
 }
 
+func TestSearch_PerRepoMatchesRepoPaths(t *testing.T) {
+	t.Parallel()
+
+	spaceFinder := newSpaceFinder(
+		map[int64]*types.SpaceCore{
+			10: {ID: 10, Path: "space", Identifier: "space"},
+		},
+		map[string]int64{"space": 10},
+	)
+
+	repoStore := &mockstore.RepoStore{}
+	repoStore.On("MapOfAllRepos", int64(10), false).
+		Return(map[int64]string{
+			1: "space/repo-1",
+			2: "space/repo-2",
+		}, nil).Once()
+
+	// Only repo 1 made it into the file matches, but both repos are reported in the
+	// per repo match counts. Repo 99 is unknown and hence stays without a path.
+	searcher := &fakeSearcher{result: types.SearchResult{
+		FileMatches: []types.FileMatch{
+			{RepoID: 1, FileName: "a.go"},
+		},
+		Stats: types.SearchStats{
+			TotalFiles:   3,
+			TotalMatches: 9,
+			PerRepoMatches: []types.RepoMatchCount{
+				{RepoID: 1, FileMatches: 2, TotalMatches: 4},
+				{RepoID: 2, FileMatches: 1, TotalMatches: 3},
+				{RepoID: 99, FileMatches: 1, TotalMatches: 2},
+			},
+		},
+	}}
+
+	ctrl := &Controller{
+		searcher:    searcher,
+		repoStore:   repoStore,
+		repoFinder:  newRepoFinder(nil, nil, nil),
+		spaceFinder: spaceFinder,
+		repoFilter:  filterAll{},
+	}
+
+	got, err := ctrl.Search(context.Background(), &auth.Session{}, types.SearchInput{
+		Query:      "foo",
+		SpacePaths: []string{"space"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := []types.RepoMatchCount{
+		{RepoID: 1, RepoPath: "space/repo-1", FileMatches: 2, TotalMatches: 4},
+		{RepoID: 2, RepoPath: "space/repo-2", FileMatches: 1, TotalMatches: 3},
+		{RepoID: 99, RepoPath: "", FileMatches: 1, TotalMatches: 2},
+	}
+	if !slices.Equal(got.Stats.PerRepoMatches, want) {
+		t.Fatalf("expected per repo matches %+v, got %+v", want, got.Stats.PerRepoMatches)
+	}
+	repoStore.AssertExpectations(t)
+}
+
 func TestSearch_SpacePathRecursiveExpandsDescendants(t *testing.T) {
 	t.Parallel()
 

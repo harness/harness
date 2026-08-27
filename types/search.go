@@ -43,6 +43,25 @@ type (
 	SearchStats struct {
 		TotalFiles   int `json:"total_files"`
 		TotalMatches int `json:"total_matches"`
+
+		// PerRepoMatches holds the match count of every repository that contains at least one match.
+		// Unlike SearchResult.FileMatches, it isn't capped by the max result count,
+		// so it also covers repositories whose matches didn't make it into the top results.
+		PerRepoMatches []RepoMatchCount `json:"per_repo_matches"`
+	}
+
+	// RepoMatchCount holds the number of matches found in a single repository.
+	RepoMatchCount struct {
+		RepoID   int64  `json:"-"`
+		RepoPath string `json:"repo_path"`
+
+		// FileMatches is the number of files that contain at least one match,
+		// counted the same way as SearchStats.TotalFiles.
+		FileMatches int `json:"file_matches"`
+
+		// TotalMatches is the number of matching lines,
+		// counted the same way as SearchStats.TotalMatches.
+		TotalMatches int `json:"total_matches"`
 	}
 
 	FileMatch struct {
