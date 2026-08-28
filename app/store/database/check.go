@@ -444,7 +444,7 @@ func mapInternalCheck(c *types.Check) *check {
 		PayloadVersion: c.Payload.Version,
 		Started:        c.Started,
 		Ended:          c.Ended,
-		BypassedBy:     c.BypassedBy,
+		BypassedBy:     c.BypassedByID,
 	}
 
 	return m
@@ -468,18 +468,21 @@ func mapCheck(c *check) types.Check {
 			Kind:    c.PayloadKind,
 			Data:    c.Payload,
 		},
-		ReportedBy: nil,
-		Started:    c.Started,
-		Ended:      c.Ended,
-		BypassedBy: c.BypassedBy,
+		ReportedBy:   nil,
+		Started:      c.Started,
+		Ended:        c.Ended,
+		BypassedByID: c.BypassedBy,
 	}
 }
 
 func (s *CheckStore) mapSliceCheck(ctx context.Context, checks []*check) ([]types.Check, error) {
-	// collect all principal IDs
-	ids := make([]int64, len(checks))
-	for i, req := range checks {
-		ids[i] = req.CreatedBy
+	// collect all principal IDs - both the reporter and the (optional) bypasser
+	ids := make([]int64, 0, len(checks)*2)
+	for _, c := range checks {
+		ids = append(ids, c.CreatedBy)
+		if c.BypassedBy != nil {
+			ids = append(ids, *c.BypassedBy)
+		}
 	}
 
 	// pull principal infos from cache
@@ -494,6 +497,11 @@ func (s *CheckStore) mapSliceCheck(ctx context.Context, checks []*check) ([]type
 		m[i] = mapCheck(c)
 		if reportedBy, ok := infoMap[c.CreatedBy]; ok {
 			m[i].ReportedBy = reportedBy
+		}
+		if c.BypassedBy != nil {
+			if bypassedBy, ok := infoMap[*c.BypassedBy]; ok {
+				m[i].BypassedBy = bypassedBy
+			}
 		}
 	}
 

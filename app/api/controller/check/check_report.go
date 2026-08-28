@@ -166,13 +166,16 @@ func (c *Controller) Report(
 		return nil, usererror.BadRequest("Invalid commit SHA provided")
 	}
 
+	var bypassedBy *types.PrincipalInfo
 	if in.BypassedBy != nil {
-		if _, err := c.principalStore.Find(ctx, *in.BypassedBy); err != nil {
+		principal, err := c.principalStore.Find(ctx, *in.BypassedBy)
+		if err != nil {
 			if errors.Is(err, store.ErrResourceNotFound) {
 				return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
 			}
 			return nil, fmt.Errorf("failed to look up bypassed_by principal: %w", err)
 		}
+		bypassedBy = principal.ToPrincipalInfo()
 	}
 
 	_, err = c.git.GetCommit(ctx, &git.GetCommitParams{
@@ -207,11 +210,13 @@ func (c *Controller) Report(
 		Summary:    in.Summary,
 		Link:       in.Link,
 		Payload:    in.Payload,
-		BypassedBy: in.BypassedBy,
 		Metadata:   metadataJSON,
 		ReportedBy: session.Principal.ToPrincipalInfo(),
 		Started:    started,
 		Ended:      ended,
+
+		BypassedByID: in.BypassedBy,
+		BypassedBy:   bypassedBy,
 	}
 
 	err = c.checkStore.Upsert(ctx, statusCheckReport)

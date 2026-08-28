@@ -135,7 +135,7 @@ func (s *Service) handlerCheckFinished(
 
 	completedChecks := make([]string, 0, len(checks))
 	for _, check := range checks {
-		if check.Status.IsSuccess() || check.BypassedBy != nil {
+		if check.Status.IsSuccess() || check.BypassedByID != nil {
 			completedChecks = append(completedChecks, check.Identifier)
 		}
 	}

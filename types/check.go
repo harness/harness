@@ -35,10 +35,11 @@ type Check struct {
 	Started    int64            `json:"started,omitempty"`
 	Ended      int64            `json:"ended,omitempty"`
 
-	BypassedBy *int64 `json:"bypassed_by,omitempty"`
+	BypassedByID *int64 `json:"-"` // clients will use "bypassed_by"
 
 	Payload    CheckPayload   `json:"payload"`
 	ReportedBy *PrincipalInfo `json:"reported_by,omitempty"`
+	BypassedBy *PrincipalInfo `json:"bypassed_by,omitempty"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.
