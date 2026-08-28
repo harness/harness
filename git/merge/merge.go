@@ -127,10 +127,7 @@ func Rebase(
 
 		// rebase merge preserves the commit author (and date) and the commit message, but changes the committer.
 		author := &commitInfo.Author
-		message := commitInfo.Title
-		if commitInfo.Message != "" {
-			message += "\n\n" + commitInfo.Message
-		}
+		message := commitInfo.Message
 
 		var mergeTreeMergeBaseSHA sha.SHA
 		if len(commitInfo.ParentSHAs) > 0 {
