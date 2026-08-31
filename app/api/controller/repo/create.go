@@ -106,6 +106,11 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
+	// a repository whose import failed occupies the identifier without holding any data - remove it.
+	if err := c.EnsureIdentifierAvailable(ctx, session, parentSpace.ID, in.Identifier); err != nil {
+		return nil, err
+	}
+
 	gitResp, isEmpty, err := c.createGitRepository(
 		ctx,
 		session,

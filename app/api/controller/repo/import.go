@@ -55,6 +55,11 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
+	// a repository whose import failed occupies the identifier without holding any data - remove it.
+	if err := c.EnsureIdentifierAvailable(ctx, session, parentSpace.ID, in.Identifier); err != nil {
+		return nil, err
+	}
+
 	remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
 	if err != nil {
 		return nil, err

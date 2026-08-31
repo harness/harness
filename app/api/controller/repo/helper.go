@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -50,6 +51,52 @@ var importingStates = []enum.RepoState{
 	enum.RepoStateGitImport,
 	enum.RepoStateMigrateDataImport,
 	enum.RepoStateMigrateGitPush,
+}
+
+// EnsureIdentifierAvailable verifies that no repository with the provided identifier exists in the
+// parent space, so that a new one can be created there.
+//
+// A repository whose import failed is kept in the DB solely to surface the failure to the user - it
+// has no git data behind it and is a dead object. Such a repository is removed here, freeing up the
+// identifier, so that the caller can retry the creation/import without a manual cleanup first.
+//
+// Any other existing repository is reported back as a conflict.
+func (c *Controller) EnsureIdentifierAvailable(
+	ctx context.Context,
+	session *auth.Session,
+	parentSpaceID int64,
+	identifier string,
+) error {
+	repo, err := c.repoStore.FindActiveByUID(ctx, parentSpaceID, identifier)
+	if errors.Is(err, gitnessstore.ErrResourceNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("failed to check for an existing repository with the same identifier: %w", err)
+	}
+
+	if repo.State != enum.RepoStateImportFailed {
+		return usererror.Conflict(fmt.Sprintf(
+			"A repository with identifier %q already exists in this space.", identifier))
+	}
+
+	log.Ctx(ctx).Info().
+		Int64("repo.id", repo.ID).
+		Str("repo.path", repo.Path).
+		Msg("removing repository with failed import to free up its identifier")
+
+	if err := c.publicAccess.Delete(ctx, enum.PublicResourceTypeRepo, repo.Path); err != nil {
+		return fmt.Errorf("failed to delete public access of repository with failed import: %w", err)
+	}
+
+	// there's no data behind the repository, so purge it right away rather than move it to the trash.
+	if err := c.PurgeNoAuth(ctx, session, repo); err != nil {
+		return fmt.Errorf("failed to purge repository with failed import: %w", err)
+	}
+
+	c.repoFinder.MarkChanged(ctx, repo.Core())
+
+	return nil
 }
 
 // GetRepo fetches a repository.
