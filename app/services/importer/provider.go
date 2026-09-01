@@ -33,6 +33,7 @@ import (
 	"github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/driver/gitlab"
 	"github.com/drone/go-scm/scm/driver/gogs"
+	"github.com/drone/go-scm/scm/driver/harness"
 	"github.com/drone/go-scm/scm/driver/stash"
 	"github.com/drone/go-scm/scm/transport"
 	"github.com/drone/go-scm/scm/transport/oauth2"
@@ -48,6 +49,7 @@ const (
 	ProviderTypeGitea     ProviderType = "gitea"
 	ProviderTypeGogs      ProviderType = "gogs"
 	ProviderTypeAzure     ProviderType = "azure"
+	ProviderTypeHarness   ProviderType = "harness"
 )
 
 func (p ProviderType) Enum() []any {
@@ -59,6 +61,7 @@ func (p ProviderType) Enum() []any {
 		ProviderTypeGitea,
 		ProviderTypeGogs,
 		ProviderTypeAzure,
+		ProviderTypeHarness,
 	}
 }
 
@@ -131,6 +134,18 @@ func basicAuthTransport(username, password string) http.RoundTripper {
 		Base:     baseTransport,
 		Username: username,
 		Password: password,
+	}
+}
+
+func apiKeyTransport(apiKey string) http.RoundTripper {
+	if apiKey == "" {
+		return baseTransport
+	}
+	return &transport.Custom{
+		Base: baseTransport,
+		Before: func(r *http.Request) {
+			r.Header.Set("x-api-key", apiKey)
+		},
 	}
 }
 
@@ -228,6 +243,20 @@ func getScmClientWithTransport(provider Provider, slug string, authReq bool) (*s
 		}
 		transport = basicAuthTransport(provider.Username, provider.Password)
 
+	case ProviderTypeHarness:
+		if provider.Host == "" {
+			return nil, errors.New("scm provider Host missing")
+		}
+		account, org, project, _, err := extractHarnessScope(slug)
+		if err != nil {
+			return nil, fmt.Errorf("invalid slug format: %w", err)
+		}
+		c, err = harness.New(provider.Host, account, org, project)
+		if err != nil {
+			return nil, fmt.Errorf("scm provider Host invalid: %w", err)
+		}
+		transport = apiKeyTransport(provider.Password)
+
 	default:
 		return nil, fmt.Errorf("unsupported scm provider: %s", provider)
 	}
@@ -257,7 +286,7 @@ func LoadRepositoryFromProvider(
 	}
 
 	// Augment user information if it's not provided for certain vendors.
-	if provider.Password != "" && provider.Username == "" {
+	if provider.Password != "" && provider.Username == "" && provider.Type != ProviderTypeHarness {
 		user, _, err := scmClient.Users.Find(ctx)
 		if err != nil {
 			return RepositoryInfo{}, provider, usererror.BadRequestf("Could not find user: %s", err)
@@ -267,6 +296,13 @@ func LoadRepositoryFromProvider(
 
 	if provider.Type == ProviderTypeAzure {
 		repoSlug, err = extractRepoFromSlug(repoSlug)
+		if err != nil {
+			return RepositoryInfo{}, provider, usererror.BadRequestf("Invalid slug format: %s", err)
+		}
+	}
+
+	if provider.Type == ProviderTypeHarness {
+		_, _, _, repoSlug, err = extractHarnessScope(repoSlug)
 		if err != nil {
 			return RepositoryInfo{}, provider, usererror.BadRequestf("Invalid slug format: %s", err)
 		}
@@ -408,6 +444,25 @@ func extractRepoFromSlug(slug string) (string, error) {
 		return res[2], nil
 	}
 	return "", fmt.Errorf("repo name missing")
+}
+
+// extractHarnessScope splits a Harness Code provider_repo slug into the account/org/project
+// scope and the repo identifier. Only account is required; org and project are optional and
+// returned empty if not present, matching account/repo, account/org/repo and
+// account/org/project/repo slug forms.
+func extractHarnessScope(slug string) (account, org, project, repo string, err error) {
+	parts := strings.Split(slug, "/")
+	switch len(parts) {
+	case 2:
+		return parts[0], "", "", parts[1], nil
+	case 3:
+		return parts[0], parts[1], "", parts[2], nil
+	case 4:
+		return parts[0], parts[1], parts[2], parts[3], nil
+	default:
+		return "", "", "", "", fmt.Errorf(
+			"expected account/repo, account/org/repo or account/org/project/repo, got %q", slug)
+	}
 }
 
 // matchesNamespace checks if the repository namespace matches the expected space slug.

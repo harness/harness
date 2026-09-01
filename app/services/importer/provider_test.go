@@ -252,3 +252,136 @@ func TestLoadRepositoriesFromProviderSpace_GitLab(t *testing.T) {
 		t.Error("Expected other-repo to be excluded (different group)")
 	}
 }
+
+func TestLoadRepositoryFromProvider_Harness(t *testing.T) {
+	originalTransport := baseTransport
+	baseTransport = http.DefaultTransport
+	defer func() { baseTransport = originalTransport }()
+
+	type harnessRepository struct {
+		UID           string `json:"uid"`
+		Path          string `json:"path"`
+		DefaultBranch string `json:"default_branch"`
+		GitURL        string `json:"git_url"`
+		IsPublic      bool   `json:"is_public"`
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/repos/sample-repo" {
+			t.Errorf("Expected path %s, got %s", "/api/v1/repos/sample-repo", r.URL.Path)
+		}
+		q := r.URL.Query()
+		if q.Get("accountIdentifier") != "account" || q.Get("orgIdentifier") != "org" ||
+			q.Get("projectIdentifier") != "project" {
+			t.Errorf("Expected account/org/project query params, got %v", q)
+		}
+		if r.Header.Get("x-api-key") != "testkey" {
+			t.Errorf("Expected x-api-key header %q, got %q", "testkey", r.Header.Get("x-api-key"))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(harnessRepository{
+			UID:           "sample-repo",
+			Path:          "account/org/project/sample-repo",
+			DefaultBranch: "main",
+			GitURL:        "https://harness-code.example.com/account/org/project/sample-repo.git",
+			IsPublic:      true,
+		})
+	}))
+	defer server.Close()
+
+	provider := Provider{
+		Type:     ProviderTypeHarness,
+		Host:     server.URL,
+		Password: "testkey",
+	}
+
+	repoInfo, _, err := LoadRepositoryFromProvider(context.Background(), provider, "account/org/project/sample-repo")
+	if err != nil {
+		t.Fatalf("LoadRepositoryFromProvider failed: %v", err)
+	}
+
+	if repoInfo.Identifier != "sample-repo" {
+		t.Errorf("Expected identifier %q, got %q", "sample-repo", repoInfo.Identifier)
+	}
+	if repoInfo.CloneURL != "https://harness-code.example.com/account/org/project/sample-repo.git" {
+		t.Errorf("Expected clone URL %q, got %q",
+			"https://harness-code.example.com/account/org/project/sample-repo.git", repoInfo.CloneURL)
+	}
+	if !repoInfo.IsPublic {
+		t.Error("Expected repo to be public per the provider response")
+	}
+	if repoInfo.DefaultBranch != "main" {
+		t.Errorf("Expected default branch %q, got %q", "main", repoInfo.DefaultBranch)
+	}
+}
+
+func TestLoadRepositoryFromProvider_Harness_AccountOnlyScope(t *testing.T) {
+	originalTransport := baseTransport
+	baseTransport = http.DefaultTransport
+	defer func() { baseTransport = originalTransport }()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		if q.Get("accountIdentifier") != "account" || q.Get("orgIdentifier") != "" || q.Get("projectIdentifier") != "" {
+			t.Errorf("Expected only accountIdentifier set, got %v", q)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"uid":     "sample-repo",
+			"git_url": "https://harness-code.example.com/account/sample-repo.git",
+		})
+	}))
+	defer server.Close()
+
+	provider := Provider{
+		Type: ProviderTypeHarness,
+		Host: server.URL,
+	}
+
+	if _, _, err := LoadRepositoryFromProvider(context.Background(), provider, "account/sample-repo"); err != nil {
+		t.Fatalf("LoadRepositoryFromProvider failed: %v", err)
+	}
+}
+
+func TestLoadRepositoryFromProvider_Harness_NotFound(t *testing.T) {
+	originalTransport := baseTransport
+	baseTransport = http.DefaultTransport
+	defer func() { baseTransport = originalTransport }()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_ = json.NewEncoder(w).Encode(map[string]string{"message": "not found"})
+	}))
+	defer server.Close()
+
+	provider := Provider{
+		Type: ProviderTypeHarness,
+		Host: server.URL,
+	}
+
+	_, _, err := LoadRepositoryFromProvider(context.Background(), provider, "account/org/project/missing-repo")
+	if err == nil {
+		t.Fatal("Expected error for 404 response, got nil")
+	}
+}
+
+func TestLoadRepositoryFromProvider_Harness_MissingHost(t *testing.T) {
+	provider := Provider{
+		Type: ProviderTypeHarness,
+	}
+
+	if _, _, err := LoadRepositoryFromProvider(context.Background(), provider, "account/sample-repo"); err == nil {
+		t.Fatal("Expected error when provider host is missing, got nil")
+	}
+}
+
+func TestLoadRepositoryFromProvider_Harness_InvalidSlug(t *testing.T) {
+	provider := Provider{
+		Type: ProviderTypeHarness,
+		Host: "https://harness-code.example.com",
+	}
+
+	if _, _, err := LoadRepositoryFromProvider(context.Background(), provider, "sample-repo"); err == nil {
+		t.Fatal("Expected error for slug missing account scope, got nil")
+	}
+}

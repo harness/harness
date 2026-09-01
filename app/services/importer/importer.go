@@ -224,12 +224,12 @@ func (r *Importer) Import(ctx context.Context, input Input) error {
 
 		log.Info().Msg("sync repository")
 
-		err = r.syncGitRepository(ctx, &systemPrincipal, repo, cloneURLWithAuth)
+		defaultBranch, err := r.syncGitRepository(ctx, &systemPrincipal, repo, cloneURLWithAuth)
 		if err != nil {
 			return fmt.Errorf("failed to sync git repository from '%s': %w", input.CloneURL, err)
 		}
 
-		log.Info().Msgf("successfully synced repository (with default branch: %q)", repo.DefaultBranch)
+		log.Info().Msgf("successfully synced repository (with default branch: %q)", defaultBranch)
 
 		log.Info().Msg("update repo in DB")
 
@@ -240,6 +240,7 @@ func (r *Importer) Import(ctx context.Context, input Input) error {
 
 			repo.GitUID = gitUID
 			repo.State = enum.RepoStateActive
+			repo.DefaultBranch = defaultBranch
 
 			return nil
 		})
@@ -360,13 +361,13 @@ func (r *Importer) syncGitRepository(
 	principal *types.Principal,
 	repo *types.Repository,
 	sourceCloneURL string,
-) error {
+) (string, error) {
 	writeParams, err := r.createRPCWriteParams(ctx, principal, repo, enum.GitOpTypeManageRepo)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	_, err = r.git.SyncRepository(ctx, &git.SyncRepositoryParams{
+	out, err := r.git.SyncRepository(ctx, &git.SyncRepositoryParams{
 		WriteParams:       writeParams,
 		Source:            sourceCloneURL,
 		CreateIfNotExists: false,
@@ -374,10 +375,10 @@ func (r *Importer) syncGitRepository(
 		DefaultBranch:     repo.DefaultBranch,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to sync repository: %w", err)
+		return "", fmt.Errorf("failed to sync repository: %w", err)
 	}
 
-	return nil
+	return out.DefaultBranch, nil
 }
 
 func (r *Importer) deleteGitRepository(
