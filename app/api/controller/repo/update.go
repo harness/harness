@@ -84,6 +84,13 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
+	// A linked repository mirrors its provider-side source: the description belongs to the
+	// source repository, so it can never be edited here - regardless of the caller's access.
+	if repoCore.Type == enum.RepoTypeLinked && in.Description != nil && *in.Description != repo.Description {
+		return nil, usererror.Forbidden(
+			"The description of a linked repository cannot be edited, it mirrors its source repository.")
+	}
+
 	if !in.hasChanges(repo) {
 		return GetRepoOutput(ctx, c.publicAccess, c.repoFinder, repo)
 	}
