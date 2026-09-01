@@ -1700,6 +1700,12 @@ type (
 			startDate int64,
 			endDate int64,
 		) (*types.UsageMetric, error)
+		// GetLatestStorage returns the most recent stored storage snapshot for a
+		// root space. found is false when no metric row exists yet.
+		GetLatestStorage(
+			ctx context.Context,
+			rootSpaceID int64,
+		) (metric *types.UsageMetric, found bool, err error)
 		List(
 			ctx context.Context,
 			start int64,

@@ -16,6 +16,8 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -203,8 +205,8 @@ func (s *UsageMetricsStore) GetMetrics(
 	SELECT
 		COALESCE(SUM(usage_metric_bandwidth_out), 0) AS usage_metric_bandwidth_out,
 		COALESCE(SUM(usage_metric_bandwidth_in), 0) AS usage_metric_bandwidth_in,
-		COALESCE(AVG(usage_metric_storage_total), 0) AS usage_metric_storage_total,
-		COALESCE(AVG(usage_metric_lfs_storage_total), 0) AS usage_metric_lfs_storage_total,
+		CAST(COALESCE(AVG(usage_metric_storage_total), 0) AS BIGINT) AS usage_metric_storage_total,
+		CAST(COALESCE(AVG(usage_metric_lfs_storage_total), 0) AS BIGINT) AS usage_metric_lfs_storage_total,
 		COALESCE(SUM(usage_metric_pushes), 0) AS usage_metric_pushes
 	FROM usage_metrics
 	WHERE
@@ -238,6 +240,33 @@ func (s *UsageMetricsStore) GetMetrics(
 	return result, nil
 }
 
+func (s *UsageMetricsStore) GetLatestStorage(
+	ctx context.Context,
+	rootSpaceID int64,
+) (*types.UsageMetric, bool, error) {
+	const sqlQuery = `
+	SELECT
+		usage_metric_storage_total,
+		usage_metric_lfs_storage_total
+	FROM usage_metrics
+	WHERE usage_metric_space_id = $1
+	ORDER BY usage_metric_date DESC
+	LIMIT 1`
+
+	result := &types.UsageMetric{RootSpaceID: rootSpaceID}
+	err := s.db.QueryRowContext(ctx, sqlQuery, rootSpaceID).Scan(
+		&result.StorageTotal,
+		&result.LFSStorageTotal,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, database.ProcessSQLErrorf(ctx, err, "failed to get latest storage metric")
+	}
+	return result, true, nil
+}
+
 func (s *UsageMetricsStore) List(
 	ctx context.Context,
 	start int64,
@@ -248,8 +277,8 @@ func (s *UsageMetricsStore) List(
 		usage_metric_space_id,
 		COALESCE(SUM(usage_metric_bandwidth_out), 0) AS usage_metric_bandwidth_out,
 		COALESCE(SUM(usage_metric_bandwidth_in), 0) AS usage_metric_bandwidth_in,
-		COALESCE(AVG(usage_metric_storage_total), 0) AS usage_metric_storage_total,
-		COALESCE(AVG(usage_metric_lfs_storage_total), 0) AS usage_metric_lfs_storage_total,
+		CAST(COALESCE(AVG(usage_metric_storage_total), 0) AS BIGINT) AS usage_metric_storage_total,
+		CAST(COALESCE(AVG(usage_metric_lfs_storage_total), 0) AS BIGINT) AS usage_metric_lfs_storage_total,
 		COALESCE(SUM(usage_metric_pushes), 0) AS usage_metric_pushes
 	FROM usage_metrics
 	WHERE

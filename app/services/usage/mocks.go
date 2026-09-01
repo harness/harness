@@ -85,6 +85,10 @@ type MetricsMock struct {
 		startDate int64,
 		endDate int64,
 	) (*types.UsageMetric, error)
+	GetLatestStorageFn func(
+		ctx context.Context,
+		rootSpaceID int64,
+	) (*types.UsageMetric, bool, error)
 	ListFn func(
 		ctx context.Context,
 		start int64,
@@ -113,6 +117,13 @@ func (m *MetricsMock) GetMetrics(
 	endDate int64,
 ) (*types.UsageMetric, error) {
 	return m.GetMetricsFn(ctx, rootSpaceID, startDate, endDate)
+}
+
+func (m *MetricsMock) GetLatestStorage(
+	ctx context.Context,
+	rootSpaceID int64,
+) (*types.UsageMetric, bool, error) {
+	return m.GetLatestStorageFn(ctx, rootSpaceID)
 }
 
 func (m *MetricsMock) List(

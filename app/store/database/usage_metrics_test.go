@@ -183,6 +183,86 @@ func TestUsageMetricsStore_GetMetrics(t *testing.T) {
 	assert.Equal(t, int64(21), metric.Pushes, "expected pushes = %d, got %d", 21, metric.Pushes)
 }
 
+func TestUsageMetricsStore_GetMetricsFractionalStorageAverage(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, _ := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+
+	metricsStore := database.NewUsageMetricsStore(db)
+
+	yesterday := time.Now().AddDate(0, 0, -1)
+	today := time.Now()
+
+	// Two days with storage 100 and 101 -> AVG = 100.5, a fractional value.
+	// On Postgres AVG(bigint) is numeric ("100.5000..."); on SQLite it is a
+	// float ("100.5"). Both fail to scan directly into an int64, which is the
+	// bug that returned a 500 from the usage/summary endpoint.
+	err := metricsStore.UpsertStorage(ctx, []*types.UsageMetric{
+		{RootSpaceID: 1, Date: yesterday, StorageTotal: 100, LFSStorageTotal: 100},
+	})
+	require.NoError(t, err)
+	err = metricsStore.UpsertStorage(ctx, []*types.UsageMetric{
+		{RootSpaceID: 1, Date: today, StorageTotal: 101, LFSStorageTotal: 101},
+	})
+	require.NoError(t, err)
+
+	metric, err := metricsStore.GetMetrics(ctx, 1, yesterday.UnixMilli(), today.UnixMilli())
+	require.NoError(t, err)
+
+	// AVG(100, 101) = 100.5; the fix casts the average to an integer in SQL,
+	// so the result is 100 (truncated) or 101 (rounded) depending on the backend.
+	assert.GreaterOrEqual(t, metric.StorageTotal, int64(100))
+	assert.LessOrEqual(t, metric.StorageTotal, int64(101))
+	assert.GreaterOrEqual(t, metric.LFSStorageTotal, int64(100))
+	assert.LessOrEqual(t, metric.LFSStorageTotal, int64(101))
+}
+
+func TestUsageMetricsStore_GetLatestStorage(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, _ := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 2, 0)
+
+	metricsStore := database.NewUsageMetricsStore(db)
+
+	// no metric row yet
+	metric, found, err := metricsStore.GetLatestStorage(ctx, 1)
+	require.NoError(t, err)
+	assert.False(t, found)
+	assert.Nil(t, metric)
+
+	err = metricsStore.UpsertStorage(ctx, []*types.UsageMetric{
+		{RootSpaceID: 1, Date: time.Now().AddDate(0, 0, -2), StorageTotal: 100, LFSStorageTotal: 10},
+		// the newest row for space 1, which is the one that must be returned
+		{RootSpaceID: 1, Date: time.Now(), StorageTotal: 300, LFSStorageTotal: 30},
+		{RootSpaceID: 1, Date: time.Now().AddDate(0, 0, -1), StorageTotal: 200, LFSStorageTotal: 20},
+		// a different root space must not leak into the result
+		{RootSpaceID: 2, Date: time.Now(), StorageTotal: 999, LFSStorageTotal: 99},
+	})
+	require.NoError(t, err)
+
+	metric, found, err = metricsStore.GetLatestStorage(ctx, 1)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.NotNil(t, metric)
+
+	assert.Equal(t, int64(1), metric.RootSpaceID)
+	assert.Equal(t, int64(300), metric.StorageTotal)
+	assert.Equal(t, int64(30), metric.LFSStorageTotal)
+}
+
 func TestUsageMetricsStore_List(t *testing.T) {
 	db, teardown := setupDB(t)
 	defer teardown()

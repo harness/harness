@@ -16,6 +16,7 @@ package githook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -78,10 +79,26 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, nil
 	}
 
+	// Storage limits are user facing: a breached hard limit rejects the push with a
+	// readable message rather than an internal error, a breached soft limit only warns.
 	if err := c.limiter.RepoSize(ctx, in.RepoID); err != nil {
-		return hook.Output{}, fmt.Errorf(
-			"resource limit exceeded: %w", limiter.ErrMaxRepoSizeReached,
-		)
+		switch {
+		case errors.Is(err, limiter.ErrRepoSizeSoftLimitReached):
+			output.Messages = append(output.Messages, err.Error(), "")
+		case errors.Is(err, limiter.ErrMaxRepoSizeReached):
+			output.Error = ptr.String(err.Error())
+			return output, nil
+		default:
+			return hook.Output{}, fmt.Errorf("failed to check repository size limit: %w", err)
+		}
+	}
+
+	if err := c.limiter.RootSpaceStorage(ctx, repo.ParentID, 0); err != nil {
+		if errors.Is(err, limiter.ErrMaxTotalStorageReached) {
+			output.Error = ptr.String(err.Error())
+			return output, nil
+		}
+		return hook.Output{}, fmt.Errorf("failed to check total storage limit: %w", err)
 	}
 
 	// For API ops that only modify references (branch and tags) without pushing commits
