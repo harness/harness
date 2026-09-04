@@ -22,6 +22,8 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/store/repos"
 	"github.com/drone/drone/store/shared/db"
+
+	"github.com/lib/pq"
 )
 
 // New returns a new Batcher.
@@ -80,6 +82,13 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 			}
 		}
 
+		// perms for the repos in insert/update are the same shape
+		// regardless of which branch a repo landed in (perm_read=true,
+		// perm_write=false, perm_admin=false, perm_synced=0), so on
+		// postgres they are collected here and written once, below, as
+		// a single batched upsert instead of one INSERT per repo.
+		var permUIDsPostgres []string
+
 		for _, repo := range insert {
 
 			//
@@ -107,15 +116,16 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 
 			//
 			// insert permissions
-			// TODO: group inserts in batches of N
 			//
 
+			if b.db.Driver() == db.Postgres {
+				permUIDsPostgres = append(permUIDsPostgres, repo.UID)
+				continue
+			}
+
 			stmt = permInsertIgnoreStmt
-			switch b.db.Driver() {
-			case db.Mysql:
+			if b.db.Driver() == db.Mysql {
 				stmt = permInsertIgnoreStmtMysql
-			case db.Postgres:
-				stmt = permInsertIgnoreStmtPostgres
 			}
 
 			_, err = execer.Exec(stmt,
@@ -178,12 +188,14 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 			}
 			// }
 
+			if b.db.Driver() == db.Postgres {
+				permUIDsPostgres = append(permUIDsPostgres, repo.UID)
+				continue
+			}
+
 			stmt = permInsertIgnoreStmt
-			switch b.db.Driver() {
-			case db.Mysql:
+			if b.db.Driver() == db.Mysql {
 				stmt = permInsertIgnoreStmtMysql
-			case db.Postgres:
-				stmt = permInsertIgnoreStmtPostgres
 			}
 
 			_, err = execer.Exec(stmt,
@@ -194,6 +206,22 @@ func (b *batchUpdater) Batch(ctx context.Context, user *core.User, batch *core.B
 			)
 			if err != nil {
 				return fmt.Errorf("batch: cannot insert permissions: %s: %s: %s", repo.Slug, repo.UID, err)
+			}
+		}
+
+		// a single round trip for every permission collected above,
+		// in place of one INSERT per repo (this was, by call volume
+		// and lock time, the single most expensive statement in this
+		// function -- see permInsertIgnoreBatchStmtPostgres).
+		if len(permUIDsPostgres) > 0 {
+			_, err := execer.Exec(permInsertIgnoreBatchStmtPostgres,
+				user.ID,
+				now,
+				now,
+				pq.Array(permUIDsPostgres),
+			)
+			if err != nil {
+				return fmt.Errorf("batch: cannot insert permissions: %s", err)
 			}
 		}
 
@@ -366,7 +394,10 @@ INSERT IGNORE INTO perms (
 )
 `
 
-const permInsertIgnoreStmtPostgres = `
+// permInsertIgnoreBatchStmtPostgres inserts one permission row per
+// repo UID in $4, in a single round trip, in place of a loop issuing
+// one single-row INSERT per repo.
+const permInsertIgnoreBatchStmtPostgres = `
 INSERT INTO perms (
  perm_user_id
 ,perm_repo_uid
@@ -376,16 +407,10 @@ INSERT INTO perms (
 ,perm_synced
 ,perm_created
 ,perm_updated
-) values (
- $1
-,$2
-,true
-,false
-,false
-,0
-,$3
-,$4
-) ON CONFLICT DO NOTHING
+)
+SELECT $1, repo_uid, true, false, false, 0, $2, $3
+FROM unnest($4::text[]) AS repo_uid
+ON CONFLICT DO NOTHING
 `
 
 // this statement deletes a repository that was

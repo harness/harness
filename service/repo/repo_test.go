@@ -247,6 +247,137 @@ func TestList_RefreshErr(t *testing.T) {
 	}
 }
 
+// TestList_ConcurrentPages proves that when the provider reports the
+// total page count up front (meta.Page.Last), List fetches the
+// remaining pages concurrently and still returns every repository,
+// regardless of which goroutine finishes first.
+func TestList_ConcurrentPages(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	mockUser := &core.User{}
+
+	pages := map[int][]*scm.Repository{
+		0: {{Namespace: "octocat", Name: "repo-1"}}, // the first request has no page number set
+		2: {{Namespace: "octocat", Name: "repo-2"}},
+		3: {{Namespace: "octocat", Name: "repo-3"}},
+	}
+
+	mockRepoService := mockscm.NewMockRepositoryService(controller)
+	mockRepoService.EXPECT().
+		List(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+			repos, ok := pages[opts.Page]
+			if !ok {
+				t.Errorf("unexpected page requested: %d", opts.Page)
+			}
+			res := &scm.Response{}
+			if opts.Page == 0 {
+				res.Page.Last = 3
+			}
+			return repos, res, nil
+		}).
+		Times(3)
+
+	mockRenewer := mock.NewMockRenewer(controller)
+	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false)
+
+	client := new(scm.Client)
+	client.Repositories = mockRepoService
+
+	service := New(client, mockRenewer, "", false)
+	got, err := service.List(noContext, mockUser)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("want 3 repos, got %d: %+v", len(got), got)
+	}
+	names := map[string]bool{}
+	for _, r := range got {
+		names[r.Name] = true
+	}
+	for _, want := range []string{"repo-1", "repo-2", "repo-3"} {
+		if !names[want] {
+			t.Errorf("want repo %q in result, got %+v", want, got)
+		}
+	}
+}
+
+// TestList_ConcurrentPagesErr proves that an error fetching any page
+// fails the whole call.
+func TestList_ConcurrentPagesErr(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	mockUser := &core.User{}
+
+	mockRepoService := mockscm.NewMockRepositoryService(controller)
+	mockRepoService.EXPECT().
+		List(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, opts scm.ListOptions) ([]*scm.Repository, *scm.Response, error) {
+			if opts.Page == 0 {
+				res := &scm.Response{}
+				res.Page.Last = 2
+				return []*scm.Repository{{Namespace: "octocat", Name: "repo-1"}}, res, nil
+			}
+			return nil, &scm.Response{}, scm.ErrNotAuthorized
+		}).
+		Times(2)
+
+	mockRenewer := mock.NewMockRenewer(controller)
+	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false)
+
+	client := new(scm.Client)
+	client.Repositories = mockRepoService
+
+	service := New(client, mockRenewer, "", false)
+	_, err := service.List(noContext, mockUser)
+	if err != scm.ErrNotAuthorized {
+		t.Errorf("want not authorized error, got %v", err)
+	}
+}
+
+// TestList_SequentialFallback proves that when the provider only
+// exposes an opaque next-page cursor (no Page.Last), List still walks
+// every page sequentially, in order.
+func TestList_SequentialFallback(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	mockUser := &core.User{}
+
+	mockRepoService := mockscm.NewMockRepositoryService(controller)
+	first := mockRepoService.EXPECT().
+		List(gomock.Any(), scm.ListOptions{Size: 100}).
+		Return([]*scm.Repository{{Namespace: "octocat", Name: "repo-1"}},
+			&scm.Response{Page: scm.Page{NextURL: "https://example.com/repos?cursor=abc"}}, nil)
+	mockRepoService.EXPECT().
+		List(gomock.Any(), scm.ListOptions{Size: 100, URL: "https://example.com/repos?cursor=abc"}).
+		Return([]*scm.Repository{{Namespace: "octocat", Name: "repo-2"}}, &scm.Response{}, nil).
+		After(first)
+
+	mockRenewer := mock.NewMockRenewer(controller)
+	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false)
+
+	client := new(scm.Client)
+	client.Repositories = mockRepoService
+
+	want := []*core.Repository{
+		{Namespace: "octocat", Name: "repo-1", Slug: "octocat/repo-1", Visibility: "public"},
+		{Namespace: "octocat", Name: "repo-2", Slug: "octocat/repo-2", Visibility: "public"},
+	}
+
+	service := New(client, mockRenewer, "", false)
+	got, err := service.List(noContext, mockUser)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("Diff: %s", diff)
+	}
+}
+
 func TestListWithNilRepo(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()

@@ -40,6 +40,7 @@ func TestRepo(t *testing.T) {
 	t.Run("FindName", testRepoFindName(store))
 	t.Run("List", testRepoList(store))
 	t.Run("ListLatest", testRepoListLatest(store))
+	t.Run("ListLatestByCounter", testRepoListLatestByCounter(store))
 	t.Run("Update", testRepoUpdate(store))
 	t.Run("Activate", testRepoActivate(store))
 	t.Run("Locking", testRepoLocking(store))
@@ -211,6 +212,66 @@ func testRepoListLatest(repos *repoStore) func(t *testing.T) {
 			t.Errorf("Expect nil build")
 		} else {
 			t.Run("Fields", testRepo(repos[0]))
+		}
+	}
+}
+
+// testRepoListLatestByCounter proves that queryRepoWithBuildPostgres
+// resolves the repo's build via repo_counter, not via insertion order
+// or build_id. It inserts the higher-numbered build first (so it gets
+// the lower build_id) and the lower-numbered build second (so it gets
+// the higher build_id) -- the old per-row subquery ordered by
+// build_id DESC would have picked the wrong one.
+func testRepoListLatestByCounter(repos *repoStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		if repos.db.Driver() != db.Postgres {
+			t.Skip("queryRepoWithBuildPostgres only runs on the postgres driver")
+		}
+
+		repo, err := repos.FindName(noContext, "octocat", "hello-world")
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		insert := func(number int64) {
+			err := repos.db.Update(func(execer db.Execer, binder db.Binder) error {
+				_, err := execer.Exec(
+					`INSERT INTO builds (build_repo_id, build_number, build_status) VALUES ($1, $2, '')`,
+					repo.ID, number,
+				)
+				return err
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		defer func() {
+			_ = repos.db.Update(func(execer db.Execer, binder db.Binder) error {
+				_, err := execer.Exec(`DELETE FROM builds WHERE build_repo_id = $1`, repo.ID)
+				return err
+			})
+		}()
+
+		insert(7) // higher number, inserted (and therefore lower build_id) first
+		insert(4) // lower number, inserted (and therefore higher build_id) second
+
+		repo.Counter = 7
+		if err := repos.Update(noContext, repo); err != nil {
+			t.Error(err)
+			return
+		}
+
+		list, err := repos.ListLatest(noContext, 1)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if len(list) != 1 || list[0].Build == nil {
+			t.Fatalf("want exactly one repo with a build, got %+v", list)
+		}
+		if got, want := list[0].Build.Number, int64(7); got != want {
+			t.Errorf("Want latest build number %d (repo_counter), got %d", want, got)
 		}
 	}
 }

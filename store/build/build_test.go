@@ -18,6 +18,19 @@ import (
 
 var noContext = context.TODO()
 
+// analyzeBuilds refreshes the planner statistics backing Count() on
+// Postgres, where the count is an estimate (see queryCountPostgres)
+// rather than an exact COUNT(*). It is a no-op on other drivers.
+func analyzeBuilds(store *buildStore) {
+	if store.db.Driver() != db.Postgres {
+		return
+	}
+	_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+		_, err := execer.Exec("ANALYZE builds")
+		return err
+	})
+}
+
 func TestBuild(t *testing.T) {
 	conn, err := dbtest.Connect()
 	if err != nil {
@@ -303,6 +316,7 @@ func testBuildCount(store *buildStore) func(t *testing.T) {
 		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100}, nil)
 		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101}, nil)
 
+		analyzeBuilds(store)
 		count, err := store.Count(noContext)
 		if err != nil {
 			t.Error(err)
@@ -324,6 +338,7 @@ func testBuildPending(store *buildStore) func(t *testing.T) {
 		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100, Status: core.StatusRunning}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusRunning}})
 		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101, Status: core.StatusPassing}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPassing}})
 
+		analyzeBuilds(store)
 		count, err := store.Count(noContext)
 		if err != nil {
 			t.Error(err)
@@ -351,6 +366,7 @@ func testBuildRunning(store *buildStore) func(t *testing.T) {
 		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100, Status: core.StatusBlocked}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusBlocked}})
 		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101, Status: core.StatusPassing}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPassing}})
 
+		analyzeBuilds(store)
 		count, err := store.Count(noContext)
 		if err != nil {
 			t.Error(err)
