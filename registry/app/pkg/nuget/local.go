@@ -340,7 +340,6 @@ func (c *localRegistry) UploadPackage(
 	log.Ctx(ctx).Debug().Msgf("uploading package for registry: %d", info.RegistryID)
 	tmpFileName := info.RootIdentifier + "-" + uuid.NewString()
 	var fileExtension string
-	metadata := nugetmetadata.Metadata{}
 
 	fileInfo, err := c.fileManager.UploadFileNoDBUpdate(ctx, info.RootIdentifier, nil, fileReader, info.RootParentID,
 		info.RegistryID)
@@ -358,7 +357,7 @@ func (c *localRegistry) UploadPackage(
 	}
 	defer r.Close()
 
-	metadata, err = c.buildMetadata(r)
+	metadata, err := c.buildMetadata(r)
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msgf("failed to build metadata for registry %d",
 			info.RegistryID)

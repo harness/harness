@@ -5,8 +5,12 @@ ifndef GOBIN # derive value from gopath (default to first entry, similar to 'go 
 	GOBIN := $(shell go env GOPATH | sed 's/:.*//')/bin
 endif
 
-tools = $(addprefix $(GOBIN)/, goimports govulncheck protoc-gen-go protoc-gen-go-grpc gci)
+tools = $(addprefix $(GOBIN)/, goimports protoc-gen-go protoc-gen-go-grpc gci)
 deps = $(addprefix $(GOBIN)/, wire dbmate)
+
+# Tools managed as go tools in go.tool.mod (run via 'go tool -modfile=go.tool.mod <name>')
+GOTOOL_MODFILE = go.tool.mod
+GOTOOL = go tool -modfile=$(GOTOOL_MODFILE)
 
 ifneq (,$(wildcard ./.local.env))
     include ./.local.env
@@ -113,21 +117,33 @@ modernize-fix: # Auto-apply modernization fixes (review changes carefully!)
 	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
 
 
-sec:
-	@echo "Vulnerability detection $(1)"
-	@govulncheck ./...
+# Fails on vulnerabilities that have an upstream fix, reports the ones that don't - see the script.
+sec: govulncheck-check ## Scan the codebase for known vulnerabilities
+	@echo "Vulnerability detection"
+	@GOVULNCHECK="$(GOTOOL) govulncheck" sh ./scripts/security/govulncheck.sh ./...
+
+# Security matters: always check for a newer govulncheck before scanning and offer to install it.
+# Set GOVULNCHECK_SKIP_CHECK=1 to skip (e.g. offline), GOVULNCHECK_AUTO_UPDATE=1 to upgrade without asking.
+govulncheck-check: ## Check for a newer govulncheck and offer to install it
+	@GOVULNCHECK_MODFILE=$(GOTOOL_MODFILE) \
+		GOVULNCHECK_SKIP_CHECK="$(GOVULNCHECK_SKIP_CHECK)" \
+		GOVULNCHECK_AUTO_UPDATE="$(GOVULNCHECK_AUTO_UPDATE)" \
+		sh ./scripts/security/govulncheck-version.sh
+
+govulncheck-update: ## Upgrade govulncheck in go.tool.mod to the latest release
+	@GOVULNCHECK_MODFILE=$(GOTOOL_MODFILE) sh ./scripts/security/govulncheck-version.sh --update
 
 lint: # lint the golang code - CI
 	@echo "Linting $(1)"
-	@go tool -modfile=go.tool.mod golangci-lint run --timeout=5m --verbose --new-from-rev=HEAD~ --whole-files
+	@$(GOTOOL) golangci-lint run --timeout=5m --verbose --new-from-rev=HEAD~ --whole-files
 
 lint-full: # full linting the golang code
 	@echo "Linting $(1)"
-	@go tool -modfile=go.tool.mod golangci-lint run --timeout=5m --verbose
+	@$(GOTOOL) golangci-lint run --timeout=5m --verbose
 
 lint-local: # lint the golang code - only untracked and staged changes
 	@echo "Linting $(1)"
-	@go tool -modfile=go.tool.mod golangci-lint run --new-from-merge-base=main --new --timeout=5m --verbose --whole-files
+	@$(GOTOOL) golangci-lint run --new-from-merge-base=main --new --timeout=5m --verbose --whole-files
 
 
 ###############################################################################
@@ -138,7 +154,7 @@ lint-local: # lint the golang code - only untracked and staged changes
 ###############################################################################
 
 generate-mocks:
-	@go tool -modfile=go.tool.mod mockery --config ./registry/app/api/controller/.mockery.yaml
+	@$(GOTOOL) mockery --config ./registry/app/api/controller/.mockery.yaml
 
 generate: wire
 	@echo "Generated Code"
@@ -176,9 +192,6 @@ $(GOBIN)/wire:
 $(GOBIN)/dbmate:
 	go install github.com/amacneil/dbmate@v1.15.0
 
-$(GOBIN)/govulncheck:
-	go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
-
 $(GOBIN)/protoc-gen-go:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 
@@ -191,4 +204,4 @@ $(GOBIN)/gci:
 help: ## show help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-.PHONY: delete-tools update-tools help format lint
+.PHONY: delete-tools update-tools help format lint sec govulncheck-check govulncheck-update
