@@ -493,18 +493,6 @@ WHERE repo_id = :repo_id
   AND repo_version = :repo_version_old
 `
 
-// TODO(bradrydzewski) this query needs performance tuning.
-// one approach that is promising is the ability to use the
-// repo_counter (latest build number) to join on the build
-// table.
-//
-//   FROM repos LEFT OUTER JOIN builds ON (
-//     repos.repo_id = builds.build_repo_id AND
-//     builds.build_number = repos.repo_counter
-//   )
-//   INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
-//
-
 const queryRepoWithBuild = queryColsBuilds + `
 FROM repos LEFT OUTER JOIN builds ON build_id = (
 	SELECT build_id FROM builds
@@ -517,12 +505,16 @@ WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC
 `
 
+// queryRepoWithBuildPostgres resolves each repo's latest build with
+// a plain equality join instead of a per-row correlated subquery.
+// repos.repo_counter is incremented atomically as a build number is
+// issued (see RepositoryStore.Increment, called from trigger.go), so
+// it always names the repo's current latest build, and
+// builds(build_repo_id, build_number) is already unique and indexed.
 const queryRepoWithBuildPostgres = queryColsBuilds + `
-FROM repos LEFT OUTER JOIN builds ON build_id = (
-	SELECT DISTINCT ON (build_repo_id) build_id FROM builds
-	WHERE builds.build_repo_id = repos.repo_id
-	ORDER BY build_repo_id, build_id DESC
-)
+FROM repos LEFT OUTER JOIN builds
+	ON builds.build_repo_id = repos.repo_id
+	AND builds.build_number = repos.repo_counter
 INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
 WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC
