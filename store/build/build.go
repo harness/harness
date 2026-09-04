@@ -447,7 +447,7 @@ func (s *buildStore) Purge(ctx context.Context, repo, number int64) error {
 	return nil
 }
 
-// Count returns a count of builds.
+// Count returns an exact count of builds.
 func (s *buildStore) Count(ctx context.Context) (i int64, err error) {
 	err = s.db.View(func(queryer db.Queryer, binder db.Binder) error {
 		return queryer.QueryRow(queryCount).Scan(&i)
@@ -455,9 +455,38 @@ func (s *buildStore) Count(ctx context.Context) (i int64, err error) {
 	return
 }
 
+// CountEstimate returns an approximate count of builds for metrics
+// and dashboards. On Postgres it reads the planner estimate
+// (pg_class.reltuples, refreshed by autovacuum/ANALYZE) instead of
+// scanning the table. The estimate can be stale, so it must not be
+// used for enforcement; use Count for that. A table that has never
+// been vacuumed or analyzed reports -1 (Postgres 14+) or 0 (older
+// versions); in that case, and on any lookup error, this falls back to
+// an exact count, which is cheap when the table really is empty.
+// Other drivers always return the exact count.
+func (s *buildStore) CountEstimate(ctx context.Context) (int64, error) {
+	if s.db.Driver() != db.Postgres {
+		return s.Count(ctx)
+	}
+	var i int64
+	err := s.db.View(func(queryer db.Queryer, binder db.Binder) error {
+		return queryer.QueryRow(queryCountEstimatePostgres).Scan(&i)
+	})
+	if err != nil || i <= 0 {
+		return s.Count(ctx)
+	}
+	return i, nil
+}
+
 const queryCount = `
 SELECT COUNT(*)
 FROM builds
+`
+
+const queryCountEstimatePostgres = `
+SELECT reltuples::bigint
+FROM pg_class
+WHERE oid = to_regclass('builds')
 `
 
 const queryBase = `

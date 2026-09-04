@@ -113,8 +113,15 @@ type BuildStore interface {
 	// Purge deletes builds from the database where the build number is less than n.
 	Purge(context.Context, int64, int64) error
 
-	// Count returns a count of builds.
+	// Count returns an exact count of builds. Use this where the value
+	// is compared against a limit (e.g. license enforcement).
 	Count(context.Context) (int64, error)
+
+	// CountEstimate returns an approximate count of builds that is
+	// cheap to compute. It is intended for metrics and dashboards
+	// only, never for enforcement. Stores that cannot estimate return
+	// the exact count.
+	CountEstimate(context.Context) (int64, error)
 }
 
 // IsDone returns true if the build has a completed state.

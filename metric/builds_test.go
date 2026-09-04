@@ -35,7 +35,7 @@ func TestBuildCount(t *testing.T) {
 	count := int64(5)
 
 	builds := mock.NewMockBuildStore(controller)
-	builds.EXPECT().Count(gomock.Any()).Return(count, nil)
+	builds.EXPECT().CountEstimate(gomock.Any()).Return(count, nil)
 	BuildCount(builds)
 
 	metrics, err := registry.Gather()

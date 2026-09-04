@@ -18,6 +18,18 @@ import (
 
 var noContext = context.TODO()
 
+// analyzeBuilds refreshes the planner statistics backing
+// CountEstimate() on Postgres. It is a no-op on other drivers.
+func analyzeBuilds(store *buildStore) {
+	if store.db.Driver() != db.Postgres {
+		return
+	}
+	_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+		_, err := execer.Exec("ANALYZE builds")
+		return err
+	})
+}
+
 func TestBuild(t *testing.T) {
 	conn, err := dbtest.Connect()
 	if err != nil {
@@ -33,6 +45,7 @@ func TestBuild(t *testing.T) {
 	t.Run("Create", testBuildCreate(store))
 	t.Run("Purge", testBuildPurge(store))
 	t.Run("Count", testBuildCount(store))
+	t.Run("CountEstimate", testBuildCountEstimate(store))
 	t.Run("Pending", testBuildPending(store))
 	t.Run("Running", testBuildRunning(store))
 	t.Run("Latest", testBuildLatest(store))
@@ -308,6 +321,41 @@ func testBuildCount(store *buildStore) func(t *testing.T) {
 			t.Error(err)
 		} else if got, want := count, int64(4); got != want {
 			t.Errorf("Want build count %d, got %d", want, got)
+		}
+	}
+}
+
+func testBuildCountEstimate(store *buildStore) func(t *testing.T) {
+	return func(t *testing.T) {
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, err := execer.Exec("DELETE FROM builds")
+			return err
+		})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 98}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 99}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101}, nil)
+
+		// Before ANALYZE, Postgres may report -1 (never analyzed) or a
+		// stale value; the estimate must never be negative, and Count
+		// must stay exact regardless.
+		est, err := store.CountEstimate(noContext)
+		if err != nil {
+			t.Error(err)
+		} else if est < 0 {
+			t.Errorf("Want non-negative estimate, got %d", est)
+		}
+		if got, err := store.Count(noContext); err != nil {
+			t.Error(err)
+		} else if want := int64(4); got != want {
+			t.Errorf("Want exact count %d, got %d", want, got)
+		}
+
+		analyzeBuilds(store)
+		if got, err := store.CountEstimate(noContext); err != nil {
+			t.Error(err)
+		} else if want := int64(4); got != want {
+			t.Errorf("Want estimate %d after ANALYZE, got %d", want, got)
 		}
 	}
 }
