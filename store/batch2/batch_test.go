@@ -41,6 +41,7 @@ func TestBatch(t *testing.T) {
 	}
 
 	t.Run("Insert", testBatchInsert(batcher, repos, perms, user))
+	t.Run("InsertMultiple", testBatchInsertMultiple(batcher, repos, perms, user))
 	t.Run("Update", testBatchUpdate(batcher, repos, perms, user))
 	t.Run("Delete", testBatchDelete(batcher, repos, perms, user))
 	t.Run("DuplicateID", testBatchDuplicateID(batcher, repos, perms, user))
@@ -83,6 +84,38 @@ func testBatchInsert(
 		_, err = perms.Find(noContext, repo.UID, user.ID)
 		if err != nil {
 			t.Errorf("Want permissions, got error %q", err)
+		}
+	}
+}
+
+// testBatchInsertMultiple proves that a single Batch() call carrying
+// several new repositories still grants a permission row for every
+// one of them -- the case the batched permInsertIgnoreBatchStmtPostgres
+// call (in place of one INSERT per repo) needs to get right.
+func testBatchInsertMultiple(
+	batcher core.Batcher,
+	repos core.RepositoryStore,
+	perms core.PermStore,
+	user *core.User,
+) func(t *testing.T) {
+	return func(t *testing.T) {
+		batch := &core.Batch{
+			Insert: []*core.Repository{
+				{UserID: 1, UID: "301", Namespace: "octocat", Name: "multi-a", Slug: "octocat/multi-a"},
+				{UserID: 1, UID: "302", Namespace: "octocat", Name: "multi-b", Slug: "octocat/multi-b"},
+				{UserID: 1, UID: "303", Namespace: "octocat", Name: "multi-c", Slug: "octocat/multi-c"},
+			},
+		}
+		err := batcher.Batch(noContext, user, batch)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		for _, uid := range []string{"301", "302", "303"} {
+			if _, err := perms.Find(noContext, uid, user.ID); err != nil {
+				t.Errorf("Want permissions for repo %s, got error %q", uid, err)
+			}
 		}
 	}
 }
