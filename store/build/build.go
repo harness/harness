@@ -447,10 +447,17 @@ func (s *buildStore) Purge(ctx context.Context, repo, number int64) error {
 	return nil
 }
 
-// Count returns a count of builds.
+// Count returns a count of builds. On Postgres this is a fast
+// planner estimate (refreshed by autovacuum/ANALYZE) rather than an
+// exact count, since callers only use this for periodic metrics and
+// dashboard stats, not anything transactional.
 func (s *buildStore) Count(ctx context.Context) (i int64, err error) {
+	query := queryCount
+	if s.db.Driver() == db.Postgres {
+		query = queryCountPostgres
+	}
 	err = s.db.View(func(queryer db.Queryer, binder db.Binder) error {
-		return queryer.QueryRow(queryCount).Scan(&i)
+		return queryer.QueryRow(query).Scan(&i)
 	})
 	return
 }
@@ -458,6 +465,12 @@ func (s *buildStore) Count(ctx context.Context) (i int64, err error) {
 const queryCount = `
 SELECT COUNT(*)
 FROM builds
+`
+
+const queryCountPostgres = `
+SELECT reltuples::bigint
+FROM pg_class
+WHERE relname = 'builds'
 `
 
 const queryBase = `
