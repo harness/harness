@@ -16,10 +16,18 @@ package repo
 
 import (
 	"context"
+	"sync"
 
 	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
+
+	"golang.org/x/sync/errgroup"
 )
+
+// listPageConcurrency bounds how many repository-list pages are
+// fetched from the SCM provider at once, to stay well clear of
+// secondary rate limits (e.g. GitHub's abuse-detection mechanism).
+const listPageConcurrency = 6
 
 type service struct {
 	renew      core.Renewer
@@ -49,24 +57,54 @@ func (s *service) List(ctx context.Context, user *core.User) ([]*core.Repository
 		Token:   user.Token,
 		Refresh: user.Refresh,
 	})
-	repos := []*core.Repository{}
+
 	opts := scm.ListOptions{Size: 100}
-	for {
+	result, meta, err := s.client.Repositories.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	repos := convertRepositories(result, s.visibility, s.trusted)
+
+	if meta.Page.Last > 1 {
+		// the provider told us the total page count up front (e.g.
+		// GitHub's Link: rel="last" header, surfaced as meta.Page.Last)
+		// -- fetch the remaining pages concurrently instead of walking
+		// them one at a time. Order doesn't matter to any caller of
+		// List, so pages are appended as they complete.
+		var mu sync.Mutex
+		group, gctx := errgroup.WithContext(ctx)
+		group.SetLimit(listPageConcurrency)
+		for page := 2; page <= meta.Page.Last; page++ {
+			page := page
+			group.Go(func() error {
+				pageOpts := scm.ListOptions{Size: opts.Size, Page: page}
+				result, _, err := s.client.Repositories.List(gctx, pageOpts)
+				if err != nil {
+					return err
+				}
+				converted := convertRepositories(result, s.visibility, s.trusted)
+				mu.Lock()
+				repos = append(repos, converted...)
+				mu.Unlock()
+				return nil
+			})
+		}
+		if err := group.Wait(); err != nil {
+			return nil, err
+		}
+		return repos, nil
+	}
+
+	// the provider only exposes an opaque next-page cursor with no
+	// advance knowledge of how many pages exist -- fall back to the
+	// sequential walk.
+	for opts.Page, opts.URL = meta.Page.Next, meta.Page.NextURL; opts.Page != 0 || opts.URL != ""; {
 		result, meta, err := s.client.Repositories.List(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
-		for _, src := range result {
-			if src != nil {
-				repos = append(repos, convertRepository(src, s.visibility, s.trusted))
-			}
-		}
-		opts.Page = meta.Page.Next
-		opts.URL = meta.Page.NextURL
-
-		if opts.Page == 0 && opts.URL == "" {
-			break
-		}
+		repos = append(repos, convertRepositories(result, s.visibility, s.trusted)...)
+		opts.Page, opts.URL = meta.Page.Next, meta.Page.NextURL
 	}
 	return repos, nil
 }
