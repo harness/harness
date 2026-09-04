@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package github
+package bitbucket
 
 import (
-	"fmt"
+	"testing"
 
 	"github.com/harness/gitness/app/services/linkedpr"
-	"github.com/harness/gitness/app/services/linkedpr/handlers"
+
+	"github.com/stretchr/testify/require"
 )
 
-// PRSyncSpec includes GitHub's server-side pull ref and maps it into the
-// Harness Code pull-request namespace.
-func PRSyncSpec(p linkedpr.PullRequestPayload) []handlers.RefSyncEntry {
-	return []handlers.RefSyncEntry{
-		{RemoteRef: fmt.Sprintf("refs/heads/%s", p.BaseRef)},
-		{RemoteRef: fmt.Sprintf("refs/heads/%s", p.HeadRef)},
-		{
-			RemoteRef: fmt.Sprintf("refs/pull/%d/head", p.Number),
-			LocalRef:  fmt.Sprintf("refs/pullreq/%d/head", p.Number),
-		},
-	}
+func TestPRSyncSpec(t *testing.T) {
+	entries := PRSyncSpec(linkedpr.PullRequestPayload{
+		Number: 8, HeadRef: "feature", BaseRef: "main",
+	})
+
+	require.Len(t, entries, 2)
+	require.Equal(t, "refs/heads/main", entries[0].RemoteRef)
+	require.Empty(t, entries[0].LocalRef)
+	// The source branch is the only head Bitbucket Cloud offers, so it is the
+	// ref that gets renamed into the Harness Code PR namespace.
+	require.Equal(t, "refs/heads/feature", entries[1].RemoteRef)
+	require.Equal(t, "refs/pullreq/8/head", entries[1].LocalRef)
 }

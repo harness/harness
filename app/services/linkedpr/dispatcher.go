@@ -73,6 +73,36 @@ type HandlerKey struct {
 // Handlers maps (Kind, Provider) to its Handler. Unmatched events are dropped.
 type Handlers map[HandlerKey]Handler
 
+// ProviderHandlers groups all handlers implemented by one SCM provider.
+// Keeping registration provider-owned avoids editing a central switch whenever
+// another provider is added.
+type ProviderHandlers struct {
+	Provider Provider
+	Handlers map[Kind]Handler
+}
+
+// NewHandlers builds the dispatcher registry and rejects incomplete or
+// duplicate provider registrations at startup.
+func NewHandlers(providers ...ProviderHandlers) (Handlers, error) {
+	handlers := make(Handlers)
+	for _, provider := range providers {
+		if provider.Provider == "" {
+			return nil, fmt.Errorf("linkedpr: provider registration has no provider")
+		}
+		for kind, handler := range provider.Handlers {
+			if kind == "" || handler == nil {
+				return nil, fmt.Errorf("linkedpr: provider %q has invalid handler for kind %q", provider.Provider, kind)
+			}
+			key := HandlerKey{Kind: kind, Provider: provider.Provider}
+			if _, exists := handlers[key]; exists {
+				return nil, fmt.Errorf("linkedpr: duplicate handler for provider %q and kind %q", provider.Provider, kind)
+			}
+			handlers[key] = handler
+		}
+	}
+	return handlers, nil
+}
+
 // Dispatcher orchestrates inbound linked-PR events.
 type Dispatcher struct {
 	linkedRepos LinkedRepoLookup

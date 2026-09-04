@@ -31,7 +31,8 @@ const (
 type Provider = importer.ProviderType
 
 const (
-	ProviderGitHub = importer.ProviderTypeGitHub
+	ProviderGitHub    = importer.ProviderTypeGitHub
+	ProviderBitbucket = importer.ProviderTypeBitbucket
 )
 
 // Event is the broker-agnostic event consumed by the Dispatcher. Adapters

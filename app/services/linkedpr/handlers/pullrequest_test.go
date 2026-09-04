@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package github_test
+package handlers_test
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/linkedpr"
-	"github.com/harness/gitness/app/services/linkedpr/handlers/github"
+	"github.com/harness/gitness/app/services/linkedpr/handlers"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	storecache "github.com/harness/gitness/app/store/cache"
@@ -73,7 +73,7 @@ const (
 
 // callHandle invokes PullRequestHandler.Handle with the typed payload
 // extracted from ev.Payload, mirroring what SafeHandler does in production.
-func callHandle(t *testing.T, h *github.PullRequestHandler, ev *linkedpr.Event, repo *types.LinkedRepo) error {
+func callHandle(t *testing.T, h *handlers.PullRequestHandler, ev *linkedpr.Event, repo *types.LinkedRepo) error {
 	t.Helper()
 	pl, ok := ev.Payload.(linkedpr.PullRequestPayload)
 	if !ok {
@@ -314,14 +314,14 @@ func newPullRequestHandler(
 	reporter *pullreqevents.Reporter,
 	tx noopTx,
 	gitOpts ...func(*mockgit.Interface),
-) *github.PullRequestHandler {
+) *handlers.PullRequestHandler {
 	t.Helper()
 	gitMock := &mockgit.Interface{}
 	configureGitMock(gitMock, gitOpts...)
 	repo := &types.RepositoryCore{ID: testRepoID, GitUID: "git-uid-test"}
-	return github.NewPullRequestHandler(
+	return handlers.NewPullRequestHandler(
 		prStore, linkedStore, activity, &repoStoreStub{}, author, reporter,
-		gitMock, testRepoFinder(repo), testURLProvider{}, testConnectorService{}, tx,
+		gitMock, testRepoFinder(repo), testURLProvider{}, testConnectorService{}, tx, testRefSyncSpec,
 	)
 }
 
@@ -1108,15 +1108,22 @@ func newPullRequestHandlerWithRepoStore(
 	reporter *pullreqevents.Reporter,
 	tx noopTx,
 	gitOpts ...func(*mockgit.Interface),
-) *github.PullRequestHandler {
+) *handlers.PullRequestHandler {
 	t.Helper()
 	gitMock := &mockgit.Interface{}
 	configureGitMock(gitMock, gitOpts...)
 	repo := &types.RepositoryCore{ID: testRepoID, GitUID: "git-uid-test"}
-	return github.NewPullRequestHandler(
+	return handlers.NewPullRequestHandler(
 		prStore, linkedStore, activity, repoStore, author, reporter,
-		gitMock, testRepoFinder(repo), testURLProvider{}, testConnectorService{}, tx,
+		gitMock, testRepoFinder(repo), testURLProvider{}, testConnectorService{}, tx, testRefSyncSpec,
 	)
+}
+
+func testRefSyncSpec(p linkedpr.PullRequestPayload) []handlers.RefSyncEntry {
+	return []handlers.RefSyncEntry{
+		{RemoteRef: "refs/heads/" + p.BaseRef},
+		{RemoteRef: "refs/heads/" + p.HeadRef},
+	}
 }
 
 func runCreateCountersTest(t *testing.T, state enum.PullReqState, want types.Repository) {

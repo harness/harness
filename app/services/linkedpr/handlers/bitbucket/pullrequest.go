@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package github
+package bitbucket
 
 import (
 	"fmt"
@@ -21,14 +21,20 @@ import (
 	"github.com/harness/gitness/app/services/linkedpr/handlers"
 )
 
-// PRSyncSpec includes GitHub's server-side pull ref and maps it into the
-// Harness Code pull-request namespace.
+// PullRequestHandler gives Wire a provider-specific type while delegating all
+// provider-neutral mirroring behavior to handlers.PullRequestHandler.
+type PullRequestHandler struct {
+	*handlers.PullRequestHandler
+}
+
+// PRSyncSpec maps the source branch directly into the Harness Code PR ref.
+// Bitbucket Cloud does not expose a server-side refs/pull namespace, so the
+// PR head is whatever the mutable source branch points at when we fetch it.
 func PRSyncSpec(p linkedpr.PullRequestPayload) []handlers.RefSyncEntry {
 	return []handlers.RefSyncEntry{
 		{RemoteRef: fmt.Sprintf("refs/heads/%s", p.BaseRef)},
-		{RemoteRef: fmt.Sprintf("refs/heads/%s", p.HeadRef)},
 		{
-			RemoteRef: fmt.Sprintf("refs/pull/%d/head", p.Number),
+			RemoteRef: fmt.Sprintf("refs/heads/%s", p.HeadRef),
 			LocalRef:  fmt.Sprintf("refs/pullreq/%d/head", p.Number),
 		},
 	}

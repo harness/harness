@@ -74,6 +74,40 @@ func handlersWith(h linkedpr.Handler) linkedpr.Handlers {
 	}
 }
 
+func TestNewHandlers_RegistersProviders(t *testing.T) {
+	githubHandler := &fakeHandler{}
+	bitbucketHandler := &fakeHandler{}
+
+	handlers, err := linkedpr.NewHandlers(
+		linkedpr.ProviderHandlers{
+			Provider: linkedpr.ProviderGitHub,
+			Handlers: map[linkedpr.Kind]linkedpr.Handler{linkedpr.KindPullRequest: githubHandler},
+		},
+		linkedpr.ProviderHandlers{
+			Provider: linkedpr.ProviderBitbucket,
+			Handlers: map[linkedpr.Kind]linkedpr.Handler{linkedpr.KindPullRequest: bitbucketHandler},
+		},
+	)
+	if err != nil {
+		t.Fatalf("NewHandlers: %v", err)
+	}
+	if got := handlers[linkedpr.HandlerKey{
+		Kind: linkedpr.KindPullRequest, Provider: linkedpr.ProviderBitbucket,
+	}]; got != bitbucketHandler {
+		t.Fatalf("Bitbucket handler: got %T want registered handler", got)
+	}
+}
+
+func TestNewHandlers_RejectsDuplicateRegistration(t *testing.T) {
+	registration := linkedpr.ProviderHandlers{
+		Provider: linkedpr.ProviderGitHub,
+		Handlers: map[linkedpr.Kind]linkedpr.Handler{linkedpr.KindPullRequest: &fakeHandler{}},
+	}
+	if _, err := linkedpr.NewHandlers(registration, registration); err == nil {
+		t.Fatal("expected duplicate registration error")
+	}
+}
+
 func TestDispatch_HappyPathRoutesToHandler(t *testing.T) {
 	lookup := &mockstore.LinkedRepoStore{}
 	lookup.On(

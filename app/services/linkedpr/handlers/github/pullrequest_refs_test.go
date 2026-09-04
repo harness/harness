@@ -32,7 +32,7 @@ func TestGithubPRSyncSpec(t *testing.T) {
 		BaseRef: "main",
 	}
 
-	entries := githubPRSyncSpec(payload)
+	entries := PRSyncSpec(payload)
 
 	require.Len(t, entries, 3)
 
