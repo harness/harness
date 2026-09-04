@@ -39,6 +39,19 @@ func convertRepository(src *scm.Repository, visibility string, trusted bool) *co
 	}
 }
 
+// convertRepositories converts a page of repositories from the
+// source code management system to the local datastructure, skipping
+// any nil entries.
+func convertRepositories(src []*scm.Repository, visibility string, trusted bool) []*core.Repository {
+	out := make([]*core.Repository, 0, len(src))
+	for _, s := range src {
+		if s != nil {
+			out = append(out, convertRepository(s, visibility, trusted))
+		}
+	}
+	return out
+}
+
 // convertVisibility is a helper function that returns the
 // repository visibility based on the privacy flag.
 func convertVisibility(src *scm.Repository, visibility string) string {
