@@ -174,7 +174,7 @@ func ExtractEnv(devcontainerConfig types.DevcontainerConfig, runArgsMap map[type
 func ExtractForwardPorts(devcontainerConfig types.DevcontainerConfig) []int {
 	var ports []int
 	for _, strPort := range devcontainerConfig.ForwardPorts {
-		portAsInt, err := strPort.Int64() // Using Atoi to convert string to int
+		portAsInt, err := strPort.Int64() // Using Int64 to convert string to int
 		if err != nil {
 			log.Warn().Msgf("Error converting port string '%s' to int: %v", strPort, err)
 			continue // Skip the invalid port
@@ -225,7 +225,7 @@ func AddIDEDownloadURLArg(
 	args map[gitspaceTypes.IDEArg]any,
 ) map[gitspaceTypes.IDEArg]any {
 	if !enum.IsJetBrainsIDE(ideService.Type()) {
-		// currently download url is only need for jetbrains IDEs
+		// currently download url is only needed for jetbrains IDEs
 		return args
 	}
 
@@ -246,7 +246,7 @@ func AddIDEDirNameArg(
 	args map[gitspaceTypes.IDEArg]any,
 ) map[gitspaceTypes.IDEArg]any {
 	if !enum.IsJetBrainsIDE(ideService.Type()) {
-		// currently dirname is only need for jetbrains IDEs
+		// currently dirname is only needed for jetbrains IDEs
 		return args
 	}
 

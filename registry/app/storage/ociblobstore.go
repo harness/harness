@@ -224,9 +224,9 @@ func (bs *ociBlobStore) Open(
 }
 
 // Put stores the content p in the blob store, calculating the digest.
-// If thebcontent is already present, only the digest will be returned.
-// This shouldbonly be used for small objects, such as manifests.
-// This implemented as a convenience for other Put implementations.
+// If the content is already present, only the digest will be returned.
+// This should only be used for small objects, such as manifests.
+// This is implemented as a convenience for other Put implementations.
 func (bs *ociBlobStore) Put(
 	ctx context.Context, pathPrefix string,
 	p []byte,
