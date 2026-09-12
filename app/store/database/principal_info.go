@@ -48,6 +48,7 @@ const (
 		,principal_email
 		,principal_display_name
 		,principal_type
+		,principal_admin
 		,principal_created
 		,principal_updated`
 )
@@ -58,6 +59,7 @@ type principalInfo struct {
 	DisplayName string             `db:"principal_display_name"`
 	Email       string             `db:"principal_email"`
 	Type        enum.PrincipalType `db:"principal_type"`
+	Admin       bool               `db:"principal_admin"`
 	Created     int64              `db:"principal_created"`
 	Updated     int64              `db:"principal_updated"`
 }
@@ -79,7 +81,7 @@ func (s *PrincipalInfoView) Find(ctx context.Context, id int64) (*types.Principa
 	info := &types.PrincipalInfo{}
 
 	if err := v.Scan(&info.ID, &info.UID, &info.Email, &info.DisplayName,
-		&info.Type, &info.Created, &info.Updated); err != nil {
+		&info.Type, &info.Admin, &info.Created, &info.Updated); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan principal info")
 	}
 
@@ -113,7 +115,7 @@ func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types
 	for rows.Next() {
 		info := &types.PrincipalInfo{}
 		err = rows.Scan(&info.ID, &info.UID, &info.Email, &info.DisplayName,
-			&info.Type, &info.Created, &info.Updated)
+			&info.Type, &info.Admin, &info.Created, &info.Updated)
 		if err != nil {
 			return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan principal info")
 		}
@@ -136,6 +138,7 @@ func mapToPrincipalInfo(p *principalInfo) types.PrincipalInfo {
 		DisplayName: p.DisplayName,
 		Email:       p.Email,
 		Type:        p.Type,
+		Admin:       p.Admin,
 		Created:     p.Created,
 		Updated:     p.Updated,
 	}
