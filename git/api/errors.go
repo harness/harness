@@ -32,6 +32,10 @@ var (
 	ErrInvalidSignature    = errors.New("invalid signature")
 )
 
+func isInvalidObjectNameError(message string) bool {
+	return strings.Contains(strings.ToLower(message), "fatal: not a valid object name")
+}
+
 // PushOutOfDateError represents an error if merging fails due to unrelated histories.
 type PushOutOfDateError struct {
 	StdOut string
