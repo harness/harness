@@ -26,12 +26,18 @@ import (
 // MergeQueueChecksPayload describes the body of merge queue checks requested/canceled triggers.
 type MergeQueueChecksPayload struct {
 	BaseSegment
+	MergeQueue MergeQueueSegment `json:"merge_queue"`
 	MergeQueueChecksSegment
+	ReferenceDetailsSegment
+}
+
+// MergeQueueSegment contains merge queue details.
+type MergeQueueSegment struct {
+	Branch string `json:"branch"`
 }
 
 // MergeQueueChecksSegment contains merge queue checks details.
 type MergeQueueChecksSegment struct {
-	Branch    string `json:"branch"`
 	CommitSHA string `json:"commit_sha"`
 }
 
@@ -43,6 +49,10 @@ func (s *Service) handleEventMergeQueueChecksRequested(
 	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerMergeQueueChecksRequested,
 		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, repo.GitUID, repo.Path, event.Payload.CommitSHA, s.urlProvider)
+			if err != nil {
+				return nil, err
+			}
 			repoInfo := repositoryInfoFrom(ctx, repo, s.urlProvider)
 
 			return &MergeQueueChecksPayload{
@@ -51,9 +61,15 @@ func (s *Service) handleEventMergeQueueChecksRequested(
 					Repo:      repoInfo,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
+				MergeQueue: MergeQueueSegment{
+					Branch: event.Payload.Branch,
+				},
 				MergeQueueChecksSegment: MergeQueueChecksSegment{
-					Branch:    event.Payload.Branch,
 					CommitSHA: event.Payload.CommitSHA,
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:        commitInfo.SHA,
+					HeadCommit: &commitInfo,
 				},
 			}, nil
 		})
@@ -75,9 +91,14 @@ func (s *Service) handleEventMergeQueueChecksCanceled(
 					Repo:      repoInfo,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
+				MergeQueue: MergeQueueSegment{
+					Branch: event.Payload.Branch,
+				},
 				MergeQueueChecksSegment: MergeQueueChecksSegment{
-					Branch:    event.Payload.Branch,
 					CommitSHA: event.Payload.CommitSHA,
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA: event.Payload.CommitSHA,
 				},
 			}, nil
 		})
