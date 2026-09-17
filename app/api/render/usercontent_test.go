@@ -20,6 +20,55 @@ import (
 	"testing"
 )
 
+// TestNeutralizeRenderableContentType covers which media types the CODE-6295 fix rewrites to
+// text/plain, per the Synack recommended fix's second option: force text/html, image/svg+xml and
+// application/xhtml+xml - and anything else a browser renders as a document - to text/plain
+// unconditionally, regardless of how the request reached the raw endpoint. Unlike forcing a
+// download, this keeps "View Raw" actually showing the file: the browser displays the literal
+// markup as text instead of parsing it as a document, so no script can run.
+func TestNeutralizeRenderableContentType(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType string
+		want        string
+	}{
+		{name: "html", contentType: "text/html; charset=utf-8", want: "text/plain; charset=utf-8"},
+		{name: "html without parameters", contentType: "text/html", want: "text/plain; charset=utf-8"},
+		{name: "xhtml", contentType: "application/xhtml+xml", want: "text/plain; charset=utf-8"},
+		{name: "text xml", contentType: "text/xml; charset=utf-8", want: "text/plain; charset=utf-8"},
+		{name: "application xml", contentType: "application/xml", want: "text/plain; charset=utf-8"},
+		{name: "xsl", contentType: "text/xsl", want: "text/plain; charset=utf-8"},
+		{
+			name:        "xslt can script through a stylesheet PI",
+			contentType: "application/xslt+xml",
+			want:        "text/plain; charset=utf-8",
+		},
+		{name: "uppercase is still html", contentType: "TEXT/HTML; CHARSET=UTF-8", want: "text/plain; charset=utf-8"},
+		{name: "padded media type", contentType: "  text/html ; charset=utf-8", want: "text/plain; charset=utf-8"},
+
+		// SVG is explicitly named in the Synack recommended fix and is neutralized
+		// unconditionally, the same as HTML - there is no <img src> exemption.
+		{name: "svg is forced to plain text", contentType: "image/svg+xml", want: "text/plain; charset=utf-8"},
+		{name: "svg uppercase is forced to plain text", contentType: "IMAGE/SVG+XML", want: "text/plain; charset=utf-8"},
+
+		{name: "plain text is unchanged", contentType: "text/plain; charset=utf-8", want: "text/plain; charset=utf-8"},
+		{name: "png is unchanged", contentType: "image/png", want: "image/png"},
+		{name: "pdf is unchanged", contentType: "application/pdf", want: "application/pdf"},
+		{name: "octet stream is unchanged", contentType: "application/octet-stream", want: "application/octet-stream"},
+		{name: "empty content type is unchanged", contentType: "", want: ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := NeutralizeRenderableContentType(test.contentType)
+
+			if got != test.want {
+				t.Errorf("Want NeutralizeRenderableContentType(%q) = %q, got %q", test.contentType, test.want, got)
+			}
+		})
+	}
+}
+
 func TestUserContentSecurityHeaders(t *testing.T) {
 	w := httptest.NewRecorder()
 
