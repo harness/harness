@@ -1,9 +1,3 @@
-run:
-  skip-dirs:
-    - third_party$
-    - builtin$
-    - examples$
-
 linters:
   disable-all: true
   enable:
@@ -53,7 +47,6 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
-    # Formatters movidos para cá:
     - gci
     - goimports
 
@@ -139,6 +132,10 @@ linters-settings:
 
 issues:
   max-same-issues: 10
+  exclude-dirs:
+    - third_party
+    - builtin
+    - examples
   exclude-rules:
     - linters:
         - govet
