@@ -52,6 +52,7 @@ jobs:
           version: v1.59.1
           skip-pkg-cache: true
           skip-build-cache: true
+          args: --timeout=10m
 
   mea-autonomous-sentry:
     name: MEA Quantum Sentry Autonomous Audit
