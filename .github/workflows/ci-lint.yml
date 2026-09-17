@@ -47,10 +47,11 @@ jobs:
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.54.2
-
+          version: latest
+          skip-pkg-cache: true
+          skip-build-cache: true
   mea-autonomous-sentry:
     name: MEA Quantum Sentry Autonomous Audit
     needs: [web, gitness]
