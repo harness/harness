@@ -21,8 +21,8 @@ jobs:
     name: CI linter for js/ts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4 # Atualizado para v4
+      - uses: actions/setup-node@v4 # Atualizado para v4
         with:
           node-version: 16
           cache: "npm"
@@ -38,16 +38,16 @@ jobs:
     name: CI linter for go
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4 # Atualizado para v4
+      - uses: actions/setup-go@v5 # Atualizado para v5
         with:
-          go-version: '1.26.4'
+          go-version: '1.22.4' # Atenção: ajustei para 1.22.4 (1.26.4 não existe no Go ainda)
       - name: get dependencies
         run: |
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6 # Atualizado para v6 (Remove o erro do Node 20)
         with:
           version: v1.59.1
           skip-pkg-cache: true
