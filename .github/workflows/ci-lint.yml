@@ -42,20 +42,19 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22.4'
-          # Ativa o cache nativo do Go para acelerar o processo
           cache: true
+          
       - name: get dependencies
         run: |
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.59
-          skip-cache: false
-          # Força o linter a focar apenas nos pacotes locais, liberando memória
-          args: --timeout=5m --concurrency=2 --build-tags="" ./...
 
+      # Baixa e executa o linter diretamente no terminal com a URL oficial corrigida
+      - name: Run golangci-lint diretamente
+        run: |
+          curl -sSfL https://githubusercontent.com | sh -s -- -b $(go env GOPATH)/bin v1.59.1
+          $(go env GOPATH)/bin/golangci-lint run --timeout=10m ./...
+          
   mea-autonomous-sentry:
     name: MEA Quantum Sentry Autonomous Audit
     needs: [web, gitness]
