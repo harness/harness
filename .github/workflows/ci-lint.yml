@@ -46,12 +46,11 @@ jobs:
         run: |
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6 # Atualizado para v6 (Remove o erro do Node 20)
+      - golangci-lint
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v1.59.1
-          skip-pkg-cache: true
-          skip-build-cache: true
+          skip-cache: true
           args: --timeout=10m
 
   mea-autonomous-sentry:
