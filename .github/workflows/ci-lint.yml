@@ -42,6 +42,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22.4'
+          # Ativa o cache nativo do Go para acelerar o processo
+          cache: true
       - name: get dependencies
         run: |
           mkdir -p ./web/dist
@@ -49,9 +51,9 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          # Alterado de v1.59.1 para v1.59 (Compatível com a v6 da action)
           version: v1.59
-          skip-cache: true
+          # Alterado para false para não ignorar o cache do linter
+          skip-cache: false
           args: --timeout=10m
 
   mea-autonomous-sentry:
