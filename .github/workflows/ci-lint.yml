@@ -12,7 +12,8 @@ permissions:
 
 jobs:
   web:
-    name: name: CI linter for js/ts
+    # Corrigido: Removido o 'name:' duplicado que quebrava a sintaxe
+    name: CI linter for js/ts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
