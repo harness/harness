@@ -52,9 +52,9 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.59
-          # Alterado para false para não ignorar o cache do linter
           skip-cache: false
-          args: --timeout=10m
+          # Força o linter a focar apenas nos pacotes locais, liberando memória
+          args: --timeout=5m --concurrency=2 --build-tags="" ./...
 
   mea-autonomous-sentry:
     name: MEA Quantum Sentry Autonomous Audit
