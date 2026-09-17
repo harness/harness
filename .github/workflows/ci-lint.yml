@@ -21,8 +21,8 @@ jobs:
     name: CI linter for js/ts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # Atualizado para v4
-      - uses: actions/setup-node@v4 # Atualizado para v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 16
           cache: "npm"
@@ -38,15 +38,15 @@ jobs:
     name: CI linter for go
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # Atualizado para v4
-      - uses: actions/setup-go@v5 # Atualizado para v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: '1.22.4' # Atenção: ajustei para 1.22.4 (1.26.4 não existe no Go ainda)
+          go-version: '1.22.4'
       - name: get dependencies
         run: |
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
-      - golangci-lint
+      - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.59.1
