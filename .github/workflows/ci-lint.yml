@@ -1,5 +1,4 @@
-name: CI & MEA Autonomous Pipeline
-
+name: CI Linter pipeline
 on:
   push:
     tags:
@@ -8,13 +7,8 @@ on:
       - master
       - main
   pull_request:
-  issues:
-    types: [opened, reopened]
-
 permissions:
   contents: read
-  issues: write
-  pull-requests: read
 
 jobs:
   web:
@@ -24,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
           cache: "npm"
           cache-dependency-path: web/yarn.lock
       - name: install, lint, and build web app
@@ -41,46 +35,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
+          # Ajustado para a versão estável correspondente ao seu ambiente
           go-version: '1.22.4'
           cache: true
-          
       - name: get dependencies
         run: |
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
-
-      # Baixa e executa o linter diretamente no terminal com a URL oficial corrigida
-      - name: Run golangci-lint diretamente
-        run: |
-          curl -sSfL https://githubusercontent.com | sh -s -- -b $(go env GOPATH)/bin v1.59.1
-          $(go env GOPATH)/bin/golangci-lint run --timeout=10m ./...
-          
-  mea-autonomous-sentry:
-    name: MEA Quantum Sentry Autonomous Audit
-    needs: [web, gitness]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: golangci-lint
+        # Atualizado para a v6 para suportar linters modernos sem quebrar
+        uses: golangci/golangci-lint-action@v6
         with:
-          python-version: '3.11'
-
-      - name: Install MEA Core Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install httpx fastapi uvicorn cryptography sentence-transformers numpy redis mem0ai
-
-      - name: Run MEA Autonomous Audit & Sentry Check
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MEA_MASTER_KEY: ${{ secrets.MEA_MASTER_KEY || 'chave_soberana_padrao' }}
-          GIBBERLINK_MODE: 'json'
-        run: |
-          echo "🌌 [CI/CD] Acionando o Kernel Quântico da MEA na nuvem..."
-          python -c "import mea; print(f'⚡ MEA Kernel Carregado com Sucesso! Versão: {mea.__version__}')"
-          
-          # Executa uma auto-auditoria estática via Guardian no commit atual
-          python -c "from mea.guardian import GuardianEngine; import glob; [print(f'Auditando {f}:', GuardianEngine().verificar_integridade_sintatica(open(f, encoding='utf-8', errors='ignore').read(), f)) for f in glob.glob('mea/**/*.py', recursive=True)]"
+          # Versão estável declarada de forma correta para a action v6
+          version: v1.59
+          args: --timeout=10m
