@@ -46,4 +46,5 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.59
-          args: --timeout=5m --concurrency=2 --issues-exit-code=0 ./...
+          # Corrigido: Bloqueia o linter de entrar na pasta web e congelar o pipeline
+          args: --timeout=5m --concurrency=2 --issues-exit-code=0 --skip-dirs=web ./...
