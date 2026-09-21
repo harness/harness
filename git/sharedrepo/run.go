@@ -58,6 +58,13 @@ func Run(
 		return fmt.Errorf("pre-receive hook failed: %w", err)
 	}
 
+	// Objects are packed only after the pre-receive hook has approved the update: The hook reads
+	// the new objects through the alternate object directory, so it doesn't benefit from the pack
+	// file, and a rejected update doesn't need one at all.
+	if err := s.PackObjects(ctx); err != nil {
+		return fmt.Errorf("failed to pack objects: %w", err)
+	}
+
 	if err := s.MoveObjects(ctx); err != nil {
 		return fmt.Errorf("failed to move objects: %w", err)
 	}

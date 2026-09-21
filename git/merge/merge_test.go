@@ -16,6 +16,7 @@ package merge
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -153,6 +154,79 @@ func TestMergeAndSquash_UseParamsMessage(t *testing.T) {
 	}
 }
 
+// TestRebase_ObjectsSurvivePacking rebases enough commits for the shared repository to combine
+// the created objects into a pack file (as sharedrepo.Run does) and asserts that the rebased
+// branch is fully available in the original repository afterwards.
+func TestRebase_ObjectsSurvivePacking(t *testing.T) {
+	requireGit(t)
+
+	ctx := context.Background()
+
+	repoPath := newTestRepo(t)
+
+	// The file is nested deeply, so that every rebased commit creates a blob, the commit itself
+	// and a tree per path element. That way a handful of commits suffices to push the number of
+	// created objects above the packing threshold of the shared repository.
+	const filePath = "a/b/c/d/e/f/g/h/i/j/source.txt"
+
+	baseContent := ""
+	for i := range 20 {
+		baseContent += fmt.Sprintf("line %d\n", i)
+	}
+
+	baseSHA := commitFile(t, repoPath, filePath, baseContent, "Initial commit\n")
+
+	// the source commits append to the end of the file
+	runGit(t, repoPath, "checkout", "-b", "feature")
+
+	content := baseContent
+	var sourceSHA sha.SHA
+	for i := 1; i <= 9; i++ {
+		content += fmt.Sprintf("appended %d\n", i)
+		sourceSHA = commitFile(t, repoPath, filePath, content, fmt.Sprintf("Change %d\n", i))
+	}
+
+	// the target commit changes the beginning of the same file, so that rebasing it creates
+	// new objects rather than reusing the ones of the source branch.
+	runGit(t, repoPath, "checkout", "main")
+	targetSHA := commitFile(t, repoPath, filePath, "prepended\n"+baseContent, "Move the target\n")
+
+	s := newSharedRepo(ctx, t, repoPath)
+
+	committer := &api.Signature{
+		Identity: api.Identity{Name: "Merge Bot", Email: "bot@test.io"},
+		When:     time.Date(2021, 2, 3, 4, 5, 6, 0, time.UTC),
+	}
+
+	mergeSHA, conflicts, err := Rebase(ctx, s, Params{
+		Author:       committer,
+		Committer:    committer,
+		Message:      "this message must be ignored by rebase",
+		MergeBaseSHA: baseSHA,
+		TargetSHA:    targetSHA,
+		SourceSHA:    sourceSHA,
+	})
+	require.NoError(t, err)
+	require.Empty(t, conflicts)
+
+	require.NoError(t, s.PackObjects(ctx))
+
+	// the objects created by the rebase must have been combined into a single pack file
+	packs, err := filepath.Glob(filepath.Join(s.Directory(), "objects", "pack", "*.pack"))
+	require.NoError(t, err)
+	require.Len(t, packs, 1)
+
+	require.NoError(t, s.MoveObjects(ctx))
+
+	// the rebased commits and everything they point to must be readable from the original
+	// repository, without the shared repository (which is gone by then) as an alternate.
+	assert.Empty(t, runGit(t, repoPath, "fsck", "--strict", "--no-dangling"))
+
+	// the rebased branch consists of the 9 rebased commits on top of the base and the target.
+	revs := strings.Fields(runGit(t, repoPath, "rev-list", mergeSHA.String()))
+	assert.Len(t, revs, 11)
+}
+
 func requireGit(t *testing.T) {
 	t.Helper()
 	if _, err := exec.LookPath("git"); err != nil {
@@ -186,7 +260,9 @@ func newSharedRepo(ctx context.Context, t *testing.T, repoPath string) *sharedre
 func commitFile(t *testing.T, repoPath, name, content, message string) sha.SHA {
 	t.Helper()
 
-	require.NoError(t, os.WriteFile(filepath.Join(repoPath, name), []byte(content), 0o600))
+	filePath := filepath.Join(repoPath, name)
+	require.NoError(t, os.MkdirAll(filepath.Dir(filePath), 0o700))
+	require.NoError(t, os.WriteFile(filePath, []byte(content), 0o600))
 	runGit(t, repoPath, "add", name)
 
 	messageFile := filepath.Join(t.TempDir(), "commit-message")
