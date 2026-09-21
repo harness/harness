@@ -23,9 +23,11 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -202,6 +204,13 @@ func (c *Controller) PreReceive(
 	rulesViolations = append(rulesViolations, mergeQueueViolations...)
 
 	processProtectionViolations(&output, rulesViolations, settingsViolations)
+
+	// Push rules have no controller-level audit, so record bypasses here. Gate on
+	// output.Error: a bypassed push rule can coexist with another violation that still
+	// rejects the push, and no commit is made in that case.
+	if output.Error == nil {
+		c.logPushRuleBypass(ctx, repo, principal, pushRulesViolations)
+	}
 
 	// Only push violations are propagated: they need the pushed objects, so the API
 	// caller can't compute them itself. It already has the ref-rule and merge-queue
@@ -397,6 +406,46 @@ func (c *Controller) checkPushProtection(
 	}
 
 	return rulesViolations, &settingsViolations, nil
+}
+
+// logPushRuleBypass records an audit event when a push bypasses one or more active
+// push protection rules. It is a no-op when nothing was bypassed.
+func (c *Controller) logPushRuleBypass(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	principal *types.Principal,
+	violations []types.RuleViolations,
+) {
+	if !protection.IsBypassed(violations) {
+		return
+	}
+
+	err := c.auditService.Log(ctx,
+		*principal,
+		audit.NewResource(
+			audit.ResourceTypeRepository,
+			repo.Identifier,
+			audit.RepoPath,
+			repo.Path,
+			audit.BypassedResourceType,
+			audit.BypassedResourceTypeCommit,
+			audit.BypassedResourceName,
+			repo.Identifier,
+			audit.ResourceName,
+			repo.Identifier,
+			audit.BypassAction,
+			audit.BypassActionCommitted,
+		),
+		audit.ActionBypassed,
+		paths.Parent(repo.Path),
+		audit.WithNewObject(audit.CommitObject{
+			RepoPath:       repo.Path,
+			RuleViolations: violations,
+		}),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to insert audit log for push rule bypass")
+	}
 }
 
 func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state enum.RepoState) bool {
