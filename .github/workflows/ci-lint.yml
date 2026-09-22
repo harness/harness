@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "yarn" # Corrigido: usa yarn em vez de npm
+          cache: "yarn" 
           cache-dependency-path: web/yarn.lock
       - name: install, lint, and build web app
         working-directory: web
@@ -38,6 +38,7 @@ jobs:
         with:
           go-version: '1.22.4'
           cache: true
+          cache-dependency-path: go.sum
       - name: get dependencies
         run: |
           mkdir -p ./web/dist
@@ -46,10 +47,9 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         continue-on-error: true
         env:
-          # Força o Garbage Collector do Go a ser mais agressivo para economizar RAM
-          GOGC: "20"
-          GOMEMLIMIT: "5GiB"
+          GOGC: "10" # Tornamos o GC ainda mais agressivo (padrão é 100) para limpar a RAM imediatamente
+          GOMEMLIMIT: "4GiB" # Deixamos uma margem segura para o sistema operacional do runner não matar o processo
         with:
-          version: v1.59
-          # Reduzimos a concorrência para 1 para não sobrecarregar a memória do runner:
-          args: --timeout=60m --concurrency=1 --skip-dirs=web ./...
+          version: v1.64 # Atualizado para a versão com correções de performance e suporte total ao Go 1.22+
+          # Removemos o --skip-dirs antigo que quebrava o parser e focamos a análise estrita no diretório atual
+          args: --timeout=30m --concurrency=2 ./...
