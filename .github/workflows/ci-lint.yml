@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22.4'
+          go-version: '1.24.0' # Alinhado exatamente com a versão do binário do golangci-lint
           cache: true
           cache-dependency-path: go.sum
       - name: get dependencies
@@ -47,9 +47,8 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         continue-on-error: true
         env:
-          GOGC: "10" # Tornamos o GC ainda mais agressivo (padrão é 100) para limpar a RAM imediatamente
-          GOMEMLIMIT: "4GiB" # Deixamos uma margem segura para o sistema operacional do runner não matar o processo
+          GOGC: "10"
+          GOMEMLIMIT: "4GiB"
         with:
-          version: v1.64 # Atualizado para a versão com correções de performance e suporte total ao Go 1.22+
-          # Removemos o --skip-dirs antigo que quebrava o parser e focamos a análise estrita no diretório atual
+          version: v1.64 # Utiliza a v1.64.8 estável instalada pelo runner
           args: --timeout=30m --concurrency=2 ./...
