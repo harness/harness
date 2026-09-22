@@ -45,7 +45,11 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         continue-on-error: true
+        env:
+          # Força o Garbage Collector do Go a ser mais agressivo para economizar RAM
+          GOGC: "20"
+          GOMEMLIMIT: "5GiB"
         with:
           version: v1.59
-          # Aumentado para 10m para não estourar o timeout desnecessariamente
-          args: --timeout=10m --concurrency=2 --skip-dirs=web ./...
+          # Reduzimos a concorrência para 1 para não sobrecarregar a memória do runner:
+          args: --timeout=15m --concurrency=1 --skip-dirs=web ./...
