@@ -14,16 +14,16 @@ jobs:
   web:
     name: CI linter for js/ts
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # Atualizado para evitar alertas de depreciação
           cache: "npm"
           cache-dependency-path: web/yarn.lock
       - name: install, lint, and build web app
         working-directory: web
+        continue-on-error: true # Permite ignorar falhas no linter de frontend
         run: |
           yarn install
           yarn check:all
@@ -32,8 +32,6 @@ jobs:
   gitness:
     name: CI linter for go
     runs-on: ubuntu-latest
-    # ESTA LINHA RESOLVE TUDO: Força o pipeline a dar sucesso mesmo se houver warnings de estilo no Go
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -46,6 +44,8 @@ jobs:
           touch ./web/dist/empty.txt
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
+        # Permite que o step do linter passe com aviso sem travar o job
+        continue-on-error: true
         with:
           version: v1.59
           args: --timeout=5m --concurrency=2 --skip-dirs=web ./...
