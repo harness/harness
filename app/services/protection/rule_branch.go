@@ -156,6 +156,10 @@ func (v *Branch) GetMergeQueueSetup(in MergeQueueSetupInput) (MergeQueueSetup, e
 	return v.PullReq.MergeQueue.GetMergeQueueSetup(in)
 }
 
+func (v *Branch) GetDeleteSourceBranch(_ DeleteSourceBranchInput) (bool, error) {
+	return v.PullReq.Merge.DeleteBranch, nil
+}
+
 func (v *Branch) UserIDs() ([]int64, error) {
 	uniqueUserMap := make(map[int64]struct{}, len(v.Bypass.UserIDs)+len(v.PullReq.Reviewers.DefaultReviewerIDs))
 	for _, id := range v.Bypass.UserIDs {

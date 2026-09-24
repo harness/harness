@@ -109,6 +109,15 @@ type (
 		GetMergeQueueSetup(in MergeQueueSetupInput) (MergeQueueSetup, error)
 	}
 
+	DeleteSourceBranchInput struct {
+		Repo         *types.RepositoryCore
+		TargetBranch string
+	}
+
+	DeleteSourceBranchGetter interface {
+		GetDeleteSourceBranch(in DeleteSourceBranchInput) (bool, error)
+	}
+
 	CreatePullReqVerifier interface {
 		CreatePullReqVerify(
 			ctx context.Context,
