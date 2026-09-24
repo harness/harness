@@ -129,6 +129,9 @@ func processGitErrorf(err error, format string, args ...any) error {
 		return errors.NotFound("repository not found")
 	case strings.Contains(err.Error(), "reference already exists"):
 		return errors.Conflict("reference already exists")
+	case strings.Contains(err.Error(), "unknown revision"),
+		strings.Contains(err.Error(), "ambiguous argument"):
+		return errors.NotFound("revision not found")
 	case strings.Contains(err.Error(), "no merge base"):
 		if len(args) >= 2 {
 			return &UnrelatedHistoriesError{

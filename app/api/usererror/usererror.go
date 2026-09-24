@@ -20,9 +20,16 @@ import (
 	"net/http"
 )
 
+// StatusClientClosedRequest is nginx's non-standard 499, used when the client closed the
+// connection before the server responded. net/http has no equivalent constant.
+const StatusClientClosedRequest = 499
+
 var (
 	// ErrInternal is returned when an internal error occurred.
 	ErrInternal = New(http.StatusInternalServerError, "Internal error occurred")
+
+	// ErrClientClosedRequest is returned when the client cancelled the request.
+	ErrClientClosedRequest = New(StatusClientClosedRequest, "Client closed request")
 
 	// ErrInvalidToken is returned when the api request token is invalid.
 	ErrInvalidToken = New(http.StatusUnauthorized, "Invalid or missing token")

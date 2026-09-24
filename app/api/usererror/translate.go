@@ -57,6 +57,11 @@ func Translate(ctx context.Context, err error) *Error {
 	case errors.As(err, &rError):
 		return rError
 
+	// must stay above the appError case - a cancellation wrapped by errors.Internalf
+	// unwraps to context.Canceled and would otherwise be translated to a 500.
+	case errors.Is(err, context.Canceled):
+		return ErrClientClosedRequest
+
 	// api auth errors
 	case errors.Is(err, apiauth.ErrForbidden):
 		return ErrForbidden
