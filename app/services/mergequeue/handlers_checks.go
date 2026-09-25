@@ -35,13 +35,19 @@ import (
 // It looks up any merge queue entries whose ChecksCommitSHA matches the reported SHA and
 // acts on the result: successful checks advance the entry toward being merged;
 // failed checks remove the entry from the queue.
+//
+// nolint:nestif
 func (s *Service) handlerCheckFinished(
 	ctx context.Context,
 	event *events.Event[*checkevents.ReportedPayload],
 ) error {
 	status := event.Payload.Status
 
-	if !status.IsCompleted() {
+	// A bypassed check is treated as satisfied even if its status isn't terminal yet,
+	// so it must be processed to let the entry advance instead of waiting for the deadline.
+	bypassed := event.Payload.Bypassed
+
+	if !status.IsCompleted() && !bypassed {
 		return nil
 	}
 
@@ -96,11 +102,24 @@ func (s *Service) handlerCheckFinished(
 		return nil
 	}
 
-	// One failure is enough to remove the PR from the merge queue.
-	if !status.IsSuccess() {
+	// One failure is enough to remove the PR from the merge queue, unless the check has been bypassed.
+	if !status.IsSuccess() && !bypassed {
+		checkIdent := event.Payload.Identifier
+		var checkLink string
+
+		if check, err := s.checkStore.FindByIdentifier(ctx, repoID, commitSHA.String(), checkIdent); err != nil {
+			log.Ctx(ctx).Warn().Err(err).
+				Int64("repo_id", repoID).
+				Int64("pullreq_id", entry.PullReqID).
+				Msg("failed to find merge queue failed check by commit SHA and identifier")
+		} else {
+			checkLink = check.Link
+		}
+
 		err = s.remove(ctx, entry.PullReqID, types.PullRequestActivityPayloadMergeQueueRemove{
 			Reason:          enum.MergeQueueRemovalReasonCheckFail,
-			MergeQueueCheck: event.Payload.Identifier,
+			CheckLink:       checkLink,
+			MergeQueueCheck: checkIdent,
 			MergeCommitSHA:  commitSHA.String(),
 		})
 		if errors.Is(err, ErrNotInQueue) {

@@ -297,6 +297,7 @@ func (a *PullRequestActivityPayloadMergeQueueAdd) ActivityType() enum.PullReqAct
 
 type PullRequestActivityPayloadMergeQueueRemove struct {
 	Reason          enum.MergeQueueRemovalReason `json:"reason"`
+	CheckLink       string                       `json:"check_link,omitempty"`
 	MergeQueueCheck string                       `json:"merge_queue_check,omitempty"`
 	MergeCommitSHA  string                       `json:"merge_commit_sha,omitempty"`
 }
