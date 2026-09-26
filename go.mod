@@ -1,6 +1,6 @@
 module github.com/harness/gitness
 
-go 1.26.6
+go 1.24.0
 
 require (
 	cloud.google.com/go/storage v1.50.0
@@ -100,7 +100,6 @@ require (
 	gopkg.in/mail.v2 v2.3.1
 	oras.land/oras-go/v2 v2.6.2
 )
-
 require (
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.116.0 // indirect

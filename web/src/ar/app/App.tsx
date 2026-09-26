@@ -85,7 +85,7 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
         appStoreData.updateAppStore({})
       }
     },
-    []
+    [appStoreData.updateAppStore, parent] // Corrigido: Dependências mapeadas aqui
   )
 
   return (
