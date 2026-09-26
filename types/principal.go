@@ -52,6 +52,7 @@ func (p *Principal) ToPrincipalInfo() *PrincipalInfo {
 		DisplayName: p.DisplayName,
 		Email:       p.Email,
 		Type:        p.Type,
+		Admin:       p.Admin,
 		Created:     p.Created,
 		Updated:     p.Updated,
 	}
@@ -64,6 +65,7 @@ type PrincipalInfo struct {
 	DisplayName string             `json:"display_name"`
 	Email       string             `json:"email"`
 	Type        enum.PrincipalType `json:"type"`
+	Admin       bool               `json:"admin"`
 	Created     int64              `json:"created"`
 	Updated     int64              `json:"updated"`
 }
