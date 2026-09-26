@@ -227,7 +227,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupPrincipals(r, principalCtrl)
-	setupInternal(r, githookCtrl, git)
+	setupInternal(r, config, githookCtrl, git)
 	setupAdmin(r, userCtrl)
 	setupPlugins(r, pluginCtrl)
 	setupInfraProviders(r, infraProviderCtrl)
@@ -673,14 +673,28 @@ func setupTriggers(
 	})
 }
 
-func setupInternal(r chi.Router, githookCtrl *controllergithook.Controller, git git.Interface) {
+func setupInternal(
+	r chi.Router,
+	config *types.Config,
+	githookCtrl *controllergithook.Controller,
+	git git.Interface,
+) {
 	r.Route("/internal", func(r chi.Router) {
-		SetupGitHooks(r, githookCtrl, git)
+		SetupGitHooks(r, config, githookCtrl, git)
 	})
 }
 
-func SetupGitHooks(r chi.Router, githookCtrl *controllergithook.Controller, git git.Interface) {
+func SetupGitHooks(
+	r chi.Router,
+	config *types.Config,
+	githookCtrl *controllergithook.Controller,
+	git git.Interface,
+) {
 	r.Route("/git-hooks", func(r chi.Router) {
+		if !config.Githook.DisableAuth {
+			r.Use(middlewareprincipal.GitHookRestrict())
+		}
+
 		r.Post("/"+githook.HTTPRequestPathPreReceive, handlergithook.HandlePreReceive(githookCtrl, git))
 		r.Post("/"+githook.HTTPRequestPathUpdate, handlergithook.HandleUpdate(githookCtrl, git))
 		r.Post("/"+githook.HTTPRequestPathPostReceive, handlergithook.HandlePostReceive(githookCtrl, git))
