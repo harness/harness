@@ -147,7 +147,10 @@ func (g *Git) listCommitSHAs(
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if cErr := command.AsError(err); cErr != nil && cErr.IsExitCode(128) {
-		if cErr.IsAmbiguousArgErr() || cErr.IsBadObject() {
+		// NOTE: git words the same "unknown revision" failure differently depending on the
+		// position of the offending revision: "ambiguous argument" for ref, "bad object" for
+		// a full SHA and "bad revision" for filter.AfterRef, which we pass as "^AfterRef".
+		if cErr.IsAmbiguousArgErr() || cErr.IsBadObject() || cErr.IsBadRevision() {
 			return []sha.SHA{}, nil // return an empty list if reference doesn't exist
 		}
 	}
@@ -646,6 +649,13 @@ func (g *Git) getCommitDivergence(
 
 	stdout := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(stdout))
+	if cErr := command.AsError(err); cErr != nil && cErr.IsExitCode(128) {
+		// An unresolvable revision is a bad request, not a server fault - report it as
+		// NotFound so GetCommitDivergences can substitute the unknown-divergence sentinel.
+		if cErr.IsAmbiguousArgErr() || cErr.IsBadObject() || cErr.IsBadRevision() {
+			return CommitDivergence{}, errors.NotFoundf("revision '%s' or '%s' does not exist", req.From, req.To)
+		}
+	}
 	if err != nil {
 		return CommitDivergence{},
 			processGitErrorf(err, "git rev-list failed for '%s...%s'", req.From, req.To)

@@ -231,6 +231,7 @@ func (c *Controller) Report(
 		},
 		Identifier: in.Identifier,
 		Status:     in.Status,
+		Bypassed:   in.BypassedBy != nil,
 	})
 
 	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeStatusCheckReportUpdated, statusCheckReport)

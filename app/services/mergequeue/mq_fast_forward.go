@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/bootstrap"
 	gitevents "github.com/harness/gitness/app/events/git"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -94,6 +95,21 @@ func (s *Service) fastForward(
 	repoFull, err := s.repoStore.Find(ctx, q.RepoID)
 	if err != nil {
 		return fmt.Errorf("failed to find repo %d: %w", q.RepoID, err)
+	}
+
+	// The rules mandate the removal of the source branch independently of what the user
+	// requested when the pull request was enqueued.
+	protectionRules, err := s.protectionManager.ListRepoBranchRules(ctx, q.RepoID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+	}
+
+	ruleDeleteSourceBranch, err := protectionRules.GetDeleteSourceBranch(protection.DeleteSourceBranchInput{
+		Repo:         repo,
+		TargetBranch: q.Branch,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get source branch removal rule: %w", err)
 	}
 
 	entryCount := len(mergeEntries)
@@ -170,7 +186,11 @@ func (s *Service) fastForward(
 				return fmt.Errorf("failed to mark pull request as merged: %w", err)
 			}
 
-			if mergeEntry.DeleteSourceBranch {
+			// only delete the source branch if the source repository is the same as the target repository.
+			deleteSourceBranch := (mergeEntry.DeleteSourceBranch || ruleDeleteSourceBranch) &&
+				pr.SourceRepoID != nil && pr.TargetRepoID == *pr.SourceRepoID
+
+			if deleteSourceBranch {
 				deleteSourceBranchMap[mergeEntry.PullReqID] = seqSourceBranchDeleted
 			}
 

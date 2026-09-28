@@ -19,6 +19,49 @@ import (
 	"testing"
 )
 
+func TestError_IsBadRevision(t *testing.T) {
+	tests := []struct {
+		name     string
+		errMsg   string
+		expected bool
+	}{
+		{
+			name:     "bad revision behind exclusion prefix",
+			errMsg:   "exit status 128: fatal: bad revision '^refs/heads/undefined'",
+			expected: true,
+		},
+		{
+			name:     "bad revision without ref prefix",
+			errMsg:   "exit status 128: fatal: bad revision '^undefined'",
+			expected: true,
+		},
+		{
+			name:     "ambiguous argument is a different wording",
+			errMsg:   "fatal: ambiguous argument 'undefined': unknown revision or path not in the working tree.",
+			expected: false,
+		},
+		{
+			name:     "bad object is a different wording",
+			errMsg:   "fatal: bad object 0000000000000000000000000000000000000001",
+			expected: false,
+		},
+		{
+			name:     "generic error",
+			errMsg:   "some other git error",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := NewError(errors.New(tt.errMsg), []byte(tt.errMsg))
+			if result := err.IsBadRevision(); result != tt.expected {
+				t.Errorf("IsBadRevision() = %v, expected %v for error: %s", result, tt.expected, tt.errMsg)
+			}
+		})
+	}
+}
+
 func TestError_IsSHAMismatchErr(t *testing.T) {
 	tests := []struct {
 		name     string

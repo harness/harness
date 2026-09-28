@@ -30,6 +30,7 @@ type ReportedPayload struct {
 	Base
 	Identifier string           `json:"identifier"`
 	Status     enum.CheckStatus `json:"status"`
+	Bypassed   bool             `json:"bypassed"`
 }
 
 func (r *Reporter) Reported(ctx context.Context, payload *ReportedPayload) {

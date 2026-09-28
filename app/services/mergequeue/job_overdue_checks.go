@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -50,6 +51,8 @@ func (j *jobOverdueChecks) Handle(ctx context.Context, _ string, _ job.ProgressR
 		return "", nil
 	}
 
+	var repoCache repoCache
+
 	for _, entry := range entries {
 		var startedAt int64
 		if entry.ChecksStarted != nil {
@@ -62,15 +65,20 @@ func (j *jobOverdueChecks) Handle(ctx context.Context, _ string, _ job.ProgressR
 		}
 
 		logEntry := log.Ctx(ctx).With().
+			Int64("merge_queue_id", entry.MergeQueueID).
 			Str("commit_sha", entry.ChecksCommitSHA.String()).
 			Int64("started_at", startedAt).
 			Int64("deadline_at", deadlineAt).
 			Int64("pullreq_id", entry.PullReqID).
 			Logger()
 
+		incompleteCheckIdent, incompleteCheckLink := j.getCheckInfo(ctx, entry, &repoCache, logEntry)
+
 		err = j.service.Remove(ctx, entry.PullReqID, types.PullRequestActivityPayloadMergeQueueRemove{
-			Reason:         enum.MergeQueueRemovalReasonCheckTimeout,
-			MergeCommitSHA: entry.MergeCommitSHA.String(),
+			Reason:          enum.MergeQueueRemovalReasonCheckTimeout,
+			CheckLink:       incompleteCheckLink,
+			MergeCommitSHA:  entry.MergeCommitSHA.String(),
+			MergeQueueCheck: incompleteCheckIdent,
 		})
 		if err != nil {
 			logEntry.Warn().Err(err).Msg("failed to remove overdue merge queue entry")
@@ -81,4 +89,66 @@ func (j *jobOverdueChecks) Handle(ctx context.Context, _ string, _ job.ProgressR
 	}
 
 	return "", nil
+}
+
+// getCheckInfo returns an overdue check (identifier and link) for a merge queue entry.
+// A merge queue entry has a single deadline for all MQ checks to complete.
+// Since in the pull request activity we can report just a single check,
+// we can pick any incomplete check for this (even a non-required check).
+// Note: If a required check wasn't even started, we won't find it the database.
+// So, it can happen that the identifier and the link are empty.
+func (j *jobOverdueChecks) getCheckInfo(
+	ctx context.Context,
+	entry *types.MergeQueueEntry,
+	repoCache *repoCache,
+	logEntry zerolog.Logger,
+) (string, string) {
+	repoID, err := repoCache.Get(ctx, j.service, entry.MergeQueueID)
+	if err != nil {
+		logEntry.Error().Err(err).Msg("failed to find repo for overdue merge queue entry")
+		return "", ""
+	}
+
+	var incompleteCheckLink string
+	var incompleteCheckIdent string
+
+	checks, err := j.service.ListChecks(ctx, repoID, entry.ChecksCommitSHA)
+	if err != nil {
+		logEntry.Warn().Err(err).Msg("failed to list checks for overdue merge queue entry")
+	} else {
+		for i := range checks {
+			// Bypassed checks count as satisfied, same as in the reported check handler.
+			if checks[i].Status.IsCompleted() || checks[i].BypassedByID != nil {
+				continue
+			}
+
+			incompleteCheckIdent = checks[i].Identifier
+			incompleteCheckLink = checks[i].Link
+
+			break
+		}
+	}
+
+	return incompleteCheckIdent, incompleteCheckLink
+}
+
+type repoCache struct {
+	m map[int64]int64 // merge queue ID -> repo ID
+}
+
+func (c *repoCache) Get(ctx context.Context, s *Service, qID int64) (int64, error) {
+	if c.m == nil {
+		c.m = make(map[int64]int64)
+	} else if repoID, ok := c.m[qID]; ok {
+		return repoID, nil
+	}
+
+	q, err := s.mergeQueueStore.Find(ctx, qID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to find merge queue by ID: %w", err)
+	}
+
+	c.m[qID] = q.RepoID
+
+	return q.RepoID, nil
 }

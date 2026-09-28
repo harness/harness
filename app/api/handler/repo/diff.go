@@ -58,6 +58,12 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 		if strings.HasPrefix(r.Header.Get("Accept"), "text/plain") {
+			// A diff is built from committed file contents, so it is user controlled. Without an
+			// explicit content type render.Reader's contract hands the body to
+			// http.DetectContentType, which would let the leading bytes of a diff pick the type.
+			render.UserContentSecurityHeaders(w)
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
 			err := repoCtrl.RawDiff(
 				ctx,
 				w,
@@ -118,6 +124,11 @@ func HandleCommitDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
+		// Same reasoning as HandleDiff: the patch is user controlled, so pin the content type
+		// rather than letting it be sniffed off the body.
+		render.UserContentSecurityHeaders(w)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
 		err = repoCtrl.CommitDiff(
 			ctx,
 			session,

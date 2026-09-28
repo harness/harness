@@ -230,6 +230,27 @@ var queryParameterOnlyFavorites = openapi3.ParameterOrRef{
 	},
 }
 
+var QueryParameterTagRepo = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamTag,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("The tags used to filter the repositories. " +
+			"Each entry is either a key (e.g. \"team\") to match any value, " +
+			"or a key:value pair (e.g. \"team:backend\"). The parameter may be repeated."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+					},
+				},
+			},
+		},
+	},
+}
+
 var QueryParameterQueryUsergroup = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -434,7 +455,8 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos.WithTags("space")
 	opRepos.WithMapOfAnything(map[string]any{"operationId": "listRepos"})
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
-		QueryParameterPage, QueryParameterLimit, QueryParameterRecursive, queryParameterOnlyFavorites)
+		QueryParameterPage, QueryParameterLimit, QueryParameterRecursive, queryParameterOnlyFavorites,
+		QueryParameterTagRepo)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []repo.RepositoryOutput{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)

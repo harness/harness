@@ -41,6 +41,19 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// packObjectsThreshold is the number of loose objects created in a shared repository from which
+// on they are combined into a single pack file before they are moved to the original repository.
+// It mirrors the default value of git's `transfer.unpackLimit`, which controls the very same
+// trade off for objects received by a push: Below the limit loose objects are cheaper, because
+// there's no extra git process involved and the repository isn't cluttered with tiny pack files.
+// Above the limit a single pack file wins, because of delta compression between the new objects
+// and because installing it requires a couple of file operations rather than thousands.
+const packObjectsThreshold = 100
+
+// reLooseObject matches the path of a loose object file relative to the object database,
+// for example "ab/cdef0123...". Both SHA-1 and SHA-256 object name lengths are accepted.
+var reLooseObject = regexp.MustCompile("^[0-9a-f]{2}/[0-9a-f]{38,62}$")
+
 type SharedRepo struct {
 	repoPath       string
 	sourceRepoPath string
@@ -907,49 +920,88 @@ func (r *SharedRepo) checkPathAvailability(
 	return nil
 }
 
+// PackObjects combines the loose objects of the shared repository into a single pack file.
+// Nothing is done if the number of loose objects is below packObjectsThreshold.
+// The loose objects that ended up in the pack file are removed, so that the pack file is
+// all that's left for MoveObjects to install in the original repository.
+func (r *SharedRepo) PackObjects(ctx context.Context) error {
+	files, err := r.objectFiles()
+	if err != nil {
+		return err
+	}
+
+	looseObjects := make([]fileEntry, 0, len(files))
+	for _, f := range files {
+		if reLooseObject.MatchString(f.relPath) {
+			looseObjects = append(looseObjects, f)
+		}
+	}
+
+	if len(looseObjects) < packObjectsThreshold {
+		return nil
+	}
+
+	stdin := bytes.NewBuffer(nil)
+	for _, f := range looseObjects {
+		// the object's name is its path in the object database without the directory separator.
+		stdin.WriteString(strings.Replace(f.relPath, "/", "", 1))
+		stdin.WriteByte('\n')
+	}
+
+	// NOTE: The pack file must not be thin - all delta bases have to be part of it,
+	// otherwise it would depend on objects of the shared repository's alternates.
+	cmd := command.New("pack-objects",
+		command.WithFlag("--non-empty"),
+		command.WithFlag("--delta-base-offset"),
+		command.WithFlag("--quiet"), // no progress reporting, but errors are still reported
+		command.WithArg(filepath.Join(r.repoPath, "objects", "pack", "pack")),
+	)
+
+	stdout := bytes.NewBuffer(nil)
+
+	err = cmd.Run(ctx,
+		command.WithDir(r.repoPath),
+		command.WithStdin(stdin),
+		command.WithStdout(stdout),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to pack-objects in shared repo: %w", err)
+	}
+
+	// because of --non-empty git writes no pack file (and prints no name) if it would be empty.
+	packName := strings.TrimSpace(stdout.String())
+	if packName == "" {
+		return nil
+	}
+
+	for _, f := range looseObjects {
+		// The pack file already holds the object, so failing to remove its loose counterpart
+		// only means that both of them are moved to the original repository - no reason to fail.
+		if err := os.Remove(f.fullPath); err != nil {
+			log.Ctx(ctx).Warn().Err(err).
+				Str("object", f.relPath).
+				Msg("failed to remove loose git object that has been packed")
+		}
+	}
+
+	log.Ctx(ctx).Debug().
+		Str("pack", packName).
+		Msgf("packed %d loose git objects", len(looseObjects))
+
+	return nil
+}
+
 // MoveObjects moves git object from the shared repository to the original repository.
 func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 	if r.sourceRepoPath == "" {
 		return errors.New("shared repo not initialized with a repository")
 	}
 
-	srcDir := path.Join(r.repoPath, "objects")
 	dstDir := path.Join(r.sourceRepoPath, "objects")
 
-	var files []fileEntry
-
-	err := filepath.WalkDir(srcDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		relPath, err := filepath.Rel(srcDir, path)
-		if err != nil {
-			return fmt.Errorf("failed to get relative path: %w", err)
-		}
-
-		// avoid coping anything in the info/
-		if strings.HasPrefix(relPath, "info/") {
-			return nil
-		}
-
-		fileName := filepath.Base(relPath)
-
-		files = append(files, fileEntry{
-			fileName: fileName,
-			fullPath: path,
-			relPath:  relPath,
-			priority: filePriority(fileName),
-		})
-
-		return nil
-	})
+	files, err := r.objectFiles()
 	if err != nil {
-		return fmt.Errorf("failed to list files of shared repository directory: %w", err)
+		return err
 	}
 
 	sort.Slice(files, func(i, j int) bool {
@@ -1005,8 +1057,8 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 
 			log.Ctx(ctx).Err(errCopy).
 				Str("object", f.relPath).
-				Str("errRename", errRename.Error()).
-				Str("errRemove", errRemove.Error()).
+				AnErr("errRename", errRename).
+				AnErr("errRemove", errRemove).
 				Msg("failed to move or copy git object")
 
 			return fmt.Errorf("failed to move or copy git object: %w", errCopy)
@@ -1014,11 +1066,56 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 
 		log.Ctx(ctx).Warn().
 			Str("object", f.relPath).
-			Str("errRename", errRename.Error()).
+			AnErr("errRename", errRename).
 			Msg("copied git object")
 	}
 
 	return nil
+}
+
+// objectFiles returns the files of the shared repository (excluding the objects/info directory).
+func (r *SharedRepo) objectFiles() ([]fileEntry, error) {
+	srcDir := path.Join(r.repoPath, "objects")
+
+	var files []fileEntry
+
+	err := filepath.WalkDir(srcDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(srcDir, path)
+		if err != nil {
+			return fmt.Errorf("failed to get relative path: %w", err)
+		}
+
+		relPath = filepath.ToSlash(relPath)
+
+		// avoid coping anything in the info/
+		if strings.HasPrefix(relPath, "info/") {
+			return nil
+		}
+
+		fileName := filepath.Base(relPath)
+
+		files = append(files, fileEntry{
+			fileName: fileName,
+			fullPath: path,
+			relPath:  relPath,
+			priority: filePriority(fileName),
+		})
+
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list files of shared repository directory: %w", err)
+	}
+
+	return files, nil
 }
 
 // filePriority is based on https://github.com/git/git/blob/master/tmp-objdir.c#L168

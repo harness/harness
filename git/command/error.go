@@ -61,6 +61,16 @@ func (e *Error) IsBadObject() bool {
 	return strings.Contains(e.Error(), "bad object")
 }
 
+// IsBadRevision returns true if git failed to resolve a revision that was given in a
+// position where it can't be reinterpreted as a path - most notably behind the "^"
+// exclusion prefix. Git reports the very same "unknown revision" condition as
+// "ambiguous argument" for a plain positional revision, so callers that tolerate
+// unresolvable revisions have to check for both.
+// e.g. `git rev-list ^refs/heads/nope main` -> fatal: bad revision '^refs/heads/nope'.
+func (e *Error) IsBadRevision() bool {
+	return strings.Contains(e.Error(), "bad revision")
+}
+
 func (e *Error) IsInvalidRefErr() bool {
 	return strings.Contains(e.Error(), "not a valid ref")
 }

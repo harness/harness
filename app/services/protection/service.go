@@ -41,6 +41,7 @@ type (
 		MergeVerifier
 		MergeQueueBranchUpdateVerifier
 		MergeQueueSetupGetter
+		DeleteSourceBranchGetter
 		CreatePullReqVerifier
 		UserIDGetter
 	}

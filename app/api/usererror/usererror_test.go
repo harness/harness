@@ -44,3 +44,25 @@ func TestTranslateUnprocessableEntity(t *testing.T) {
 		t.Errorf("Expected message %q, got %q", expectedMsg, result.Message)
 	}
 }
+
+func TestTranslate_ClientCanceled(t *testing.T) {
+	got := Translate(context.Background(), context.Canceled)
+	if got.Status != StatusClientClosedRequest {
+		t.Fatalf("expected %d, got %d", StatusClientClosedRequest, got.Status)
+	}
+}
+
+func TestTranslate_CanceledWrappedInInternal(t *testing.T) {
+	err := errors.Internalf(context.Canceled, "failed to stream commits")
+	got := Translate(context.Background(), err)
+	if got.Status != StatusClientClosedRequest {
+		t.Fatalf("expected %d, got %d", StatusClientClosedRequest, got.Status)
+	}
+}
+
+func TestTranslate_DeadlineExceededIsStill500(t *testing.T) {
+	got := Translate(context.Background(), context.DeadlineExceeded)
+	if got.Status != http.StatusInternalServerError {
+		t.Fatalf("deadline exceeded must remain %d, got %d", http.StatusInternalServerError, got.Status)
+	}
+}

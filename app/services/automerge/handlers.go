@@ -78,7 +78,9 @@ func (s *Service) mergePRsOnCheckSucceeded(
 	ctx context.Context,
 	event *events.Event[*checkevents.ReportedPayload],
 ) error {
-	if !event.Payload.Status.IsSuccess() {
+	// A bypassed check is treated as satisfied by the protection rules even if it didn't succeed,
+	// so it must be processed to give the pull request a chance to be auto-merged.
+	if !event.Payload.Status.IsSuccess() && !event.Payload.Bypassed {
 		return nil
 	}
 

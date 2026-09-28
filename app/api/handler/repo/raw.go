@@ -43,9 +43,9 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 		}
 
 		gitRef := request.GetGitRefFromQueryOrDefault(r, "")
-		path := request.GetOptionalRemainderFromPath(r)
+		filePath := request.GetOptionalRemainderFromPath(r)
 
-		resp, err := repoCtrl.Raw(ctx, session, repoRef, gitRef, path)
+		resp, err := repoCtrl.Raw(ctx, session, repoRef, gitRef, filePath)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -57,35 +57,46 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 			}
 		}()
 
-		ifNoneMatch, ok := request.GetIfNoneMatchFromHeader(r)
-		if ok && ifNoneMatch == resp.SHA.String() {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
+		writeRawResponse(w, r, resp)
+	}
+}
 
-		render.UserContentSecurityHeaders(w)
+// writeRawResponse streams the blob back to the client. It is separate from HandleRaw so that
+// the headers which stop a committed file from executing on the app origin can be tested
+// without standing up a repo controller.
+func writeRawResponse(w http.ResponseWriter, r *http.Request, resp *repo.RawContent) {
+	ctx := r.Context()
 
-		w.Header().Add("Content-Length", fmt.Sprint(resp.Size))
-		w.Header().Add(request.HeaderETag, resp.SHA.String())
+	// Set before the 304 below so that no raw response - not even a revalidated one - can
+	// reach the browser without the sandbox policy.
+	render.UserContentSecurityHeaders(w)
 
-		// http package hasnt implemented svg mime type detection
-		// https://github.com/golang/go/blob/master/src/net/http/sniff.go#L66
-		if resp.Size > 0 {
-			buf := make([]byte, 512) // 512 bytes is standard for MIME detection
-			n, err := io.ReadFull(resp.Data, buf)
-			if err == nil || err == io.EOF || err == io.ErrUnexpectedEOF {
-				contentType := detectContentType(buf[:n])
-				w.Header().Set("Content-Type", contentType)
+	ifNoneMatch, ok := request.GetIfNoneMatchFromHeader(r)
+	if ok && ifNoneMatch == resp.SHA.String() {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 
-				resp.Data = &types.MultiReadCloser{
-					Reader:    io.MultiReader(bytes.NewReader(buf[:n]), resp.Data),
-					CloseFunc: resp.Data.Close,
-				}
+	w.Header().Add("Content-Length", fmt.Sprint(resp.Size))
+	w.Header().Add(request.HeaderETag, resp.SHA.String())
+
+	// http package hasnt implemented svg mime type detection
+	// https://github.com/golang/go/blob/master/src/net/http/sniff.go#L66
+	if resp.Size > 0 {
+		buf := make([]byte, 512) // 512 bytes is standard for MIME detection
+		n, err := io.ReadFull(resp.Data, buf)
+		if err == nil || err == io.EOF || err == io.ErrUnexpectedEOF {
+			contentType := render.NeutralizeRenderableContentType(detectContentType(buf[:n]))
+			w.Header().Set("Content-Type", contentType)
+
+			resp.Data = &types.MultiReadCloser{
+				Reader:    io.MultiReader(bytes.NewReader(buf[:n]), resp.Data),
+				CloseFunc: resp.Data.Close,
 			}
 		}
-
-		render.Reader(ctx, w, http.StatusOK, resp.Data)
 	}
+
+	render.Reader(ctx, w, http.StatusOK, resp.Data)
 }
 
 // xmlPrefixRegex is used to detect XML declarations in a case-insensitive way.

@@ -168,6 +168,31 @@ func (s branchRuleSet) GetMergeQueueSetup(in MergeQueueSetupInput) (MergeQueueSe
 	return out, nil
 }
 
+func (s branchRuleSet) GetDeleteSourceBranch(in DeleteSourceBranchInput) (bool, error) {
+	var out bool
+
+	err := s.forEachRuleMatchBranch(
+		in.Repo.ID,
+		in.Repo.Path,
+		in.Repo.DefaultBranch,
+		in.TargetBranch,
+		func(_ *types.RuleInfoInternal, p BranchProtection) error {
+			deleteSourceBranch, err := p.GetDeleteSourceBranch(in)
+			if err != nil {
+				return err
+			}
+
+			out = out || deleteSourceBranch
+
+			return nil
+		})
+	if err != nil {
+		return false, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
+	}
+
+	return out, nil
+}
+
 func (s branchRuleSet) MergeQueueBranchUpdateVerify(in MergeQueueBranchUpdateInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
 

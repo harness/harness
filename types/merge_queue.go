@@ -108,7 +108,9 @@ type MergeQueueEntry struct {
 	// CommitMessage is the body of the merge commit message.
 	CommitMessage string
 
-	// DeleteSourceBranch indicates whether the source branch should be deleted after merging.
+	// DeleteSourceBranch indicates whether the user requested the removal of the source branch
+	// after merging. The branch protection rules can mandate the removal independently of this
+	// field, so they are evaluated at merge time, the same way auto-merge does it.
 	DeleteSourceBranch bool
 }
 

@@ -16,6 +16,7 @@ package protection
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"slices"
 	"testing"
@@ -977,6 +978,94 @@ func TestRuleSet_MergeQueueSetup(t *testing.T) {
 
 			if !reflect.DeepEqual(exp, got) {
 				t.Errorf("MergeQueueSetup: want=%+v got=%+v", exp, got)
+			}
+		})
+	}
+}
+
+func TestRuleSet_GetDeleteSourceBranch(t *testing.T) {
+	deleteBranchDef := func(id int, identifier, pattern string, deleteBranch bool) types.RuleInfoInternal {
+		return types.RuleInfoInternal{
+			RuleInfo: types.RuleInfo{
+				ID:         int64(id),
+				Identifier: identifier,
+				Type:       TypeBranch,
+				State:      enum.RuleStateActive,
+			},
+			Pattern:    []byte(pattern),
+			Definition: []byte(fmt.Sprintf(`{"pullreq":{"merge":{"delete_branch":%t}}}`, deleteBranch)),
+			RepoTarget: emptyRepoTarget,
+		}
+	}
+
+	tests := []struct {
+		name  string
+		rules []types.RuleInfoInternal
+		exp   bool
+	}{
+		{
+			name:  "empty-rules",
+			rules: []types.RuleInfoInternal{},
+			exp:   false,
+		},
+		{
+			name:  "single-rule-mandating-removal",
+			rules: []types.RuleInfoInternal{deleteBranchDef(1, "rule1", `{"default":true}`, true)},
+			exp:   true,
+		},
+		{
+			name:  "single-rule-not-mandating-removal",
+			rules: []types.RuleInfoInternal{deleteBranchDef(1, "rule1", `{"default":true}`, false)},
+			exp:   false,
+		},
+		{
+			name: "two-rules-one-mandating-removal",
+			rules: []types.RuleInfoInternal{
+				deleteBranchDef(1, "rule1", `{"default":true}`, false),
+				deleteBranchDef(2, "rule2", `{"default":true}`, true),
+			},
+			exp: true,
+		},
+		{
+			name: "two-rules-none-mandating-removal",
+			rules: []types.RuleInfoInternal{
+				deleteBranchDef(1, "rule1", `{"default":true}`, false),
+				deleteBranchDef(2, "rule2", `{"default":true}`, false),
+			},
+			exp: false,
+		},
+		{
+			name:  "rule-non-matching-branch",
+			rules: []types.RuleInfoInternal{deleteBranchDef(1, "rule1", `{"include":["feature/**"]}`, true)},
+			exp:   false,
+		},
+	}
+
+	m := NewManager(nil)
+	_ = m.Register(TypeBranch, func() Definition {
+		return &Branch{}
+	})
+
+	in := DeleteSourceBranchInput{
+		Repo:         &types.RepositoryCore{ID: 1, DefaultBranch: "main"},
+		TargetBranch: "main",
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			set := branchRuleSet{
+				rules:   tt.rules,
+				manager: m,
+			}
+
+			got, err := set.GetDeleteSourceBranch(in)
+			if err != nil {
+				t.Errorf("got error: %s", err.Error())
+				return
+			}
+
+			if tt.exp != got {
+				t.Errorf("DeleteSourceBranch: want=%t got=%t", tt.exp, got)
 			}
 		})
 	}
