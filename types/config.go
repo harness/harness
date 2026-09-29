@@ -300,6 +300,11 @@ type Config struct {
 		Namespace             string      `envconfig:"GITNESS_EVENTS_NAMESPACE"                default:"gitness"`
 		MaxStreamLength       int64       `envconfig:"GITNESS_EVENTS_MAX_STREAM_LENGTH"        default:"10000"`
 		ApproxMaxStreamLength bool        `envconfig:"GITNESS_EVENTS_APPROX_MAX_STREAM_LENGTH" default:"true"`
+		// Producer retry for Redis stream XADD during transient failures / Memorystore failover.
+		ProducerMaxAttempts    int           `envconfig:"GITNESS_EVENTS_PRODUCER_MAX_ATTEMPTS"    default:"6"`
+		ProducerInitialBackoff time.Duration `envconfig:"GITNESS_EVENTS_PRODUCER_INITIAL_BACKOFF" default:"1s"`
+		ProducerBackoffFactor  float64       `envconfig:"GITNESS_EVENTS_PRODUCER_BACKOFF_FACTOR"  default:"1.5"`
+		ProducerMaxBackoff     time.Duration `envconfig:"GITNESS_EVENTS_PRODUCER_MAX_BACKOFF"     default:"8s"`
 	}
 
 	Lock struct {

@@ -18,6 +18,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/harness/gitness/stream"
 )
 
 const (
@@ -53,6 +55,8 @@ type Config struct {
 	Namespace             string
 	MaxStreamLength       int64
 	ApproxMaxStreamLength bool
+	// ProducerRetry controls Redis stream produce retries (ignored for in-memory mode).
+	ProducerRetry stream.ProducerRetryConfig
 }
 
 func (c *Config) Validate() error {

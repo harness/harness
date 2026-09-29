@@ -16,6 +16,7 @@ package server
 
 import (
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/types"
 
@@ -29,11 +30,13 @@ func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
 		addrs := strings.Split(config.Redis.SentinelEndpoint, ",")
 
 		failoverOptions := &redis.FailoverOptions{
-			MasterName:    config.Redis.SentinelMaster,
-			SentinelAddrs: addrs,
-			MaxRetries:    config.Redis.MaxRetries,
-			MinIdleConns:  config.Redis.MinIdleConnections,
-			PoolSize:      config.Redis.MaxConnections,
+			MasterName:      config.Redis.SentinelMaster,
+			SentinelAddrs:   addrs,
+			MaxRetries:      config.Redis.MaxRetries,
+			MinRetryBackoff: 100 * time.Millisecond,
+			MaxRetryBackoff: 2 * time.Second,
+			MinIdleConns:    config.Redis.MinIdleConnections,
+			PoolSize:        config.Redis.MaxConnections,
 		}
 		if config.Redis.Password != "" {
 			failoverOptions.Password = config.Redis.Password
@@ -42,10 +45,12 @@ func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
 	}
 
 	options := &redis.Options{
-		Addr:         config.Redis.Endpoint,
-		MaxRetries:   config.Redis.MaxRetries,
-		MinIdleConns: config.Redis.MinIdleConnections,
-		PoolSize:     config.Redis.MaxConnections,
+		Addr:            config.Redis.Endpoint,
+		MaxRetries:      config.Redis.MaxRetries,
+		MinRetryBackoff: 100 * time.Millisecond,
+		MaxRetryBackoff: 2 * time.Second,
+		MinIdleConns:    config.Redis.MinIdleConnections,
+		PoolSize:        config.Redis.MaxConnections,
 	}
 
 	if config.Redis.Password != "" {

@@ -80,7 +80,7 @@ func provideSystemRedis(
 
 	return newRedisStreamConsumerFactoryMethod(redisClient, config.Namespace),
 		newRedisStreamProducer(redisClient, config.Namespace,
-			config.MaxStreamLength, config.ApproxMaxStreamLength),
+			config.MaxStreamLength, config.ApproxMaxStreamLength, config.ProducerRetry),
 		nil
 }
 
@@ -104,6 +104,8 @@ func newRedisStreamConsumerFactoryMethod(
 }
 
 func newRedisStreamProducer(redisClient redis.UniversalClient, namespace string,
-	maxStreamLength int64, approxMaxStreamLength bool) StreamProducer {
-	return stream.NewRedisProducer(redisClient, namespace, maxStreamLength, approxMaxStreamLength)
+	maxStreamLength int64, approxMaxStreamLength bool, retry stream.ProducerRetryConfig,
+) StreamProducer {
+	return stream.NewRedisProducer(redisClient, namespace, maxStreamLength, approxMaxStreamLength,
+		stream.WithProducerRetry(retry))
 }

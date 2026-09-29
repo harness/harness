@@ -39,6 +39,7 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
@@ -320,6 +321,12 @@ func ProvideEventsConfig(config *types.Config) events.Config {
 		Namespace:             config.Events.Namespace,
 		MaxStreamLength:       config.Events.MaxStreamLength,
 		ApproxMaxStreamLength: config.Events.ApproxMaxStreamLength,
+		ProducerRetry: stream.ProducerRetryConfig{
+			MaxAttempts:    config.Events.ProducerMaxAttempts,
+			InitialBackoff: config.Events.ProducerInitialBackoff,
+			BackoffFactor:  config.Events.ProducerBackoffFactor,
+			MaxBackoff:     config.Events.ProducerMaxBackoff,
+		},
 	}
 }
 
