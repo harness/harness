@@ -105,3 +105,37 @@ func TestParseFileHeader(t *testing.T) {
 		})
 	}
 }
+
+// TestParsePureRename verifies a pure rename has no "index" line, so blob SHAs stay empty.
+func TestParsePureRename(t *testing.T) {
+	input := "diff --git a/old.txt b/new.txt\n" +
+		"similarity index 100%\n" +
+		"rename from old.txt\n" +
+		"rename to new.txt\n"
+
+	parser := &Parser{Reader: bufio.NewReader(strings.NewReader(input))}
+
+	var files []*File
+	err := parser.Parse(func(f *File) error {
+		files = append(files, f)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected parse error: %v", err)
+	}
+
+	if len(files) != 1 {
+		t.Fatalf("expected 1 file, got %d", len(files))
+	}
+
+	f := files[0]
+	if f.Type != FileRename {
+		t.Errorf("expected file type %v, got %v", FileRename, f.Type)
+	}
+	if f.OldPath != "old.txt" || f.Path != "new.txt" {
+		t.Errorf("expected rename old.txt->new.txt, got %q->%q", f.OldPath, f.Path)
+	}
+	if f.OldSHA != "" || f.SHA != "" {
+		t.Errorf("expected empty blob SHAs for pure rename, got old=%q new=%q", f.OldSHA, f.SHA)
+	}
+}

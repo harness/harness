@@ -315,6 +315,49 @@ func flattenDirectory(
 	return nil
 }
 
+// GetBlobSHAsForPaths resolves the blob SHA of each of the given file paths at rev with a
+// single git ls-tree call. Paths not found in the tree are omitted from the result.
+func (g *Git) GetBlobSHAsForPaths(
+	ctx context.Context,
+	repoPath, rev string,
+	paths []string,
+) (map[string]string, error) {
+	if repoPath == "" {
+		return nil, ErrRepositoryPathEmpty
+	}
+	if len(paths) == 0 {
+		return map[string]string{}, nil
+	}
+
+	cmd := command.New("ls-tree",
+		command.WithFlag("-z"),
+		command.WithArg(rev),
+		command.WithPostSepArg(paths...),
+	)
+
+	output := &bytes.Buffer{}
+	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output)); err != nil {
+		return nil, fmt.Errorf("failed to run git ls-tree: %w", err)
+	}
+
+	result := make(map[string]string, len(paths))
+	scan := bufio.NewScanner(output)
+	scan.Split(parser.ScanZeroSeparated)
+	for scan.Scan() {
+		line := scan.Text()
+		columns := regexpLsTreeColumns.FindStringSubmatch(line)
+		if columns == nil {
+			return nil, fmt.Errorf("unrecognized format of git ls-tree output: %q", line)
+		}
+		result[columns[5]] = columns[3]
+	}
+	if err := scan.Err(); err != nil {
+		return nil, fmt.Errorf("failed to scan git ls-tree output: %w", err)
+	}
+
+	return result, nil
+}
+
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
 func (g *Git) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode, error) {
 	return GetTreeNode(ctx, repoPath, rev, treePath, false)

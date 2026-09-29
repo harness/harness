@@ -395,8 +395,13 @@ func (s *Service) Diff(
 			IncludePatch: params.IncludePatch,
 		}
 
+		// Pure renames have no "index" line, so the parser leaves their blob SHAs empty.
+		// Buffer them and resolve all SHAs in a single ls-tree call once parsing is done,
+		// instead of one git call per file.
+		var pendingRenames []*FileDiff
+
 		err := parser.Parse(func(f *diff.File) error {
-			ch <- &FileDiff{
+			fileDiff := &FileDiff{
 				SHA:         f.SHA,
 				OldSHA:      f.OldSHA,
 				Path:        f.Path,
@@ -409,11 +414,26 @@ func (s *Service) Diff(
 				IsBinary:    f.IsBinary,
 				IsSubmodule: f.IsSubmodule,
 			}
+
+			if fileDiff.Status == enum.FileDiffStatusRenamed && fileDiff.SHA == "" {
+				pendingRenames = append(pendingRenames, fileDiff)
+				return nil
+			}
+
+			ch <- fileDiff
 			return nil
 		})
 		if err != nil {
 			cherr <- err
 			return
+		}
+
+		if err := s.resolveRenameBlobSHAs(ctx, params, pendingRenames); err != nil {
+			cherr <- err
+			return
+		}
+		for _, fileDiff := range pendingRenames {
+			ch <- fileDiff
 		}
 	})
 
@@ -424,6 +444,36 @@ func (s *Service) Diff(
 	}()
 
 	return ch, cherr
+}
+
+// resolveRenameBlobSHAs fills in the blob SHAs of pure-rename file diffs with a single ls-tree
+// call. A pure rename is byte-identical, so its old and new blob SHAs are the same.
+func (s *Service) resolveRenameBlobSHAs(ctx context.Context, params *DiffParams, renames []*FileDiff) error {
+	if len(renames) == 0 {
+		return nil
+	}
+
+	paths := make([]string, len(renames))
+	for i, fileDiff := range renames {
+		paths[i] = fileDiff.Path
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	pathToSHA, err := s.git.GetBlobSHAsForPaths(ctx, repoPath, params.HeadRef, paths)
+	if err != nil {
+		return fmt.Errorf("failed to resolve blob shas for renamed files: %w", err)
+	}
+
+	for _, fileDiff := range renames {
+		blobSHA, ok := pathToSHA[fileDiff.Path]
+		if !ok {
+			return fmt.Errorf("failed to resolve blob sha for renamed file %q", fileDiff.Path)
+		}
+		fileDiff.SHA = blobSHA
+		fileDiff.OldSHA = blobSHA
+	}
+
+	return nil
 }
 
 type DiffFileNamesOutput struct {
