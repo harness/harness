@@ -34,13 +34,37 @@ func (c *Controller) GeneralFindSpace(
 		return nil, err
 	}
 
-	defaultBranch, err := c.settings.SpaceGetDefaultBranch(ctx, space.ID, inherited)
+	out := settings.GetDefaultGeneralSettingsSpace()
+
+	// The non-inherited path returns only the space-local value (no provenance to report).
+	if !inherited {
+		defaultBranch, err := c.settings.SpaceGetDefaultBranch(ctx, space.ID, false)
+		if err != nil {
+			return nil, err
+		}
+
+		out.DefaultBranch = &defaultBranch
+
+		return out, nil
+	}
+
+	// The inherited path resolves the effective value and reports which space configures it so the
+	// caller can distinguish "set here" from "inherited from <scope>".
+	defaultBranch, sourceSpaceID, found, err := c.settings.SpaceGetDefaultBranchWithSource(ctx, space.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	out := settings.GetDefaultGeneralSettingsSpace()
 	out.DefaultBranch = &defaultBranch
+
+	if found {
+		sourceSpace, err := c.spaceFinder.FindByID(ctx, sourceSpaceID)
+		if err != nil {
+			return nil, err
+		}
+
+		out.DefaultBranchScope = &sourceSpace.Path
+	}
 
 	return out, nil
 }

@@ -174,3 +174,35 @@ func (s *Service) SpaceGetDefaultBranch(
 	}
 	return defaultBranch, nil
 }
+
+// SpaceGetDefaultBranchWithSource resolves the effective default branch for a space by walking up the
+// parent chain and reports which space configured it. It returns the resolved value, the ID of the
+// space where the value is set, and found=true when an ancestor (or the space itself) configures it.
+// When found=false no ancestor configures it: the global default is returned and sourceSpaceID is 0.
+func (s *Service) SpaceGetDefaultBranchWithSource(
+	ctx context.Context,
+	spaceID int64,
+) (value string, sourceSpaceID int64, found bool, err error) {
+	currentID := spaceID
+	for currentID > 0 {
+		var defaultBranch string
+		ok, getErr := s.Get(ctx, enum.SettingsScopeSpace, currentID, DefaultBranchKey, &defaultBranch)
+		if getErr != nil {
+			return "", 0, false, fmt.Errorf(
+				"failed to find setting %s for space ID %d: %w", DefaultBranchKey, currentID, getErr)
+		}
+
+		if ok {
+			return defaultBranch, currentID, true, nil
+		}
+
+		space, findErr := s.spaceFinder.FindByID(ctx, currentID)
+		if findErr != nil {
+			return "", 0, false, fmt.Errorf("failed to find space with id %d: %w", currentID, findErr)
+		}
+
+		currentID = space.ParentID
+	}
+
+	return DefaultBranch, 0, false, nil
+}

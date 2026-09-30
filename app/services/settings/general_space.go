@@ -26,6 +26,11 @@ import (
 // GeneralSettingsSpace represents the general space settings as exposed externally.
 type GeneralSettingsSpace struct {
 	DefaultBranch *string `json:"default_branch" yaml:"default_branch" description:"default branch name"`
+	// DefaultBranchScope is read-only output populated on find with inherited=true. It holds the path
+	// of the space where the default branch is configured, or nil when no ancestor configures it (the
+	// global default applies). It is ignored on update.
+	//nolint:lll
+	DefaultBranchScope *string `json:"default_branch_scope,omitempty" yaml:"default_branch_scope,omitempty" description:"path of the space configuring the default branch (read-only)"`
 }
 
 func GetDefaultGeneralSettingsSpace() *GeneralSettingsSpace {

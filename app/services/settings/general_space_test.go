@@ -22,7 +22,9 @@ import (
 
 	"github.com/harness/gitness/app/services/refcache"
 	appstore "github.com/harness/gitness/app/store"
+	storecache "github.com/harness/gitness/app/store/cache"
 	basestore "github.com/harness/gitness/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/stretchr/testify/require"
@@ -92,6 +94,98 @@ func TestSpaceGetDefaultBranchFallsBackToGlobalDefault(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, DefaultBranch, branch)
 }
+
+func TestSpaceGetDefaultBranchWithSource(t *testing.T) {
+	t.Parallel()
+
+	// Space hierarchy walked by the resolver: 3 (child) -> 2 (mid) -> 1 (root) -> 0 (none).
+	spaces := map[int64]*types.SpaceCore{
+		1: {ID: 1, ParentID: 0, Path: "acme"},
+		2: {ID: 2, ParentID: 1, Path: "acme/team"},
+		3: {ID: 3, ParentID: 2, Path: "acme/team/proj"},
+	}
+
+	tests := []struct {
+		name         string
+		setOnSpaceID int64 // 0 means the value is not set anywhere in the chain.
+		branch       string
+		wantValue    string
+		wantSourceID int64
+		wantFound    bool
+	}{
+		{
+			name:         "value set on the space itself",
+			setOnSpaceID: 3,
+			branch:       "develop",
+			wantValue:    "develop",
+			wantSourceID: 3,
+			wantFound:    true,
+		},
+		{
+			name:         "value set on an ancestor is resolved by walking up",
+			setOnSpaceID: 1,
+			branch:       "release/1.0",
+			wantValue:    "release/1.0",
+			wantSourceID: 1,
+			wantFound:    true,
+		},
+		{
+			name:         "no value anywhere falls back to the global default",
+			setOnSpaceID: 0,
+			wantValue:    DefaultBranch,
+			wantSourceID: 0,
+			wantFound:    false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			store := newInMemorySettingsStore()
+			service := NewService(store, newSpaceFinderWith(spaces))
+
+			if tc.setOnSpaceID > 0 {
+				require.NoError(t, service.Set(
+					ctx, enum.SettingsScopeSpace, tc.setOnSpaceID, DefaultBranchKey, ptrString(tc.branch)))
+			}
+
+			// Always query from the deepest space so the walk exercises the full chain.
+			value, sourceID, found, err := service.SpaceGetDefaultBranchWithSource(ctx, 3)
+			require.NoError(t, err)
+			require.Equal(t, tc.wantValue, value)
+			require.Equal(t, tc.wantSourceID, sourceID)
+			require.Equal(t, tc.wantFound, found)
+		})
+	}
+}
+
+func newSpaceFinderWith(spaces map[int64]*types.SpaceCore) refcache.SpaceFinder {
+	return refcache.NewSpaceFinder(
+		&fakeSpaceIDCache{spaces: spaces},
+		nil,
+		nil,
+		storecache.Evictor[*types.SpaceCore]{},
+	)
+}
+
+// fakeSpaceIDCache is a minimal in-memory cache.Cache[int64, *types.SpaceCore] so SpaceFinder.FindByID
+// can walk the parent chain in tests without a database.
+type fakeSpaceIDCache struct {
+	spaces map[int64]*types.SpaceCore
+}
+
+func (c *fakeSpaceIDCache) Get(_ context.Context, id int64) (*types.SpaceCore, error) {
+	space, ok := c.spaces[id]
+	if !ok {
+		return nil, basestore.ErrResourceNotFound
+	}
+	return space, nil
+}
+
+func (c *fakeSpaceIDCache) Stats() (int64, int64)            { return 0, 0 }
+func (c *fakeSpaceIDCache) Evict(_ context.Context, _ int64) {}
 
 func ptrString(value string) *string {
 	return &value
