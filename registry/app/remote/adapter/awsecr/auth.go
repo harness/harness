@@ -32,6 +32,7 @@ import (
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	commonhttp "github.com/harness/gitness/registry/app/common/http"
 	"github.com/harness/gitness/registry/app/common/http/modifier"
+	"github.com/harness/gitness/registry/app/remote/adapter/commons"
 	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/secret"
 
@@ -151,7 +152,7 @@ func getCreds(
 		log.Ctx(ctx).Debug().Msgf("invalid auth type: %s", reg.RepoAuthType)
 		return "", "", false, nil
 	}
-	secretKey, err := getSecretValue(ctx, spaceFinder, secretService, reg.SecretSpaceID,
+	secretKey, err := getSecretValue(ctx, spaceFinder, secretService, reg.ParentID, reg.SecretSpaceID,
 		reg.SecretIdentifier)
 	if err != nil {
 		return "", "", false, err
@@ -159,7 +160,7 @@ func getCreds(
 	if reg.UserName != "" {
 		return reg.UserName, secretKey, false, nil
 	}
-	accessKey, err := getSecretValue(ctx, spaceFinder, secretService, reg.UserNameSecretSpaceID,
+	accessKey, err := getSecretValue(ctx, spaceFinder, secretService, reg.ParentID, reg.UserNameSecretSpaceID,
 		reg.UserNameSecretIdentifier)
 	if err != nil {
 		return "", "", false, err
@@ -169,17 +170,23 @@ func getCreds(
 
 func getSecretValue(
 	ctx context.Context, spaceFinder refcache.SpaceFinder, secretService secret.Service,
-	secretSpaceID int64, secretSpacePath string,
+	registryParentID string, secretSpaceID int64, secretIdentifier string,
 ) (string, error) {
+	if secretIdentifier == "" || secretSpaceID <= 0 {
+		return "", nil
+	}
 	spacePath, err := spaceFinder.FindByID(ctx, secretSpaceID)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to find space path: %d, %v", secretSpaceID, err)
 		return "", err
 	}
-	decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Path, secretSpacePath)
+	if err := commons.AssertSecretSameAccountAsRegistry(ctx, spaceFinder, registryParentID, spacePath); err != nil {
+		return "", err
+	}
+	decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Path, secretIdentifier)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("failed to decrypt secret at path: %s, secret: %s, %v", spacePath.Path,
-			secretSpacePath, err)
+			secretIdentifier, err)
 		return "", err
 	}
 	return decryptSecret, nil

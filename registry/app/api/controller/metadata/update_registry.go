@@ -117,6 +117,28 @@ func (c *APIController) ModifyRegistry(
 		//nolint:nilerr
 		return throwModifyRegistry400Error(err), nil
 	}
+
+	// Re-authorize only when the secret reference or upstream destination changes.
+	if upstreamSecretReferenceChanged(upstreamproxyEntity, upstreamproxy) {
+		if authErr := c.authorizeUpstreamSecretAccess(ctx, upstreamproxy); authErr != nil {
+			statusCode, message := HandleAuthError(authErr)
+			if statusCode == http.StatusUnauthorized {
+				//nolint:nilerr
+				return artifact.ModifyRegistry401JSONResponse{
+					UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+						*GetErrorResponse(http.StatusUnauthorized, message),
+					),
+				}, nil
+			}
+			//nolint:nilerr
+			return artifact.ModifyRegistry403JSONResponse{
+				UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
+					*GetErrorResponse(http.StatusForbidden, message),
+				),
+			}, nil
+		}
+	}
+
 	registry.ID = repoEntity.ID
 	upstreamproxy.ID = upstreamproxyEntity.ID
 	upstreamproxy.RegistryID = repoEntity.ID

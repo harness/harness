@@ -123,6 +123,24 @@ func (c *APIController) CreateRegistry(
 		return throwCreateRegistry400Error(err), nil
 	}
 
+	if authErr := c.authorizeUpstreamSecretAccess(ctx, upstreamproxy); authErr != nil {
+		statusCode, message := HandleAuthError(authErr)
+		if statusCode == http.StatusUnauthorized {
+			//nolint:nilerr
+			return artifact.CreateRegistry401JSONResponse{
+				UnauthenticatedJSONResponse: artifact.UnauthenticatedJSONResponse(
+					*GetErrorResponse(http.StatusUnauthorized, message),
+				),
+			}, nil
+		}
+		//nolint:nilerr
+		return artifact.CreateRegistry403JSONResponse{
+			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
+				*GetErrorResponse(http.StatusForbidden, message),
+			),
+		}, nil
+	}
+
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			registryID, err = c.createRegistry(ctx, registry, string(parentRef), &session.Principal, true)
@@ -497,6 +515,71 @@ func (c *APIController) CreateUpstreamProxyEntity(
 		upstreamProxyConfigEntity.SecretIdentifier = res.SecretKeyIdentifier
 	}
 	return repoEntity, upstreamProxyConfigEntity, nil
+}
+
+// authorizeUpstreamSecretAccess verifies the caller holds secret_access on every secret
+// referenced by the upstream-proxy credential, in each secret's own space.
+func (c *APIController) authorizeUpstreamSecretAccess(
+	ctx context.Context, upstreamProxy *registrytypes.UpstreamProxyConfig,
+) error {
+	if upstreamProxy == nil {
+		return nil
+	}
+	if err := c.checkSecretAccess(
+		ctx, upstreamProxy.UserNameSecretSpaceID, upstreamProxy.UserNameSecretIdentifier,
+	); err != nil {
+		return err
+	}
+	return c.checkSecretAccess(ctx, upstreamProxy.SecretSpaceID, upstreamProxy.SecretIdentifier)
+}
+
+// checkSecretAccess verifies the caller holds secret_access on the referenced secret in the
+// space identified by secretSpaceID. A missing identifier or unresolved space (<= 0) means
+// there is no secret reference to authorize, so the check is a no-op.
+func (c *APIController) checkSecretAccess(
+	ctx context.Context, secretSpaceID int64, secretIdentifier string,
+) error {
+	if secretIdentifier == "" || secretSpaceID <= 0 {
+		return nil
+	}
+	session, ok := request.AuthSessionFrom(ctx)
+	if !ok {
+		return apiauth.ErrUnauthorized
+	}
+	secretSpace, err := c.SpaceFinder.FindByID(ctx, secretSpaceID)
+	if err != nil {
+		return fmt.Errorf("failed to find secret space %d: %w", secretSpaceID, err)
+	}
+	return apiauth.CheckSecret(
+		ctx, c.Authorizer, session, secretSpace.Path, secretIdentifier, gitnessenum.PermissionSecretAccess,
+	)
+}
+
+// normalizeSecretSpaceID collapses the two "unset" encodings to a single canonical 0: the DB
+// mapping layer represents a missing space id as -1, while a freshly built entity uses the Go
+// zero value 0. Without this, an unchanged-but-unset reference would appear to have changed.
+func normalizeSecretSpaceID(id int64) int64 {
+	if id < 0 {
+		return 0
+	}
+	return id
+}
+
+// upstreamSecretReferenceChanged reports whether the secret binding or upstream destination
+// (URL/Source) differs from the persisted binding. Destination changes are included because
+// they cause the bound secret to be sent to a new host on the next pull.
+func upstreamSecretReferenceChanged(
+	existing *registrytypes.UpstreamProxy, updated *registrytypes.UpstreamProxyConfig,
+) bool {
+	if existing == nil || updated == nil {
+		return true
+	}
+	return updated.SecretIdentifier != existing.SecretIdentifier ||
+		normalizeSecretSpaceID(updated.SecretSpaceID) != normalizeSecretSpaceID(existing.SecretSpaceID) ||
+		updated.UserNameSecretIdentifier != existing.UserNameSecretIdentifier ||
+		normalizeSecretSpaceID(updated.UserNameSecretSpaceID) != normalizeSecretSpaceID(existing.UserNameSecretSpaceID) ||
+		(updated.URL != "" && updated.URL != existing.RepoURL) ||
+		updated.Source != existing.Source
 }
 
 func isDuplicateKeyError(err error) bool {
