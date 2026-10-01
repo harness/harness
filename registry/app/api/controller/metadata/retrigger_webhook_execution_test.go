@@ -81,7 +81,6 @@ var (
 )
 
 func TestReTriggerWebhookExecution(t *testing.T) {
-	// Create mocks that will be used across all tests
 	mockSpaceFinder := new(mocks.SpaceFinder)
 	mockRegistryRepository := new(mocks.RegistryRepository)
 	mockWebhooksRepository := new(mocks.WebhooksRepository)
@@ -112,6 +111,8 @@ func TestReTriggerWebhookExecution(t *testing.T) {
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
 				mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockWebhooksRepository.On("GetByRegistryAndIdentifier", mock.Anything, int64(1), "webhook").Return(&coretypes.WebhookCore{ID: 1}, nil)
+				mockWebhooksExecutionRepository.On("Find", mock.Anything, int64(1)).Return(webhookExecution, nil)
 
 				latestExecutionResult := enum.WebhookExecutionResultSuccess
 				mockWebhookService.On("ReTriggerWebhookExecution", mock.Anything, int64(1)).Return(&gitnesswebhook.TriggerResult{
@@ -216,6 +217,8 @@ func TestReTriggerWebhookExecution(t *testing.T) {
 				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
 				mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit).Return(permissionChecks)
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockWebhooksRepository.On("GetByRegistryAndIdentifier", mock.Anything, int64(1), "webhook").Return(&coretypes.WebhookCore{ID: 1}, nil)
+				mockWebhooksExecutionRepository.On("Find", mock.Anything, int64(1)).Return(webhookExecution, nil)
 				mockWebhookService.On("ReTriggerWebhookExecution", mock.Anything, int64(1)).Return(nil, fmt.Errorf("error"))
 			},
 			request: api.ReTriggerWebhookExecutionRequestObject{
@@ -230,11 +233,45 @@ func TestReTriggerWebhookExecution(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "cross_tenant_execution_id_returns_404",
+			setupMocks: func(_ *metadata.APIController) {
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentRef:          "root/parent",
+				}
+				space := &coretypes.SpaceCore{ID: 2}
+				var permissionChecks []coretypes.PermissionCheck
+
+				// Execution belongs to a different webhook (victim's webhook ID 99),
+				// not the webhook (ID 1) under the caller's registry.
+				victimExecution := &coretypes.WebhookExecutionCore{ID: 710, WebhookID: 99}
+
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockRegistryMetadataHelper.On("GetPermissionChecks", space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit).Return(permissionChecks)
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockWebhooksRepository.On("GetByRegistryAndIdentifier", mock.Anything, int64(1), "anything").Return(&coretypes.WebhookCore{ID: 1}, nil)
+				mockWebhooksExecutionRepository.On("Find", mock.Anything, int64(710)).Return(victimExecution, nil)
+				// ReTriggerWebhookExecution must NOT be called for a cross-tenant execution.
+			},
+			request: api.ReTriggerWebhookExecutionRequestObject{
+				WebhookIdentifier:  "anything",
+				RegistryRef:        "reg",
+				WebhookExecutionId: "710",
+			},
+			expectedResp: api.ReTriggerWebhookExecution404JSONResponse{
+				NotFoundJSONResponse: api.NotFoundJSONResponse{
+					Code:    "404",
+					Message: "webhook execution '710' not found",
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clear mock expectations
 			mockSpaceFinder.ExpectedCalls = nil
 			mockRegistryRepository.ExpectedCalls = nil
 			mockWebhooksRepository.ExpectedCalls = nil
@@ -253,7 +290,6 @@ func TestReTriggerWebhookExecution(t *testing.T) {
 				WebhookService:              mockWebhookService,
 			}
 
-			// Setup mocks
 			tt.setupMocks(controller)
 
 			resp, err := controller.ReTriggerWebhookExecution(context.Background(), tt.request)
@@ -308,9 +344,14 @@ func TestReTriggerWebhookExecution(t *testing.T) {
 				errorResp, _ := resp.(api.ReTriggerWebhookExecution500JSONResponse) //nolint:errcheck
 				assert.Equal(t, "500", errorResp.Code)
 				assert.Equal(t, "failed to re-trigger execution: error", errorResp.Message)
+
+			case "cross_tenant_execution_id_returns_404":
+				assert.IsType(t, api.ReTriggerWebhookExecution404JSONResponse{}, resp, "expected 404 response")
+				errorResp, _ := resp.(api.ReTriggerWebhookExecution404JSONResponse) //nolint:errcheck
+				assert.Equal(t, "404", errorResp.Code)
+				assert.Equal(t, "webhook execution '710' not found", errorResp.Message)
 			}
 
-			// Verify all mock expectations
 			mockSpaceFinder.AssertExpectations(t)
 			mockRegistryRepository.AssertExpectations(t)
 			mockWebhooksRepository.AssertExpectations(t)

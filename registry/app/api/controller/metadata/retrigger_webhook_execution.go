@@ -71,6 +71,45 @@ func (c *APIController) ReTriggerWebhookExecution(
 			),
 		}, nil
 	}
+
+	// RegistryID is already resolved by GetRegistryRequestBaseInfo (same GetByParentIDAndName + WithAllDeleted).
+	webhook, err := c.WebhooksRepository.GetByRegistryAndIdentifier(ctx, regInfo.RegistryID, string(r.WebhookIdentifier))
+	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return api.ReTriggerWebhookExecution404JSONResponse{
+				NotFoundJSONResponse: api.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook '%s' not found", r.WebhookIdentifier)),
+				),
+			}, nil
+		}
+		log.Ctx(ctx).Error().Msgf(getWebhookErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
+		return getReTriggerWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to find webhook: %w", err))
+	}
+
+	// Verify the execution belongs to the webhook under the authorized registry before re-firing.
+	// This prevents cross-registry/cross-tenant replay via a global execution id (IDOR).
+	existing, err := c.WebhooksExecutionRepository.Find(ctx, webhookExecutionID)
+	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return api.ReTriggerWebhookExecution404JSONResponse{
+				NotFoundJSONResponse: api.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook execution '%d' not found", webhookExecutionID)),
+				),
+			}, nil
+		}
+		log.Ctx(ctx).Error().Msgf(getWebhookErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
+		return getReTriggerWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to find webhook execution: %w", err))
+	}
+	if existing.WebhookID != webhook.ID {
+		log.Ctx(ctx).Warn().Msgf("webhook execution '%d' does not belong to webhook '%s' of registry '%s'",
+			webhookExecutionID, r.WebhookIdentifier, regInfo.RegistryIdentifier)
+		return api.ReTriggerWebhookExecution404JSONResponse{
+			NotFoundJSONResponse: api.NotFoundJSONResponse(
+				*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook execution '%d' not found", webhookExecutionID)),
+			),
+		}, nil
+	}
+
 	result, err := c.WebhookService.ReTriggerWebhookExecution(ctx, webhookExecutionID)
 	if err != nil {
 		if errors.Is(err, store.ErrResourceNotFound) {

@@ -41,6 +41,7 @@ func TestGetWebhookExecution(t *testing.T) {
 			*mocks.SpaceFinder,
 			*mocks.Authorizer,
 			*mocks.RegistryMetadataHelper,
+			*mocks.RegistryRepository,
 			*mocks.WebhooksRepository,
 			*mocks.WebhooksExecutionRepository)
 		request  api.GetWebhookExecutionRequestObject
@@ -48,7 +49,7 @@ func TestGetWebhookExecution(t *testing.T) {
 	}{
 		{
 			name: "invalid_execution_identifier",
-			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
+			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockRegistryRepo *mocks.RegistryRepository, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
 				space := &coretypes.SpaceCore{ID: 2}
 				regInfo := &types.RegistryRequestBaseInfo{
 					RegistryID:         1,
@@ -65,6 +66,7 @@ func TestGetWebhookExecution(t *testing.T) {
 				c.SpaceFinder = mockSpaceFinder
 				c.Authorizer = mockAuthorizer
 				c.RegistryMetadataHelper = mockRegistryMetadataHelper
+				c.RegistryRepository = mockRegistryRepo
 				c.WebhooksRepository = mockWebhooksRepo
 				c.WebhooksExecutionRepository = mockWebhooksExecRepo
 			},
@@ -85,7 +87,7 @@ func TestGetWebhookExecution(t *testing.T) {
 		},
 		{
 			name: "permission_check_fails",
-			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
+			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockRegistryRepo *mocks.RegistryRepository, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
 				space := &coretypes.SpaceCore{ID: 2}
 				regInfo := &types.RegistryRequestBaseInfo{
 					RegistryID:         1,
@@ -102,6 +104,7 @@ func TestGetWebhookExecution(t *testing.T) {
 				c.SpaceFinder = mockSpaceFinder
 				c.Authorizer = mockAuthorizer
 				c.RegistryMetadataHelper = mockRegistryMetadataHelper
+				c.RegistryRepository = mockRegistryRepo
 				c.WebhooksRepository = mockWebhooksRepo
 				c.WebhooksExecutionRepository = mockWebhooksExecRepo
 			},
@@ -122,7 +125,7 @@ func TestGetWebhookExecution(t *testing.T) {
 		},
 		{
 			name: "success_case",
-			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
+			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockRegistryRepo *mocks.RegistryRepository, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
 				space := &coretypes.SpaceCore{ID: 2}
 				regInfo := &types.RegistryRequestBaseInfo{
 					RegistryID:         1,
@@ -156,11 +159,13 @@ func TestGetWebhookExecution(t *testing.T) {
 				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
 				mockRegistryMetadataHelper.On("GetPermissionChecks", space, "reg", enum.PermissionRegistryView).Return([]coretypes.PermissionCheck{})
 				mockAuthorizer.On("CheckAll", mock.Anything, (*auth.Session)(nil)).Return(true, nil)
+				mockWebhooksRepo.On("GetByRegistryAndIdentifier", mock.Anything, int64(1), "webhook").Return(&coretypes.WebhookCore{ID: 1}, nil)
 				mockWebhooksExecRepo.On("Find", mock.Anything, int64(1)).Return(execution, nil)
 
 				c.SpaceFinder = mockSpaceFinder
 				c.Authorizer = mockAuthorizer
 				c.RegistryMetadataHelper = mockRegistryMetadataHelper
+				c.RegistryRepository = mockRegistryRepo
 				c.WebhooksRepository = mockWebhooksRepo
 				c.WebhooksExecutionRepository = mockWebhooksExecRepo
 			},
@@ -198,7 +203,7 @@ func TestGetWebhookExecution(t *testing.T) {
 		},
 		{
 			name: "find_execution_error",
-			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
+			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockRegistryRepo *mocks.RegistryRepository, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
 				space := &coretypes.SpaceCore{ID: 2}
 				regInfo := &types.RegistryRequestBaseInfo{
 					RegistryID:         1,
@@ -221,6 +226,7 @@ func TestGetWebhookExecution(t *testing.T) {
 					enum.PermissionRegistryView,
 				).Return([]coretypes.PermissionCheck{})
 				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockWebhooksRepo.On("GetByRegistryAndIdentifier", mock.Anything, int64(1), "webhook").Return(&coretypes.WebhookCore{ID: 1}, nil)
 				mockWebhooksExecRepo.On(
 					"Find",
 					mock.Anything,
@@ -230,6 +236,7 @@ func TestGetWebhookExecution(t *testing.T) {
 				c.SpaceFinder = mockSpaceFinder
 				c.Authorizer = mockAuthorizer
 				c.RegistryMetadataHelper = mockRegistryMetadataHelper
+				c.RegistryRepository = mockRegistryRepo
 				c.WebhooksRepository = mockWebhooksRepo
 				c.WebhooksExecutionRepository = mockWebhooksExecRepo
 			},
@@ -248,33 +255,81 @@ func TestGetWebhookExecution(t *testing.T) {
 				assert.Equal(t, "failed to find webhook execution: error finding execution", resp.Message)
 			},
 		},
+		{
+			name: "cross_tenant_execution_id_returns_404",
+			setupMocks: func(c *APIController, mockSpaceFinder *mocks.SpaceFinder, mockAuthorizer *mocks.Authorizer, mockRegistryMetadataHelper *mocks.RegistryMetadataHelper, mockRegistryRepo *mocks.RegistryRepository, mockWebhooksRepo *mocks.WebhooksRepository, mockWebhooksExecRepo *mocks.WebhooksExecutionRepository) {
+				space := &coretypes.SpaceCore{ID: 2}
+				regInfo := &types.RegistryRequestBaseInfo{
+					RegistryID:         1,
+					RegistryIdentifier: "reg",
+					ParentID:           2,
+					ParentRef:          "root/parent",
+				}
+
+				// Execution belongs to a different webhook (victim's webhook ID 99),
+				// not the webhook (ID 1) under the caller's registry.
+				execution := &coretypes.WebhookExecutionCore{
+					ID:        710,
+					WebhookID: 99,
+					Request: coretypes.WebhookExecutionRequest{
+						URL:     "https://example.invalid/victim-hook",
+						Headers: "{\"X-Victim-Signing-Secret\":\"secret\"}",
+						Body:    "{}",
+					},
+				}
+
+				mockSpaceFinder.On("FindByRef", mock.Anything, "root/parent").Return(space, nil)
+				mockRegistryMetadataHelper.On("GetRegistryRequestBaseInfo", mock.Anything, "", "reg").Return(regInfo, nil)
+				mockRegistryMetadataHelper.On("GetPermissionChecks", space, "reg", enum.PermissionRegistryView).Return([]coretypes.PermissionCheck{})
+				mockAuthorizer.On("CheckAll", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+				mockWebhooksRepo.On("GetByRegistryAndIdentifier", mock.Anything, int64(1), "anything").Return(&coretypes.WebhookCore{ID: 1}, nil)
+				mockWebhooksExecRepo.On("Find", mock.Anything, int64(710)).Return(execution, nil)
+
+				c.SpaceFinder = mockSpaceFinder
+				c.Authorizer = mockAuthorizer
+				c.RegistryMetadataHelper = mockRegistryMetadataHelper
+				c.RegistryRepository = mockRegistryRepo
+				c.WebhooksRepository = mockWebhooksRepo
+				c.WebhooksExecutionRepository = mockWebhooksExecRepo
+			},
+			request: api.GetWebhookExecutionRequestObject{
+				RegistryRef:        "reg",
+				WebhookIdentifier:  "anything",
+				WebhookExecutionId: "710",
+			},
+			validate: func(t *testing.T, response api.GetWebhookExecutionResponseObject, err error) {
+				assert.NoError(t, err)
+				assert.NotNil(t, response)
+
+				resp, ok := response.(api.GetWebhookExecution404JSONResponse)
+				assert.True(t, ok, "expected 404 response")
+				assert.Equal(t, "404", resp.Code)
+				assert.Equal(t, "webhook execution '710' not found", resp.Message)
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create mocks
 			mockSpaceFinder := new(mocks.SpaceFinder)
 			mockAuthorizer := new(mocks.Authorizer)
 			mockRegistryMetadataHelper := new(mocks.RegistryMetadataHelper)
+			mockRegistryRepo := new(mocks.RegistryRepository)
 			mockWebhooksRepo := new(mocks.WebhooksRepository)
 			mockWebhooksExecRepo := new(mocks.WebhooksExecutionRepository)
 
-			// Create controller
 			controller := &APIController{}
 
-			// Setup mocks
-			tt.setupMocks(controller, mockSpaceFinder, mockAuthorizer, mockRegistryMetadataHelper, mockWebhooksRepo, mockWebhooksExecRepo)
+			tt.setupMocks(controller, mockSpaceFinder, mockAuthorizer, mockRegistryMetadataHelper, mockRegistryRepo, mockWebhooksRepo, mockWebhooksExecRepo)
 
-			// Call function
 			resp, err := controller.GetWebhookExecution(context.Background(), tt.request)
 
-			// Validate response
 			tt.validate(t, resp, err)
 
-			// Verify mock expectations
 			mockSpaceFinder.AssertExpectations(t)
 			mockAuthorizer.AssertExpectations(t)
 			mockRegistryMetadataHelper.AssertExpectations(t)
+			mockRegistryRepo.AssertExpectations(t)
 			mockWebhooksRepo.AssertExpectations(t)
 			mockWebhooksExecRepo.AssertExpectations(t)
 		})

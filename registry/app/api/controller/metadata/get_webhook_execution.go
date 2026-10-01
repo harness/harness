@@ -74,6 +74,20 @@ func (c *APIController) GetWebhookExecution(
 		}, nil
 	}
 
+	// RegistryID is already resolved by GetRegistryRequestBaseInfo (same GetByParentIDAndName + WithAllDeleted).
+	webhook, err := c.WebhooksRepository.GetByRegistryAndIdentifier(ctx, regInfo.RegistryID, string(r.WebhookIdentifier))
+	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return api.GetWebhookExecution404JSONResponse{
+				NotFoundJSONResponse: api.NotFoundJSONResponse(
+					*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook '%s' not found", r.WebhookIdentifier)),
+				),
+			}, nil
+		}
+		log.Ctx(ctx).Error().Msgf(getWebhookErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
+		return getWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to find webhook: %w", err))
+	}
+
 	w, err := c.WebhooksExecutionRepository.Find(ctx, webhookExecutionID)
 	if err != nil {
 		if errors.Is(err, store.ErrResourceNotFound) {
@@ -85,6 +99,18 @@ func (c *APIController) GetWebhookExecution(
 		}
 		log.Ctx(ctx).Error().Msgf(getWebhookErrMsg, regInfo.RegistryRef, r.WebhookIdentifier, err)
 		return getWebhooksExecutionsInternalErrorResponse(fmt.Errorf("failed to find webhook execution: %w", err))
+	}
+
+	// Ensure the execution actually belongs to the webhook under the authorized registry.
+	// This prevents cross-registry/cross-tenant access via a global execution id (IDOR).
+	if w.WebhookID != webhook.ID {
+		log.Ctx(ctx).Warn().Msgf("webhook execution '%d' does not belong to webhook '%s' of registry '%s'",
+			webhookExecutionID, r.WebhookIdentifier, regInfo.RegistryIdentifier)
+		return api.GetWebhookExecution404JSONResponse{
+			NotFoundJSONResponse: api.NotFoundJSONResponse(
+				*GetErrorResponse(http.StatusNotFound, fmt.Sprintf("webhook execution '%d' not found", webhookExecutionID)),
+			),
+		}, nil
 	}
 	webhookExecution, err := MapToWebhookExecutionResponseEntity(*w)
 	if err != nil {
