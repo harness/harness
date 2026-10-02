@@ -169,7 +169,7 @@ func (c *Controller) Report(
 	}
 
 	bypassedBy, err := c.bypassPrincipal(ctx, in)
-	if err != nil {
+	if err != nil && !errors.Is(err, errNoBypassPrincipal) {
 		return nil, err
 	}
 
@@ -239,6 +239,9 @@ type PrincipalResolver interface {
 	Resolve(ctx context.Context, uid string, kind enum.PrincipalType) (int64, error)
 }
 
+// errNoBypassPrincipal means the report did not name a bypass principal.
+var errNoBypassPrincipal = errors.New("check report has no bypass principal")
+
 func (c *Controller) bypassPrincipal(ctx context.Context, in *ReportInput) (*types.PrincipalInfo, error) {
 	if in.BypassedBy != nil && *in.BypassedBy > 0 {
 		principal, err := c.principalStore.Find(ctx, *in.BypassedBy)
@@ -254,7 +257,7 @@ func (c *Controller) bypassPrincipal(ctx context.Context, in *ReportInput) (*typ
 		if in.BypassedBy != nil {
 			return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
 		}
-		return nil, nil
+		return nil, errNoBypassPrincipal
 	}
 	if in.BypassedByType == "" || c.principalResolver == nil {
 		return nil, usererror.BadRequest("Invalid value provided for bypassed_by")

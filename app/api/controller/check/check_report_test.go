@@ -401,6 +401,16 @@ func Test_Sanitize_BypassedBy(t *testing.T) {
 	}
 }
 
+func Test_bypassPrincipal_withoutBypass(t *testing.T) {
+	principal, err := (&Controller{}).bypassPrincipal(context.Background(), &ReportInput{})
+	if !errors.Is(err, errNoBypassPrincipal) {
+		t.Fatalf("bypassPrincipal() error = %v, want %v", err, errNoBypassPrincipal)
+	}
+	if principal != nil {
+		t.Fatalf("bypassPrincipal() principal = %+v, want nil", principal)
+	}
+}
+
 func Test_bypassPrincipal_withoutResolver(t *testing.T) {
 	_, err := (&Controller{}).bypassPrincipal(context.Background(), &ReportInput{
 		BypassedByUID:  "user-1",
