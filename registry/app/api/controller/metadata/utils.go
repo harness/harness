@@ -223,7 +223,7 @@ func GetSortByOrder(sortOrder string) string {
 	if len(sortOrder) == 0 {
 		return defaultSortOrder
 	}
-	if sortOrder == decreasingSortOrder {
+	if strings.EqualFold(strings.TrimSpace(sortOrder), decreasingSortOrder) {
 		return decreasingSortOrder
 	}
 	return defaultSortOrder
