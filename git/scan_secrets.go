@@ -99,11 +99,7 @@ func (s *Service) ScanSecrets(ctx context.Context, params *ScanSecretsParams) (*
 			}
 		}
 
-		// TODO: fix issue where secrets in second-parent commits are not detected
-		logOpts := fmt.Sprintf("--no-merges --first-parent %s", params.Rev)
-		if params.BaseRev != "" {
-			logOpts = fmt.Sprintf("--no-merges --first-parent %s..%s", params.BaseRev, params.Rev)
-		}
+		logOpts := gitLogOptionsForSecretScan(params.BaseRev, params.Rev)
 
 		gitCmd, err := sources.NewGitLogCmd(sharedRepo.Directory(), logOpts)
 		if err != nil {
@@ -126,6 +122,14 @@ func (s *Service) ScanSecrets(ctx context.Context, params *ScanSecretsParams) (*
 	return &ScanSecretsOutput{
 		Findings: findings,
 	}, nil
+}
+
+func gitLogOptionsForSecretScan(baseRev, rev string) string {
+	if baseRev == "" {
+		return fmt.Sprintf("--no-merges %s", rev)
+	}
+
+	return fmt.Sprintf("--no-merges %s..%s", baseRev, rev)
 }
 
 func (s *Service) setupGitleaksIgnoreInSharedRepo(
