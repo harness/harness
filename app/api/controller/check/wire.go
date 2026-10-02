@@ -59,5 +59,6 @@ func ProvideController(
 		sanitizers,
 		sseStreamer,
 		eventReporter,
+		nil,
 	)
 }

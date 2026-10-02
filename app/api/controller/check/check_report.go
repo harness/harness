@@ -41,7 +41,9 @@ type ReportInput struct {
 	Link       string             `json:"link"`
 	Payload    types.CheckPayload `json:"payload"`
 
-	BypassedBy *int64 `json:"bypassed_by,omitempty"`
+	BypassedBy     *int64             `json:"bypassed_by,omitempty"`
+	BypassedByUID  string             `json:"bypassed_by_uid,omitempty"`
+	BypassedByType enum.PrincipalType `json:"bypassed_by_type,omitempty"`
 
 	Started int64 `json:"started,omitempty"`
 	Ended   int64 `json:"ended,omitempty"`
@@ -100,15 +102,15 @@ func (in *ReportInput) Sanitize(
 		return usererror.BadRequest("Started time reported after ended time")
 	}
 
-	if in.BypassedBy != nil {
+	if in.BypassedBy != nil || in.BypassedByUID != "" {
 		// Only service principals are allowed to report a bypass.
 		if session.Principal.Type != enum.PrincipalTypeService {
 			return usererror.Forbidden("Only service principals can report bypassed_by")
 		}
+	}
 
-		if *in.BypassedBy <= 0 {
-			return usererror.BadRequest("bypassed_by must be a valid (positive) principal id")
-		}
+	if in.BypassedBy != nil && *in.BypassedBy <= 0 && in.BypassedByUID == "" {
+		return usererror.BadRequest("bypassed_by must be a valid (positive) principal id")
 	}
 
 	return nil
@@ -166,16 +168,9 @@ func (c *Controller) Report(
 		return nil, usererror.BadRequest("Invalid commit SHA provided")
 	}
 
-	var bypassedBy *types.PrincipalInfo
-	if in.BypassedBy != nil {
-		principal, err := c.principalStore.Find(ctx, *in.BypassedBy)
-		if err != nil {
-			if errors.Is(err, store.ErrResourceNotFound) {
-				return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
-			}
-			return nil, fmt.Errorf("failed to look up bypassed_by principal: %w", err)
-		}
-		bypassedBy = principal.ToPrincipalInfo()
+	bypassedBy, err := c.bypassPrincipal(ctx, in)
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = c.git.GetCommit(ctx, &git.GetCommitParams{
@@ -237,6 +232,51 @@ func (c *Controller) Report(
 	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeStatusCheckReportUpdated, statusCheckReport)
 
 	return statusCheckReport, nil
+}
+
+// PrincipalResolver resolves a platform principal to a stored principal ID.
+type PrincipalResolver interface {
+	Resolve(ctx context.Context, uid string, kind enum.PrincipalType) (int64, error)
+}
+
+func (c *Controller) bypassPrincipal(ctx context.Context, in *ReportInput) (*types.PrincipalInfo, error) {
+	if in.BypassedBy != nil && *in.BypassedBy > 0 {
+		principal, err := c.principalStore.Find(ctx, *in.BypassedBy)
+		if err == nil {
+			return principal.ToPrincipalInfo(), nil
+		}
+		if !errors.Is(err, store.ErrResourceNotFound) {
+			return nil, fmt.Errorf("failed to look up bypassed_by principal: %w", err)
+		}
+	}
+
+	if in.BypassedByUID == "" {
+		if in.BypassedBy != nil {
+			return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
+		}
+		return nil, nil
+	}
+	if in.BypassedByType == "" || c.principalResolver == nil {
+		return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
+	}
+
+	id, err := c.principalResolver.Resolve(ctx, in.BypassedByUID, in.BypassedByType)
+	if err != nil {
+		return nil, err
+	}
+	if id <= 0 {
+		return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
+	}
+	in.BypassedBy = &id
+
+	principal, err := c.principalStore.Find(ctx, id)
+	if err != nil {
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return nil, usererror.BadRequest("Invalid value provided for bypassed_by")
+		}
+		return nil, fmt.Errorf("failed to look up bypassed_by principal: %w", err)
+	}
+	return principal.ToPrincipalInfo(), nil
 }
 
 func getStartTime(in *ReportInput, check types.Check, now int64) int64 {

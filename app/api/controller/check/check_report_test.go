@@ -15,10 +15,14 @@
 package check
 
 import (
+	"context"
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/harness/gitness/app/auth"
+	appstore "github.com/harness/gitness/app/store"
+	gitnessstore "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -350,6 +354,27 @@ func Test_Sanitize_BypassedBy(t *testing.T) {
 			session: session(enum.PrincipalTypeUser),
 		},
 		{
+			name: "service principal can name a bypass by uid",
+			input: &ReportInput{
+				Identifier:    "check1",
+				Status:        enum.CheckStatusFailure,
+				BypassedByUID: "user-1",
+				Payload:       types.CheckPayload{Kind: enum.CheckPayloadKindEmpty},
+			},
+			session: session(enum.PrincipalTypeService),
+		},
+		{
+			name: "user can't name a bypass by uid",
+			input: &ReportInput{
+				Identifier:    "check1",
+				Status:        enum.CheckStatusFailure,
+				BypassedByUID: "user-1",
+				Payload:       types.CheckPayload{Kind: enum.CheckPayloadKindEmpty},
+			},
+			session: session(enum.PrincipalTypeUser),
+			errMsg:  "Only service principals can report bypassed_by",
+		},
+		{
 			name: "non positive bypass principal id is rejected",
 			input: &ReportInput{
 				Identifier: "check1",
@@ -373,5 +398,118 @@ func Test_Sanitize_BypassedBy(t *testing.T) {
 				t.Errorf("Sanitize() error = %q, want it to contain %q", err.Error(), tt.errMsg)
 			}
 		})
+	}
+}
+
+func Test_bypassPrincipal_withoutResolver(t *testing.T) {
+	_, err := (&Controller{}).bypassPrincipal(context.Background(), &ReportInput{
+		BypassedByUID:  "user-1",
+		BypassedByType: enum.PrincipalTypeUser,
+	})
+	if err == nil || !strings.Contains(err.Error(), "Invalid value provided for bypassed_by") {
+		t.Fatalf("bypassPrincipal() error = %v", err)
+	}
+}
+
+type bypassPrincipalStore struct {
+	appstore.PrincipalStore
+	principals map[int64]*types.Principal
+}
+
+func (s bypassPrincipalStore) Find(_ context.Context, id int64) (*types.Principal, error) {
+	principal, ok := s.principals[id]
+	if !ok {
+		return nil, gitnessstore.ErrResourceNotFound
+	}
+	return principal, nil
+}
+
+type stubPrincipalResolver struct {
+	id    int64
+	err   error
+	calls int
+}
+
+func (r *stubPrincipalResolver) Resolve(_ context.Context, _ string, _ enum.PrincipalType) (int64, error) {
+	r.calls++
+	return r.id, r.err
+}
+
+func Test_bypassPrincipal_usesStoredIDWithoutResolver(t *testing.T) {
+	id := int64(7)
+	resolver := &stubPrincipalResolver{id: 9}
+	controller := &Controller{
+		principalStore: bypassPrincipalStore{
+			principals: map[int64]*types.Principal{
+				id: {ID: id, UID: "user-1", Type: enum.PrincipalTypeUser},
+			},
+		},
+		principalResolver: resolver,
+	}
+
+	principal, err := controller.bypassPrincipal(context.Background(), &ReportInput{
+		BypassedBy:     &id,
+		BypassedByUID:  "user-1",
+		BypassedByType: enum.PrincipalTypeUser,
+	})
+	if err != nil {
+		t.Fatalf("bypassPrincipal() error = %v", err)
+	}
+	if principal.ID != id {
+		t.Fatalf("bypassPrincipal() id = %d, want %d", principal.ID, id)
+	}
+	if resolver.calls != 0 {
+		t.Fatalf("resolver calls = %d, want 0", resolver.calls)
+	}
+}
+
+func Test_bypassPrincipal_resolvesMissingStoredID(t *testing.T) {
+	missingID := int64(7)
+	resolvedID := int64(9)
+	resolver := &stubPrincipalResolver{id: resolvedID}
+	controller := &Controller{
+		principalStore: bypassPrincipalStore{
+			principals: map[int64]*types.Principal{
+				resolvedID: {ID: resolvedID, UID: "user-1", Type: enum.PrincipalTypeUser},
+			},
+		},
+		principalResolver: resolver,
+	}
+	input := &ReportInput{
+		BypassedBy:     &missingID,
+		BypassedByUID:  "user-1",
+		BypassedByType: enum.PrincipalTypeUser,
+	}
+
+	principal, err := controller.bypassPrincipal(context.Background(), input)
+	if err != nil {
+		t.Fatalf("bypassPrincipal() error = %v", err)
+	}
+	if principal.ID != resolvedID {
+		t.Fatalf("bypassPrincipal() id = %d, want %d", principal.ID, resolvedID)
+	}
+	if input.BypassedBy == nil || *input.BypassedBy != resolvedID {
+		t.Fatalf("input bypassed_by = %v, want %d", input.BypassedBy, resolvedID)
+	}
+	if resolver.calls != 1 {
+		t.Fatalf("resolver calls = %d, want 1", resolver.calls)
+	}
+}
+
+func Test_bypassPrincipal_returnsResolverError(t *testing.T) {
+	resolveErr := errors.New("sync failed")
+	controller := &Controller{
+		principalStore: bypassPrincipalStore{},
+		principalResolver: &stubPrincipalResolver{
+			err: resolveErr,
+		},
+	}
+
+	_, err := controller.bypassPrincipal(context.Background(), &ReportInput{
+		BypassedByUID:  "user-1",
+		BypassedByType: enum.PrincipalTypeUser,
+	})
+	if !errors.Is(err, resolveErr) {
+		t.Fatalf("bypassPrincipal() error = %v, want %v", err, resolveErr)
 	}
 }
