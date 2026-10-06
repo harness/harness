@@ -518,10 +518,10 @@ func (c *RedisConsumer) consumer(ctx context.Context) {
 func (c *RedisConsumer) removeStaleConsumers(ctx context.Context, maxAge time.Duration) {
 	for streamID := range c.streams {
 		// Fetch all consumers for this stream and group.
-		resConsumers, err := c.rdb.XInfoConsumers(ctx, streamID, c.groupName).Result()
+		resConsumers, err := readXInfoConsumers(ctx, c.rdb, streamID, c.groupName)
 		if err != nil {
 			c.pushError(fmt.Errorf("failed to read consumers for stream '%s': %w", streamID, err))
-			return
+			continue
 		}
 
 		// Delete old consumers, but only if they don't have pending messages.
