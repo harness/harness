@@ -92,7 +92,7 @@ func (r *JobRepository) Run(
 		Input: Input{
 			RepoID:    repo.ID,
 			Public:    public,
-			GitUser:   provider.Username,
+			GitUser:   gitCloneUser(provider),
 			GitPass:   provider.Password,
 			CloneURL:  cloneURL,
 			Pipelines: pipelines,
@@ -132,7 +132,7 @@ func (r *JobRepository) RunMany(
 			Input: Input{
 				RepoID:    repoID,
 				Public:    publics[k],
-				GitUser:   provider.Username,
+				GitUser:   gitCloneUser(provider),
 				GitPass:   provider.Password,
 				CloneURL:  cloneURL,
 				Pipelines: pipelines,
