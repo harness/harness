@@ -69,6 +69,13 @@ func (c *Controller) Revert(
 		return nil, usererror.BadRequest("Only merged pull requests can be reverted.")
 	}
 
+	// Both SHAs are needed: the merge commit is the base of the revert commit and
+	// the merge target SHA marks the start of the diff that has to be reverted.
+	// Imported pull requests are marked as merged, but have none of the two.
+	if pr.MergeSHA == nil || *pr.MergeSHA == "" || pr.MergeTargetSHA == nil || *pr.MergeTargetSHA == "" {
+		return nil, usererror.BadRequest("This pull request is missing merge commit SHA and can't be reverted.")
+	}
+
 	readParams := git.CreateReadParams(repo)
 	// Use APIContent for PR revert - this creates new commits.
 	writeParams, err := controller.CreateRPCAPIContentWriteParams(ctx, c.urlProvider, session, repo)
@@ -104,11 +111,19 @@ func (c *Controller) Revert(
 
 	now := time.Now()
 
+	// The revert commit is put on top of the merge commit and it undoes the diff between
+	// the merge commit and the target branch tip that the merge was based on.
+	// That makes the end of the diff and the base of the revert commit the same commit.
+	// See git.Service.Revert for why the diff must not be taken against the merge base.
+	parentSHA := sha.Must(*pr.MergeSHA)
+	fromSHA := sha.Must(*pr.MergeTargetSHA)
+	toSHA := parentSHA
+
 	result, err := c.git.Revert(ctx, &git.RevertParams{
 		WriteParams:     writeParams,
-		ParentCommitSHA: sha.Must(*pr.MergeSHA),
-		FromCommitSHA:   sha.Must(pr.MergeBaseSHA),
-		ToCommitSHA:     sha.Must(pr.SourceSHA),
+		ParentCommitSHA: parentSHA,
+		FromCommitSHA:   fromSHA,
+		ToCommitSHA:     toSHA,
 		RevertBranch:    revertBranch,
 		Message:         commitMessage,
 		Committer:       committer,

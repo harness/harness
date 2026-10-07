@@ -72,10 +72,22 @@ type RevertOutput struct {
 // Revert creates a revert commit. The revert commit contains all changes introduced
 // by the commits between params.FromCommitSHA and params.ToCommitSHA.
 // The newly created commit will have the parent set as params.ParentCommitSHA.
+//
 // This method can be used to revert a pull request:
-// * params.ParentCommit = pr.MergeSHA
-// * params.FromCommitSHA = pr.MergeBaseSHA
-// * params.ToCommitSHA = pr.SourceSHA.
+// * params.ParentCommitSHA = pr.MergeSHA
+// * params.FromCommitSHA = pr.MergeTargetSHA
+// * params.ToCommitSHA = pr.MergeSHA.
+//
+// The revert diff must be taken against the merge commit's own target: the tip of the
+// target branch that the merge was based on. That's the first parent of the merge commit
+// for the merge and the squash method, and an ancestor of it for the rebase and the
+// fast-forward method. It must not be taken against pr.MergeBaseSHA.
+//
+// A merge-base-relative patch carries context lines from the source branch
+// and is applied to the merged tree, so it fails with "patch does not apply"
+// whenever the target branch changed the same regions. Diffing the merge commit
+// against its own target instead produces a patch that is applied to the very tree
+// that it was generated from, which always applies cleanly.
 func (s *Service) Revert(ctx context.Context, params *RevertParams) (RevertOutput, error) {
 	err := params.Validate()
 	if err != nil {
