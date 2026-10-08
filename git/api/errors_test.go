@@ -65,3 +65,35 @@ func TestProcessGitErrorf(t *testing.T) {
 		})
 	}
 }
+
+func TestIsInvalidObjectNameError(t *testing.T) {
+	tests := []struct {
+		name    string
+		message string
+		want    bool
+	}{
+		{
+			name:    "current capitalization",
+			message: "fatal: Not a valid object name main",
+			want:    true,
+		},
+		{
+			name:    "lowercase capitalization",
+			message: "exit status 128: fatal: not a valid object name main",
+			want:    true,
+		},
+		{
+			name:    "different git error",
+			message: "fatal: not a tree object",
+			want:    false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := isInvalidObjectNameError(test.message); got != test.want {
+				t.Fatalf("isInvalidObjectNameError(%q) = %t, want %t", test.message, got, test.want)
+			}
+		})
+	}
+}
