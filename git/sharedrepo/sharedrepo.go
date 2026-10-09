@@ -503,6 +503,10 @@ func (r *SharedRepo) ApplyToIndex(
 	cmd := command.New("apply", command.WithFlag("--cached"), command.WithArg(inputFileName))
 
 	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
+		// Return the git stderr as a conflict (409) instead of a generic 500.
+		if cmdErr := command.AsError(err); cmdErr != nil && len(cmdErr.StdErr) > 0 {
+			return errors.Conflictf("failed to apply patch: %s", strings.TrimSpace(string(cmdErr.StdErr)))
+		}
 		return fmt.Errorf("failed to apply a patch in shared repo: %w", err)
 	}
 
