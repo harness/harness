@@ -111,6 +111,8 @@ type GetRepoLanguageStatsParams struct {
 
 type GetRepoLanguageStatsOutput struct {
 	Stats map[string]*langstats.LangStat
+	// LOC is the repository's source-lines-of-code total (scc Code).
+	LOC int64
 }
 
 type GetRepositorySizeOutput struct {
@@ -805,9 +807,68 @@ func (s *Service) GetRepoLanguageStats(
 			fmt.Errorf("failed to list tree nodes recursively: %w", err)
 	}
 
-	stats := langstats.AnalyzeRepoLanguages(ctx, nodes)
+	analyzer := langstats.NewAnalyzer()
+
+	// Stream blob content through a single cat-file --batch process.
+	writer, reader, cancel := api.CatFileBatch(ctx, repoPath, nil)
+	defer cancel()
+
+	for i := range nodes {
+		n := &nodes[i]
+		// Only regular file blobs.
+		if n.IsDir() || n.IsSubmodule() || n.IsLink() || n.NodeType != api.TreeNodeTypeBlob {
+			continue
+		}
+
+		if _, err := writer.Write([]byte(n.SHA.String() + "\n")); err != nil {
+			return GetRepoLanguageStatsOutput{},
+				fmt.Errorf("failed to request blob content from cat-file batch: %w", err)
+		}
+
+		header, err := api.ReadBatchHeaderLine(reader)
+		if err != nil {
+			// A missing object leaves the stream aligned (git emits no body), so we
+			// can skip it and keep going. Any other error means the stream itself is
+			// broken and continuing would read garbage, so abort.
+			if errors.IsNotFound(err) {
+				log.Ctx(ctx).Warn().Err(err).Str("path", n.Path).
+					Msg("skipping blob missing from object database during language analysis")
+				continue
+			}
+			return GetRepoLanguageStatsOutput{},
+				fmt.Errorf("failed to read cat-file batch header: %w", err)
+		}
+
+		// Bound the reader to the blob so the analyzer streams large files rather
+		// than buffering them; it reads only what it needs to count lines.
+		blob := io.LimitReader(reader, header.Size)
+		if err := analyzer.AddBlob(n.Path, n.Size, blob); err != nil {
+			return GetRepoLanguageStatsOutput{},
+				fmt.Errorf("failed to analyze blob content: %w", err)
+		}
+
+		// Drain anything AddBlob left unread so the batch stream stays aligned.
+		if _, err := io.Copy(io.Discard, blob); err != nil {
+			return GetRepoLanguageStatsOutput{},
+				fmt.Errorf("failed to drain blob from cat-file batch: %w", err)
+		}
+
+		// cat-file --batch emits a trailing newline after the object content.
+		if _, err := reader.Discard(1); err != nil {
+			return GetRepoLanguageStatsOutput{},
+				fmt.Errorf("failed to discard cat-file batch EOL: %w", err)
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		return GetRepoLanguageStatsOutput{},
+			fmt.Errorf("failed to close cat-file batch writer: %w", err)
+	}
+
+	analyzer.LogUnclassified(ctx)
 
 	return GetRepoLanguageStatsOutput{
-		Stats: stats,
+		Stats: analyzer.Stats(),
+		LOC:   analyzer.CodeLines(),
 	}, nil
 }

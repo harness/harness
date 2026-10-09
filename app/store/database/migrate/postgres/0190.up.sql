@@ -1,0 +1,1 @@
+ALTER TABLE repositories ADD COLUMN repo_loc BIGINT NOT NULL DEFAULT 0;

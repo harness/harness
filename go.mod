@@ -10,6 +10,7 @@ require (
 	github.com/adrg/xdg v0.5.0
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/boyter/scc v2.12.0+incompatible
 	github.com/coreos/go-semver v0.3.1
 	github.com/dchest/uniuri v1.2.0
 	github.com/distribution/distribution/v3 v3.1.1
@@ -128,6 +129,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.1.4 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
+	github.com/dbaggerman/cuba v0.3.2 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
@@ -159,8 +161,10 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
+	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/natessilva/dag v0.0.0-20180124060714-7194b8dcc5c4 // indirect

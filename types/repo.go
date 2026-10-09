@@ -84,6 +84,10 @@ type Repository struct {
 	Type enum.RepoType `json:"repo_type,omitempty" yaml:"repo_type"`
 
 	Language string `json:"language,omitempty" yaml:"language"`
+
+	// LOC is the scc source-lines-of-code count (excludes blank and comment
+	// lines) for the default branch.
+	LOC int64 `json:"loc" yaml:"loc" description:"source lines of code on the default branch"`
 }
 
 func (r *Repository) Core() *RepositoryCore {

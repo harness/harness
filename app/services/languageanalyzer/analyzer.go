@@ -125,6 +125,7 @@ func (a Analyzer) AnalyzeLanguages(
 	// run opt-lock repo update outside repo lang tx to avoid delete/reinsert on conflict
 	_, err = a.repoStore.UpdateOptLock(ctx, repo, func(repository *types.Repository) error {
 		repository.Language = mainLang
+		repository.LOC = langStatsOutput.LOC
 		return nil
 	})
 	if err != nil {

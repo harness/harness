@@ -98,6 +98,8 @@ type repository struct {
 
 	Language string `db:"repo_language"`
 
+	LOC int64 `db:"repo_loc"`
+
 	Type null.String `db:"repo_type"`
 }
 
@@ -132,6 +134,7 @@ const (
 		,repo_tags
 		,repo_type
 		,repo_language
+		,repo_loc
 		`
 )
 
@@ -331,6 +334,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_is_empty = :repo_is_empty
 			,repo_tags = :repo_tags
 			,repo_language = :repo_language
+			,repo_loc = :repo_loc
 
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
@@ -1090,6 +1094,7 @@ func (s *RepoStore) mapToRepo(
 		Tags:                in.Tags,
 		Type:                t,
 		Language:            in.Language,
+		LOC:                 in.LOC,
 		// Path: is set below
 	}
 
@@ -1183,6 +1188,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		Tags:                in.Tags,
 		Type:                null.NewString(string(in.Type), in.Type != ""),
 		Language:            in.Language,
+		LOC:                 in.LOC,
 	}
 }
 
