@@ -16,23 +16,62 @@ package secret
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/gitspace/secret/enum"
+	"github.com/harness/gitness/secret"
+
+	"github.com/dchest/uniuri"
 )
 
+const defaultPasswordRef = "harness_password"
+
 type PasswordResolver struct {
+	secretService secret.Service
 }
 
-const defaultPassword = "Harness@123"
-
-func NewPasswordResolver() *PasswordResolver {
-	return &PasswordResolver{}
+func NewPasswordResolver(secretService secret.Service) *PasswordResolver {
+	return &PasswordResolver{
+		secretService: secretService,
+	}
 }
 
 // Resolve implements Resolver.
-func (p *PasswordResolver) Resolve(_ context.Context, _ ResolutionContext) (ResolvedSecret, error) {
+func (p *PasswordResolver) Resolve(ctx context.Context, resolutionContext ResolutionContext) (ResolvedSecret, error) {
+	if resolutionContext.SecretRef != "" && resolutionContext.SecretRef != defaultPasswordRef {
+		if p.secretService == nil {
+			return ResolvedSecret{}, fmt.Errorf(
+				"secret service unavailable to resolve secret %q",
+				resolutionContext.SecretRef,
+			)
+		}
+		val, err := p.secretService.DecryptSecret(ctx, resolutionContext.SpaceIdentifier, resolutionContext.SecretRef)
+		if err != nil {
+			return ResolvedSecret{}, fmt.Errorf(
+				"failed to resolve secret %q for gitspace %q: %w",
+				resolutionContext.SecretRef,
+				resolutionContext.GitspaceIdentifier,
+				err,
+			)
+		}
+		return ResolvedSecret{
+			SecretValue: val,
+		}, nil
+	}
+
+	// If the default password ref is provided and exists in the secret store, use it.
+	if resolutionContext.SecretRef == defaultPasswordRef && p.secretService != nil {
+		val, err := p.secretService.DecryptSecret(ctx, resolutionContext.SpaceIdentifier, resolutionContext.SecretRef)
+		if err == nil && val != "" {
+			return ResolvedSecret{
+				SecretValue: val,
+			}, nil
+		}
+	}
+
+	// Generate a secure random password per gitspace instance when no specific secret is configured.
 	return ResolvedSecret{
-		SecretValue: defaultPassword,
+		SecretValue: uniuri.NewLen(24),
 	}, nil
 }
 
