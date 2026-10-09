@@ -99,7 +99,7 @@ func (c *Controller) collectBranchMetadata(
 			commitSHAs[i] = branches[i].SHA.String()
 		}
 
-		checkSummary, err = c.checkStore.ResultSummary(ctx, repo.ID, commitSHAs)
+		checkSummary, err = c.checkStore.ResultSummary(ctx, repo.ID, commitSHAs, nil)
 		if err != nil {
 			return branchMetadataOutput{}, fmt.Errorf("fail to fetch check summary for commits: %w", err)
 		}

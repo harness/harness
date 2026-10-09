@@ -17,6 +17,7 @@ package types
 import (
 	"encoding/json"
 
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -121,4 +122,10 @@ type CheckCountSummary struct {
 	Failure        int `json:"failure"`
 	Error          int `json:"error"`
 	FailureIgnored int `json:"failure_ignored"`
+}
+
+// CommitCheckSummary holds the status check counts for a single commit.
+type CommitCheckSummary struct {
+	CommitSHA    sha.SHA           `json:"commit_sha"`
+	CheckSummary CheckCountSummary `json:"check_summary"`
 }

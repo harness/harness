@@ -177,7 +177,7 @@ func (s *stubCheckStore) ListResults(
 }
 
 func (s *stubCheckStore) ResultSummary(
-	_ context.Context, _ int64, _ []string,
+	context.Context, int64, []string, []enum.CheckPayloadKind,
 ) (map[sha.SHA]types.CheckCountSummary, error) {
 	return map[sha.SHA]types.CheckCountSummary{}, nil
 }

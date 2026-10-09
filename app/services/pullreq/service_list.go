@@ -299,7 +299,7 @@ func (c *ListService) backfillChecks(
 
 	repoCheckSummaryMap := make(map[repoSHA]types.CheckCountSummary)
 	for repoID, commitSHAs := range repoCommitSHAs {
-		commitCheckSummaryMap, err := c.checkStore.ResultSummary(ctx, repoID, commitSHAs)
+		commitCheckSummaryMap, err := c.checkStore.ResultSummary(ctx, repoID, commitSHAs, nil)
 		if err != nil {
 			return fmt.Errorf("fail to fetch check summary for commits: %w", err)
 		}

@@ -834,6 +834,7 @@ func SetupWebhookRepo(r chi.Router, webhookCtrl *webhook.Controller) {
 func SetupChecks(r chi.Router, checkCtrl *check.Controller) {
 	r.Route("/checks", func(r chi.Router) {
 		r.Get("/recent", handlercheck.HandleCheckListRecent(checkCtrl))
+		r.Post("/summary", handlercheck.HandleListCheckSummaries(checkCtrl))
 		r.Route(fmt.Sprintf("/commits/{%s}", request.PathParamCommitSHA), func(r chi.Router) {
 			r.Put("/", handlercheck.HandleCheckReport(checkCtrl))
 			r.Get("/", handlercheck.HandleCheckList(checkCtrl))

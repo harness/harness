@@ -337,9 +337,11 @@ func (s *CheckStore) ListResults(ctx context.Context,
 }
 
 // ResultSummary returns a list of status check result summaries for the provided list of commits in a repo.
+// Checks with a payload kind in excludePayloadKinds are not counted.
 func (s *CheckStore) ResultSummary(ctx context.Context,
 	repoID int64,
 	commitSHAs []string,
+	excludePayloadKinds []enum.CheckPayloadKind,
 ) (map[sha.SHA]types.CheckCountSummary, error) {
 	const selectColumns = `
 			check_commit_sha,
@@ -356,6 +358,10 @@ func (s *CheckStore) ResultSummary(ctx context.Context,
 		Where("check_repo_id = ?", repoID).
 		Where(squirrel.Eq{"check_commit_sha": commitSHAs}).
 		GroupBy("check_commit_sha")
+
+	if len(excludePayloadKinds) > 0 {
+		stmt = stmt.Where(squirrel.NotEq{"check_payload_kind": excludePayloadKinds})
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

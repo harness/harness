@@ -2130,6 +2130,74 @@ paths:
           description: Internal Server Error
       tags:
       - status_checks
+  /repos/{repo_ref}/checks/summary:
+    post:
+      operationId: listStatusCheckSummaries
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                commit_shas:
+                  description: Full commit SHAs. At most 100 are allowed.
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                exclude_payload_kinds:
+                  description: Check payload kinds not to count. At most 10.
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesCommitCheckSummary'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "413":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Request Entity Too Large
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - status_checks
   /repos/{repo_ref}/code-search:
     get:
       operationId: searchRepo
@@ -17194,6 +17262,13 @@ components:
           $ref: '#/components/schemas/TypesCommitStats'
         title:
           type: string
+      type: object
+    TypesCommitCheckSummary:
+      properties:
+        check_summary:
+          $ref: '#/components/schemas/TypesCheckCountSummary'
+        commit_sha:
+          $ref: '#/components/schemas/ShaSHA'
       type: object
     TypesCommitDivergence:
       properties:

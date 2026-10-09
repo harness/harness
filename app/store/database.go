@@ -875,10 +875,12 @@ type (
 		ListResults(ctx context.Context, repoID int64, commitSHA string) ([]types.CheckResult, error)
 
 		// ResultSummary returns a list of status check result summaries for the provided list of commits in a repo.
+		// Checks with a payload kind in excludePayloadKinds are not counted.
 		ResultSummary(
 			ctx context.Context,
 			repoID int64,
 			commitSHAs []string,
+			excludePayloadKinds []enum.CheckPayloadKind,
 		) (map[sha.SHA]types.CheckCountSummary, error)
 	}
 

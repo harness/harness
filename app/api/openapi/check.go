@@ -107,6 +107,22 @@ func checkOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/checks/recent",
 		listStatusCheckRecent)
 
+	listStatusCheckSummaries := openapi3.Operation{}
+	listStatusCheckSummaries.WithTags(tag)
+	listStatusCheckSummaries.WithMapOfAnything(map[string]any{"operationId": "listStatusCheckSummaries"})
+	_ = reflector.SetRequest(&listStatusCheckSummaries, struct {
+		repoRequest
+		check.SummaryInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&listStatusCheckSummaries, new([]types.CommitCheckSummary), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listStatusCheckSummaries, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&listStatusCheckSummaries, new(usererror.Error), http.StatusRequestEntityTooLarge)
+	_ = reflector.SetJSONResponse(&listStatusCheckSummaries, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&listStatusCheckSummaries, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&listStatusCheckSummaries, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/checks/summary",
+		listStatusCheckSummaries)
+
 	listStatusCheckRecentSpace := openapi3.Operation{}
 	listStatusCheckRecentSpace.WithTags(tag)
 	listStatusCheckRecentSpace.WithParameters(
