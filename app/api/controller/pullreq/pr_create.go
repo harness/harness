@@ -275,6 +275,10 @@ func (c *Controller) Create(
 		}
 	}
 
+	if len(userReviewerMap)+len(userGroupReviewerMap) > types.MaxPullReqReviewers {
+		return nil, pullreqsvc.ErrReviewerLimitExceeded
+	}
+
 	// Prepare label assign input
 
 	var labelAssignOuts []*labelsvc.AssignToPullReqOut

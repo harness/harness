@@ -33,8 +33,6 @@ import (
 
 var _ store.PullReqReviewerStore = (*PullReqReviewerStore)(nil)
 
-const maxPullRequestReviewers = 100
-
 // NewPullReqReviewerStore returns a new PullReqReviewerStore.
 func NewPullReqReviewerStore(db *sqlx.DB,
 	pCache store.PrincipalInfoCache) *PullReqReviewerStore {
@@ -196,7 +194,8 @@ func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.P
 		From("pullreq_reviewers").
 		Where("pullreq_reviewer_pullreq_id = ?", prID).
 		OrderBy("pullreq_reviewer_created asc").
-		Limit(maxPullRequestReviewers) // memory safety limit
+		// A pull request shouldn't have more reviewers than this, so the limit is just a memory safety net.
+		Limit(types.MaxPullReqReviewers)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -217,6 +216,28 @@ func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.P
 	}
 
 	return result, nil
+}
+
+// Count returns the number of reviewers of a pull request.
+func (s *PullReqReviewerStore) Count(ctx context.Context, prID int64) (int64, error) {
+	stmt := database.Builder.
+		Select("COUNT(*)").
+		From("pullreq_reviewers").
+		Where("pullreq_reviewer_pullreq_id = ?", prID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert pull request reviewer count query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	if err = db.GetContext(ctx, &count, sql, args...); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing pull request reviewer count query")
+	}
+
+	return count, nil
 }
 
 func mapPullReqReviewer(v *pullReqReviewer) *types.PullReqReviewer {

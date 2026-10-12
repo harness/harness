@@ -146,6 +146,23 @@ func (s *UsergroupReviewerStore) Find(
 	return mapPullReqUserGroupReviewer(dst), nil
 }
 
+// Count returns the number of usergroup reviewers of a pull request.
+func (s *UsergroupReviewerStore) Count(ctx context.Context, prID int64) (int64, error) {
+	const sqlQuery = `
+	SELECT COUNT(*)
+	FROM usergroup_reviewers
+	WHERE usergroup_reviewer_pullreq_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	if err := db.GetContext(ctx, &count, sqlQuery, prID); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to count pull request usergroup reviewers")
+	}
+
+	return count, nil
+}
+
 func mapInternalPullReqUserGroupReviewer(v *types.UserGroupReviewer) *usergroupReviewer {
 	m := &usergroupReviewer{
 		PullReqID:   v.PullReqID,

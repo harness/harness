@@ -214,6 +214,10 @@ type PullReqReview struct {
 	SHA      string                     `json:"sha"`
 }
 
+// MaxPullReqReviewers is the maximum number of reviewers a pull request can have.
+// The limit is for the combined count of principal reviewers and user group reviewers.
+const MaxPullReqReviewers = 200
+
 // PullReqReviewer holds pull request reviewer.
 type PullReqReviewer struct {
 	PullReqID   int64 `json:"-"`

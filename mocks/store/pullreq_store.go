@@ -41,6 +41,23 @@ func (m *PullReqStore) Find(_ context.Context, id int64) (*types.PullReq, error)
 	return v, nil
 }
 
+func (m *PullReqStore) FindWithLock(_ context.Context, id int64) (*types.PullReq, error) {
+	args := m.Called(id)
+	if len(args) == 1 {
+		if rf, ok := args.Get(0).(func(int64) (*types.PullReq, error)); ok {
+			return rf(id)
+		}
+	}
+	var v *types.PullReq
+	if args.Get(0) != nil {
+		v, _ = args.Get(0).(*types.PullReq)
+	}
+	if len(args) > 1 {
+		return v, args.Error(1)
+	}
+	return v, nil
+}
+
 func (m *PullReqStore) FindByNumberWithLock(_ context.Context, repoID, number int64) (*types.PullReq, error) {
 	args := m.Called(repoID, number)
 	if v, _ := args.Get(0).(*types.PullReq); v != nil {

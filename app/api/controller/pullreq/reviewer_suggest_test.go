@@ -182,7 +182,7 @@ func TestReviewerSuggestBatch_AuthorCannotBeSuggested(t *testing.T) {
 	suggestionStore.AssertNotCalled(t, "CreateMany", mock.Anything)
 }
 
-func TestReviewerSuggestBatch_AllAlreadyReviewersStillCreateMany(t *testing.T) {
+func TestReviewerSuggestBatch_AllAlreadyReviewersSkipsCreateMany(t *testing.T) {
 	t.Parallel()
 
 	repo := &types.RepositoryCore{ID: 1, ParentID: 10, Path: "space/repo", State: enum.RepoStateActive}
@@ -194,7 +194,6 @@ func TestReviewerSuggestBatch_AllAlreadyReviewersStillCreateMany(t *testing.T) {
 		Return(&types.PullReq{ID: 55, Number: 7, CreatedBy: 101}, nil).Once()
 	reviewerStore.On("List", int64(55)).
 		Return([]*types.PullReqReviewer{{PrincipalID: 200}}, nil).Once()
-	suggestionStore.On("CreateMany", mock.AnythingOfType("[]*types.PullReqReviewerSuggestion")).Return(nil).Once()
 
 	ctrl := &Controller{
 		authorizer:              authztest.AllowAuthorizer{},
@@ -217,7 +216,7 @@ func TestReviewerSuggestBatch_AllAlreadyReviewersStillCreateMany(t *testing.T) {
 
 	pullreqStore.AssertExpectations(t)
 	reviewerStore.AssertExpectations(t)
-	suggestionStore.AssertExpectations(t)
+	suggestionStore.AssertNotCalled(t, "CreateMany", mock.Anything)
 }
 
 func TestReviewerSuggestApply_NotFoundSuggestion(t *testing.T) {

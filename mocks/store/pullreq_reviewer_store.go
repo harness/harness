@@ -49,3 +49,9 @@ func (m *PullReqReviewerStore) List(_ context.Context, prID int64) ([]*types.Pul
 	v, _ := args.Get(0).([]*types.PullReqReviewer)
 	return v, args.Error(1)
 }
+
+func (m *PullReqReviewerStore) Count(_ context.Context, prID int64) (int64, error) {
+	args := m.Called(prID)
+	v, _ := args.Get(0).(int64)
+	return v, args.Error(1)
+}

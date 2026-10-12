@@ -122,6 +122,10 @@ func (c *Controller) ReviewSubmit(
 		}
 
 		if reviewer == nil {
+			if err := c.pullreqService.CheckReviewerLimit(ctx, pr.ID); err != nil {
+				return fmt.Errorf("failed to check pull request reviewer limit: %w", err)
+			}
+
 			reviewer = &types.PullReqReviewer{
 				PullReqID:      pr.ID,
 				PrincipalID:    session.Principal.ID,

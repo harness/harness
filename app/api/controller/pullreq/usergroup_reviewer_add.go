@@ -109,7 +109,17 @@ func (c *Controller) UserGroupReviewerAdd(
 		SHA:           userGroupSHA,
 	}
 
-	err = c.userGroupReviewerStore.Create(ctx, userGroupReviewer)
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		if err := c.pullreqService.CheckReviewerLimit(ctx, pr.ID); err != nil {
+			return fmt.Errorf("failed to check pull request reviewer limit: %w", err)
+		}
+
+		if err := c.userGroupReviewerStore.Create(ctx, userGroupReviewer); err != nil {
+			return fmt.Errorf("failed to create user group reviewer: %w", err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
 	}

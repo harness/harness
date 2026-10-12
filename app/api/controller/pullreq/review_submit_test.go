@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/auth/authz/authztest"
 	"github.com/harness/gitness/app/services/instrument"
+	pullreqsvc "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/sha"
 	mockgit "github.com/harness/gitness/mocks/git"
@@ -59,6 +60,7 @@ type reviewSubmitFixture struct {
 	pullreqStore            *mockstore.PullReqStore
 	reviewStore             *mockstore.PullReqReviewStore
 	reviewerStore           *mockstore.PullReqReviewerStore
+	userGroupReviewerStore  *mockstore.UserGroupReviewerStore
 	reviewerSuggestionStore *mockstore.PullReqReviewerSuggestionStore
 	activityStore           *mockstore.PullReqActivityStore
 	gitClient               *mockgit.Interface
@@ -69,9 +71,18 @@ func (f *reviewSubmitFixture) assertExpectations(t *testing.T) {
 	f.pullreqStore.AssertExpectations(t)
 	f.reviewStore.AssertExpectations(t)
 	f.reviewerStore.AssertExpectations(t)
+	f.userGroupReviewerStore.AssertExpectations(t)
 	f.reviewerSuggestionStore.AssertExpectations(t)
 	f.activityStore.AssertExpectations(t)
 	f.gitClient.AssertExpectations(t)
+}
+
+// expectReviewerLimitOK sets up the Count mocks CheckReviewerLimit issues when
+// a new reviewer row is about to be created, reporting a PR well under the limit.
+func (f *reviewSubmitFixture) expectReviewerLimitOK() {
+	f.pullreqStore.On("FindWithLock", reviewSubmitPRID).Return(reviewSubmitPR(), nil).Once()
+	f.reviewerStore.On("Count", reviewSubmitPRID).Return(int64(1), nil).Once()
+	f.userGroupReviewerStore.On("Count", reviewSubmitPRID).Return(int64(0), nil).Once()
 }
 
 // newReviewSubmitFixture wires a Controller with mocks common to all
@@ -91,6 +102,7 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 	pullreqStore := &mockstore.PullReqStore{}
 	reviewStore := &mockstore.PullReqReviewStore{}
 	reviewerStore := &mockstore.PullReqReviewerStore{}
+	userGroupReviewerStore := &mockstore.UserGroupReviewerStore{}
 	reviewerSuggestionStore := &mockstore.PullReqReviewerSuggestionStore{}
 	activityStore := &mockstore.PullReqActivityStore{}
 	gitClient := &mockgit.Interface{}
@@ -116,6 +128,7 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 		git:                     gitClient,
 		eventReporter:           mockpullreq.NewStubReporter(t),
 		instrumentation:         noopInstrumentation{},
+		pullreqService:          pullreqsvc.NewWithReviewerStores(pullreqStore, reviewerStore, userGroupReviewerStore),
 	}
 
 	return &reviewSubmitFixture{
@@ -124,6 +137,7 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 		pullreqStore:            pullreqStore,
 		reviewStore:             reviewStore,
 		reviewerStore:           reviewerStore,
+		userGroupReviewerStore:  userGroupReviewerStore,
 		reviewerSuggestionStore: reviewerSuggestionStore,
 		activityStore:           activityStore,
 		gitClient:               gitClient,
@@ -156,6 +170,7 @@ func TestReviewSubmit_NewReviewer_CreatesReviewAndReviewer(t *testing.T) {
 
 	f.reviewerStore.On("Find", reviewSubmitPRID, reviewSubmitReviewerID).
 		Return(nil, basestore.ErrResourceNotFound).Once()
+	f.expectReviewerLimitOK()
 
 	f.reviewStore.On("Create", mock.Anything).Run(func(args mock.Arguments) {
 		require.True(t, f.tx.inTx, "review create must run inside transaction")
@@ -340,6 +355,7 @@ func TestReviewSubmit_ActivityWriteFailure_IsSwallowed(t *testing.T) {
 
 	f.reviewerStore.On("Find", reviewSubmitPRID, reviewSubmitReviewerID).
 		Return(nil, basestore.ErrResourceNotFound).Once()
+	f.expectReviewerLimitOK()
 	f.reviewStore.On("Create", mock.Anything).
 		Run(func(args mock.Arguments) {
 			review, ok := args.Get(0).(*types.PullReqReview)
@@ -471,6 +487,37 @@ func TestReviewSubmit_ReviewStoreCreateError_RollsBack(t *testing.T) {
 	f.assertExpectations(t)
 }
 
+// TestReviewSubmit_ReviewerLimitExceeded_RollsBack: the PR is already at the
+// combined reviewer limit, so self-assigning the submitter as a reviewer must
+// be rejected and the whole transaction (including the review row) rolled back.
+func TestReviewSubmit_ReviewerLimitExceeded_RollsBack(t *testing.T) {
+	t.Parallel()
+
+	f := newReviewSubmitFixture(t, reviewSubmitPR())
+
+	f.reviewerStore.On("Find", reviewSubmitPRID, reviewSubmitReviewerID).
+		Return(nil, basestore.ErrResourceNotFound).Once()
+	f.reviewStore.On("Create", mock.Anything).Run(func(args mock.Arguments) {
+		review, ok := args.Get(0).(*types.PullReqReview)
+		require.True(t, ok)
+		review.ID = 507
+	}).Return(nil).Once()
+	f.pullreqStore.On("FindWithLock", reviewSubmitPRID).Return(reviewSubmitPR(), nil).Once()
+	f.reviewerStore.On("Count", reviewSubmitPRID).Return(int64(types.MaxPullReqReviewers), nil).Once()
+	f.userGroupReviewerStore.On("Count", reviewSubmitPRID).Return(int64(0), nil).Once()
+	// Deliberately no reviewerStore.Create / reviewerSuggestionStore.Delete
+	// expectation — asserting they are never called.
+
+	err := f.ctrl.ReviewSubmit(
+		context.Background(), testSession(), "1", reviewSubmitPRNum,
+		reviewSubmitInput(enum.PullReqReviewDecisionApproved),
+	)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "can't have more than")
+	require.True(t, f.tx.called)
+	f.assertExpectations(t)
+}
+
 // TestReviewSubmit_SuggestionDeleted_ReviewCompletes: the principal is in the
 // suggestion table when they submit a review — Delete returns nil and the
 // review still completes successfully.
@@ -481,6 +528,7 @@ func TestReviewSubmit_SuggestionDeleted_ReviewCompletes(t *testing.T) {
 
 	f.reviewerStore.On("Find", reviewSubmitPRID, reviewSubmitReviewerID).
 		Return(nil, basestore.ErrResourceNotFound).Once()
+	f.expectReviewerLimitOK()
 	f.reviewStore.On("Create", mock.Anything).Run(func(args mock.Arguments) {
 		review, ok := args.Get(0).(*types.PullReqReview)
 		require.True(t, ok)
@@ -514,6 +562,7 @@ func TestReviewSubmit_SuggestionDeleteError_RollsBack(t *testing.T) {
 
 	f.reviewerStore.On("Find", reviewSubmitPRID, reviewSubmitReviewerID).
 		Return(nil, basestore.ErrResourceNotFound).Once()
+	f.expectReviewerLimitOK()
 	f.reviewStore.On("Create", mock.Anything).Run(func(args mock.Arguments) {
 		review, ok := args.Get(0).(*types.PullReqReview)
 		require.True(t, ok)

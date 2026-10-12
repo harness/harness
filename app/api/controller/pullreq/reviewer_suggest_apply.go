@@ -54,7 +54,7 @@ func (c *Controller) ReviewerSuggestApply(
 
 	reviewer, added, err := c.pullreqService.AddReviewer(ctx, &session.Principal, repo, pr, suggestion.PrincipalID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to add reviewer from suggestion: %w", err)
 	}
 
 	if added {

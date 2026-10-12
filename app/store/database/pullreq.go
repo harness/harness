@@ -157,10 +157,13 @@ const (
 	FROM pullreqs`
 )
 
-// Find finds the pull request by id.
-func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, error) {
-	const sqlQuery = pullReqSelectBase + `
+func (s *PullReqStore) findInternal(ctx context.Context, id int64, lock bool) (*types.PullReq, error) {
+	sqlQuery := pullReqSelectBase + `
 	WHERE pullreq_id = $1`
+
+	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		sqlQuery += "\n" + database.SQLForUpdate
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -170,6 +173,16 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 	}
 
 	return s.mapPullReq(ctx, dst), nil
+}
+
+// Find finds the pull request by id.
+func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, error) {
+	return s.findInternal(ctx, id, false)
+}
+
+// FindWithLock finds the pull request by id and locks the row for the duration of the transaction.
+func (s *PullReqStore) FindWithLock(ctx context.Context, id int64) (*types.PullReq, error) {
+	return s.findInternal(ctx, id, true)
 }
 
 func (s *PullReqStore) findByNumberInternal(

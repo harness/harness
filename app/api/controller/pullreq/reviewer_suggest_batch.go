@@ -99,6 +99,10 @@ func (c *Controller) ReviewerSuggestBatch(
 		})
 	}
 
+	if len(suggestions) == 0 {
+		return nil
+	}
+
 	err = c.reviewerSuggestionStore.CreateMany(ctx, suggestions)
 	if err != nil {
 		return fmt.Errorf("failed to create reviewer suggestions: %w", err)

@@ -216,16 +216,25 @@ func TestAddReviewer_FindReviewerError(t *testing.T) {
 func TestAddReviewer_CreateReviewerError(t *testing.T) {
 	t.Parallel()
 
+	pullreqStore := &mockstore.PullReqStore{}
+	pullreqStore.On("FindWithLock", int64(42)).Return(&types.PullReq{ID: 42}, nil).Once()
+
 	reviewerStore := &mockstore.PullReqReviewerStore{}
 	reviewerStore.On("Find", int64(42), int64(100)).Return((*types.PullReqReviewer)(nil), store.ErrResourceNotFound).Once()
+	reviewerStore.On("Count", int64(42)).Return(int64(1), nil).Once()
 	reviewerStore.On("Create", mock.AnythingOfType("*types.PullReqReviewer")).Return(errors.New("create failed")).Once()
 
 	suggestionStore := &mockstore.PullReqReviewerSuggestionStore{}
 
+	userGroupReviewerStore := &mockstore.UserGroupReviewerStore{}
+	userGroupReviewerStore.On("Count", int64(42)).Return(int64(1), nil).Once()
+
 	svc := &Service{
 		tx:                      &testTransactor{},
+		pullreqStore:            pullreqStore,
 		reviewerStore:           reviewerStore,
 		reviewerSuggestionStore: suggestionStore,
+		userGroupReviewerStore:  userGroupReviewerStore,
 	}
 
 	ctx := context.Background()
@@ -338,12 +347,16 @@ func TestAddReviewer_AddedReviewer_UpdateActivitySeqErrorIgnored(t *testing.T) {
 
 	reviewerStore := &mockstore.PullReqReviewerStore{}
 	suggestionStore := &mockstore.PullReqReviewerSuggestionStore{}
+	userGroupReviewerStore := &mockstore.UserGroupReviewerStore{}
 	pullreqStore := &mockstore.PullReqStore{}
 	activityStore := &mockstore.PullReqActivityStore{}
 
 	reviewerStore.On("Find", int64(42), int64(100)).Return((*types.PullReqReviewer)(nil), store.ErrResourceNotFound).Once()
+	reviewerStore.On("Count", int64(42)).Return(int64(1), nil).Once()
 	reviewerStore.On("Create", mock.AnythingOfType("*types.PullReqReviewer")).Return(nil).Once()
 	suggestionStore.On("Delete", int64(42), int64(100)).Return(nil).Once()
+	userGroupReviewerStore.On("Count", int64(42)).Return(int64(1), nil).Once()
+	pullreqStore.On("FindWithLock", int64(42)).Return(&types.PullReq{ID: 42}, nil).Once()
 	pullreqStore.
 		On("UpdateActivitySeq", mock.AnythingOfType("*types.PullReq")).
 		Return((*types.PullReq)(nil), errors.New("seq failed")).
@@ -353,6 +366,7 @@ func TestAddReviewer_AddedReviewer_UpdateActivitySeqErrorIgnored(t *testing.T) {
 		tx:                      &testTransactor{},
 		reviewerStore:           reviewerStore,
 		reviewerSuggestionStore: suggestionStore,
+		userGroupReviewerStore:  userGroupReviewerStore,
 		pullreqStore:            pullreqStore,
 		activityStore:           activityStore,
 	}
@@ -391,6 +405,7 @@ func TestAddReviewer_AddedReviewer_CreateActivityErrorIgnored(t *testing.T) {
 
 	reviewerStore := &mockstore.PullReqReviewerStore{}
 	suggestionStore := &mockstore.PullReqReviewerSuggestionStore{}
+	userGroupReviewerStore := &mockstore.UserGroupReviewerStore{}
 	pullreqStore := &mockstore.PullReqStore{}
 	activityStore := &mockstore.PullReqActivityStore{}
 
@@ -398,8 +413,11 @@ func TestAddReviewer_AddedReviewer_CreateActivityErrorIgnored(t *testing.T) {
 	updatedPR := &types.PullReq{ID: 42, CreatedBy: 11, ActivitySeq: 10}
 
 	reviewerStore.On("Find", int64(42), int64(100)).Return((*types.PullReqReviewer)(nil), store.ErrResourceNotFound).Once()
+	reviewerStore.On("Count", int64(42)).Return(int64(1), nil).Once()
 	reviewerStore.On("Create", mock.AnythingOfType("*types.PullReqReviewer")).Return(nil).Once()
 	suggestionStore.On("Delete", int64(42), int64(100)).Return(nil).Once()
+	userGroupReviewerStore.On("Count", int64(42)).Return(int64(1), nil).Once()
+	pullreqStore.On("FindWithLock", int64(42)).Return(&types.PullReq{ID: 42}, nil).Once()
 	pullreqStore.On("UpdateActivitySeq", pr).Return(updatedPR, nil).Once()
 	activityStore.
 		On("CreateWithPayload", updatedPR, int64(100), mock.Anything, mock.Anything).
@@ -410,6 +428,7 @@ func TestAddReviewer_AddedReviewer_CreateActivityErrorIgnored(t *testing.T) {
 		tx:                      &testTransactor{},
 		reviewerStore:           reviewerStore,
 		reviewerSuggestionStore: suggestionStore,
+		userGroupReviewerStore:  userGroupReviewerStore,
 		pullreqStore:            pullreqStore,
 		activityStore:           activityStore,
 	}

@@ -485,6 +485,10 @@ type (
 		// Find the pull request by id.
 		Find(ctx context.Context, id int64) (*types.PullReq, error)
 
+		// FindWithLock finds the pull request by id and acquires an exclusive lock
+		// of the pull request database row for the duration of the transaction.
+		FindWithLock(ctx context.Context, id int64) (*types.PullReq, error)
+
 		// FindByNumberWithLock finds the pull request by repo ID and the pull request number
 		// and acquires an exclusive lock of the pull request database row for the duration of the transaction.
 		FindByNumberWithLock(ctx context.Context, repoID, number int64) (*types.PullReq, error)
@@ -623,6 +627,9 @@ type (
 
 		// List returns all pull request reviewers for the pull request.
 		List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error)
+
+		// Count returns the total number of pull request reviewers for the pull request.
+		Count(ctx context.Context, prID int64) (int64, error)
 	}
 
 	PullReqReviewerSuggestionStore interface {
@@ -652,6 +659,9 @@ type (
 			prID,
 			userGroupReviewerID int64,
 		) (*types.UserGroupReviewer, error)
+
+		// Count returns the total number of usergroup reviewers for the pull request.
+		Count(ctx context.Context, prID int64) (int64, error)
 	}
 
 	// PullReqFileViewStore stores information about what file a user viewed.

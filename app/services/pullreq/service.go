@@ -51,6 +51,7 @@ type Service struct {
 	principalStore          store.PrincipalStore
 	reviewerStore           store.PullReqReviewerStore
 	reviewerSuggestionStore store.PullReqReviewerSuggestionStore
+	userGroupReviewerStore  store.UserGroupReviewerStore
 	codeCommentView         store.CodeCommentView
 	principalInfoCache      store.PrincipalInfoCache
 	codeCommentMigrator     *codecomments.Migrator
@@ -81,6 +82,7 @@ func New(ctx context.Context,
 	principalStore store.PrincipalStore,
 	reviewerStore store.PullReqReviewerStore,
 	reviewerSuggestionStore store.PullReqReviewerSuggestionStore,
+	userGroupReviewerStore store.UserGroupReviewerStore,
 	codeCommentView store.CodeCommentView,
 	codeCommentMigrator *codecomments.Migrator,
 	fileViewStore store.PullReqFileViewStore,
@@ -102,6 +104,7 @@ func New(ctx context.Context,
 		principalStore:          principalStore,
 		reviewerStore:           reviewerStore,
 		reviewerSuggestionStore: reviewerSuggestionStore,
+		userGroupReviewerStore:  userGroupReviewerStore,
 		principalInfoCache:      principalInfoCache,
 		codeCommentView:         codeCommentView,
 		urlProvider:             urlProvider,
@@ -223,6 +226,21 @@ func New(ctx context.Context,
 	}
 
 	return service, nil
+}
+
+// NewWithReviewerStores builds a Service exposing only the reviewer limit dependencies.
+// It is meant for tests in other packages that need to exercise CheckReviewerLimit
+// without constructing the full Service via New.
+func NewWithReviewerStores(
+	pullreqStore store.PullReqStore,
+	reviewerStore store.PullReqReviewerStore,
+	userGroupReviewerStore store.UserGroupReviewerStore,
+) *Service {
+	return &Service{
+		pullreqStore:           pullreqStore,
+		reviewerStore:          reviewerStore,
+		userGroupReviewerStore: userGroupReviewerStore,
+	}
 }
 
 // createRPCSystemReferencesWriteParams creates base write parameters for write operations.

@@ -549,7 +549,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory2, readerFactory3, reporter5, transactor, authorizer, gitInterface, repoFinder, repoStore, pullReqStore, pullReqActivityStore, autoMergeStore, principalStore, pullReqReviewerStore, pullReqReviewerSuggestionStore, principalInfoCache, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
+	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory2, readerFactory3, reporter5, transactor, authorizer, gitInterface, repoFinder, repoStore, pullReqStore, pullReqActivityStore, autoMergeStore, principalStore, pullReqReviewerStore, pullReqReviewerSuggestionStore, userGroupReviewerStore, principalInfoCache, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
 	if err != nil {
 		return nil, err
 	}

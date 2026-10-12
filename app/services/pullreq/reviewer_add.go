@@ -122,6 +122,10 @@ func (s *Service) AddReviewer(
 		}
 
 		if reviewer == nil {
+			if limitErr := s.CheckReviewerLimit(ctx, pr.ID); limitErr != nil {
+				return limitErr
+			}
+
 			reviewer = NewPullReqReviewer(
 				pr, repo, reviewerInfo, addedByInfo, reviewerType, reviewerID,
 			)
