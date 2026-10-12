@@ -459,7 +459,9 @@ func (s *Service) resolveRenameBlobSHAs(ctx context.Context, params *DiffParams,
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	pathToSHA, err := s.git.GetBlobSHAsForPaths(ctx, repoPath, params.HeadRef, paths)
+	pathToSHA, err := s.git.GetBlobSHAsForPaths(
+		ctx, repoPath, params.AlternateObjectDirs, params.HeadRef, paths,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to resolve blob shas for renamed files: %w", err)
 	}

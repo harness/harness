@@ -319,7 +319,9 @@ func flattenDirectory(
 // single git ls-tree call. Paths not found in the tree are omitted from the result.
 func (g *Git) GetBlobSHAsForPaths(
 	ctx context.Context,
-	repoPath, rev string,
+	repoPath string,
+	alternateObjectDirs []string,
+	rev string,
 	paths []string,
 ) (map[string]string, error) {
 	if repoPath == "" {
@@ -331,6 +333,7 @@ func (g *Git) GetBlobSHAsForPaths(
 
 	cmd := command.New("ls-tree",
 		command.WithFlag("-z"),
+		command.WithAlternateObjectDirs(alternateObjectDirs...),
 		command.WithArg(rev),
 		command.WithPostSepArg(paths...),
 	)
