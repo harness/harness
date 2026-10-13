@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package linkedpr
+package linkedsync
 
 // CheckPayload carries one or more status checks from an external CI provider.
 // Each CheckEntry maps to a single upsert into the gitness CheckStore.

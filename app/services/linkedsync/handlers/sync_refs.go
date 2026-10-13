@@ -61,17 +61,17 @@ func RunSyncRefs(
 		RepoIdentifier: linkedRepo.ConnectorRepo,
 	})
 	if err != nil {
-		return fmt.Errorf("linkedpr: get connector access info: %w", err)
+		return fmt.Errorf("linkedsync: get connector access info: %w", err)
 	}
 
 	cloneURL, err := accessInfo.URLWithCredentials()
 	if err != nil {
-		return fmt.Errorf("linkedpr: build clone url with creds: %w", err)
+		return fmt.Errorf("linkedsync: build clone url with creds: %w", err)
 	}
 
 	repo, err := repoFinder.FindByID(ctx, linkedRepo.RepoID)
 	if err != nil {
-		return fmt.Errorf("linkedpr: find repo %d: %w", linkedRepo.RepoID, err)
+		return fmt.Errorf("linkedsync: find repo %d: %w", linkedRepo.RepoID, err)
 	}
 
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
@@ -84,7 +84,7 @@ func RunSyncRefs(
 		enum.GitOpTypeManageRepo,
 	)
 	if err != nil {
-		return fmt.Errorf("linkedpr: githook env vars: %w", err)
+		return fmt.Errorf("linkedsync: githook env vars: %w", err)
 	}
 
 	writeParams := git.WriteParams{
@@ -109,7 +109,7 @@ func RunSyncRefs(
 		Source:      cloneURL,
 		Refs:        fetchRefs,
 	}); err != nil {
-		return fmt.Errorf("linkedpr: git SyncRefs: %w", err)
+		return fmt.Errorf("linkedsync: git SyncRefs: %w", err)
 	}
 
 	// For each entry that needs renaming: read the fetched SHA, point LocalRef
@@ -128,7 +128,7 @@ func RunSyncRefs(
 		if err != nil {
 			// SyncRefs succeeded with this ref in fetchRefs, so a GetRef failure
 			// here indicates internal inconsistency — surface it rather than skipping.
-			return fmt.Errorf("linkedpr: GetRef %s after sync: %w", e.RemoteRef, err)
+			return fmt.Errorf("linkedsync: GetRef %s after sync: %w", e.RemoteRef, err)
 		}
 
 		renameUpdates = append(renameUpdates,
@@ -145,7 +145,7 @@ func RunSyncRefs(
 		WriteParams: writeParams,
 		Refs:        renameUpdates,
 	}); err != nil {
-		return fmt.Errorf("linkedpr: rename provider refs to gitness namespace: %w", err)
+		return fmt.Errorf("linkedsync: rename provider refs to gitness namespace: %w", err)
 	}
 
 	return nil

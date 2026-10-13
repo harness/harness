@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package linkedpr_test
+package linkedsync_test
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/harness/gitness/app/services/linkedpr"
+	"github.com/harness/gitness/app/services/linkedsync"
 	"github.com/harness/gitness/types"
 )
 
@@ -28,23 +28,23 @@ import (
 // a mistyped payload without panicking.
 type otherPayload struct{}
 
-func (otherPayload) Kind() linkedpr.Kind    { return linkedpr.Kind("other") }
+func (otherPayload) Kind() linkedsync.Kind  { return linkedsync.Kind("other") }
 func (otherPayload) RepoProviderID() string { return "R_other" }
 
 func TestSafeHandler_DispatchesPayloadToTypedFn(t *testing.T) {
-	var got linkedpr.PullRequestPayload
-	fn := func(_ context.Context, _ *linkedpr.Event, p linkedpr.PullRequestPayload, _ *types.LinkedRepo) error {
+	var got linkedsync.PullRequestPayload
+	fn := func(_ context.Context, _ *linkedsync.Event, p linkedsync.PullRequestPayload, _ *types.LinkedRepo) error {
 		got = p
 		return nil
 	}
-	h := linkedpr.SafeHandler[linkedpr.PullRequestPayload]("test", fn)
-	ev := &linkedpr.Event{
-		Provider:   linkedpr.ProviderGitHub,
+	h := linkedsync.SafeHandler[linkedsync.PullRequestPayload]("test", fn)
+	ev := &linkedsync.Event{
+		Provider:   linkedsync.ProviderGitHub,
 		AccountID:  "a",
 		DeliveryID: "d",
-		Payload: linkedpr.PullRequestPayload{
+		Payload: linkedsync.PullRequestPayload{
 			Number:     42,
-			Repository: linkedpr.Repository{ProviderID: "280125018"},
+			Repository: linkedsync.Repository{ProviderID: "280125018"},
 		},
 	}
 	if err := h.Handle(context.Background(), ev, &types.LinkedRepo{RepoID: 1}); err != nil {
@@ -56,8 +56,8 @@ func TestSafeHandler_DispatchesPayloadToTypedFn(t *testing.T) {
 }
 
 func TestSafeHandler_RejectsNilEvent(t *testing.T) {
-	h := linkedpr.SafeHandler[linkedpr.PullRequestPayload]("test",
-		func(context.Context, *linkedpr.Event, linkedpr.PullRequestPayload, *types.LinkedRepo) error {
+	h := linkedsync.SafeHandler[linkedsync.PullRequestPayload]("test",
+		func(context.Context, *linkedsync.Event, linkedsync.PullRequestPayload, *types.LinkedRepo) error {
 			t.Fatal("inner fn must not be called for nil event")
 			return nil
 		})
@@ -67,25 +67,25 @@ func TestSafeHandler_RejectsNilEvent(t *testing.T) {
 }
 
 func TestSafeHandler_RejectsNilPayload(t *testing.T) {
-	h := linkedpr.SafeHandler[linkedpr.PullRequestPayload]("test",
-		func(context.Context, *linkedpr.Event, linkedpr.PullRequestPayload, *types.LinkedRepo) error {
+	h := linkedsync.SafeHandler[linkedsync.PullRequestPayload]("test",
+		func(context.Context, *linkedsync.Event, linkedsync.PullRequestPayload, *types.LinkedRepo) error {
 			t.Fatal("inner fn must not be called for nil payload")
 			return nil
 		})
-	ev := &linkedpr.Event{Provider: linkedpr.ProviderGitHub, DeliveryID: "d"}
+	ev := &linkedsync.Event{Provider: linkedsync.ProviderGitHub, DeliveryID: "d"}
 	if err := h.Handle(context.Background(), ev, &types.LinkedRepo{}); err == nil {
 		t.Fatal("expected error for nil payload")
 	}
 }
 
 func TestSafeHandler_RejectsMismatchedPayloadType(t *testing.T) {
-	h := linkedpr.SafeHandler[linkedpr.PullRequestPayload]("test",
-		func(context.Context, *linkedpr.Event, linkedpr.PullRequestPayload, *types.LinkedRepo) error {
+	h := linkedsync.SafeHandler[linkedsync.PullRequestPayload]("test",
+		func(context.Context, *linkedsync.Event, linkedsync.PullRequestPayload, *types.LinkedRepo) error {
 			t.Fatal("inner fn must not be called for mismatched payload type")
 			return nil
 		})
-	ev := &linkedpr.Event{
-		Provider:   linkedpr.ProviderGitHub,
+	ev := &linkedsync.Event{
+		Provider:   linkedsync.ProviderGitHub,
 		DeliveryID: "d",
 		Payload:    otherPayload{},
 	}
@@ -100,15 +100,15 @@ func TestSafeHandler_RejectsMismatchedPayloadType(t *testing.T) {
 
 func TestSafeHandler_PropagatesInnerError(t *testing.T) {
 	want := errors.New("inner boom")
-	h := linkedpr.SafeHandler[linkedpr.PullRequestPayload]("test",
-		func(context.Context, *linkedpr.Event, linkedpr.PullRequestPayload, *types.LinkedRepo) error {
+	h := linkedsync.SafeHandler[linkedsync.PullRequestPayload]("test",
+		func(context.Context, *linkedsync.Event, linkedsync.PullRequestPayload, *types.LinkedRepo) error {
 			return want
 		})
-	ev := &linkedpr.Event{
-		Provider:   linkedpr.ProviderGitHub,
+	ev := &linkedsync.Event{
+		Provider:   linkedsync.ProviderGitHub,
 		DeliveryID: "d",
-		Payload: linkedpr.PullRequestPayload{
-			Repository: linkedpr.Repository{ProviderID: "280125018"},
+		Payload: linkedsync.PullRequestPayload{
+			Repository: linkedsync.Repository{ProviderID: "280125018"},
 		},
 	}
 	if err := h.Handle(context.Background(), ev, &types.LinkedRepo{}); !errors.Is(err, want) {

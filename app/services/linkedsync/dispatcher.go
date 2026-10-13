@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package linkedpr dispatches inbound linked-PR events. Broker-agnostic;
+// Package linkedsync dispatches inbound linked-PR events. Broker-agnostic;
 // transport adapters live outside this package.
-package linkedpr
+package linkedsync
 
 import (
 	"context"
@@ -87,15 +87,15 @@ func NewHandlers(providers ...ProviderHandlers) (Handlers, error) {
 	handlers := make(Handlers)
 	for _, provider := range providers {
 		if provider.Provider == "" {
-			return nil, fmt.Errorf("linkedpr: provider registration has no provider")
+			return nil, fmt.Errorf("linkedsync: provider registration has no provider")
 		}
 		for kind, handler := range provider.Handlers {
 			if kind == "" || handler == nil {
-				return nil, fmt.Errorf("linkedpr: provider %q has invalid handler for kind %q", provider.Provider, kind)
+				return nil, fmt.Errorf("linkedsync: provider %q has invalid handler for kind %q", provider.Provider, kind)
 			}
 			key := HandlerKey{Kind: kind, Provider: provider.Provider}
 			if _, exists := handlers[key]; exists {
-				return nil, fmt.Errorf("linkedpr: duplicate handler for provider %q and kind %q", provider.Provider, kind)
+				return nil, fmt.Errorf("linkedsync: duplicate handler for provider %q and kind %q", provider.Provider, kind)
 			}
 			handlers[key] = handler
 		}
@@ -124,13 +124,13 @@ func NewDispatcher(
 // deliberate drop; (Result, err) for a transient failure the broker should retry.
 func (d *Dispatcher) Dispatch(ctx context.Context, ev *Event) (Result, error) {
 	if ev == nil {
-		log.Ctx(ctx).Warn().Msg("linkedpr: nil event")
+		log.Ctx(ctx).Warn().Msg("linkedsync: nil event")
 		return ResultDroppedMalformedEvent, nil
 	}
 
 	if ev.Payload == nil {
 		log.Ctx(ctx).Warn().Str("account_id", ev.AccountID).Str("delivery_id", ev.DeliveryID).
-			Msg("linkedpr: event has no payload")
+			Msg("linkedsync: event has no payload")
 		return ResultDroppedMalformedEvent, nil
 	}
 
@@ -145,14 +145,14 @@ func (d *Dispatcher) Dispatch(ctx context.Context, ev *Event) (Result, error) {
 			Str("kind", string(ev.Payload.Kind())).
 			Str("provider", string(ev.Provider)).
 			Str("delivery_id", ev.DeliveryID).
-			Msg("linkedpr: payload missing repo provider id")
+			Msg("linkedsync: payload missing repo provider id")
 		return ResultDroppedMalformedEvent, nil
 	}
 	if ev.DeliveryID == "" {
 		log.Ctx(ctx).Warn().
 			Str("kind", string(ev.Payload.Kind())).
 			Str("provider", string(ev.Provider)).
-			Msg("linkedpr: missing delivery id")
+			Msg("linkedsync: missing delivery id")
 		return ResultDroppedMalformedEvent, nil
 	}
 	if ev.AccountID == "" {
@@ -160,7 +160,7 @@ func (d *Dispatcher) Dispatch(ctx context.Context, ev *Event) (Result, error) {
 			Str("kind", string(ev.Payload.Kind())).
 			Str("provider", string(ev.Provider)).
 			Str("delivery_id", ev.DeliveryID).
-			Msg("linkedpr: missing account id")
+			Msg("linkedsync: missing account id")
 		return ResultDroppedMalformedEvent, nil
 	}
 

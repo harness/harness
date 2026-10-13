@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package linkedpr
+package linkedsync
 
 import (
 	"github.com/harness/gitness/app/services/importer"
@@ -24,6 +24,7 @@ type Kind string
 const (
 	KindPullRequest Kind = "pull_request"
 	KindCheck       Kind = "check_run"
+	KindPush        Kind = "push"
 )
 
 // Provider identifies the upstream SCM. Alias of importer.ProviderType so

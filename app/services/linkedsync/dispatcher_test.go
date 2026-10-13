@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package linkedpr_test
+package linkedsync_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/harness/gitness/app/services/linkedpr"
+	"github.com/harness/gitness/app/services/linkedsync"
 	mockstore "github.com/harness/gitness/mocks/store"
 	"github.com/harness/gitness/types"
 
@@ -33,14 +33,14 @@ func linkedRepoLookup(rows []types.LinkedRepo, err error) *mockstore.LinkedRepoS
 	return m
 }
 
-// fakeHandler implements linkedpr.Handler.
+// fakeHandler implements linkedsync.Handler.
 type fakeHandler struct {
 	calls    int
 	gotRepos []int64
 	err      error
 }
 
-func (f *fakeHandler) Handle(_ context.Context, _ *linkedpr.Event, lr *types.LinkedRepo) error {
+func (f *fakeHandler) Handle(_ context.Context, _ *linkedsync.Event, lr *types.LinkedRepo) error {
 	f.calls++
 	if lr != nil {
 		f.gotRepos = append(f.gotRepos, lr.RepoID)
@@ -50,14 +50,14 @@ func (f *fakeHandler) Handle(_ context.Context, _ *linkedpr.Event, lr *types.Lin
 
 // buildPREvent returns a minimal valid pull_request Event for tests. mutators
 // can adjust fields per-case.
-func buildPREvent(mutators ...func(*linkedpr.Event)) *linkedpr.Event {
-	ev := &linkedpr.Event{
-		Provider:   linkedpr.ProviderGitHub,
+func buildPREvent(mutators ...func(*linkedsync.Event)) *linkedsync.Event {
+	ev := &linkedsync.Event{
+		Provider:   linkedsync.ProviderGitHub,
 		AccountID:  "acct-x",
 		DeliveryID: "deliv-1",
-		Payload: linkedpr.PullRequestPayload{
+		Payload: linkedsync.PullRequestPayload{
 			Number: 7,
-			Repository: linkedpr.Repository{
+			Repository: linkedsync.Repository{
 				ProviderID: "280125018",
 			},
 		},
@@ -68,9 +68,9 @@ func buildPREvent(mutators ...func(*linkedpr.Event)) *linkedpr.Event {
 	return ev
 }
 
-func handlersWith(h linkedpr.Handler) linkedpr.Handlers {
-	return linkedpr.Handlers{
-		{Kind: linkedpr.KindPullRequest, Provider: linkedpr.ProviderGitHub}: h,
+func handlersWith(h linkedsync.Handler) linkedsync.Handlers {
+	return linkedsync.Handlers{
+		{Kind: linkedsync.KindPullRequest, Provider: linkedsync.ProviderGitHub}: h,
 	}
 }
 
@@ -78,32 +78,32 @@ func TestNewHandlers_RegistersProviders(t *testing.T) {
 	githubHandler := &fakeHandler{}
 	bitbucketHandler := &fakeHandler{}
 
-	handlers, err := linkedpr.NewHandlers(
-		linkedpr.ProviderHandlers{
-			Provider: linkedpr.ProviderGitHub,
-			Handlers: map[linkedpr.Kind]linkedpr.Handler{linkedpr.KindPullRequest: githubHandler},
+	handlers, err := linkedsync.NewHandlers(
+		linkedsync.ProviderHandlers{
+			Provider: linkedsync.ProviderGitHub,
+			Handlers: map[linkedsync.Kind]linkedsync.Handler{linkedsync.KindPullRequest: githubHandler},
 		},
-		linkedpr.ProviderHandlers{
-			Provider: linkedpr.ProviderBitbucket,
-			Handlers: map[linkedpr.Kind]linkedpr.Handler{linkedpr.KindPullRequest: bitbucketHandler},
+		linkedsync.ProviderHandlers{
+			Provider: linkedsync.ProviderBitbucket,
+			Handlers: map[linkedsync.Kind]linkedsync.Handler{linkedsync.KindPullRequest: bitbucketHandler},
 		},
 	)
 	if err != nil {
 		t.Fatalf("NewHandlers: %v", err)
 	}
-	if got := handlers[linkedpr.HandlerKey{
-		Kind: linkedpr.KindPullRequest, Provider: linkedpr.ProviderBitbucket,
+	if got := handlers[linkedsync.HandlerKey{
+		Kind: linkedsync.KindPullRequest, Provider: linkedsync.ProviderBitbucket,
 	}]; got != bitbucketHandler {
 		t.Fatalf("Bitbucket handler: got %T want registered handler", got)
 	}
 }
 
 func TestNewHandlers_RejectsDuplicateRegistration(t *testing.T) {
-	registration := linkedpr.ProviderHandlers{
-		Provider: linkedpr.ProviderGitHub,
-		Handlers: map[linkedpr.Kind]linkedpr.Handler{linkedpr.KindPullRequest: &fakeHandler{}},
+	registration := linkedsync.ProviderHandlers{
+		Provider: linkedsync.ProviderGitHub,
+		Handlers: map[linkedsync.Kind]linkedsync.Handler{linkedsync.KindPullRequest: &fakeHandler{}},
 	}
-	if _, err := linkedpr.NewHandlers(registration, registration); err == nil {
+	if _, err := linkedsync.NewHandlers(registration, registration); err == nil {
 		t.Fatal("expected duplicate registration error")
 	}
 }
@@ -112,16 +112,16 @@ func TestDispatch_HappyPathRoutesToHandler(t *testing.T) {
 	lookup := &mockstore.LinkedRepoStore{}
 	lookup.On(
 		"ListByProviderID",
-		"acct-x", string(linkedpr.ProviderGitHub), "280125018", mock.Anything,
+		"acct-x", string(linkedsync.ProviderGitHub), "280125018", mock.Anything,
 	).Return([]types.LinkedRepo{{RepoID: 100}}, nil)
 	h := &fakeHandler{}
 
-	d := linkedpr.NewDispatcher(lookup, handlersWith(h))
+	d := linkedsync.NewDispatcher(lookup, handlersWith(h))
 	res, err := d.Dispatch(context.Background(), buildPREvent())
 	if err != nil {
 		t.Fatalf("Dispatch: %v", err)
 	}
-	if res != linkedpr.ResultDispatched {
+	if res != linkedsync.ResultDispatched {
 		t.Errorf("Result: got %v, want Dispatched", res)
 	}
 	if h.calls != 1 || h.gotRepos[0] != 100 {
@@ -134,12 +134,12 @@ func TestDispatch_FansOutToAllLinkedRepos(t *testing.T) {
 	lookup := linkedRepoLookup([]types.LinkedRepo{{RepoID: 1}, {RepoID: 2}, {RepoID: 3}}, nil)
 	h := &fakeHandler{}
 
-	d := linkedpr.NewDispatcher(lookup, handlersWith(h))
+	d := linkedsync.NewDispatcher(lookup, handlersWith(h))
 	res, err := d.Dispatch(context.Background(), buildPREvent())
 	if err != nil {
 		t.Fatalf("Dispatch: %v", err)
 	}
-	if res != linkedpr.ResultDispatched {
+	if res != linkedsync.ResultDispatched {
 		t.Errorf("Result: got %v, want Dispatched", res)
 	}
 	if h.calls != 3 {
@@ -147,34 +147,34 @@ func TestDispatch_FansOutToAllLinkedRepos(t *testing.T) {
 	}
 }
 
-// stubPayload implements linkedpr.Payload with a caller-controlled Kind so
+// stubPayload implements linkedsync.Payload with a caller-controlled Kind so
 // the dispatcher routes it to a key with no registered handler.
-type stubPayload struct{ kind linkedpr.Kind }
+type stubPayload struct{ kind linkedsync.Kind }
 
-func (s stubPayload) Kind() linkedpr.Kind    { return s.kind }
+func (s stubPayload) Kind() linkedsync.Kind  { return s.kind }
 func (s stubPayload) RepoProviderID() string { return "R_stub" }
 
 func TestDispatch_DropOnUnsupportedKind(t *testing.T) {
-	d := linkedpr.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
-	ev := buildPREvent(func(e *linkedpr.Event) { e.Payload = stubPayload{kind: linkedpr.Kind("check_run")} })
+	d := linkedsync.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
+	ev := buildPREvent(func(e *linkedsync.Event) { e.Payload = stubPayload{kind: linkedsync.Kind("check_run")} })
 	res, _ := d.Dispatch(context.Background(), ev)
-	if res != linkedpr.ResultDroppedUnsupportedEvent {
+	if res != linkedsync.ResultDroppedUnsupportedEvent {
 		t.Errorf("Result: got %v, want DroppedUnsupportedEvent", res)
 	}
 }
 
 func TestDispatch_DropOnEmptyHandlers(t *testing.T) {
-	d := linkedpr.NewDispatcher(linkedRepoLookup(nil, nil), nil)
+	d := linkedsync.NewDispatcher(linkedRepoLookup(nil, nil), nil)
 	res, _ := d.Dispatch(context.Background(), buildPREvent())
-	if res != linkedpr.ResultDroppedUnsupportedEvent {
+	if res != linkedsync.ResultDroppedUnsupportedEvent {
 		t.Errorf("Result: got %v, want DroppedUnsupportedEvent", res)
 	}
 }
 
 func TestDispatch_DropOnMissingRepoProviderID(t *testing.T) {
-	d := linkedpr.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
-	ev := buildPREvent(func(e *linkedpr.Event) {
-		p, ok := e.Payload.(linkedpr.PullRequestPayload)
+	d := linkedsync.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
+	ev := buildPREvent(func(e *linkedsync.Event) {
+		p, ok := e.Payload.(linkedsync.PullRequestPayload)
 		if !ok {
 			t.Fatalf("Payload is not PullRequestPayload: %T", e.Payload)
 		}
@@ -182,16 +182,16 @@ func TestDispatch_DropOnMissingRepoProviderID(t *testing.T) {
 		e.Payload = p
 	})
 	res, _ := d.Dispatch(context.Background(), ev)
-	if res != linkedpr.ResultDroppedMalformedEvent {
+	if res != linkedsync.ResultDroppedMalformedEvent {
 		t.Errorf("Result: got %v, want DroppedDecodeFailed", res)
 	}
 }
 
 func TestDispatch_DropOnMissingDeliveryID(t *testing.T) {
-	d := linkedpr.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
-	ev := buildPREvent(func(e *linkedpr.Event) { e.DeliveryID = "" })
+	d := linkedsync.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
+	ev := buildPREvent(func(e *linkedsync.Event) { e.DeliveryID = "" })
 	res, _ := d.Dispatch(context.Background(), ev)
-	if res != linkedpr.ResultDroppedMalformedEvent {
+	if res != linkedsync.ResultDroppedMalformedEvent {
 		t.Errorf("Result: got %v, want DroppedDecodeFailed", res)
 	}
 }
@@ -199,9 +199,9 @@ func TestDispatch_DropOnMissingDeliveryID(t *testing.T) {
 func TestDispatch_DropOnNoLinkedRepo(t *testing.T) {
 	lookup := linkedRepoLookup(nil, nil)
 	h := &fakeHandler{}
-	d := linkedpr.NewDispatcher(lookup, handlersWith(h))
+	d := linkedsync.NewDispatcher(lookup, handlersWith(h))
 	res, _ := d.Dispatch(context.Background(), buildPREvent())
-	if res != linkedpr.ResultDroppedNotLinked {
+	if res != linkedsync.ResultDroppedNotLinked {
 		t.Errorf("Result: got %v, want DroppedNotLinked", res)
 	}
 	if h.calls != 0 {
@@ -211,7 +211,7 @@ func TestDispatch_DropOnNoLinkedRepo(t *testing.T) {
 
 func TestDispatch_LookupErrorRetries(t *testing.T) {
 	lookup := linkedRepoLookup(nil, errors.New("db down"))
-	d := linkedpr.NewDispatcher(lookup, handlersWith(&fakeHandler{}))
+	d := linkedsync.NewDispatcher(lookup, handlersWith(&fakeHandler{}))
 	_, err := d.Dispatch(context.Background(), buildPREvent())
 	if err == nil {
 		t.Errorf("expected error so caller doesn't ack, got nil")
@@ -221,7 +221,7 @@ func TestDispatch_LookupErrorRetries(t *testing.T) {
 func TestDispatch_HandlerErrorRetries(t *testing.T) {
 	lookup := linkedRepoLookup([]types.LinkedRepo{{RepoID: 100}}, nil)
 	h := &fakeHandler{err: errors.New("transient")}
-	d := linkedpr.NewDispatcher(lookup, handlersWith(h))
+	d := linkedsync.NewDispatcher(lookup, handlersWith(h))
 	_, err := d.Dispatch(context.Background(), buildPREvent())
 	if err == nil {
 		t.Errorf("expected error so caller doesn't ack, got nil")
@@ -229,12 +229,12 @@ func TestDispatch_HandlerErrorRetries(t *testing.T) {
 }
 
 func TestDispatch_NilEventDropsGracefully(t *testing.T) {
-	d := linkedpr.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
+	d := linkedsync.NewDispatcher(linkedRepoLookup(nil, nil), handlersWith(&fakeHandler{}))
 	res, err := d.Dispatch(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("Dispatch: %v", err)
 	}
-	if res != linkedpr.ResultDroppedMalformedEvent {
+	if res != linkedsync.ResultDroppedMalformedEvent {
 		t.Errorf("Result: got %v, want DroppedDecodeFailed", res)
 	}
 }

@@ -22,7 +22,7 @@ import (
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/app/services/linkedpr"
+	"github.com/harness/gitness/app/services/linkedsync"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
@@ -43,7 +43,7 @@ type PullRequestHandler struct {
 	linkedPullReqStore store.LinkedPullReqStore
 	activityStore      store.PullReqActivityStore
 	repoStore          store.RepoStore
-	authorResolver     linkedpr.AuthorResolver
+	authorResolver     linkedsync.AuthorResolver
 	reporter           *pullreqevents.Reporter
 	gitClient          git.Interface
 	repoFinder         refcache.RepoFinder
@@ -54,14 +54,14 @@ type PullRequestHandler struct {
 }
 
 // RefSyncSpec returns the provider-specific refs needed to mirror one PR.
-type RefSyncSpec func(linkedpr.PullRequestPayload) []RefSyncEntry
+type RefSyncSpec func(linkedsync.PullRequestPayload) []RefSyncEntry
 
 func NewPullRequestHandler(
 	pullReqStore store.PullReqStore,
 	linkedPullReqStore store.LinkedPullReqStore,
 	activityStore store.PullReqActivityStore,
 	repoStore store.RepoStore,
-	authorResolver linkedpr.AuthorResolver,
+	authorResolver linkedsync.AuthorResolver,
 	reporter *pullreqevents.Reporter,
 	gitClient git.Interface,
 	repoFinder refcache.RepoFinder,
@@ -88,8 +88,8 @@ func NewPullRequestHandler(
 
 func (h *PullRequestHandler) Handle(
 	ctx context.Context,
-	ev *linkedpr.Event,
-	prPayload linkedpr.PullRequestPayload,
+	ev *linkedsync.Event,
+	prPayload linkedsync.PullRequestPayload,
 	linkedRepo *types.LinkedRepo,
 ) error {
 	// Drop malformed payloads — otherwise refsToFetch would emit "refs/heads/"
@@ -101,7 +101,7 @@ func (h *PullRequestHandler) Handle(
 			Int("provider_pr_number", prPayload.Number).
 			Str("head_ref", prPayload.HeadRef).Str("head_sha", prPayload.HeadSHA).
 			Str("base_ref", prPayload.BaseRef).Str("base_sha", prPayload.BaseSHA).
-			Msg("linkedpr: payload missing required ref/sha fields; ack-skipping")
+			Msg("linkedsync: payload missing required ref/sha fields; ack-skipping")
 		return nil
 	}
 
@@ -147,7 +147,7 @@ func (h *PullRequestHandler) Handle(
 			Int64("stored_provider_updated_at", existing.ProviderUpdatedAt).
 			Str("provider_id", linkedRepo.ProviderRepoID).
 			Int("provider_pr_number", prPayload.Number).
-			Msg("linkedpr: stale webhook (older than last applied event); dropping")
+			Msg("linkedsync: stale webhook (older than last applied event); dropping")
 		return nil
 	}
 
@@ -187,8 +187,8 @@ var (
 func (h *PullRequestHandler) create(
 	ctx context.Context,
 	linkedRepo *types.LinkedRepo,
-	ev *linkedpr.Event,
-	prPayload linkedpr.PullRequestPayload,
+	ev *linkedsync.Event,
+	prPayload linkedsync.PullRequestPayload,
 	authorPrincipalID int64,
 	mergeBaseSHA string,
 ) error {
@@ -275,7 +275,7 @@ func (h *PullRequestHandler) create(
 			Int("pr_number", prPayload.Number).
 			Str("provider", string(ev.Provider)).
 			Str("provider_id", linkedRepo.ProviderRepoID).
-			Msg("linkedpr: pullreq number collision with native PR; dropping event")
+			Msg("linkedsync: pullreq number collision with native PR; dropping event")
 		return nil
 	default:
 		return txErr
@@ -286,8 +286,8 @@ func (h *PullRequestHandler) create(
 // and falls through to update with shaChanged=true to force a merge re-check.
 func (h *PullRequestHandler) handleLinkedDuplicate(
 	ctx context.Context,
-	ev *linkedpr.Event,
-	prPayload linkedpr.PullRequestPayload,
+	ev *linkedsync.Event,
+	prPayload linkedsync.PullRequestPayload,
 	linkedRepo *types.LinkedRepo,
 	mergeBaseSHA string,
 ) error {
@@ -304,7 +304,7 @@ func (h *PullRequestHandler) handleLinkedDuplicate(
 			Int64("stored_provider_updated_at", existing.ProviderUpdatedAt).
 			Str("provider_id", linkedRepo.ProviderRepoID).
 			Int("provider_pr_number", prPayload.Number).
-			Msg("linkedpr: stale duplicate (race-recovery loser); dropping")
+			Msg("linkedsync: stale duplicate (race-recovery loser); dropping")
 		return nil
 	}
 	parent, err := h.pullReqStore.Find(ctx, existing.PullReqID)
@@ -316,7 +316,7 @@ func (h *PullRequestHandler) handleLinkedDuplicate(
 
 func (h *PullRequestHandler) update(
 	ctx context.Context,
-	prPayload linkedpr.PullRequestPayload,
+	prPayload linkedsync.PullRequestPayload,
 	existing *types.LinkedPullReq,
 	parent *types.PullReq,
 	mergeBaseSHA string,
@@ -484,7 +484,7 @@ func (h *PullRequestHandler) applyRepoPRCountersDelta(
 	if err != nil {
 		log.Ctx(ctx).Err(err).
 			Int64("repo_id", repoID).
-			Msg("linkedpr: failed to find repository to update PR counters")
+			Msg("linkedsync: failed to find repository to update PR counters")
 		return
 	}
 
@@ -501,7 +501,7 @@ func (h *PullRequestHandler) applyRepoPRCountersDelta(
 			Int("num_open_pulls_delta", delta.numOpenPulls).
 			Int("num_closed_pulls_delta", delta.numClosedPulls).
 			Int("num_merged_pulls_delta", delta.numMergedPulls).
-			Msg("linkedpr: failed to update repository PR counters")
+			Msg("linkedsync: failed to update repository PR counters")
 	}
 }
 
@@ -554,7 +554,7 @@ func (h *PullRequestHandler) writeActivities(
 			log.Ctx(ctx).Err(err).
 				Str("activity_type", string(payload.ActivityType())).
 				Int64("pullreq_id", parent.ID).
-				Msg("linkedpr: failed to write pull request activity")
+				Msg("linkedsync: failed to write pull request activity")
 		}
 	}
 }

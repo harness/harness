@@ -21,8 +21,8 @@ import (
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/app/services/linkedpr"
-	"github.com/harness/gitness/app/services/linkedpr/handlers"
+	"github.com/harness/gitness/app/services/linkedsync"
+	"github.com/harness/gitness/app/services/linkedsync/handlers"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	storecache "github.com/harness/gitness/app/store/cache"
@@ -73,9 +73,9 @@ const (
 
 // callHandle invokes PullRequestHandler.Handle with the typed payload
 // extracted from ev.Payload, mirroring what SafeHandler does in production.
-func callHandle(t *testing.T, h *handlers.PullRequestHandler, ev *linkedpr.Event, repo *types.LinkedRepo) error {
+func callHandle(t *testing.T, h *handlers.PullRequestHandler, ev *linkedsync.Event, repo *types.LinkedRepo) error {
 	t.Helper()
-	pl, ok := ev.Payload.(linkedpr.PullRequestPayload)
+	pl, ok := ev.Payload.(linkedsync.PullRequestPayload)
 	if !ok {
 		t.Fatalf("test event payload is not PullRequestPayload: %T", ev.Payload)
 	}
@@ -310,7 +310,7 @@ func newPullRequestHandler(
 	prStore store.PullReqStore,
 	linkedStore store.LinkedPullReqStore,
 	activity store.PullReqActivityStore,
-	author linkedpr.AuthorResolver,
+	author linkedsync.AuthorResolver,
 	reporter *pullreqevents.Reporter,
 	tx noopTx,
 	gitOpts ...func(*mockgit.Interface),
@@ -363,8 +363,8 @@ func (noopTx) WithTx(ctx context.Context, txFn func(context.Context) error, _ ..
 // ─── fixtures ─────────────────────────────────────────────────────────────
 
 // basePayload returns a typical "open PR" payload; tests mutate per case.
-func basePayload(mutators ...func(*linkedpr.PullRequestPayload)) linkedpr.PullRequestPayload {
-	p := linkedpr.PullRequestPayload{
+func basePayload(mutators ...func(*linkedsync.PullRequestPayload)) linkedsync.PullRequestPayload {
+	p := linkedsync.PullRequestPayload{
 		Number:      testPRNumber,
 		Title:       testPRTitle,
 		Description: "",
@@ -377,12 +377,12 @@ func basePayload(mutators ...func(*linkedpr.PullRequestPayload)) linkedpr.PullRe
 		CreatedAt:   1_700_000_000_000,
 		UpdatedAt:   1_700_000_100_000,
 		HTMLURL:     "https://github.com/acme/widget/pull/7",
-		Author: linkedpr.User{
+		Author: linkedsync.User{
 			Login:   testActorLog,
 			Avatar:  "https://avatars/x.png",
 			HTMLURL: "https://github.com/octocat",
 		},
-		Repository: linkedpr.Repository{
+		Repository: linkedsync.Repository{
 			ProviderID: testRepoProviderID,
 		},
 	}
@@ -392,9 +392,9 @@ func basePayload(mutators ...func(*linkedpr.PullRequestPayload)) linkedpr.PullRe
 	return p
 }
 
-func eventWith(p linkedpr.PullRequestPayload) *linkedpr.Event {
-	return &linkedpr.Event{
-		Provider:   linkedpr.ProviderGitHub,
+func eventWith(p linkedsync.PullRequestPayload) *linkedsync.Event {
+	return &linkedsync.Event{
+		Provider:   linkedsync.ProviderGitHub,
 		AccountID:  "acct-1",
 		DeliveryID: "deliv-1",
 		Payload:    p,
@@ -404,7 +404,7 @@ func eventWith(p linkedpr.PullRequestPayload) *linkedpr.Event {
 func testLinkedRepo() *types.LinkedRepo {
 	return &types.LinkedRepo{
 		RepoID:         testRepoID,
-		ProviderType:   string(linkedpr.ProviderGitHub),
+		ProviderType:   string(linkedsync.ProviderGitHub),
 		ProviderRepoID: testRepoProviderID,
 	}
 }
@@ -438,9 +438,9 @@ func assertDedupKey(t *testing.T, linkedRepoID int64, provider, providerID strin
 	if linkedRepoID != testRepoID {
 		t.Errorf("FindByLinkedRepoAndProviderPR linkedRepoID: got %d want %d", linkedRepoID, testRepoID)
 	}
-	if provider != string(linkedpr.ProviderGitHub) {
+	if provider != string(linkedsync.ProviderGitHub) {
 		t.Errorf("FindByLinkedRepoAndProviderPR provider: got %q want %q",
-			provider, string(linkedpr.ProviderGitHub))
+			provider, string(linkedsync.ProviderGitHub))
 	}
 	if providerID != testRepoProviderID {
 		t.Errorf("FindByLinkedRepoAndProviderPR providerID: got %q want repo's provider id %q",
@@ -460,7 +460,7 @@ func TestHandle_Create_Opened(t *testing.T) {
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{findByFn: findNotFound(t)})
 
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
 	if err := callHandle(t, h, eventWith(basePayload()), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -490,14 +490,14 @@ func TestHandle_Create_Opened(t *testing.T) {
 	if linked.ProviderAuthorLogin != testActorLog {
 		t.Errorf("linked.ProviderAuthorLogin: got %q want %q", linked.ProviderAuthorLogin, testActorLog)
 	}
-	if linked.ProviderType != string(linkedpr.ProviderGitHub) {
+	if linked.ProviderType != string(linkedsync.ProviderGitHub) {
 		t.Errorf("linked ProviderType: got %q want github", linked.ProviderType)
 	}
 }
 
 func runUpdateTest(
 	t *testing.T,
-	payloadFn func() linkedpr.PullRequestPayload,
+	payloadFn func() linkedsync.PullRequestPayload,
 	prevState enum.PullReqState,
 	want func(*types.PullReq),
 ) {
@@ -518,13 +518,13 @@ func runUpdateTest(
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
 			PullReqID:      50,
-			ProviderType:   string(linkedpr.ProviderGitHub),
+			ProviderType:   string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
 	if err := callHandle(t, h, eventWith(payloadFn()), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -536,8 +536,8 @@ func runUpdateTest(
 }
 
 func TestHandle_Update_Synchronize(t *testing.T) {
-	runUpdateTest(t, func() linkedpr.PullRequestPayload {
-		return basePayload(func(p *linkedpr.PullRequestPayload) { p.HeadSHA = "new-sha" })
+	runUpdateTest(t, func() linkedsync.PullRequestPayload {
+		return basePayload(func(p *linkedsync.PullRequestPayload) { p.HeadSHA = "new-sha" })
 	}, enum.PullReqStateOpen, func(_ *types.PullReq) {})
 }
 
@@ -546,12 +546,12 @@ func TestHandle_Create_MergedFallsBackToUpdatedAt(t *testing.T) {
 	prStore := newPullReqStoreHarness(pullReqStoreConfig{})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{findByFn: findNotFound(t)})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
-	pl := basePayload(func(p *linkedpr.PullRequestPayload) {
+	pl := basePayload(func(p *linkedsync.PullRequestPayload) {
 		p.State = enum.PullReqStateMerged
 		p.UpdatedAt = 1_700_000_200_000
-		p.Sender = linkedpr.User{Login: testActorLog}
+		p.Sender = linkedsync.User{Login: testActorLog}
 	})
 	if err := callHandle(t, h, eventWith(pl), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -594,17 +594,17 @@ func TestHandle_Update_MergeTransitionFillsClosed(t *testing.T) {
 	})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
-			PullReqID: 50, ProviderType: string(linkedpr.ProviderGitHub),
+			PullReqID: 50, ProviderType: string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
-	pl := basePayload(func(p *linkedpr.PullRequestPayload) {
+	pl := basePayload(func(p *linkedsync.PullRequestPayload) {
 		p.State = enum.PullReqStateMerged
 		p.UpdatedAt = 1_700_000_200_000
-		p.Sender = linkedpr.User{Login: "merger-bot"}
+		p.Sender = linkedsync.User{Login: "merger-bot"}
 	})
 	if err := callHandle(t, h, eventWith(pl), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -635,8 +635,8 @@ func TestHandle_Update_MergeTransitionFillsClosed(t *testing.T) {
 }
 
 func TestHandle_Update_Closed(t *testing.T) {
-	runUpdateTest(t, func() linkedpr.PullRequestPayload {
-		return basePayload(func(p *linkedpr.PullRequestPayload) {
+	runUpdateTest(t, func() linkedsync.PullRequestPayload {
+		return basePayload(func(p *linkedsync.PullRequestPayload) {
 			p.State = enum.PullReqStateClosed
 			p.UpdatedAt = 1_700_000_200_000
 		})
@@ -648,8 +648,8 @@ func TestHandle_Update_Closed(t *testing.T) {
 }
 
 func TestHandle_Update_Merged(t *testing.T) {
-	runUpdateTest(t, func() linkedpr.PullRequestPayload {
-		return basePayload(func(p *linkedpr.PullRequestPayload) {
+	runUpdateTest(t, func() linkedsync.PullRequestPayload {
+		return basePayload(func(p *linkedsync.PullRequestPayload) {
 			p.State = enum.PullReqStateMerged
 			p.UpdatedAt = 1_700_000_200_000
 		})
@@ -661,7 +661,7 @@ func TestHandle_Update_Merged(t *testing.T) {
 }
 
 func TestHandle_Update_Reopened(t *testing.T) {
-	runUpdateTest(t, func() linkedpr.PullRequestPayload {
+	runUpdateTest(t, func() linkedsync.PullRequestPayload {
 		return basePayload() // open again
 	}, enum.PullReqStateClosed, func(parent *types.PullReq) {
 		if parent.State != enum.PullReqStateOpen {
@@ -687,14 +687,14 @@ func TestHandle_Update_ReopenClearsClosedAndMerged(t *testing.T) {
 	})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
-			PullReqID: 50, ProviderType: string(linkedpr.ProviderGitHub),
+			PullReqID: 50, ProviderType: string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
-	pl := basePayload(func(p *linkedpr.PullRequestPayload) {
+	pl := basePayload(func(p *linkedsync.PullRequestPayload) {
 		p.State = enum.PullReqStateOpen
 		p.UpdatedAt = 1_700_000_300_000
 	})
@@ -729,7 +729,7 @@ func TestHandle_AuthorResolverError(t *testing.T) {
 
 type failResolver struct{}
 
-func (*failResolver) Resolve(context.Context, *linkedpr.Event) (int64, error) {
+func (*failResolver) Resolve(context.Context, *linkedsync.Event) (int64, error) {
 	return 0, errors.New("resolver down")
 }
 
@@ -738,7 +738,7 @@ func TestHandle_SyncRefsError_PropagatesForRetry(t *testing.T) {
 		newPullReqStoreHarness(pullReqStoreConfig{}),
 		newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{findByFn: findNotFound(t)}),
 		testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42},
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42},
 		testReporter(t), noopTx{},
 		func(m *mockgit.Interface) {
 			m.ExpectedCalls = nil
@@ -771,13 +771,13 @@ func TestHandle_Update_SkipsSyncRefsWhenSourceSHAUnchanged(t *testing.T) {
 	})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
-			PullReqID: 50, ProviderType: string(linkedpr.ProviderGitHub),
+			PullReqID: 50, ProviderType: string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	syncRefsCalls := 0
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{},
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{},
 		func(m *mockgit.Interface) {
 			m.ExpectedCalls = nil
 			m.On("SyncRefs", mock.Anything, mock.Anything).Run(func(mock.Arguments) {
@@ -808,13 +808,13 @@ func TestHandle_Update_SyncsRefsWhenSourceSHAChanged(t *testing.T) {
 	})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
-			PullReqID: 50, ProviderType: string(linkedpr.ProviderGitHub),
+			PullReqID: 50, ProviderType: string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	syncRefsCalls := 0
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{},
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{},
 		func(m *mockgit.Interface) {
 			m.ExpectedCalls = nil
 			m.On("SyncRefs", mock.Anything, mock.Anything).Run(func(mock.Arguments) {
@@ -854,12 +854,12 @@ func TestHandle_Update_SHAChangeResetsMergeCheckStatus(t *testing.T) {
 	})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
-			PullReqID: 50, ProviderType: string(linkedpr.ProviderGitHub),
+			PullReqID: 50, ProviderType: string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 	if err := callHandle(t, h, eventWith(basePayload()), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -896,12 +896,12 @@ func TestHandle_Update_BaseOnlyChangeDoesNotEmitBranchUpdateActivity(t *testing.
 	activityStore, activityRows := newActivityStoreMock(t)
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
-			PullReqID: 50, ProviderType: string(linkedpr.ProviderGitHub),
+			PullReqID: 50, ProviderType: string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, activityStore,
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 	if err := callHandle(t, h, eventWith(basePayload()), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -932,13 +932,13 @@ func TestHandle_Update_PreservesMergeCheckStatusWithoutSHAChange(t *testing.T) {
 	})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
-			PullReqID: 50, ProviderType: string(linkedpr.ProviderGitHub),
+			PullReqID: 50, ProviderType: string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
-	pl := basePayload(func(p *linkedpr.PullRequestPayload) { p.Draft = true })
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+	pl := basePayload(func(p *linkedsync.PullRequestPayload) { p.Draft = true })
 	if err := callHandle(t, h, eventWith(pl), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -964,7 +964,7 @@ func TestHandle_Update_DropsStaleWebhook(t *testing.T) {
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
 			PullReqID:      50,
-			ProviderType:   string(linkedpr.ProviderGitHub),
+			ProviderType:   string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 			// Newer than fixture payload's UpdatedAt (1_700_000_100_000):
 			// the incoming event predates the last applied one.
@@ -972,7 +972,7 @@ func TestHandle_Update_DropsStaleWebhook(t *testing.T) {
 		}),
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 	if err := callHandle(t, h, eventWith(basePayload()), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle should swallow stale webhook, got: %v", err)
 	}
@@ -985,7 +985,7 @@ func TestHandle_Create_ParentDuplicateAcksAndDrops(t *testing.T) {
 	prStore := newPullReqStoreHarness(pullReqStoreConfig{createErr: gitness_store.ErrDuplicate})
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{findByFn: findNotFound(t)})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
 	err := callHandle(t, h, eventWith(basePayload()), testLinkedRepo())
 	if err != nil {
@@ -1026,14 +1026,14 @@ func TestHandle_Create_LinkedDuplicateDropsStaleLoser(t *testing.T) {
 			// Winner stored a fresher ProviderUpdatedAt than our loser carries.
 			return &types.LinkedPullReq{
 				PullReqID:         winner.ID,
-				ProviderType:      string(linkedpr.ProviderGitHub),
+				ProviderType:      string(linkedsync.ProviderGitHub),
 				ProviderRepoID:    testRepoProviderID,
 				ProviderUpdatedAt: 1_700_000_200_000,
 			}, nil
 		},
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
 	// Loser payload's UpdatedAt is 1_700_000_100_000 (basePayload default) —
 	// older than the winner's 1_700_000_200_000.
@@ -1074,13 +1074,13 @@ func TestHandle_Create_LinkedDuplicateFallsThroughToUpdate(t *testing.T) {
 				return nil, gitness_store.ErrResourceNotFound
 			}
 			return &types.LinkedPullReq{
-				PullReqID: winner.ID, ProviderType: string(linkedpr.ProviderGitHub),
+				PullReqID: winner.ID, ProviderType: string(linkedsync.ProviderGitHub),
 				ProviderRepoID: testRepoProviderID,
 			}, nil
 		},
 	})
 	h := newPullRequestHandler(t, prStore, linkedStore, testActivityStore(t),
-		&linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		&linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
 	if err := callHandle(t, h, eventWith(basePayload()), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -1104,7 +1104,7 @@ func newPullRequestHandlerWithRepoStore(
 	linkedStore store.LinkedPullReqStore,
 	activity store.PullReqActivityStore,
 	repoStore *repoStoreStub,
-	author linkedpr.AuthorResolver,
+	author linkedsync.AuthorResolver,
 	reporter *pullreqevents.Reporter,
 	tx noopTx,
 	gitOpts ...func(*mockgit.Interface),
@@ -1119,7 +1119,7 @@ func newPullRequestHandlerWithRepoStore(
 	)
 }
 
-func testRefSyncSpec(p linkedpr.PullRequestPayload) []handlers.RefSyncEntry {
+func testRefSyncSpec(p linkedsync.PullRequestPayload) []handlers.RefSyncEntry {
 	return []handlers.RefSyncEntry{
 		{RemoteRef: "refs/heads/" + p.BaseRef},
 		{RemoteRef: "refs/heads/" + p.HeadRef},
@@ -1132,9 +1132,9 @@ func runCreateCountersTest(t *testing.T, state enum.PullReqState, want types.Rep
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{findByFn: findNotFound(t)})
 	repoStore := &repoStoreStub{}
 	h := newPullRequestHandlerWithRepoStore(t, prStore, linkedStore, testActivityStore(t),
-		repoStore, &linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		repoStore, &linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
-	pl := basePayload(func(p *linkedpr.PullRequestPayload) { p.State = state })
+	pl := basePayload(func(p *linkedsync.PullRequestPayload) { p.State = state })
 	if err := callHandle(t, h, eventWith(pl), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -1192,15 +1192,15 @@ func runUpdateCountersTest(
 	linkedStore := newLinkedPullReqStoreHarness(linkedPullReqStoreConfig{
 		findByFn: findExisting(t, &types.LinkedPullReq{
 			PullReqID:      50,
-			ProviderType:   string(linkedpr.ProviderGitHub),
+			ProviderType:   string(linkedsync.ProviderGitHub),
 			ProviderRepoID: testRepoProviderID,
 		}),
 	})
 	repoStore := &repoStoreStub{}
 	h := newPullRequestHandlerWithRepoStore(t, prStore, linkedStore, testActivityStore(t),
-		repoStore, &linkedpr.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
+		repoStore, &linkedsync.SystemPrincipalResolver{PrincipalID: 42}, testReporter(t), noopTx{})
 
-	pl := basePayload(func(p *linkedpr.PullRequestPayload) { p.State = newState })
+	pl := basePayload(func(p *linkedsync.PullRequestPayload) { p.State = newState })
 	if err := callHandle(t, h, eventWith(pl), testLinkedRepo()); err != nil {
 		t.Fatalf("Handle: %v", err)
 	}

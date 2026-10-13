@@ -34,7 +34,7 @@ func RunMergeBase(
 ) (string, error) {
 	repo, err := repoFinder.FindByID(ctx, linkedRepo.RepoID)
 	if err != nil {
-		return "", fmt.Errorf("linkedpr: find repo %d: %w", linkedRepo.RepoID, err)
+		return "", fmt.Errorf("linkedsync: find repo %d: %w", linkedRepo.RepoID, err)
 	}
 	out, err := gitClient.MergeBase(ctx, git.MergeBaseParams{
 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
@@ -42,7 +42,7 @@ func RunMergeBase(
 		Ref2:       ref2,
 	})
 	if err != nil {
-		return "", fmt.Errorf("linkedpr: git MergeBase: %w", err)
+		return "", fmt.Errorf("linkedsync: git MergeBase: %w", err)
 	}
 	return out.MergeBaseSHA.String(), nil
 }

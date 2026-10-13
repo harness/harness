@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package github
+package bitbucket
 
 import (
-	checkevents "github.com/harness/gitness/app/events/check"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/app/services/linkedpr"
-	"github.com/harness/gitness/app/services/linkedpr/handlers"
+	"github.com/harness/gitness/app/services/linkedsync"
+	"github.com/harness/gitness/app/services/linkedsync/handlers"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
@@ -29,35 +28,24 @@ import (
 	"github.com/google/wire"
 )
 
-// WireSet exposes the GitHub-specific providers.
-var WireSet = wire.NewSet(
-	ProvidePullRequestHandler,
-	ProvideCheckHandler,
-)
-
-func ProvideCheckHandler(
-	checkStore store.CheckStore,
-	eventReporter *checkevents.Reporter,
-	authorResolver linkedpr.AuthorResolver,
-) *CheckHandler {
-	return NewCheckHandler(checkStore, eventReporter, authorResolver)
-}
+// WireSet exposes Bitbucket Cloud's provider-specific PR handler.
+var WireSet = wire.NewSet(ProvidePullRequestHandler)
 
 func ProvidePullRequestHandler(
 	pullReqStore store.PullReqStore,
 	linkedPullReqStore store.LinkedPullReqStore,
 	activityStore store.PullReqActivityStore,
 	repoStore store.RepoStore,
-	authorResolver linkedpr.AuthorResolver,
+	authorResolver linkedsync.AuthorResolver,
 	reporter *pullreqevents.Reporter,
 	gitClient git.Interface,
 	repoFinder refcache.RepoFinder,
 	urlProvider gitnessurl.Provider,
 	connectorService importer.ConnectorService,
 	tx dbtx.Transactor,
-) *handlers.PullRequestHandler {
-	return handlers.NewPullRequestHandler(
+) *PullRequestHandler {
+	return &PullRequestHandler{PullRequestHandler: handlers.NewPullRequestHandler(
 		pullReqStore, linkedPullReqStore, activityStore, repoStore, authorResolver,
 		reporter, gitClient, repoFinder, urlProvider, connectorService, tx, PRSyncSpec,
-	)
+	)}
 }

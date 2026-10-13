@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package linkedpr
+package linkedsync
 
 import (
 	"context"
@@ -57,37 +57,37 @@ func (h *safeHandler[T]) Handle(
 	linkedRepo *types.LinkedRepo,
 ) error {
 	if ev == nil {
-		return fmt.Errorf("linkedpr: %s: nil event", h.name)
+		return fmt.Errorf("linkedsync: %s: nil event", h.name)
 	}
 	if ev.Payload == nil {
-		return fmt.Errorf("linkedpr: %s: nil payload", h.name)
+		return fmt.Errorf("linkedsync: %s: nil payload", h.name)
 	}
 	if linkedRepo == nil {
-		return fmt.Errorf("linkedpr: %s: nil linked repo", h.name)
+		return fmt.Errorf("linkedsync: %s: nil linked repo", h.name)
 	}
 	payload, ok := ev.Payload.(T)
 	if !ok {
 		// This is a wiring bug: the Handlers registry routed an event whose
 		// Kind doesn't match this handler's expected payload type.
 		return fmt.Errorf(
-			"linkedpr: %s: payload type mismatch (got kind=%s)",
+			"linkedsync: %s: payload type mismatch (got kind=%s)",
 			h.name, ev.Payload.Kind(),
 		)
 	}
 
 	logger := log.Ctx(ctx).With().
-		Str("linkedpr.handler", h.name).
-		Str("linkedpr.kind", string(ev.Payload.Kind())).
-		Str("linkedpr.provider", string(ev.Provider)).
-		Int64("linkedpr.linked_repo_id", linkedRepo.RepoID).
+		Str("linkedsync.handler", h.name).
+		Str("linkedsync.kind", string(ev.Payload.Kind())).
+		Str("linkedsync.provider", string(ev.Provider)).
+		Int64("linkedsync.linked_repo_id", linkedRepo.RepoID).
 		Logger()
 	ctx = logger.WithContext(ctx)
 
-	logger.Debug().Msg("linkedpr: handler start")
+	logger.Debug().Msg("linkedsync: handler start")
 	err := h.fn(ctx, ev, payload, linkedRepo)
 	if err != nil {
-		return fmt.Errorf("linkedpr: %s: %w", h.name, err)
+		return fmt.Errorf("linkedsync: %s: %w", h.name, err)
 	}
-	logger.Debug().Msg("linkedpr: handler ok")
+	logger.Debug().Msg("linkedsync: handler ok")
 	return nil
 }

@@ -17,13 +17,13 @@ package bitbucket
 import (
 	"testing"
 
-	"github.com/harness/gitness/app/services/linkedpr"
+	"github.com/harness/gitness/app/services/linkedsync"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestPRSyncSpec(t *testing.T) {
-	entries := PRSyncSpec(linkedpr.PullRequestPayload{
+	entries := PRSyncSpec(linkedsync.PullRequestPayload{
 		Number: 8, HeadRef: "feature", BaseRef: "main",
 	})
 

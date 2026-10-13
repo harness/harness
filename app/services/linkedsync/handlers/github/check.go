@@ -21,7 +21,7 @@ import (
 	"time"
 
 	checkevents "github.com/harness/gitness/app/events/check"
-	"github.com/harness/gitness/app/services/linkedpr"
+	"github.com/harness/gitness/app/services/linkedsync"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -34,13 +34,13 @@ import (
 type CheckHandler struct {
 	checkStore     store.CheckStore
 	eventReporter  *checkevents.Reporter
-	authorResolver linkedpr.AuthorResolver
+	authorResolver linkedsync.AuthorResolver
 }
 
 func NewCheckHandler(
 	checkStore store.CheckStore,
 	eventReporter *checkevents.Reporter,
-	authorResolver linkedpr.AuthorResolver,
+	authorResolver linkedsync.AuthorResolver,
 ) *CheckHandler {
 	return &CheckHandler{
 		checkStore:     checkStore,
@@ -51,8 +51,8 @@ func NewCheckHandler(
 
 func (h *CheckHandler) Handle(
 	ctx context.Context,
-	ev *linkedpr.Event,
-	payload linkedpr.CheckPayload,
+	ev *linkedsync.Event,
+	payload linkedsync.CheckPayload,
 	linkedRepo *types.LinkedRepo,
 ) error {
 	reporterPrincipalID, err := h.authorResolver.Resolve(ctx, ev)
@@ -66,20 +66,20 @@ func (h *CheckHandler) Handle(
 		if entry.SHA == "" {
 			log.Ctx(ctx).Warn().
 				Str("identifier", entry.Identifier).
-				Msg("linkedpr: check entry missing SHA; skipping")
+				Msg("linkedsync: check entry missing SHA; skipping")
 			continue
 		}
 		if entry.Identifier == "" {
 			log.Ctx(ctx).Warn().
 				Str("sha", entry.SHA).
-				Msg("linkedpr: check entry missing identifier; skipping")
+				Msg("linkedsync: check entry missing identifier; skipping")
 			continue
 		}
 		if entry.Link == "" {
 			log.Ctx(ctx).Warn().
 				Str("identifier", entry.Identifier).
 				Str("sha", entry.SHA).
-				Msg("linkedpr: check entry missing link; skipping")
+				Msg("linkedsync: check entry missing link; skipping")
 			continue
 		}
 

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/harness/gitness/app/services/linkedpr"
+	"github.com/harness/gitness/app/services/linkedsync"
 
 	"github.com/stretchr/testify/require"
 )
@@ -26,7 +26,7 @@ import (
 func TestGithubPRSyncSpec(t *testing.T) {
 	t.Parallel()
 
-	payload := linkedpr.PullRequestPayload{
+	payload := linkedsync.PullRequestPayload{
 		Number:  8,
 		HeadRef: "feature-branch",
 		BaseRef: "main",

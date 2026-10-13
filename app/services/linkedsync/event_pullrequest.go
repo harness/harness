@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package linkedpr
+package linkedsync
 
 import "github.com/harness/gitness/types/enum"
 

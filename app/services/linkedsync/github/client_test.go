@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	ghclient "github.com/harness/gitness/app/services/linkedpr/github"
+	ghclient "github.com/harness/gitness/app/services/linkedsync/github"
 
 	gh "github.com/drone/go-scm/scm/driver/github"
 )

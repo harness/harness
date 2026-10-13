@@ -21,7 +21,7 @@ import (
 	"time"
 
 	checkevents "github.com/harness/gitness/app/events/check"
-	"github.com/harness/gitness/app/services/linkedpr"
+	"github.com/harness/gitness/app/services/linkedsync"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -121,7 +121,7 @@ type stubAuthorResolver struct {
 	err         error
 }
 
-func (s *stubAuthorResolver) Resolve(_ context.Context, _ *linkedpr.Event) (int64, error) {
+func (s *stubAuthorResolver) Resolve(_ context.Context, _ *linkedsync.Event) (int64, error) {
 	return s.principalID, s.err
 }
 
@@ -201,15 +201,15 @@ func testLinkedRepo(repoID int64) *types.LinkedRepo {
 	return &types.LinkedRepo{RepoID: repoID}
 }
 
-func testEvent() *linkedpr.Event {
-	return &linkedpr.Event{
-		Provider:  linkedpr.ProviderGitHub,
+func testEvent() *linkedsync.Event {
+	return &linkedsync.Event{
+		Provider:  linkedsync.ProviderGitHub,
 		AccountID: "acc-test",
 	}
 }
 
-func validEntry() linkedpr.CheckEntry {
-	return linkedpr.CheckEntry{
+func validEntry() linkedsync.CheckEntry {
+	return linkedsync.CheckEntry{
 		Identifier: "ci/build",
 		Status:     "completed",
 		Conclusion: "success",
@@ -227,8 +227,8 @@ func TestCheckHandler_Handle_AuthorResolverError(t *testing.T) {
 	cs := &stubCheckStore{}
 	h := newTestHandler(cs, &stubAuthorResolver{err: resolveErr})
 
-	payload := linkedpr.CheckPayload{
-		Checks: []linkedpr.CheckEntry{validEntry()},
+	payload := linkedsync.CheckPayload{
+		Checks: []linkedsync.CheckEntry{validEntry()},
 	}
 	err := h.Handle(context.Background(), testEvent(), payload, testLinkedRepo(1))
 
@@ -249,7 +249,7 @@ func TestCheckHandler_Handle_SkipEmptySHA(t *testing.T) {
 
 	entry := validEntry()
 	entry.SHA = ""
-	payload := linkedpr.CheckPayload{Checks: []linkedpr.CheckEntry{entry}}
+	payload := linkedsync.CheckPayload{Checks: []linkedsync.CheckEntry{entry}}
 
 	if err := h.Handle(context.Background(), testEvent(), payload, testLinkedRepo(1)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -265,7 +265,7 @@ func TestCheckHandler_Handle_SkipEmptyIdentifier(t *testing.T) {
 
 	entry := validEntry()
 	entry.Identifier = ""
-	payload := linkedpr.CheckPayload{Checks: []linkedpr.CheckEntry{entry}}
+	payload := linkedsync.CheckPayload{Checks: []linkedsync.CheckEntry{entry}}
 
 	if err := h.Handle(context.Background(), testEvent(), payload, testLinkedRepo(1)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -281,7 +281,7 @@ func TestCheckHandler_Handle_SkipEmptyLink(t *testing.T) {
 
 	entry := validEntry()
 	entry.Link = ""
-	payload := linkedpr.CheckPayload{Checks: []linkedpr.CheckEntry{entry}}
+	payload := linkedsync.CheckPayload{Checks: []linkedsync.CheckEntry{entry}}
 
 	if err := h.Handle(context.Background(), testEvent(), payload, testLinkedRepo(1)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -296,7 +296,7 @@ func TestCheckHandler_Handle_UpsertError(t *testing.T) {
 	cs := &stubCheckStore{upsertFn: func(_ *types.Check) error { return upsertErr }}
 	h := newTestHandler(cs, &stubAuthorResolver{principalID: 1})
 
-	payload := linkedpr.CheckPayload{Checks: []linkedpr.CheckEntry{validEntry()}}
+	payload := linkedsync.CheckPayload{Checks: []linkedsync.CheckEntry{validEntry()}}
 	err := h.Handle(context.Background(), testEvent(), payload, testLinkedRepo(1))
 
 	if err == nil {
@@ -323,7 +323,7 @@ func TestCheckHandler_Handle_HappyPath(t *testing.T) {
 	h := newTestHandler(cs, &stubAuthorResolver{principalID: principalID})
 
 	entry := validEntry()
-	payload := linkedpr.CheckPayload{Checks: []linkedpr.CheckEntry{entry}}
+	payload := linkedsync.CheckPayload{Checks: []linkedsync.CheckEntry{entry}}
 
 	err := h.Handle(context.Background(), testEvent(), payload, testLinkedRepo(repoID))
 	if !errors.Is(err, errStopAfterUpsert) {
@@ -354,13 +354,13 @@ func TestCheckHandler_Handle_PartialSkip(t *testing.T) {
 	cs := &stubCheckStore{upsertFn: func(_ *types.Check) error { return errStopAfterUpsert }}
 	h := newTestHandler(cs, &stubAuthorResolver{principalID: 1})
 
-	entries := []linkedpr.CheckEntry{
+	entries := []linkedsync.CheckEntry{
 		{Identifier: "skip-no-sha", Link: "https://x", SHA: ""},
 		validEntry(), // only this one should be upserted
 		{Identifier: "", SHA: "abc", Link: "https://x"},
 		{Identifier: "skip-no-link", SHA: "abc", Link: ""},
 	}
-	payload := linkedpr.CheckPayload{Checks: entries}
+	payload := linkedsync.CheckPayload{Checks: entries}
 
 	err := h.Handle(context.Background(), testEvent(), payload, testLinkedRepo(1))
 	if !errors.Is(err, errStopAfterUpsert) {
