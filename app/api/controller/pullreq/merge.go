@@ -328,6 +328,13 @@ func (c *Controller) Merge(
 			}
 		}(in.Method)
 
+		var conflicts []string
+		if in.Method == enum.MergeMethodRebase {
+			conflicts = pr.RebaseConflicts
+		} else {
+			conflicts = pr.MergeConflicts
+		}
+
 		if checkMergeability {
 			// for merge-check we can skip git hooks explicitly (we don't update any refs anyway)
 			writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, targetRepo)
@@ -356,7 +363,9 @@ func (c *Controller) Merge(
 				return nil, nil, fmt.Errorf("failed merge check with method=%s: %w", in.Method, err)
 			}
 
-			pr, err = c.pullreqStore.UpdateMergeCheckMetadataOptLock(ctx, pr, func(pr *types.PullReq) error {
+			conflicts = mergeOutput.ConflictFiles
+
+			_, err = c.pullreqStore.UpdateMergeCheckMetadataOptLock(ctx, pr, func(pr *types.PullReq) error {
 				if pr.SourceSHA != mergeOutput.HeadSHA.String() {
 					return errors.New("source SHA has changed")
 				}
@@ -386,13 +395,6 @@ func (c *Controller) Merge(
 			} else {
 				c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 			}
-		}
-
-		var conflicts []string
-		if in.Method == enum.MergeMethodRebase {
-			conflicts = pr.RebaseConflicts
-		} else {
-			conflicts = pr.MergeConflicts
 		}
 
 		err := c.backfillApprovalInfo(ctx, ruleOut.DefaultReviewerApprovals)
