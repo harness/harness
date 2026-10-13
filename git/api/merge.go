@@ -80,7 +80,7 @@ func (g *Git) GetMergeBase(
 		// git merge-base rev1 rev2
 		// if there is unrelated history then stderr is empty with
 		// exit code 1. This cannot be handled in processGitErrorf because stderr is empty.
-		if command.AsError(err).IsExitCode(1) && stderr.Len() == 0 {
+		if cmdErr := command.AsError(err); cmdErr != nil && cmdErr.IsExitCode(1) && stderr.Len() == 0 {
 			return sha.None, "", &UnrelatedHistoriesError{
 				BaseRef: base,
 				HeadRef: head,
