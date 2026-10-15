@@ -22,8 +22,8 @@ import (
 )
 
 type Check struct {
-	ID         int64            `json:"id"`
-	CreatedBy  int64            `json:"-"` // clients will use "reported_by"
+	ID         int64            `json:"id,omitempty"` // pending checks have no DB entry, omit their zero ID
+	CreatedBy  int64            `json:"-"`            // clients will use "reported_by"
 	Created    int64            `json:"created,omitempty"`
 	Updated    int64            `json:"updated,omitempty"`
 	RepoID     int64            `json:"-"` // status checks are always returned for a commit in a repository
