@@ -170,3 +170,29 @@ func TestCommandContextTimeout(t *testing.T) {
 		t.Errorf("expected: %v error, got: %v", context.DeadlineExceeded, err)
 	}
 }
+
+func TestCommandContextCanceled(t *testing.T) {
+	repoDir := t.TempDir()
+	if err := New("init", WithFlag("--bare")).Run(context.Background(), WithDir(repoDir)); err != nil {
+		t.Fatalf("init failed: %v", err)
+	}
+
+	// cat-file --batch keeps running for as long as stdin stays open. The pipe must still close
+	// eventually, because cmd.Wait also waits for the goroutine copying stdin.
+	pr, pw := io.Pipe()
+	defer pr.Close()
+	time.AfterFunc(time.Second, func() { _ = pw.Close() })
+
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(200*time.Millisecond, cancel)
+
+	err := New("cat-file", WithFlag("--batch")).Run(ctx,
+		WithDir(repoDir),
+		WithStdin(pr),
+		WithStdout(io.Discard),
+	)
+
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("expected: %v error, got: %v", context.Canceled, err)
+	}
+}

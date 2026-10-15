@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"os"
 	"os/exec"
 	"regexp"
 	"sync"
@@ -167,7 +168,10 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 	case <-ctx.Done():
 		<-result
 		if cmd.Process != nil && cmd.ProcessState != nil && !cmd.ProcessState.Exited() {
-			if err := cmd.Process.Kill(); err != nil && !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			// exec.CommandContext has usually killed git already, so ErrProcessDone means there is
+			// nothing left to stop - report the cancellation, not the redundant kill.
+			if err := cmd.Process.Kill(); err != nil && !errors.Is(err, os.ErrProcessDone) &&
+				!errors.Is(ctx.Err(), context.DeadlineExceeded) {
 				return fmt.Errorf("kill process: %w", err)
 			}
 		}
