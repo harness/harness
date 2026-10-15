@@ -107,3 +107,20 @@ func (m *LinkedRepoStore) ListByProviderID(
 	}
 	return v, nil
 }
+
+func (m *LinkedRepoStore) ExistsByRootSpace(_ context.Context, rootSpaceIdentifier string) (bool, error) {
+	args := m.Called(rootSpaceIdentifier)
+	if len(args) == 1 {
+		if rf, ok := args.Get(0).(func(string) (bool, error)); ok {
+			return rf(rootSpaceIdentifier)
+		}
+	}
+	var v bool
+	if args.Get(0) != nil {
+		v, _ = args.Get(0).(bool)
+	}
+	if len(args) > 1 {
+		return v, args.Error(1)
+	}
+	return v, nil
+}

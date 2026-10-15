@@ -368,6 +368,9 @@ type (
 			accountID, provider, providerID string,
 			pagination types.Pagination,
 		) ([]types.LinkedRepo, error)
+		// ExistsByRootSpace reports whether a root space owns any live linked repo,
+		// so inbound-webhook consumers can skip root spaces that use no linked repos.
+		ExistsByRootSpace(ctx context.Context, rootSpaceIdentifier string) (bool, error)
 	}
 
 	// LinkedPullReqStore defines persistence operations for the linked-PR mirror table.

@@ -147,6 +147,42 @@ func TestDispatch_FansOutToAllLinkedRepos(t *testing.T) {
 	}
 }
 
+// alwaysFullPageLookup returns a full page for every request, as a store would
+// if it ignored the offset or if a pathological number of rows mirrored the same
+// upstream repo. The pagination walk must bound itself rather than trust the
+// data to run out.
+type alwaysFullPageLookup struct {
+	pageSize int
+	calls    int
+}
+
+func (l *alwaysFullPageLookup) ListByProviderID(
+	_ context.Context, _, _, _ string, _ types.Pagination,
+) ([]types.LinkedRepo, error) {
+	l.calls++
+	rows := make([]types.LinkedRepo, l.pageSize)
+	for i := range rows {
+		rows[i] = types.LinkedRepo{RepoID: int64(i)}
+	}
+	return rows, nil
+}
+
+// A store that never returns a short page must not spin forever: the walk uses
+// OFFSET pagination, so each extra page also costs the database more than the
+// last.
+func TestDispatch_BoundsPaginationWalk(t *testing.T) {
+	lookup := &alwaysFullPageLookup{pageSize: 100}
+	h := &fakeHandler{}
+
+	d := linkedsync.NewDispatcher(lookup, handlersWith(h))
+	if _, err := d.Dispatch(context.Background(), buildPREvent()); err != nil {
+		t.Fatalf("Dispatch: %v", err)
+	}
+	if lookup.calls > 20 {
+		t.Errorf("pagination walk unbounded: %d lookups", lookup.calls)
+	}
+}
+
 // stubPayload implements linkedsync.Payload with a caller-controlled Kind so
 // the dispatcher routes it to a key with no registered handler.
 type stubPayload struct{ kind linkedsync.Kind }

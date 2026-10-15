@@ -27,6 +27,7 @@ import (
 var WireSet = wire.NewSet(
 	ProvideDispatcher,
 	ProvideAuthorResolver,
+	ProvidePresenceCache,
 )
 
 // ProvideAuthorResolver returns the system-principal default; override via wire.
@@ -41,4 +42,10 @@ func ProvideDispatcher(
 	registry Handlers,
 ) *Dispatcher {
 	return NewDispatcher(linkedRepoStore, registry)
+}
+
+// ProvidePresenceCache provides the account-level relevance filter for inbound
+// webhook consumers.
+func ProvidePresenceCache(linkedRepoStore store.LinkedRepoStore) *PresenceCache {
+	return NewPresenceCache(linkedRepoStore)
 }

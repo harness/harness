@@ -195,10 +195,15 @@ func listAllByProviderID(
 	lookup LinkedRepoLookup,
 	accountID, provider, providerID string,
 ) ([]types.LinkedRepo, error) {
-	const pageSize = 100
+	const (
+		pageSize = 100
+		// Offset pagination makes every page cost the database more than the one
+		// before it, so bound the walk instead of trusting the rows to run out.
+		maxPages = 10
+	)
 
 	var all []types.LinkedRepo
-	for page := 1; ; page++ {
+	for page := 1; page <= maxPages; page++ {
 		batch, err := lookup.ListByProviderID(ctx, accountID, provider, providerID, types.Pagination{
 			Page: page,
 			Size: pageSize,
@@ -209,9 +214,16 @@ func listAllByProviderID(
 
 		all = append(all, batch...)
 		if len(batch) < pageSize {
-			break
+			return all, nil
 		}
 	}
+
+	log.Ctx(ctx).Warn().
+		Str("account_id", accountID).
+		Str("provider", provider).
+		Str("provider_id", providerID).
+		Int("limit", maxPages*pageSize).
+		Msg("linkedsync: linked repo lookup hit its page cap; later mirrors skipped for this event")
 
 	return all, nil
 }

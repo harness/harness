@@ -1,0 +1,2 @@
+DROP INDEX idx_linked_repositories_provider_id;
+DROP INDEX idx_repositories_linked_root_space;

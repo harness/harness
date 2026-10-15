@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -276,6 +278,39 @@ func (s *LinkedRepoStore) ListByProviderID(
 		result[i] = *mapToLinkedRepo(&dst[i])
 	}
 	return result, nil
+}
+
+// ExistsByRootSpace reports whether the root space owns any live linked repo. It
+// is the cheap pre-filter for inbound webhook routing: the consumer reads a
+// platform-wide stream, so this answers "is this root space relevant at all?"
+// before any per-event work. In Harness the root space identifier is the account id.
+func (s *LinkedRepoStore) ExistsByRootSpace(ctx context.Context, rootSpaceIdentifier string) (bool, error) {
+	stmt := database.Builder.
+		Select("1").
+		From("linked_repositories").
+		InnerJoin("repositories ON repo_id = linked_repo_id").
+		Where(squirrel.Eq{"repo_root_space_identifier": rootSpaceIdentifier}).
+		// repo_type and repo_deleted match the partial index idx_repositories_linked_root_space.
+		Where(squirrel.Eq{"repo_type": enum.RepoTypeLinked}).
+		Where("repo_deleted IS NULL").
+		Limit(1)
+
+	sqlQuery, args, err := stmt.ToSql()
+	if err != nil {
+		return false, fmt.Errorf("failed to convert linked repo exists query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var exists int
+	if err := db.QueryRowContext(ctx, sqlQuery, args...).Scan(&exists); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, database.ProcessSQLErrorf(ctx, err, "Failed to check linked repos by account")
+	}
+
+	return true, nil
 }
 
 func mapToLinkedRepo(src *linkedRepo) *types.LinkedRepo {
