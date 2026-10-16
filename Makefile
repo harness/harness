@@ -104,7 +104,7 @@ ar-clean:
 
 format: tools # Format go code and error if any changes are made
 	@echo "Formatting ..."
-	@goimports -w .
+	@find . -name node_modules -prune -o -name '*.go' ! -name wire_gen.go -print0 | xargs -0 -r goimports -w
 	@gci write --skip-generated --custom-order -s standard -s "prefix(github.com/harness/gitness)" -s default -s blank -s dot .
 	@echo "Formatting complete"
 
