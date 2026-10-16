@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -47,6 +48,11 @@ func (c *Controller) UserGroupReviewerDelete(
 	if err != nil {
 		return fmt.Errorf("failed to delete user group reviewer: %w", err)
 	}
+
+	c.eventReporter.UserGroupReviewerRemoved(ctx, &events.UserGroupReviewerRemovedPayload{
+		Base:        eventBase(pr, &session.Principal),
+		UserGroupID: userGroupID,
+	})
 
 	err = func() error {
 		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {

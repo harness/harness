@@ -21,6 +21,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -78,6 +79,11 @@ func (c *Controller) ReviewerDelete(
 	if err != nil {
 		return fmt.Errorf("failed to delete reviewer: %w", err)
 	}
+
+	c.eventReporter.ReviewerRemoved(ctx, &events.ReviewerRemovedPayload{
+		Base:       eventBase(pr, &session.Principal),
+		ReviewerID: reviewerID,
+	})
 
 	err = func() error {
 		payload := &types.PullRequestActivityPayloadReviewerDelete{

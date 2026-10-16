@@ -194,6 +194,12 @@ const (
 	WebhookTriggerPullReqLabelAssigned WebhookTrigger = "pullreq_label_assigned"
 	// WebhookTriggerPullReqReviewSubmitted gets triggered when a pull request review is submitted.
 	WebhookTriggerPullReqReviewSubmitted = "pullreq_review_submitted"
+	// WebhookTriggerPullReqReviewerAssigned gets triggered when a reviewer is assigned to a pull request.
+	WebhookTriggerPullReqReviewerAssigned WebhookTrigger = "pullreq_reviewer_assigned"
+	// WebhookTriggerPullReqReviewerUnassigned gets triggered when a reviewer is unassigned from a pull request.
+	WebhookTriggerPullReqReviewerUnassigned WebhookTrigger = "pullreq_reviewer_unassigned"
+	// WebhookTriggerPullReqCheckCompleted gets triggered when a status check on a PR reaches a terminal state.
+	WebhookTriggerPullReqCheckCompleted WebhookTrigger = "pullreq_check_completed"
 	// WebhookTriggerPullReqTargetBranchChanged gets triggered when a pull request target branch is changed.
 	WebhookTriggerPullReqTargetBranchChanged = "pullreq_target_branch_changed"
 
@@ -226,6 +232,9 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqMerged,
 	WebhookTriggerPullReqLabelAssigned,
 	WebhookTriggerPullReqReviewSubmitted,
+	WebhookTriggerPullReqReviewerAssigned,
+	WebhookTriggerPullReqReviewerUnassigned,
+	WebhookTriggerPullReqCheckCompleted,
 	WebhookTriggerPullReqTargetBranchChanged,
 	WebhookTriggerMergeQueueChecksRequested,
 	WebhookTriggerMergeQueueChecksCanceled,

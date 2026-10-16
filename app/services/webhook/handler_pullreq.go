@@ -480,6 +480,8 @@ func extractCodeCommentInfoIfAvailable(
 type PullReqLabelAssignedPayload struct {
 	BaseSegment
 	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
 	PullReqLabelSegment
 }
 
@@ -496,7 +498,7 @@ func (s *Service) handleEventPullReqLabelAssigned(
 			principal *types.Principal,
 			pr *types.PullReq,
 			targetRepo,
-			_ *types.Repository,
+			sourceRepo *types.Repository,
 		) (any, error) {
 			label, err := s.labelStore.FindByID(ctx, event.Payload.LabelID)
 			if err != nil {
@@ -513,6 +515,7 @@ func (s *Service) handleEventPullReqLabelAssigned(
 			}
 
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 			return &PullReqLabelAssignedPayload{
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqLabelAssigned,
@@ -521,6 +524,18 @@ func (s *Service) handleEventPullReqLabelAssigned(
 				},
 				PullReqSegment: PullReqSegment{
 					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
 				},
 				PullReqLabelSegment: PullReqLabelSegment{
 					LabelInfo: LabelInfo{
@@ -674,6 +689,24 @@ type PullReqReviewSubmittedPayload struct {
 	PullReqReviewSegment
 }
 
+// PullReqReviewerAssignedPayload describes the body of the pullreq reviewer assigned trigger.
+type PullReqReviewerAssignedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqReviewerSegment
+}
+
+// PullReqReviewerUnassignedPayload describes the body of the pullreq reviewer unassigned trigger.
+type PullReqReviewerUnassignedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqReviewerSegment
+}
+
 // handleEventPullReqReviewSubmitted handles review events for pull requests
 // and triggers pullreq review submitted webhooks for the target repo.
 func (s *Service) handleEventPullReqReviewSubmitted(
@@ -725,6 +758,173 @@ func (s *Service) handleEventPullReqReviewSubmitted(
 					ReviewerInfo:   principalInfoFrom(reviewer.ToPrincipalInfo()),
 				},
 			}, nil
+		})
+}
+
+// handleEventPullReqReviewerAssigned handles reviewer assigned events for pull requests.
+func (s *Service) handleEventPullReqReviewerAssigned(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.ReviewerAddedPayload],
+) error {
+	return s.triggerReviewerWebhook(
+		ctx,
+		enum.WebhookTriggerPullReqReviewerAssigned,
+		event.ID,
+		event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func() (PullReqReviewerSegment, error) {
+			reviewer, err := s.WebhookExecutor.FindPrincipalForEvent(ctx, event.Payload.ReviewerID)
+			if err != nil {
+				return PullReqReviewerSegment{}, fmt.Errorf(
+					"failed to get reviewer by id for reviewer id %d: %w", event.Payload.ReviewerID, err)
+			}
+			info := principalInfoFrom(reviewer.ToPrincipalInfo())
+			return PullReqReviewerSegment{Reviewer: &info}, nil
+		},
+	)
+}
+
+// handleEventPullReqReviewerUnassigned handles reviewer unassigned events for pull requests.
+func (s *Service) handleEventPullReqReviewerUnassigned(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.ReviewerRemovedPayload],
+) error {
+	return s.triggerReviewerWebhook(
+		ctx,
+		enum.WebhookTriggerPullReqReviewerUnassigned,
+		event.ID,
+		event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func() (PullReqReviewerSegment, error) {
+			reviewer, err := s.WebhookExecutor.FindPrincipalForEvent(ctx, event.Payload.ReviewerID)
+			if err != nil {
+				return PullReqReviewerSegment{}, fmt.Errorf(
+					"failed to get reviewer by id for reviewer id %d: %w", event.Payload.ReviewerID, err)
+			}
+			info := principalInfoFrom(reviewer.ToPrincipalInfo())
+			return PullReqReviewerSegment{Reviewer: &info}, nil
+		},
+	)
+}
+
+// handleEventPullReqUserGroupReviewerAssigned fires the same assign trigger for user groups.
+func (s *Service) handleEventPullReqUserGroupReviewerAssigned(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.UserGroupReviewerAddedPayload],
+) error {
+	for _, userGroupID := range event.Payload.UserGroupReviewerIDs {
+		err := s.triggerReviewerWebhook(
+			ctx,
+			enum.WebhookTriggerPullReqReviewerAssigned,
+			fmt.Sprintf("%s-ug-%d", event.ID, userGroupID),
+			event.Payload.PrincipalID,
+			event.Payload.PullReqID,
+			func() (PullReqReviewerSegment, error) {
+				group, err := s.userGroupStore.Find(ctx, userGroupID)
+				if err != nil {
+					return PullReqReviewerSegment{}, fmt.Errorf(
+						"failed to get user group by id %d: %w", userGroupID, err)
+				}
+				info := userGroupInfoFrom(group)
+				return PullReqReviewerSegment{RequestedUserGroup: &info}, nil
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// handleEventPullReqUserGroupReviewerUnassigned fires the same unassign trigger for user groups.
+func (s *Service) handleEventPullReqUserGroupReviewerUnassigned(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.UserGroupReviewerRemovedPayload],
+) error {
+	return s.triggerReviewerWebhook(
+		ctx,
+		enum.WebhookTriggerPullReqReviewerUnassigned,
+		event.ID,
+		event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func() (PullReqReviewerSegment, error) {
+			group, err := s.userGroupStore.Find(ctx, event.Payload.UserGroupID)
+			if err != nil {
+				return PullReqReviewerSegment{}, fmt.Errorf(
+					"failed to get user group by id %d: %w", event.Payload.UserGroupID, err)
+			}
+			info := userGroupInfoFrom(group)
+			return PullReqReviewerSegment{RequestedUserGroup: &info}, nil
+		},
+	)
+}
+
+func (s *Service) triggerReviewerWebhook(
+	ctx context.Context,
+	triggerType enum.WebhookTrigger,
+	eventID string,
+	principalID int64,
+	prID int64,
+	reviewerSegmentFn func() (PullReqReviewerSegment, error),
+) error {
+	return s.triggerForEventWithPullReq(
+		ctx,
+		triggerType,
+		eventID, principalID, prID,
+		func(
+			principal *types.Principal,
+			pr *types.PullReq,
+			targetRepo,
+			sourceRepo *types.Repository,
+		) (any, error) {
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
+
+			segment, err := reviewerSegmentFn()
+			if err != nil {
+				return nil, err
+			}
+
+			base := BaseSegment{
+				Trigger:   triggerType,
+				Repo:      targetRepoInfo,
+				Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+			}
+			pullReq := PullReqSegment{
+				PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+			}
+			targetRef := PullReqTargetReferenceSegment{
+				TargetRef: ReferenceInfo{
+					Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+					Repo: targetRepoInfo,
+				},
+			}
+			ref := ReferenceSegment{
+				Ref: ReferenceInfo{
+					Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+					Repo: sourceRepoInfo,
+				},
+			}
+
+			if triggerType == enum.WebhookTriggerPullReqReviewerAssigned {
+				return &PullReqReviewerAssignedPayload{
+					BaseSegment:                   base,
+					PullReqSegment:                pullReq,
+					PullReqTargetReferenceSegment: targetRef,
+					ReferenceSegment:              ref,
+					PullReqReviewerSegment:        segment,
+				}, nil
+			}
+			if triggerType == enum.WebhookTriggerPullReqReviewerUnassigned {
+				return &PullReqReviewerUnassignedPayload{
+					BaseSegment:                   base,
+					PullReqSegment:                pullReq,
+					PullReqTargetReferenceSegment: targetRef,
+					ReferenceSegment:              ref,
+					PullReqReviewerSegment:        segment,
+				}, nil
+			}
+			return nil, fmt.Errorf("unexpected reviewer webhook trigger %q", triggerType)
 		})
 }
 

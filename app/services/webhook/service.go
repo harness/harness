@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	checkevents "github.com/harness/gitness/app/events/check"
 	gitevents "github.com/harness/gitness/app/events/git"
 	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
@@ -189,6 +190,7 @@ type Service struct {
 	config                Config
 	auditService          audit.Service
 	sseStreamer           sse.Streamer
+	userGroupStore        store.UserGroupStore
 }
 
 func NewService(
@@ -198,6 +200,7 @@ func NewService(
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	mqReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
+	checkReaderFactory *events.ReaderFactory[*checkevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
 	spaceStore store.SpaceStore,
@@ -215,6 +218,7 @@ func NewService(
 	sseStreamer sse.Streamer,
 	secretService secret.Service,
 	spacePathStore store.SpacePathStore,
+	userGroupStore store.UserGroupStore,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service Config is invalid: %w", err)
@@ -244,6 +248,7 @@ func NewService(
 		labelValueStore:       labelValueStore,
 		auditService:          auditService,
 		sseStreamer:           sseStreamer,
+		userGroupStore:        userGroupStore,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
@@ -294,11 +299,33 @@ func NewService(
 			_ = r.RegisterReviewSubmitted(service.handleEventPullReqReviewSubmitted)
 			_ = r.RegisterCommentStatusUpdated(service.handleEventPullReqCommentStatusUpdated)
 			_ = r.RegisterTargetBranchChanged(service.handleEventPullReqTargetBranchChanged)
+			_ = r.RegisterReviewerAdded(service.handleEventPullReqReviewerAssigned)
+			_ = r.RegisterReviewerRemoved(service.handleEventPullReqReviewerUnassigned)
+			_ = r.RegisterUserGroupReviewerAdded(service.handleEventPullReqUserGroupReviewerAssigned)
+			_ = r.RegisterUserGroupReviewerRemoved(service.handleEventPullReqUserGroupReviewerUnassigned)
 
 			return nil
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch pr event reader for webhooks: %w", err)
+	}
+
+	_, err = checkReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+		func(r *checkevents.Reader) error {
+			const idleTimeout = 1 * time.Minute
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
+
+			_ = r.RegisterReported(service.handleEventCheckReported)
+
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch check event reader for webhooks: %w", err)
 	}
 
 	_, err = mqReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,

@@ -80,6 +80,9 @@ interface FormData {
   prCommentStatusUpdated: boolean
   prCommentUpdated: boolean
   prReviewSubmitted: boolean
+  prReviewerAssigned: boolean
+  prReviewerUnassigned: boolean
+  prCheckCompleted: boolean
   customHeaders: CustomHeader[]
 }
 
@@ -138,6 +141,9 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_STATUS_UPDATED) || false,
             prCommentUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_UPDATED) || false,
             prReviewSubmitted: webhook?.triggers?.includes(WebhookIndividualEvent.PR_REVIEW_SUBMITTED) || false,
+            prReviewerAssigned: webhook?.triggers?.includes(WebhookIndividualEvent.PR_REVIEWER_ASSIGNED) || false,
+            prReviewerUnassigned: webhook?.triggers?.includes(WebhookIndividualEvent.PR_REVIEWER_UNASSIGNED) || false,
+            prCheckCompleted: webhook?.triggers?.includes(WebhookIndividualEvent.PR_CHECK_COMPLETED) || false,
             events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL,
             customHeaders: (webhook?.extra_headers || []).map(h => ({
               key: h.key || '',
@@ -204,6 +210,15 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               }
               if (formData.prReviewSubmitted) {
                 triggers.push(WebhookIndividualEvent.PR_REVIEW_SUBMITTED)
+              }
+              if (formData.prReviewerAssigned) {
+                triggers.push(WebhookIndividualEvent.PR_REVIEWER_ASSIGNED)
+              }
+              if (formData.prReviewerUnassigned) {
+                triggers.push(WebhookIndividualEvent.PR_REVIEWER_UNASSIGNED)
+              }
+              if (formData.prCheckCompleted) {
+                triggers.push(WebhookIndividualEvent.PR_CHECK_COMPLETED)
               }
               if (formData.prMerged) {
                 triggers.push(WebhookIndividualEvent.PR_MERGED)
@@ -443,6 +458,21 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                         <FormInput.CheckBox
                           label={getString('webhookPRReviewSubmitted')}
                           name="prReviewSubmitted"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRReviewerAssigned')}
+                          name="prReviewerAssigned"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRReviewerUnassigned')}
+                          name="prReviewerUnassigned"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRCheckCompleted')}
+                          name="prCheckCompleted"
                           className={css.checkbox}
                         />
                         <FormInput.CheckBox

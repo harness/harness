@@ -495,6 +495,9 @@ webhookPRCommentUpdated: PR comment updated
 webhookPRMerged: PR merged
 webhookPRLabelAssigned: PR label assigned
 webhookPRReviewSubmitted: PR review submitted
+webhookPRReviewerAssigned: PR reviewer assigned
+webhookPRReviewerUnassigned: PR reviewer unassigned
+webhookPRCheckCompleted: PR check completed
 nameYourWebhook: Name your webhook
 noExecutionsFound: No Executions found
 noExecutionsFoundForWebhook: No executions found for the given webhook

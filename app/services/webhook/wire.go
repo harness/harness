@@ -17,6 +17,7 @@ package webhook
 import (
 	"context"
 
+	checkevents "github.com/harness/gitness/app/events/check"
 	gitevents "github.com/harness/gitness/app/events/git"
 	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
@@ -46,6 +47,7 @@ func ProvideService(
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	mqReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
+	checkReaderFactory *events.ReaderFactory[*checkevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
 	spaceStore store.SpaceStore,
@@ -63,6 +65,7 @@ func ProvideService(
 	sseStreamer sse.Streamer,
 	secretService secret.Service,
 	spacePathStore store.SpacePathStore,
+	userGroupStore store.UserGroupStore,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -71,6 +74,7 @@ func ProvideService(
 		gitReaderFactory,
 		prReaderFactory,
 		mqReaderFactory,
+		checkReaderFactory,
 		webhookStore,
 		webhookExecutionStore,
 		spaceStore, repoStore,
@@ -87,6 +91,7 @@ func ProvideService(
 		sseStreamer,
 		secretService,
 		spacePathStore,
+		userGroupStore,
 	)
 }
 

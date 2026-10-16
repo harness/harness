@@ -15319,6 +15319,7 @@ components:
       - merge_queue_checks_canceled
       - merge_queue_checks_requested
       - pullreq_branch_updated
+      - pullreq_check_completed
       - pullreq_closed
       - pullreq_comment_created
       - pullreq_comment_status_updated
@@ -15328,6 +15329,8 @@ components:
       - pullreq_merged
       - pullreq_reopened
       - pullreq_review_submitted
+      - pullreq_reviewer_assigned
+      - pullreq_reviewer_unassigned
       - pullreq_target_branch_changed
       - pullreq_updated
       - tag_created

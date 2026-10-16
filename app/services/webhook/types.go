@@ -105,6 +105,35 @@ type PullReqReviewSegment struct {
 	ReviewerInfo   PrincipalInfo              `json:"reviewer"`
 }
 
+type PullReqReviewerSegment struct {
+	Reviewer           *PrincipalInfo `json:"reviewer,omitempty"`
+	RequestedUserGroup *UserGroupInfo `json:"requested_user_group,omitempty"`
+}
+
+type UserGroupInfo struct {
+	ID         int64  `json:"id"`
+	Identifier string `json:"identifier"`
+	Name       string `json:"name"`
+}
+
+func userGroupInfoFrom(group *types.UserGroup) UserGroupInfo {
+	return UserGroupInfo{
+		ID:         group.ID,
+		Identifier: group.Identifier,
+		Name:       group.Name,
+	}
+}
+
+type PullReqCheckSegment struct {
+	Check CheckInfo `json:"check"`
+}
+
+type CheckInfo struct {
+	Identifier string           `json:"identifier"`
+	Name       string           `json:"name"`
+	Status     enum.CheckStatus `json:"status"`
+}
+
 type PullReqTargetBrancheChangedSegment struct {
 	OldTargetBranch string `json:"old_target_branch"`
 	OldMergeBaseSHA string `json:"old_merge_base_sha"`
