@@ -599,7 +599,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, publicaccessService, searcher, repoStore, spaceFinder, repoFinder)
 	infraproviderController := infraprovider2.ProvideController(authorizer, spaceFinder, infraproviderService)
 	limiterGitspace := limiter.ProvideGitspaceLimiter()
-	gitspaceController := gitspace.ProvideController(transactor, authorizer, infraproviderService, spaceStore, spaceFinder, gitspaceEventStore, statefulLogger, scmSCM, gitspaceService, limiterGitspace, repoFinder, gitspacesettingsService)
+	gitspaceController := gitspace.ProvideController(transactor, authorizer, infraproviderService, spaceStore, spaceFinder, gitspaceEventStore, statefulLogger, scmSCM, gitspaceService, limiterGitspace, repoFinder, gitspacesettingsService, config)
 	rule := migrate.ProvideRuleImporter(ruleStore, transactor, principalStore)
 	migrateWebhook := migrate.ProvideWebhookImporter(webhookConfig, transactor, webhookStore)
 	migrateLabel := migrate.ProvideLabelImporter(transactor, labelStore, labelValueStore, spaceStore)

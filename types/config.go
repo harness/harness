@@ -563,6 +563,14 @@ type Config struct {
 
 		AgentPort int `envconfig:"GITNESS_GITSPACE_AGENT_PORT" default:"8083"`
 
+		// LookupAllowPrivateNetwork, LookupAllowLoopback and LookupAllowLinkLocal
+		// control which resolved addresses the repository lookup (git ls-remote
+		// of a user provided URL) is allowed to reach. The URL is user provided,
+		// so all of them default to false.
+		LookupAllowPrivateNetwork bool `envconfig:"GITNESS_GITSPACE_LOOKUP_ALLOW_PRIVATE_NETWORK" default:"false"`
+		LookupAllowLoopback       bool `envconfig:"GITNESS_GITSPACE_LOOKUP_ALLOW_LOOPBACK" default:"false"`
+		LookupAllowLinkLocal      bool `envconfig:"GITNESS_GITSPACE_LOOKUP_ALLOW_LINK_LOCAL" default:"false"`
+
 		InfraTimeoutInMins int `envconfig:"GITNESS_INFRA_TIMEOUT_IN_MINS" default:"60"`
 
 		BusyActionInMins int `envconfig:"GITNESS_BUSY_ACTION_IN_MINS" default:"15"`
