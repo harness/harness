@@ -17,6 +17,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -50,6 +51,8 @@ type EmbeddedDockerOrchestrator struct {
 	statefulLogger      *logutil.StatefulLogger
 	runArgProvider      runarg.Provider
 	eventReporter       *events.Reporter
+	// featureTransport downloads devcontainer features, whose sources are user provided.
+	featureTransport http.RoundTripper
 }
 
 // Step represents a single setup action.
@@ -92,12 +95,14 @@ func NewEmbeddedDockerOrchestrator(
 	statefulLogger *logutil.StatefulLogger,
 	runArgProvider runarg.Provider,
 	eventReporter *events.Reporter,
+	featureTransport http.RoundTripper,
 ) EmbeddedDockerOrchestrator {
 	return EmbeddedDockerOrchestrator{
 		dockerClientFactory: dockerClientFactory,
 		statefulLogger:      statefulLogger,
 		runArgProvider:      runArgProvider,
 		eventReporter:       eventReporter,
+		featureTransport:    featureTransport,
 	}
 }
 
@@ -490,9 +495,10 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	gitspaceLogger.Info(fmt.Sprintf("Remote user: %s", remoteUser))
 	var features []*types.ResolvedFeature
 	if devcontainerConfig.Features != nil && len(*devcontainerConfig.Features) > 0 {
-		sortedFeatures, newImageName, err := InstallFeatures(ctx, gitspaceConfig.GitspaceInstance.Identifier,
-			dockerClient, *devcontainerConfig.Features, devcontainerConfig.OverrideFeatureInstallOrder, imageName,
-			containerUser, remoteUser, containerUserHomeDir, remoteUserHomeDir, gitspaceLogger)
+		sortedFeatures, newImageName, err := InstallFeatures(ctx, e.featureTransport,
+			gitspaceConfig.GitspaceInstance.Identifier, dockerClient, *devcontainerConfig.Features,
+			devcontainerConfig.OverrideFeatureInstallOrder, imageName, containerUser, remoteUser,
+			containerUserHomeDir, remoteUserHomeDir, gitspaceLogger)
 		if err != nil {
 			return err
 		}
@@ -561,6 +567,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 
 func InstallFeatures(
 	ctx context.Context,
+	featureTransport http.RoundTripper,
 	gitspaceInstanceIdentifier string,
 	dockerClient *client.Client,
 	features types.Features,
@@ -573,7 +580,7 @@ func InstallFeatures(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) ([]*types.ResolvedFeature, string, error) {
 	gitspaceLogger.Info("Downloading features...")
-	downloadedFeatures, err := utils.DownloadFeatures(ctx, gitspaceInstanceIdentifier, features)
+	downloadedFeatures, err := utils.DownloadFeatures(ctx, featureTransport, gitspaceInstanceIdentifier, features)
 	if err != nil {
 		return nil, "", logStreamWrapError(gitspaceLogger, "Error downloading features", err)
 	}
