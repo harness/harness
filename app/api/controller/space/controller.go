@@ -192,7 +192,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 ) (*types.SpaceCore, error) {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
-		// TODO: Restrict top level space creation - should be move to authorizer?
+		// TODO: Restrict top level space creation - should be moved to authorizer?
 		if auth.IsAnonymousSession(session) {
 			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
 		}
