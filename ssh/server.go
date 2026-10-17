@@ -262,6 +262,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 			Email:       principal.Email,
 			Type:        principal.Type,
 			DisplayName: principal.DisplayName,
+			Admin:       principal.Admin,
 			Created:     principal.Created,
 			Updated:     principal.Updated,
 		}
