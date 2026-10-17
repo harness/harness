@@ -61,8 +61,12 @@ func RealIP(r *http.Request) string {
 		}
 		ip = xff[:i]
 	} else {
-		ip = strings.Split(r.RemoteAddr, ":")[0]
+		ip = r.RemoteAddr
+		if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+			ip = host
+		}
 	}
+	ip = strings.TrimSpace(ip)
 	if ip == "" || net.ParseIP(ip) == nil {
 		return ""
 	}
