@@ -164,6 +164,7 @@ type RepositorySummary struct {
 	BranchCount              int                      `json:"branch_count"`
 	TagCount                 int                      `json:"tag_count"`
 	PullReqSummary           RepositoryPullReqSummary `json:"pull_req_summary"`
+	LOC                      int64                    `json:"loc" description:"source lines of code on the default branch"`
 }
 
 type RepositoryCount struct {

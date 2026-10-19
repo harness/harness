@@ -54,5 +54,6 @@ func (c *Controller) Summary(
 			ClosedCount: repo.NumClosedPulls,
 			MergedCount: repo.NumMergedPulls,
 		},
+		LOC: repo.LOC,
 	}, nil
 }

@@ -18725,6 +18725,8 @@ components:
           type: integer
         default_branch_commit_count:
           type: integer
+        loc:
+          type: integer
         pull_req_summary:
           $ref: '#/components/schemas/TypesRepositoryPullReqSummary'
         tag_count:

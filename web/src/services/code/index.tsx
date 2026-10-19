@@ -1845,6 +1845,7 @@ export interface TypesRepositoryPullReqSummary {
 export interface TypesRepositorySummary {
   branch_count?: number
   default_branch_commit_count?: number
+  loc?: number
   pull_req_summary?: TypesRepositoryPullReqSummary
   tag_count?: number
 }

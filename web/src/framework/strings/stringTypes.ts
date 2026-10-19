@@ -555,6 +555,7 @@ export interface StringsMap {
   lfsInfo: string
   license: string
   lineBreaks: string
+  linesOfCode: string
   loading: string
   logOut: string
   logoutMsg: string

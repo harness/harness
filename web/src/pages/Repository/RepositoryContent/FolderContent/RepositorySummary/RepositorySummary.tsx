@@ -17,7 +17,7 @@
 import React from 'react'
 import { Button, ButtonVariation, Container, Layout, Text, Utils } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { GitCommit, GitFork, Label, GitPullRequest } from 'iconoir-react'
+import { GitCommit, GitFork, Label, GitPullRequest, Code } from 'iconoir-react'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
@@ -161,6 +161,17 @@ const RepositorySummary = (props: RepositorySummaryProps) => {
             text={'Open Pull Requests'}
             data={repoSummaryData?.pull_req_summary.open_count}
           />
+          {typeof repoSummaryData?.loc === 'number' && repoSummaryData.loc > 0 && (
+            <Layout.Horizontal className={css.metaData}>
+              <Text color={Color.BLACK} font={{ variation: FontVariation.BODY2_SEMI }} className={css.align}>
+                <Code height={20} width={20} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                {getString('linesOfCode')}
+              </Text>
+              <Text color={Color.BLACK} font={{ variation: FontVariation.BODY2_SEMI }}>
+                {repoSummaryData.loc.toLocaleString()}
+              </Text>
+            </Layout.Horizontal>
+          )}
         </Layout.Vertical>
       </Layout.Vertical>
     </Container>
