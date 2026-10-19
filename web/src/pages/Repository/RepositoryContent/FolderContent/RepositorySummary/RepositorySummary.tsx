@@ -17,13 +17,13 @@
 import React from 'react'
 import { Button, ButtonVariation, Container, Layout, Text, Utils } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { GitCommit, GitFork, Label, GitPullRequest, Code } from 'iconoir-react'
+import { GitCommit, GitFork, Label, GitPullRequest, Code, HardDrive } from 'iconoir-react'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, RepositorySummaryData } from 'utils/GitUtils'
 import type { RepoRepositoryOutput } from 'services/code'
-import { permissionProps, formatDate } from 'utils/Utils'
+import { permissionProps, formatDate, formatBytes } from 'utils/Utils'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import css from './RepositorySummary.module.scss'
 
@@ -169,6 +169,17 @@ const RepositorySummary = (props: RepositorySummaryProps) => {
               </Text>
               <Text color={Color.BLACK} font={{ variation: FontVariation.BODY2_SEMI }}>
                 {repoSummaryData.loc.toLocaleString()}
+              </Text>
+            </Layout.Horizontal>
+          )}
+          {typeof repoSummaryData?.size === 'number' && repoSummaryData.size > 0 && (
+            <Layout.Horizontal className={css.metaData}>
+              <Text color={Color.BLACK} font={{ variation: FontVariation.BODY2_SEMI }} className={css.align}>
+                <HardDrive height={20} width={20} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                {getString('repositorySize')}
+              </Text>
+              <Text color={Color.BLACK} font={{ variation: FontVariation.BODY2_SEMI }}>
+                {formatBytes(repoSummaryData.size * 1024)}
               </Text>
             </Layout.Horizontal>
           )}

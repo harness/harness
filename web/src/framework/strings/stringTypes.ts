@@ -1043,6 +1043,7 @@ export interface StringsMap {
   'repos.specificRepositories': string
   repositories: string
   repositoryName: string
+  repositorySize: string
   reqChanges: string
   requestChanges: string
   requestHeaders: string
@@ -1299,6 +1300,7 @@ export interface StringsMap {
   webhookEventsLabel: string
   webhookListingContent: string
   webhookPRBranchUpdated: string
+  webhookPRCheckCompleted: string
   webhookPRClosed: string
   webhookPRCommentCreated: string
   webhookPRCommentStatusUpdated: string
@@ -1310,7 +1312,6 @@ export interface StringsMap {
   webhookPRReviewSubmitted: string
   webhookPRReviewerAssigned: string
   webhookPRReviewerUnassigned: string
-  webhookPRCheckCompleted: string
   webhookPRUpdated: string
   webhookPage: string
   webhookSelectAllEvents: string

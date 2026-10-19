@@ -93,6 +93,7 @@ export interface RepositorySummaryData {
   branch_count: number
   tag_count: number
   loc?: number
+  size?: number
   pull_req_summary: {
     open_count: number
     closed_count: number

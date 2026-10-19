@@ -18729,6 +18729,8 @@ components:
           type: integer
         pull_req_summary:
           $ref: '#/components/schemas/TypesRepositoryPullReqSummary'
+        size:
+          type: integer
         tag_count:
           type: integer
       type: object
