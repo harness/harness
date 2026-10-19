@@ -636,7 +636,9 @@ func (s *Service) FetchObjects(
 	source := s.convertRepoSource(params.Source)
 
 	// sync repo content
-	err := s.git.FetchObjects(ctx, repoPath, source, params.ObjectSHAs)
+	err := s.sharedRunner.Run(ctx, nil, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
+		return r.FetchObjects(ctx, source, params.ObjectSHAs)
+	})
 	if err != nil {
 		return FetchObjectsOutput{}, fmt.Errorf("failed to fetch git objects from source repo: %w", err)
 	}
@@ -766,7 +768,7 @@ func (s *Service) SyncRefs(
 		return &SyncRefsOutput{}, nil
 	}
 
-	err = sharedrepo.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
+	err = s.sharedRunner.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
 		objects := slices.Collect(maps.Values(refRemoteMap))
 
 		if err := s.FetchObjects(ctx, source, objects); err != nil {

@@ -209,7 +209,7 @@ func TestRebase_ObjectsSurvivePacking(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, conflicts)
 
-	require.NoError(t, s.PackObjects(ctx))
+	require.NoError(t, s.PackObjects(ctx, 1))
 
 	// the objects created by the rebase must have been combined into a single pack file
 	packs, err := filepath.Glob(filepath.Join(s.Directory(), "objects", "pack", "*.pack"))

@@ -58,7 +58,7 @@ func TestPackObjects(t *testing.T) {
 
 			objectSHAs := writeTestObjects(t, s, test.objectCount)
 
-			require.NoError(t, s.PackObjects(ctx))
+			require.NoError(t, s.PackObjects(ctx, packObjectsThreshold))
 
 			looseCount, packCount := countObjectFiles(t, s)
 			if test.wantPacked {

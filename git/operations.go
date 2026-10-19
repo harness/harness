@@ -158,7 +158,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 	}
 
 	// run the actions in a shared repo
-	err = sharedrepo.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
+	err = s.sharedRunner.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
 		var parentCommits []sha.SHA
 		var oldTreeSHA sha.SHA
 

@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/cache"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/git/sharedrepo"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/git/types"
 
@@ -53,5 +54,7 @@ func ProvideService(
 		adapter,
 		hookClientFactory,
 		storage,
+		sharedrepo.DefaultRunner{},
+		sharedrepo.DefaultReadOnlyRunner{},
 	)
 }

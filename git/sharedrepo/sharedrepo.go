@@ -928,7 +928,7 @@ func (r *SharedRepo) checkPathAvailability(
 // Nothing is done if the number of loose objects is below packObjectsThreshold.
 // The loose objects that ended up in the pack file are removed, so that the pack file is
 // all that's left for MoveObjects to install in the original repository.
-func (r *SharedRepo) PackObjects(ctx context.Context) error {
+func (r *SharedRepo) PackObjects(ctx context.Context, packObjectsThreshold int) error {
 	files, err := r.objectFiles()
 	if err != nil {
 		return err
@@ -1002,6 +1002,15 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 	}
 
 	dstDir := path.Join(r.sourceRepoPath, "objects")
+
+	stats, err := os.Stat(dstDir)
+	if err != nil {
+		return fmt.Errorf("failed to check stats of destination directory in MoveObjects: %w", err)
+	}
+
+	if !stats.IsDir() {
+		return errors.New("destination for MoveObjects is not a directory")
+	}
 
 	files, err := r.objectFiles()
 	if err != nil {

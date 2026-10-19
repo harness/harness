@@ -287,45 +287,6 @@ func (g *Git) Sync(
 	return nil
 }
 
-// FetchObjects pull git objects from a different repository.
-// It doesn't update any references.
-func (g *Git) FetchObjects(
-	ctx context.Context,
-	repoPath string,
-	source string,
-	objectSHAs []sha.SHA,
-) error {
-	if repoPath == "" {
-		return ErrRepositoryPathEmpty
-	}
-	cmd := command.New("fetch",
-		command.WithConfig("advice.fetchShowForcedUpdates", "false"),
-		command.WithConfig("credential.helper", ""),
-		command.WithFlag(
-			"--quiet",
-			"--no-auto-gc", // because we're fetching objects that are not referenced
-			"--no-tags",
-			"--no-write-fetch-head",
-			"--no-show-forced-updates",
-		),
-		command.WithArg(source),
-	)
-
-	for _, objectSHA := range objectSHAs {
-		cmd.Add(command.WithArg(objectSHA.String()))
-	}
-
-	err := cmd.Run(ctx, command.WithDir(repoPath))
-	if err != nil {
-		if parts := reNotOurRef.FindStringSubmatch(strings.TrimSpace(err.Error())); parts != nil {
-			return errors.InvalidArgumentf("Unrecognized git object: %s", parts[1])
-		}
-		return processGitErrorf(err, "failed to fetch objects")
-	}
-
-	return nil
-}
-
 // ListRemoteReferences lists references from a remote repository.
 func (g *Git) ListRemoteReferences(
 	ctx context.Context,
@@ -390,8 +351,6 @@ func (g *Git) ListLocalReferences(
 
 	return result, nil
 }
-
-var reNotOurRef = regexp.MustCompile("upload-pack: not our ref ([a-fA-f0-9]+)$")
 
 func (g *Git) AddFiles(
 	ctx context.Context,

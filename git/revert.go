@@ -174,7 +174,7 @@ func (s *Service) Revert(ctx context.Context, params *RevertParams) (RevertOutpu
 
 	var commitSHA sha.SHA
 
-	err = sharedrepo.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
+	err = s.sharedRunner.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
 		if err := s.WriteDiff(ctx, params.ToCommitSHA.String(), params.FromCommitSHA.String(), diffPatch); err != nil {
 			return fmt.Errorf("failed to find diff between the two commits: %w", err)
 		}

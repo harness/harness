@@ -78,7 +78,7 @@ func (s *Service) ScanSecrets(ctx context.Context, params *ScanSecretsParams) (*
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	var findings []ScanSecretsFinding
-	err := sharedrepo.Run(ctx, nil, s.sharedRepoRoot, repoPath, func(sharedRepo *sharedrepo.SharedRepo) error {
+	err := s.sharedReadOnlyRunner.Run(ctx, s.sharedRepoRoot, repoPath, func(sharedRepo *sharedrepo.SharedRepo) error {
 		fsGitleaksIgnorePath, err := s.setupGitleaksIgnoreInSharedRepo(
 			ctx,
 			sharedRepo,

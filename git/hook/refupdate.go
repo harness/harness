@@ -177,6 +177,10 @@ func (u *RefUpdater) Init(ctx context.Context, refs []ReferenceUpdate) error {
 
 // Pre runs the pre-receive git hook.
 func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
+	if u == nil {
+		return nil
+	}
+
 	if u.state != statePre {
 		return fmt.Errorf("invalid operation order: pre-receive hook requires state=%s, current state=%s",
 			statePre, u.state)
@@ -215,6 +219,10 @@ func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 
 // UpdateRef updates the git reference.
 func (u *RefUpdater) UpdateRef(ctx context.Context) error {
+	if u == nil {
+		return nil
+	}
+
 	if u.state != stateUpdate {
 		return fmt.Errorf("invalid operation order: ref update requires state=%s, current state=%s",
 			stateUpdate, u.state)
@@ -267,6 +275,10 @@ func (u *RefUpdater) UpdateRef(ctx context.Context) error {
 
 // Post runs the pre-receive git hook.
 func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) error {
+	if u == nil {
+		return nil
+	}
+
 	if u.state != statePost {
 		return fmt.Errorf("invalid operation order: post-receive hook requires state=%s, current state=%s",
 			statePost, u.state)

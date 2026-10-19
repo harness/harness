@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/git/sharedrepo"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/git/types"
 )
@@ -32,13 +33,15 @@ const (
 )
 
 type Service struct {
-	reposRoot         string
-	sharedRepoRoot    string
-	git               *api.Git
-	hookClientFactory hook.ClientFactory
-	store             storage.Store
-	gitHookPath       string
-	reposGraveyard    string
+	reposRoot            string
+	sharedRepoRoot       string
+	git                  *api.Git
+	hookClientFactory    hook.ClientFactory
+	store                storage.Store
+	sharedRunner         sharedrepo.Runner
+	sharedReadOnlyRunner sharedrepo.ReadOnlyRunner
+	gitHookPath          string
+	reposGraveyard       string
 }
 
 func New(
@@ -46,6 +49,8 @@ func New(
 	adapter *api.Git,
 	hookClientFactory hook.ClientFactory,
 	storage storage.Store,
+	sharedRunner sharedrepo.Runner,
+	sharedReadOnlyRunner sharedrepo.ReadOnlyRunner,
 ) (*Service, error) {
 	// Create repos folder
 	reposRoot, err := createSubdir(config.Root, repoSubdirName)
@@ -66,13 +71,15 @@ func New(
 	}
 
 	return &Service{
-		reposRoot:         reposRoot,
-		sharedRepoRoot:    sharedRepoDir,
-		reposGraveyard:    reposGraveyard,
-		git:               adapter,
-		hookClientFactory: hookClientFactory,
-		store:             storage,
-		gitHookPath:       config.HookPath,
+		reposRoot:            reposRoot,
+		sharedRepoRoot:       sharedRepoDir,
+		reposGraveyard:       reposGraveyard,
+		git:                  adapter,
+		hookClientFactory:    hookClientFactory,
+		store:                storage,
+		sharedRunner:         sharedRunner,
+		sharedReadOnlyRunner: sharedReadOnlyRunner,
+		gitHookPath:          config.HookPath,
 	}, nil
 }
 
