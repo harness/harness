@@ -1,6 +1,6 @@
 module github.com/harness/gitness
 
-go 1.26.8
+go 1.26.9
 
 require (
 	cloud.google.com/go/storage v1.50.0
