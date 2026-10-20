@@ -307,6 +307,14 @@ func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) error {
 	return nil
 }
 
+func (u *RefUpdater) Refs() []ReferenceUpdate {
+	if u == nil {
+		return nil
+	}
+
+	return u.refs
+}
+
 func (u *RefUpdater) getRef(ctx context.Context, ref string) (sha.SHA, error) {
 	cmd := command.New("show-ref",
 		command.WithFlag("--verify"),
