@@ -25,46 +25,38 @@ type Runner interface {
 	// Run makes changes in a repository through sharedrepo.SharedRepo.
 	// Even if refUpdater is nil or its list of references are empty,
 	// still new objects could be introduced to the original repository.
-	Run(
-		ctx context.Context,
-		refUpdater *hook.RefUpdater,
-		tmpDir, repoPath string,
-		fn func(s *SharedRepo) error,
-		alternates ...string,
-	) error
+	Run(ctx context.Context, refUpdater *hook.RefUpdater, fn func(s *SharedRepo) error) error
 }
 
 type ReadOnlyRunner interface {
 	// Run executes the provided function in a sharedrepo.SharedRepo.
 	// Any changes made to the repository would be discarded.
-	Run(
-		ctx context.Context,
-		tmpDir, repoPath string,
-		fn func(s *SharedRepo) error,
-		alternates ...string,
-	) error
+	Run(ctx context.Context, fn func(s *SharedRepo) error) error
 }
 
-type DefaultRunner struct{}
+type defaultRunner struct {
+	tmpDir     string
+	repoUID    string
+	repoPath   string
+	alternates []string
+}
 
 // Run is used to run the provided function inside a shared repository.
 // If the provided hook.RefUpdater is not nil it will be used to update the reference.
 // Inside the provided inline function there should be a call to initialize the ref updater.
-func (DefaultRunner) Run(
+func (r defaultRunner) Run(
 	ctx context.Context,
 	refUpdater *hook.RefUpdater,
-	tmpDir, repoPath string,
 	fn func(s *SharedRepo) error,
-	alternates ...string,
 ) error {
-	s, err := NewSharedRepo(tmpDir, repoPath)
+	s, err := NewSharedRepo(r.tmpDir, r.repoPath)
 	if err != nil {
 		return err
 	}
 
 	defer s.Close(ctx)
 
-	if err := s.Init(ctx, alternates...); err != nil {
+	if err := s.Init(ctx, r.alternates...); err != nil {
 		return fmt.Errorf("failed to init shared repository: %w", err)
 	}
 
@@ -101,23 +93,26 @@ func (DefaultRunner) Run(
 	return nil
 }
 
-type DefaultReadOnlyRunner struct{}
+type defaultReadOnlyRunner struct {
+	tmpDir     string
+	repoUID    string
+	repoPath   string
+	alternates []string
+}
 
 // Run is used to run the provided function inside a shared repository.
-func (DefaultReadOnlyRunner) Run(
+func (r defaultReadOnlyRunner) Run(
 	ctx context.Context,
-	tmpDir, repoPath string,
 	fn func(s *SharedRepo) error,
-	alternates ...string,
 ) error {
-	s, err := NewSharedRepo(tmpDir, repoPath)
+	s, err := NewSharedRepo(r.tmpDir, r.repoPath)
 	if err != nil {
 		return err
 	}
 
 	defer s.Close(ctx)
 
-	if err := s.Init(ctx, alternates...); err != nil {
+	if err := s.Init(ctx, r.alternates...); err != nil {
 		return fmt.Errorf("failed to init shared repository: %w", err)
 	}
 

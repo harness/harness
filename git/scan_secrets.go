@@ -78,7 +78,10 @@ func (s *Service) ScanSecrets(ctx context.Context, params *ScanSecretsParams) (*
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	var findings []ScanSecretsFinding
-	err := s.sharedReadOnlyRunner.Run(ctx, s.sharedRepoRoot, repoPath, func(sharedRepo *sharedrepo.SharedRepo) error {
+
+	sharedRunner := s.sharedRunnerFactory.ReadOnlyRunner(params.RepoUID, repoPath, params.AlternateObjectDirs...)
+
+	err := sharedRunner.Run(ctx, func(sharedRepo *sharedrepo.SharedRepo) error {
 		fsGitleaksIgnorePath, err := s.setupGitleaksIgnoreInSharedRepo(
 			ctx,
 			sharedRepo,
@@ -118,7 +121,7 @@ func (s *Service) ScanSecrets(ctx context.Context, params *ScanSecretsParams) (*
 		findings = mapFindings(res)
 
 		return nil
-	}, params.AlternateObjectDirs...)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get leaks on diff: %w", err)
 	}

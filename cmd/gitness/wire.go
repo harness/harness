@@ -148,6 +148,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/sharedrepo"
 	"github.com/harness/gitness/git/storage"
 	infraproviderpkg "github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/job"
@@ -236,6 +237,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		api.WireSet,
 		cliserver.ProvideGitConfig,
 		git.WireSet,
+		sharedrepo.WireSet,
 		store.WireSet,
 		check.WireSet,
 		encrypt.WireSet,

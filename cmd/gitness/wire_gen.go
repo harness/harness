@@ -137,6 +137,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/sharedrepo"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/job"
@@ -300,7 +301,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	storageStore := storage.ProvideLocalStore()
-	gitInterface, err := git.ProvideService(typesConfig, apiGit, clientFactory, storageStore)
+	runnerFactory, err := sharedrepo.ProvideRunnerFactory(typesConfig)
+	if err != nil {
+		return nil, err
+	}
+	gitInterface, err := git.ProvideService(typesConfig, apiGit, clientFactory, storageStore, runnerFactory)
 	if err != nil {
 		return nil, err
 	}

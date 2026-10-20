@@ -15,11 +15,8 @@
 package git
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/directory"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sharedrepo"
 	"github.com/harness/gitness/git/storage"
@@ -28,20 +25,17 @@ import (
 
 const (
 	repoSubdirName           = "repos"
-	repoSharedRepoSubdirName = "shared_temp"
 	ReposGraveyardSubdirName = "cleanup"
 )
 
 type Service struct {
-	reposRoot            string
-	sharedRepoRoot       string
-	git                  *api.Git
-	hookClientFactory    hook.ClientFactory
-	store                storage.Store
-	sharedRunner         sharedrepo.Runner
-	sharedReadOnlyRunner sharedrepo.ReadOnlyRunner
-	gitHookPath          string
-	reposGraveyard       string
+	reposRoot           string
+	git                 *api.Git
+	hookClientFactory   hook.ClientFactory
+	store               storage.Store
+	sharedRunnerFactory sharedrepo.RunnerFactory
+	gitHookPath         string
+	reposGraveyard      string
 }
 
 func New(
@@ -49,47 +43,28 @@ func New(
 	adapter *api.Git,
 	hookClientFactory hook.ClientFactory,
 	storage storage.Store,
-	sharedRunner sharedrepo.Runner,
-	sharedReadOnlyRunner sharedrepo.ReadOnlyRunner,
+	sharedRunnerFactory sharedrepo.RunnerFactory,
 ) (*Service, error) {
 	// Create repos folder
-	reposRoot, err := createSubdir(config.Root, repoSubdirName)
+	reposRoot, err := directory.CreateSubdir(config.Root, repoSubdirName)
 	if err != nil {
 		return nil, err
 	}
 
 	// create a temp dir for deleted repositories
 	// this dir should get cleaned up peridocally if it's not empty
-	reposGraveyard, err := createSubdir(config.Root, ReposGraveyardSubdirName)
-	if err != nil {
-		return nil, err
-	}
-
-	sharedRepoDir, err := createSubdir(config.Root, repoSharedRepoSubdirName)
+	reposGraveyard, err := directory.CreateSubdir(config.Root, ReposGraveyardSubdirName)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Service{
-		reposRoot:            reposRoot,
-		sharedRepoRoot:       sharedRepoDir,
-		reposGraveyard:       reposGraveyard,
-		git:                  adapter,
-		hookClientFactory:    hookClientFactory,
-		store:                storage,
-		sharedRunner:         sharedRunner,
-		sharedReadOnlyRunner: sharedReadOnlyRunner,
-		gitHookPath:          config.HookPath,
+		reposRoot:           reposRoot,
+		reposGraveyard:      reposGraveyard,
+		git:                 adapter,
+		hookClientFactory:   hookClientFactory,
+		store:               storage,
+		sharedRunnerFactory: sharedRunnerFactory,
+		gitHookPath:         config.HookPath,
 	}, nil
-}
-
-func createSubdir(root, subdir string) (string, error) {
-	subdirPath := filepath.Join(root, subdir)
-
-	err := os.MkdirAll(subdirPath, fileMode700)
-	if err != nil {
-		return "", fmt.Errorf("failed to create directory, path=%s: %w", subdirPath, err)
-	}
-
-	return subdirPath, nil
 }

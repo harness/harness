@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
+	"github.com/harness/gitness/git/directory"
 	"github.com/harness/gitness/git/hash"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
@@ -52,8 +53,6 @@ const (
 	gitReferenceNamePrefixTag    = "refs/tags/"
 
 	gitHooksDir = "hooks"
-
-	fileMode700 = 0o700
 )
 
 var (
@@ -246,7 +245,7 @@ func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string
 
 	// delete should not fail if repoGraveyard dir does not exist.
 	if _, err := os.Stat(s.reposGraveyard); errors.Is(err, fs.ErrNotExist) {
-		if errdir := os.MkdirAll(s.reposGraveyard, fileMode700); errdir != nil {
+		if errdir := os.MkdirAll(s.reposGraveyard, directory.FileMode700); errdir != nil {
 			return fmt.Errorf("clean up dir '%s' doesn't exist and can't be created: %w", s.reposGraveyard, errdir)
 		}
 	}
@@ -635,8 +634,10 @@ func (s *Service) FetchObjects(
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	source := s.convertRepoSource(params.Source)
 
+	sharedRunner := s.sharedRunnerFactory.Runner(params.RepoUID, repoPath)
+
 	// sync repo content
-	err := s.sharedRunner.Run(ctx, nil, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
+	err := sharedRunner.Run(ctx, nil, func(r *sharedrepo.SharedRepo) error {
 		return r.FetchObjects(ctx, source, params.ObjectSHAs)
 	})
 	if err != nil {
@@ -768,7 +769,9 @@ func (s *Service) SyncRefs(
 		return &SyncRefsOutput{}, nil
 	}
 
-	err = s.sharedRunner.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
+	sharedRunner := s.sharedRunnerFactory.Runner(params.RepoUID, repoPath)
+
+	err = sharedRunner.Run(ctx, refUpdater, func(s *sharedrepo.SharedRepo) error {
 		objects := slices.Collect(maps.Values(refRemoteMap))
 
 		if err := s.FetchObjects(ctx, source, objects); err != nil {

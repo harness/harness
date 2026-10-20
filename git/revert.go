@@ -157,7 +157,9 @@ func (s *Service) Revert(ctx context.Context, params *RevertParams) (RevertOutpu
 
 	// Temp file to hold the diff patch.
 
-	diffPatch, err := os.CreateTemp(s.sharedRepoRoot, "revert-*.patch")
+	sharedRunner := s.sharedRunnerFactory.Runner(params.RepoUID, repoPath)
+
+	diffPatch, err := os.CreateTemp(s.sharedRunnerFactory.Directory(), "revert-*.patch")
 	if err != nil {
 		return RevertOutput{}, fmt.Errorf("failed to create temporary file to hold the diff patch: %w", err)
 	}
@@ -174,7 +176,7 @@ func (s *Service) Revert(ctx context.Context, params *RevertParams) (RevertOutpu
 
 	var commitSHA sha.SHA
 
-	err = s.sharedRunner.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
+	err = sharedRunner.Run(ctx, refUpdater, func(s *sharedrepo.SharedRepo) error {
 		if err := s.WriteDiff(ctx, params.ToCommitSHA.String(), params.FromCommitSHA.String(), diffPatch); err != nil {
 			return fmt.Errorf("failed to find diff between the two commits: %w", err)
 		}

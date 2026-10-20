@@ -48,13 +48,13 @@ func ProvideService(
 	adapter *api.Git,
 	hookClientFactory hook.ClientFactory,
 	storage storage.Store,
+	sharedRepoFactory sharedrepo.RunnerFactory,
 ) (Interface, error) {
 	return New(
 		config,
 		adapter,
 		hookClientFactory,
 		storage,
-		sharedrepo.DefaultRunner{},
-		sharedrepo.DefaultReadOnlyRunner{},
+		sharedRepoFactory,
 	)
 }

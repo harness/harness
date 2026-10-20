@@ -259,7 +259,9 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	var mergeCommitSHA sha.SHA
 	var conflicts []string
 
-	err = s.sharedRunner.Run(ctx, refUpdater, s.sharedRepoRoot, repoPath, func(s *sharedrepo.SharedRepo) error {
+	sharedRepoRunner := s.sharedRunnerFactory.Runner(params.RepoUID, repoPath)
+
+	err = sharedRepoRunner.Run(ctx, refUpdater, func(s *sharedrepo.SharedRepo) error {
 		message := parser.CleanUpWhitespace(params.Message)
 
 		mergeCommitSHA, conflicts, err = mergeFunc(

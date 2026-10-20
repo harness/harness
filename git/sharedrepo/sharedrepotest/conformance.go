@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package sharedrepotest holds conformance tests for the implementations of
-// sharedrepo.Runner and sharedrepo.ReadOnlyRunner interfaces.
+// Package sharedrepotest holds conformance tests for the implementations of the
+// sharedrepo.RunnerFactory interface and for the runners it creates.
 //
 // Call RunnerConformance and ReadOnlyRunnerConformance from a test of the package
 // that provides the implementation:
 //
-//	func TestMyRunner(t *testing.T) {
-//		sharedrepotest.RunnerConformance(t, &MyRunner{})
+//	func TestMyRunnerFactory(t *testing.T) {
+//		sharedrepotest.RunnerConformance(t, myRunnerFactory)
 //	}
 package sharedrepotest
 
@@ -40,32 +40,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testRef = "refs/tags/conformance"
+const (
+	testRef     = "refs/tags/conformance"
+	testRepoUID = "conformance-repo-uid"
+)
 
 // runFunc runs the function in a shared repository without a reference update.
 type runFunc func(
 	ctx context.Context,
-	tmpDir, repoPath string,
+	repoPath string,
 	fn func(s *sharedrepo.SharedRepo) error,
 	alternates ...string,
 ) error
 
-// RunnerConformance checks that the provided sharedrepo.Runner follows the contract of the interface.
-func RunnerConformance(t *testing.T, runner sharedrepo.Runner) {
+// RunnerConformance checks that the runners created by the provided sharedrepo.RunnerFactory
+// follow the contract of the sharedrepo.Runner interface.
+func RunnerConformance(t *testing.T, factory sharedrepo.RunnerFactory) {
 	requireGit(t)
 
 	// Both runners must provide the same view of the repository, regardless of the reference updater.
 	run := func(
 		ctx context.Context,
-		tmpDir, repoPath string,
+		repoPath string,
 		fn func(s *sharedrepo.SharedRepo) error,
 		alternates ...string,
 	) error {
-		return runner.Run(ctx, nil, tmpDir, repoPath, fn, alternates...)
+		return factory.Runner(testRepoUID, repoPath, alternates...).Run(ctx, nil, fn)
 	}
 
 	t.Run("sees objects of the original repository and of the alternates", func(t *testing.T) {
-		testSeesObjects(t, run)
+		testSeesObjects(t, factory, run)
 	})
 
 	t.Run("without ref updater new objects are still added to the original repository", func(t *testing.T) {
@@ -74,7 +78,7 @@ func RunnerConformance(t *testing.T, runner sharedrepo.Runner) {
 
 		var blob sha.SHA
 		var dir string
-		err := runner.Run(ctx, nil, t.TempDir(), repoPath, func(s *sharedrepo.SharedRepo) error {
+		err := factory.Runner(testRepoUID, repoPath).Run(ctx, nil, func(s *sharedrepo.SharedRepo) error {
 			var err error
 			dir = s.Directory()
 			blob, err = s.WriteGitObject(ctx, strings.NewReader("new object\n"))
@@ -96,7 +100,7 @@ func RunnerConformance(t *testing.T, runner sharedrepo.Runner) {
 
 		var blob sha.SHA
 		var dir string
-		err := runner.Run(ctx, updater, t.TempDir(), repoPath, func(s *sharedrepo.SharedRepo) error {
+		err := factory.Runner(testRepoUID, repoPath).Run(ctx, updater, func(s *sharedrepo.SharedRepo) error {
 			var err error
 			dir = s.Directory()
 			blob, err = s.WriteGitObject(ctx, strings.NewReader("new object\n"))
@@ -142,7 +146,7 @@ func RunnerConformance(t *testing.T, runner sharedrepo.Runner) {
 
 		updater := newRefUpdater(t, hooks, repoPath)
 
-		err := runner.Run(ctx, updater, t.TempDir(), repoPath, func(s *sharedrepo.SharedRepo) error {
+		err := factory.Runner(testRepoUID, repoPath).Run(ctx, updater, func(s *sharedrepo.SharedRepo) error {
 			var err error
 			dir = s.Directory()
 			blob, err = s.WriteGitObject(ctx, strings.NewReader("new object\n"))
@@ -173,7 +177,7 @@ func RunnerConformance(t *testing.T, runner sharedrepo.Runner) {
 
 		var blob sha.SHA
 		var dir string
-		err := runner.Run(ctx, updater, t.TempDir(), repoPath, func(s *sharedrepo.SharedRepo) error {
+		err := factory.Runner(testRepoUID, repoPath).Run(ctx, updater, func(s *sharedrepo.SharedRepo) error {
 			var err error
 			dir = s.Directory()
 			blob, err = s.WriteGitObject(ctx, strings.NewReader("new object\n"))
@@ -192,12 +196,20 @@ func RunnerConformance(t *testing.T, runner sharedrepo.Runner) {
 	})
 }
 
-// ReadOnlyRunnerConformance checks that the provided sharedrepo.ReadOnlyRunner follows the contract of the interface.
-func ReadOnlyRunnerConformance(t *testing.T, runner sharedrepo.ReadOnlyRunner) {
+// ReadOnlyRunnerConformance checks that the read-only runners created by the provided sharedrepo.RunnerFactory
+// follow the contract of the sharedrepo.ReadOnlyRunner interface.
+func ReadOnlyRunnerConformance(t *testing.T, factory sharedrepo.RunnerFactory) {
 	requireGit(t)
 
 	t.Run("sees objects of the original repository and of the alternates", func(t *testing.T) {
-		testSeesObjects(t, runner.Run)
+		testSeesObjects(t, factory, func(
+			ctx context.Context,
+			repoPath string,
+			fn func(s *sharedrepo.SharedRepo) error,
+			alternates ...string,
+		) error {
+			return factory.ReadOnlyRunner(testRepoUID, repoPath, alternates...).Run(ctx, fn)
+		})
 	})
 
 	t.Run("discards the changes", func(t *testing.T) {
@@ -206,7 +218,7 @@ func ReadOnlyRunnerConformance(t *testing.T, runner sharedrepo.ReadOnlyRunner) {
 
 		var blob sha.SHA
 		var dir string
-		err := runner.Run(ctx, t.TempDir(), repoPath, func(s *sharedrepo.SharedRepo) error {
+		err := factory.ReadOnlyRunner(testRepoUID, repoPath).Run(ctx, func(s *sharedrepo.SharedRepo) error {
 			var err error
 			dir = s.Directory()
 			blob, err = s.WriteGitObject(ctx, strings.NewReader("new object\n"))
@@ -225,7 +237,7 @@ func ReadOnlyRunnerConformance(t *testing.T, runner sharedrepo.ReadOnlyRunner) {
 		errFn := errors.New("function failed")
 
 		var dir string
-		err := runner.Run(ctx, t.TempDir(), repoPath, func(s *sharedrepo.SharedRepo) error {
+		err := factory.ReadOnlyRunner(testRepoUID, repoPath).Run(ctx, func(s *sharedrepo.SharedRepo) error {
 			dir = s.Directory()
 			return errFn
 		})
@@ -235,9 +247,9 @@ func ReadOnlyRunnerConformance(t *testing.T, runner sharedrepo.ReadOnlyRunner) {
 	})
 }
 
-// testSeesObjects checks that the shared repository can access the objects
-// of the original repository and of the additional alternates.
-func testSeesObjects(t *testing.T, run runFunc) {
+// testSeesObjects checks that the shared repository is created in the directory of the factory
+// and that it can access the objects of the original repository and of the additional alternates.
+func testSeesObjects(t *testing.T, factory sharedrepo.RunnerFactory, run runFunc) {
 	ctx := t.Context()
 
 	repoPath := newBareRepo(t)
@@ -246,14 +258,18 @@ func testSeesObjects(t *testing.T, run runFunc) {
 	alternatePath := newBareRepo(t)
 	alternateBlob := writeBlob(t, alternatePath, "object of the alternate\n")
 
+	var dir string
 	var seesRepoBlob, seesAlternateBlob bool
-	err := run(ctx, t.TempDir(), repoPath, func(s *sharedrepo.SharedRepo) error {
+	err := run(ctx, repoPath, func(s *sharedrepo.SharedRepo) error {
+		dir = s.Directory()
 		seesRepoBlob = hasObject(t, s.Directory(), repoBlob)
 		seesAlternateBlob = hasObject(t, s.Directory(), alternateBlob)
 		return nil
 	}, filepath.Join(alternatePath, "objects"))
 	require.NoError(t, err)
 
+	assert.Equal(t, factory.Directory(), filepath.Dir(dir),
+		"shared repository must be created in the directory of the factory")
 	assert.True(t, seesRepoBlob, "object of the original repository must be accessible")
 	assert.True(t, seesAlternateBlob, "object of the alternate must be accessible")
 }

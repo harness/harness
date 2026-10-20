@@ -33,9 +33,9 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/directory"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
-	"github.com/harness/gitness/git/tempdir"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
@@ -72,7 +72,7 @@ func NewSharedRepo(
 	_, _ = rand.Read(buf[:])
 	id := base32.StdEncoding.EncodeToString(buf[:])
 
-	repoPath, err := tempdir.CreateTemporaryPath(baseTmpDir, id)
+	repoPath, err := directory.CreateTemporaryPath(baseTmpDir, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create shared repository directory: %w", err)
 	}
@@ -86,7 +86,7 @@ func NewSharedRepo(
 }
 
 func (r *SharedRepo) Close(ctx context.Context) {
-	if err := tempdir.RemoveTemporaryPath(r.repoPath); err != nil {
+	if err := directory.RemoveTemporaryPath(r.repoPath); err != nil {
 		log.Ctx(ctx).Err(err).
 			Str("path", r.repoPath).
 			Msg("Failed to remove temporary shared directory")
