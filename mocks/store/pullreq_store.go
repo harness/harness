@@ -158,6 +158,16 @@ func (m *PullReqStore) ListOpenByBranchName(
 	return nil, args.Error(1)
 }
 
+func (m *PullReqStore) ListRecentAuthorIDs(
+	_ context.Context,
+	repoID int64,
+	limit int,
+) ([]int64, error) {
+	args := m.Called(repoID, limit)
+	v, _ := args.Get(0).([]int64)
+	return v, args.Error(1)
+}
+
 func (m *PullReqStore) UpdateRootSpace(
 	_ context.Context,
 	targetRepoIDs []int64,

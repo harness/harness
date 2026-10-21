@@ -548,6 +548,9 @@ type (
 		// UpdateRootSpace sets the root space id and identifier for all pull requests
 		// whose target repository is any of the given repos.
 		UpdateRootSpace(ctx context.Context, targetRepoIDs []int64, rootSpaceID int64, rootSpaceIdentifier string) error
+
+		// ListRecentAuthorIDs returns distinct user IDs in newest-first order from a bounded pull request scan.
+		ListRecentAuthorIDs(ctx context.Context, repoID int64, limit int) ([]int64, error)
 	}
 
 	PullReqActivityStore interface {
