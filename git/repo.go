@@ -409,7 +409,6 @@ func (s *Service) HashRepository(ctx context.Context, params *HashRepositoryPara
 	}, nil
 }
 
-//nolint:gocognit // refactor if needed
 func (s *Service) createRepositoryInternal(
 	ctx context.Context,
 	base *WriteParams,
@@ -453,62 +452,18 @@ func (s *Service) createRepositoryInternal(
 	}
 
 	// only execute file creation logic if files are provided
-	//nolint: nestif
-
-	// we need temp dir for cloning
-	tempDir, err := os.MkdirTemp("", "*-"+base.RepoUID)
-	if err != nil {
-		return fmt.Errorf("error creating temp dir for repo %s: %w", base.RepoUID, err)
-	}
-	defer func(path string) {
-		// when repo is successfully created remove temp dir
-		errRm := os.RemoveAll(path)
-		if errRm != nil {
-			log.Err(errRm).Msg("failed to cleanup temporary dir.")
-		}
-	}(tempDir)
-
-	// Clone repository to temp dir
-	if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{}); err != nil {
-		return fmt.Errorf("createRepositoryInternal: failed to clone repo: %w", err)
-	}
-
-	// logic for receiving files
-	filePaths := make([]string, 0, 16)
-	for _, file := range files {
-		var filePath string
-		filePath, err = s.handleFileUploadIfAvailable(ctx, tempDir, file)
-		if errors.Is(err, io.EOF) {
-			log.Info().Msg("received stream EOF")
-			break
-		}
-		if err != nil {
-			return errors.Internalf(err, "failed to receive file %s", file)
-		}
-
-		filePaths = append(filePaths, filePath)
-	}
-
-	if len(filePaths) > 0 {
+	if len(files) > 0 {
 		if committer == nil {
 			committer = &base.Actor
 		}
 		if author == nil {
 			author = committer
 		}
-		// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
-		// TODO: this should at least be a constant and not hardcoded?
-		if err = s.addFilesAndPush(ctx,
-			tempDir,
-			filePaths, "HEAD:"+defaultBranch,
-			nil,
-			author,
-			authorDate,
-			committer,
-			committerDate,
-			"origin",
-			"initial commit",
-		); err != nil {
+
+		// NOTE: This creates the default branch in the repo (as it doesn't exist as of now)
+		err = s.createInitialCommit(ctx, base.RepoUID, repoPath, defaultBranch, files,
+			author, authorDate, committer, committerDate)
+		if err != nil {
 			return err
 		}
 	}
@@ -525,6 +480,77 @@ func (s *Service) createRepositoryInternal(
 	}
 
 	log.Info().Msgf("repository created. Path: %s", repoPath)
+	return nil
+}
+
+// createInitialCommit creates a commit with the provided files and points the default branch to it.
+// The repository must not have any commits yet.
+func (s *Service) createInitialCommit(
+	ctx context.Context,
+	repoUID string,
+	repoPath string,
+	defaultBranch string,
+	files []File,
+	author *Identity,
+	authorDate time.Time,
+	committer *Identity,
+	committerDate time.Time,
+) error {
+	// IMPORTANT: The server hooks must not be called, because the repository is still being created.
+	// That's why the hooks are installed last, and why here the ref updater uses a no-op hook client.
+	refUpdater, err := hook.CreateRefUpdater(hook.NewNoopClientFactory(nil), nil, repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to create ref updater: %w", err)
+	}
+
+	sharedRunner := s.sharedRunnerFactory.Runner(repoUID, repoPath)
+
+	err = sharedRunner.Run(ctx, refUpdater, func(r *sharedrepo.SharedRepo) error {
+		for _, file := range files {
+			filePath := api.CleanUploadFileName(file.Path)
+			if filePath == "" {
+				return errors.InvalidArgumentf("invalid file path %q", file.Path)
+			}
+
+			if _, err := r.CreateFile(ctx, sha.None, filePath, filePermissionDefault, file.Content); err != nil {
+				return errors.Internalf(err, "failed to create file %q", file.Path)
+			}
+		}
+
+		treeSHA, err := r.WriteTree(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to write tree object: %w", err)
+		}
+
+		authorSig := &api.Signature{
+			Identity: api.Identity{Name: author.Name, Email: author.Email},
+			When:     authorDate,
+		}
+		committerSig := &api.Signature{
+			Identity: api.Identity{Name: committer.Name, Email: committer.Email},
+			When:     committerDate,
+		}
+
+		commitSHA, err := r.CommitTree(ctx, authorSig, committerSig, treeSHA, "initial commit", false)
+		if err != nil {
+			return fmt.Errorf("failed to commit the tree: %w", err)
+		}
+
+		ref := hook.ReferenceUpdate{
+			Ref: api.GetReferenceFromBranchName(defaultBranch),
+			Old: sha.Nil,
+			New: commitSHA,
+		}
+		if err := refUpdater.Init(ctx, []hook.ReferenceUpdate{ref}); err != nil {
+			return fmt.Errorf("failed to init ref updater new=%s: %w", commitSHA, err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create initial commit in shared repository: %w", err)
+	}
+
 	return nil
 }
 
