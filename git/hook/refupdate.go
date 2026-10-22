@@ -273,6 +273,21 @@ func (u *RefUpdater) UpdateRef(ctx context.Context) error {
 	return nil
 }
 
+// SkipUpdateRef updates the git reference.
+func (u *RefUpdater) SkipUpdateRef(context.Context) error {
+	if u == nil {
+		return nil
+	}
+
+	if u.state != stateUpdate {
+		return fmt.Errorf("invalid operation order: skip ref update requires state=%s, current state=%s",
+			stateUpdate, u.state)
+	}
+
+	u.state = statePost
+	return nil
+}
+
 // Post runs the pre-receive git hook.
 func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) error {
 	if u == nil {
