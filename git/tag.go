@@ -278,7 +278,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	// ref updater
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ref updater to create the tag: %w", err)
 	}
@@ -346,7 +346,7 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
 	if err != nil {
 		return fmt.Errorf("failed to create ref updater to delete the tag: %w", err)
 	}

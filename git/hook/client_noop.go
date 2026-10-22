@@ -27,19 +27,6 @@ func NewNoopClient(messages []string) Client {
 	return &NoopClient{messages: messages}
 }
 
-// NoopClientFactory creates NoopClient for any environment.
-type NoopClientFactory struct {
-	messages []string
-}
-
-func NewNoopClientFactory(messages []string) ClientFactory {
-	return &NoopClientFactory{messages: messages}
-}
-
-func (f *NoopClientFactory) NewClient(map[string]string) (Client, error) {
-	return NewNoopClient(f.messages), nil
-}
-
 func (c *NoopClient) PreReceive(_ context.Context, _ PreReceiveInput) (Output, error) {
 	return Output{Messages: c.messages}, nil
 }

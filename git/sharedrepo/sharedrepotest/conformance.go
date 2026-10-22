@@ -313,7 +313,7 @@ func (f *fakeHooks) PostReceive(_ context.Context, in hook.PostReceiveInput) (ho
 func newRefUpdater(t *testing.T, hooks *fakeHooks, repoPath string) *hook.RefUpdater {
 	t.Helper()
 
-	updater, err := hook.CreateRefUpdater(hooks, nil, repoPath)
+	updater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(hooks, nil))
 	require.NoError(t, err)
 
 	return updater

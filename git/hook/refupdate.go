@@ -28,28 +28,56 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CreateRefUpdater creates new RefUpdater object using the provided git hook ClientFactory.
+// CreateRefUpdater creates new RefUpdater object. Options WithHooks and WithNoUpdate can be provided.
 func CreateRefUpdater(
-	hookClientFactory ClientFactory,
-	envVars map[string]string,
 	repoPath string,
+	opts ...func(updater *RefUpdater) error,
 ) (*RefUpdater, error) {
 	if repoPath == "" {
 		return nil, errors.Internal(nil, "repo path can't be empty")
 	}
 
-	client, err := hookClientFactory.NewClient(envVars)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create hook.Client: %w", err)
+	u := &RefUpdater{
+		state:    stateInit,
+		repoPath: repoPath,
+		refs:     nil,
 	}
 
-	return &RefUpdater{
-		state:      stateInit,
-		hookClient: client,
-		envVars:    envVars,
-		repoPath:   repoPath,
-		refs:       nil,
-	}, nil
+	for _, opt := range opts {
+		if err := opt(u); err != nil {
+			return nil, fmt.Errorf("failed to apply RefUpdater option: %w", err)
+		}
+	}
+
+	return u, nil
+}
+
+// WithHooks is an option for CreateRefUpdater that enables git hooks calling (pre-receive and post-receive).
+func WithHooks(hookClientFactory ClientFactory, envVars map[string]string) func(*RefUpdater) error {
+	return func(u *RefUpdater) error {
+		if hookClientFactory == nil {
+			return errors.Internal(nil, "hook client factory can't be nil")
+		}
+
+		client, err := hookClientFactory.NewClient(envVars)
+		if err != nil {
+			return fmt.Errorf("failed to create hook.Client: %w", err)
+		}
+
+		if client == nil {
+			return errors.Internal(nil, "hook client factory returned nil client")
+		}
+
+		u.hookClient = client
+
+		return nil
+	}
+}
+
+// WithNoUpdate is an option for CreateRefUpdater that disables the update of the reference in UpdateRef.
+func WithNoUpdate(u *RefUpdater) error {
+	u.noUpdate = true
+	return nil
 }
 
 // RefUpdater is an entity that is responsible for update of a reference.
@@ -58,9 +86,9 @@ func CreateRefUpdater(
 type RefUpdater struct {
 	state      refUpdaterState
 	hookClient Client
-	envVars    map[string]string
 	repoPath   string
 	refs       []ReferenceUpdate
+	noUpdate   bool
 }
 
 // refUpdaterState represents state of the ref updater internal state machine.
@@ -175,7 +203,7 @@ func (u *RefUpdater) Init(ctx context.Context, refs []ReferenceUpdate) error {
 	return nil
 }
 
-// Pre runs the pre-receive git hook.
+// Pre runs the pre-receive git hook if hooks were enabled with WithHooks option.
 func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 	if u == nil {
 		return nil
@@ -186,7 +214,7 @@ func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 			statePre, u.state)
 	}
 
-	if len(u.refs) == 0 {
+	if len(u.refs) == 0 || u.hookClient == nil {
 		u.state = stateUpdate
 		return nil
 	}
@@ -228,7 +256,7 @@ func (u *RefUpdater) UpdateRef(ctx context.Context) error {
 			stateUpdate, u.state)
 	}
 
-	if len(u.refs) == 0 {
+	if len(u.refs) == 0 || u.noUpdate {
 		u.state = statePost
 		return nil
 	}
@@ -288,7 +316,7 @@ func (u *RefUpdater) SkipUpdateRef(context.Context) error {
 	return nil
 }
 
-// Post runs the pre-receive git hook.
+// Post runs the pre-receive git hook if hooks were enabled with WithHooks option.
 func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) error {
 	if u == nil {
 		return nil
@@ -299,7 +327,7 @@ func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) error {
 			statePost, u.state)
 	}
 
-	if len(u.refs) == 0 {
+	if len(u.refs) == 0 || u.hookClient == nil {
 		u.state = stateDone
 		return nil
 	}

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sharedrepo"
 	"github.com/harness/gitness/git/types"
 
@@ -161,10 +162,38 @@ func newTestService(t *testing.T) (*Service, string) {
 	runnerFactory, err := sharedrepo.NewRunnerFactory(config.Root)
 	require.NoError(t, err)
 
-	s, err := New(config, adapter, nil, nil, runnerFactory)
+	s, err := New(config, adapter, failingHookClientFactory{t: t}, nil, runnerFactory)
 	require.NoError(t, err)
 
 	return s, s.reposRoot
+}
+
+// failingHookClientFactory creates hook clients that fail the test if any hook is called.
+type failingHookClientFactory struct {
+	t *testing.T
+}
+
+func (f failingHookClientFactory) NewClient(map[string]string) (hook.Client, error) {
+	return failingHookClient(f), nil
+}
+
+type failingHookClient struct {
+	t *testing.T
+}
+
+func (c failingHookClient) PreReceive(context.Context, hook.PreReceiveInput) (hook.Output, error) {
+	c.t.Error("unexpected call of the pre-receive hook")
+	return hook.Output{}, nil
+}
+
+func (c failingHookClient) Update(context.Context, hook.UpdateInput) (hook.Output, error) {
+	c.t.Error("unexpected call of the update hook")
+	return hook.Output{}, nil
+}
+
+func (c failingHookClient) PostReceive(context.Context, hook.PostReceiveInput) (hook.Output, error) {
+	c.t.Error("unexpected call of the post-receive hook")
+	return hook.Output{}, nil
 }
 
 func requireGit(t *testing.T) {

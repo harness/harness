@@ -92,7 +92,7 @@ func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 		return fmt.Errorf("failed to create reference '%s': %w", params.Name, err)
 	}
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
 	if err != nil {
 		return fmt.Errorf("failed to create ref updater: %w", err)
 	}
@@ -115,7 +115,7 @@ func (s *Service) UpdateRefs(ctx context.Context, params UpdateRefsParams) error
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
 	if err != nil {
 		return fmt.Errorf("failed to create ref updater: %w", err)
 	}

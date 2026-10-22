@@ -150,7 +150,7 @@ func (s *Service) Revert(ctx context.Context, params *RevertParams) (RevertOutpu
 		return RevertOutput{}, fmt.Errorf("failed to generate revert branch ref name: %w", err)
 	}
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
 	if err != nil {
 		return RevertOutput{}, fmt.Errorf("failed to create reference updater: %w", err)
 	}

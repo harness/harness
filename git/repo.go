@@ -497,8 +497,7 @@ func (s *Service) createInitialCommit(
 	committerDate time.Time,
 ) error {
 	// IMPORTANT: The server hooks must not be called, because the repository is still being created.
-	// That's why the hooks are installed last, and why here the ref updater uses a no-op hook client.
-	refUpdater, err := hook.CreateRefUpdater(hook.NewNoopClientFactory(nil), nil, repoPath)
+	refUpdater, err := hook.CreateRefUpdater(repoPath)
 	if err != nil {
 		return fmt.Errorf("failed to create ref updater: %w", err)
 	}
@@ -766,7 +765,7 @@ func (s *Service) SyncRefs(
 		return nil, errors.InvalidArgumentf("Could not find remote references: %v", notFound)
 	}
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath)
+	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reference updater: %w", err)
 	}
