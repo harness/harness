@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"iter"
 	"strings"
 	"time"
 
@@ -805,6 +806,91 @@ func (s *RepoStore) ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeI
 	return s.mapToRepoSizes(dst), nil
 }
 
+// allSizeInfosPageSize bounds the memory one page holds while keeping round trips low.
+const allSizeInfosPageSize = 1000
+
+// ListAllSizeInfosIter iterates size info for every non-deleted repository, unlike ListSizeInfos
+// which filters to repos pushed to since their size was last updated. Pages are read as the
+// sequence is consumed, so the caller never holds every repository in memory. The first page is
+// read eagerly, so a query that cannot start fails here; the sequence then yields a non-nil error
+// at most once and stops.
+//
+// Each page's cursor is closed before any of it is yielded, deliberately: the caller writes while
+// consuming the sequence, and on SQLite an open read blocks a write on another pooled connection,
+// so a cursor held across yields deadlocks the caller against itself.
+func (s *RepoStore) ListAllSizeInfosIter(
+	ctx context.Context,
+) (iter.Seq2[*types.RepositorySizeInfo, error], error) {
+	first, err := s.listAllSizeInfosPage(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(yield func(*types.RepositorySizeInfo, error) bool) {
+		page := first
+		for {
+			for _, info := range page {
+				if !yield(info, nil) {
+					return
+				}
+			}
+
+			// A short page is the last one: no repo can have an ID beyond it.
+			if len(page) < allSizeInfosPageSize {
+				return
+			}
+
+			// Stop on a cancelled context (job timeout or shutdown) rather than reading on.
+			if ctx.Err() != nil {
+				yield(nil, ctx.Err())
+				return
+			}
+
+			next, err := s.listAllSizeInfosPage(ctx, page[len(page)-1].ID)
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+			page = next
+		}
+	}, nil
+}
+
+// listAllSizeInfosPage reads up to allSizeInfosPageSize rows with an ID greater than afterID.
+// Keying on the primary key rather than OFFSET keeps each page one index range scan, and repos
+// created or deleted mid-iteration shift no other repo between pages.
+func (s *RepoStore) listAllSizeInfosPage(
+	ctx context.Context,
+	afterID int64,
+) ([]*types.RepositorySizeInfo, error) {
+	stmt := database.Builder.
+		Select("repo_id", "repo_git_uid", "repo_size", "repo_lfs_size", "repo_size_updated").
+		From("repositories").
+		Where("repo_deleted IS NULL").
+		Where("repo_state NOT IN (?, ?, ?)",
+			enum.RepoStateGitImport,
+			enum.RepoStateMigrateGitPush,
+			enum.RepoStateImportFailed,
+		).
+		Where("repo_id > ?", afterID).
+		OrderBy("repo_id").
+		Limit(allSizeInfosPageSize)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*repoSize{}
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+
+	return s.mapToRepoSizes(dst), nil
+}
+
 // ListAll returns a list of all repos across spaces with the provided filters.
 func (s *RepoStore) ListAll(
 	ctx context.Context,
@@ -1144,6 +1230,7 @@ func (s *RepoStore) mapToRepoSize(
 		ID:          in.ID,
 		GitUID:      in.GitUID,
 		Size:        in.Size,
+		LFSSize:     in.LFSSize,
 		SizeUpdated: in.SizeUpdated,
 	}
 }

@@ -17,6 +17,7 @@ package database_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"testing"
 
@@ -24,11 +25,15 @@ import (
 	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/jmoiron/sqlx"
 )
 
 const (
 	numTestRepos = 10
 	repoSize     = int64(100)
+	// rootSpaceID is the space the size-info tests create their repos under.
+	rootSpaceID = int64(1)
 )
 
 func TestDatabase_GetSize(t *testing.T) {
@@ -209,11 +214,11 @@ func TestDatabase_ListSizeInfos(t *testing.T) {
 	wantIDs := map[int64]bool{}
 	for _, state := range includedStates {
 		id++
-		wantIDs[createRepoWithState(ctx, t, repoStore, id, 1, state)] = true
+		wantIDs[createRepoWithState(ctx, t, repoStore, id, state)] = true
 	}
 	for _, state := range excludedStates {
 		id++
-		createRepoWithState(ctx, t, repoStore, id, 1, state)
+		createRepoWithState(ctx, t, repoStore, id, state)
 	}
 
 	infos, err := repoStore.ListSizeInfos(ctx)
@@ -263,14 +268,13 @@ func createRepo(
 	}
 }
 
-// createRepoWithState creates a repo in the given state and returns the ID
-// assigned by the store.
+// createRepoWithState creates a repo in the given state under the root space every caller sets up,
+// and returns the ID assigned by the store.
 func createRepoWithState(
 	ctx context.Context,
 	t *testing.T,
 	repoStore *database.RepoStore,
 	id int64,
-	spaceID int64,
 	state enum.RepoState,
 ) int64 {
 	t.Helper()
@@ -278,7 +282,7 @@ func createRepoWithState(
 	identifier := "repo_" + strconv.FormatInt(id, 10)
 	repo := types.Repository{
 		Identifier: identifier, GitUID: identifier,
-		ParentID: spaceID,
+		ParentID: rootSpaceID,
 		State:    state,
 		Size:     repoSize,
 		Tags:     json.RawMessage{},
@@ -326,4 +330,326 @@ func createNestedSpaces(
 		}
 	}
 	return numSpaces
+}
+
+func TestRepoStore_ListAllSizeInfosIter(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+
+	// State filtering must match ListSizeInfos, even though the push-time filter is weaker.
+	includedStates := []enum.RepoState{
+		enum.RepoStateActive,
+		enum.RepoStateMigrateDataImport,
+		enum.RepoStateArchived,
+	}
+	excludedStates := []enum.RepoState{
+		enum.RepoStateGitImport,
+		enum.RepoStateMigrateGitPush,
+		enum.RepoStateImportFailed,
+	}
+
+	var id int64
+	wantAllSizeInfosIDs := map[int64]bool{}
+	for _, state := range includedStates {
+		id++
+		wantAllSizeInfosIDs[createRepoWithState(ctx, t, repoStore, id, state)] = true
+	}
+	for _, state := range excludedStates {
+		id++
+		createRepoWithState(ctx, t, repoStore, id, state)
+	}
+
+	// A repo with repo_last_git_push < repo_size_updated: not pushed to since its size was last
+	// updated, so ListSizeInfos filters it out and ListAllSizeInfosIter must not.
+	id++
+	notPushedID := createRepoWithState(ctx, t, repoStore, id, enum.RepoStateActive)
+	currentTime := int64(1000000000)
+	pastTime := int64(999999999)
+	if _, err := db.Exec(
+		"UPDATE repositories SET repo_size_updated = ?, repo_last_git_push = ? WHERE repo_id = ?",
+		currentTime, pastTime, notPushedID,
+	); err != nil {
+		t.Fatalf("failed to update repo timestamps: %v", err)
+	}
+	wantAllSizeInfosIDs[notPushedID] = true
+
+	// A soft-deleted repo, excluded from both listings.
+	id++
+	deletedID := createRepoWithState(ctx, t, repoStore, id, enum.RepoStateActive)
+	if _, err := db.Exec(
+		"UPDATE repositories SET repo_deleted = ? WHERE repo_id = ?",
+		currentTime, deletedID,
+	); err != nil {
+		t.Fatalf("failed to soft-delete repo: %v", err)
+	}
+	// deletedID is deliberately left out of wantAllSizeInfosIDs.
+
+	allSizeInfos, err := repoStore.ListAllSizeInfosIter(ctx)
+	if err != nil {
+		t.Fatalf("ListAllSizeInfosIter failed: %v", err)
+	}
+
+	gotIDs := map[int64]bool{}
+	for info, err := range allSizeInfos {
+		if err != nil {
+			t.Fatalf("ListAllSizeInfosIter failed mid-iteration: %v", err)
+		}
+		gotIDs[info.ID] = true
+	}
+
+	if len(gotIDs) != len(wantAllSizeInfosIDs) {
+		t.Errorf("ListAllSizeInfosIter returned %d repos, want %d", len(gotIDs), len(wantAllSizeInfosIDs))
+	}
+	for wantID := range wantAllSizeInfosIDs {
+		if !gotIDs[wantID] {
+			t.Errorf("repo %d is expected in size infos but is missing", wantID)
+		}
+	}
+	for gotID := range gotIDs {
+		if !wantAllSizeInfosIDs[gotID] {
+			t.Errorf("repo %d must be excluded from size infos but is present", gotID)
+		}
+	}
+
+	// The difference this method exists for: ListSizeInfos drops the unpushed repo, the iterator
+	// keeps it.
+	sizeInfos, err := repoStore.ListSizeInfos(ctx)
+	if err != nil {
+		t.Fatalf("ListSizeInfos failed: %v", err)
+	}
+
+	gotSizeInfosIDs := map[int64]bool{}
+	for _, info := range sizeInfos {
+		gotSizeInfosIDs[info.ID] = true
+	}
+
+	if gotSizeInfosIDs[notPushedID] {
+		t.Errorf("repo %d should be filtered out by ListSizeInfos (unpushed), but it was returned", notPushedID)
+	}
+	if !gotIDs[notPushedID] {
+		t.Errorf("repo %d should be returned by ListAllSizeInfosIter even though unpushed, but it was missing",
+			notPushedID)
+	}
+}
+
+// Snapshots record LFS storage from what these listings return, so a mapping that drops
+// repo_lfs_size reports every repository as having no LFS data at all.
+func TestRepoStore_SizeInfosCarryLFSSize(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+
+	repoID := createRepoWithState(ctx, t, repoStore, 1, enum.RepoStateActive)
+
+	const wantLFSSize = int64(4096)
+	if _, err := db.Exec(
+		"UPDATE repositories SET repo_lfs_size = ? WHERE repo_id = ?", wantLFSSize, repoID,
+	); err != nil {
+		t.Fatalf("failed to set lfs size: %v", err)
+	}
+
+	sizeInfos, err := repoStore.ListSizeInfos(ctx)
+	if err != nil {
+		t.Fatalf("ListSizeInfos failed: %v", err)
+	}
+	if len(sizeInfos) != 1 {
+		t.Fatalf("ListSizeInfos returned %d repos, want 1", len(sizeInfos))
+	}
+	if sizeInfos[0].LFSSize != wantLFSSize {
+		t.Errorf("ListSizeInfos LFSSize = %d, want %d", sizeInfos[0].LFSSize, wantLFSSize)
+	}
+
+	iterInfos, err := repoStore.ListAllSizeInfosIter(ctx)
+	if err != nil {
+		t.Fatalf("ListAllSizeInfosIter failed: %v", err)
+	}
+
+	var yielded int
+	for info, err := range iterInfos {
+		if err != nil {
+			t.Fatalf("ListAllSizeInfosIter failed mid-iteration: %v", err)
+		}
+		yielded++
+		if info.LFSSize != wantLFSSize {
+			t.Errorf("ListAllSizeInfosIter LFSSize = %d, want %d", info.LFSSize, wantLFSSize)
+		}
+	}
+	if yielded != 1 {
+		t.Errorf("ListAllSizeInfosIter yielded %d repos, want 1", yielded)
+	}
+}
+
+// seedSizeInfoRepos inserts count active repos in one statement; the store's create path is far
+// too slow to cross several 1000-row pages.
+func seedSizeInfoRepos(ctx context.Context, t *testing.T, db *sqlx.DB, count int) {
+	t.Helper()
+
+	if _, err := db.ExecContext(ctx, `
+		WITH RECURSIVE i(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM i WHERE i < $1)
+		INSERT INTO repositories (
+			 repo_version, repo_parent_id, repo_uid, repo_created_by, repo_created, repo_updated
+			,repo_git_uid, repo_default_branch, repo_pullreq_seq, repo_num_forks, repo_num_pulls
+			,repo_num_closed_pulls, repo_num_open_pulls, repo_num_merged_pulls
+			,repo_size, repo_size_updated, repo_is_empty, repo_state, repo_last_git_push
+			,repo_lfs_size, repo_tags, repo_root_space_id, repo_root_space_identifier
+		)
+		SELECT
+			 0, $2, 'repo_' || i, 1, 1, 1
+			,'repo_' || i, 'main', 0, 0, 0
+			,0, 0, 0
+			,i, 1, false, 0, 1
+			,0, '{}', $2, 'root'
+		FROM i`,
+		count, rootSpaceID,
+	); err != nil {
+		t.Fatalf("failed to seed %d repos: %v", count, err)
+	}
+}
+
+func newSizeInfoStore(t *testing.T, count int) (*database.RepoStore, *sqlx.DB) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	db, teardown := setupDB(t)
+	t.Cleanup(teardown)
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+	seedSizeInfoRepos(ctx, t, db, count)
+
+	return repoStore, db
+}
+
+// The page size is 1000, so these counts cover a partial last page (2500) and an exact multiple,
+// where the last page is full and termination depends on one more, empty, read (2000).
+func TestRepoStore_ListAllSizeInfosIter_PagesThroughEveryRepo(t *testing.T) {
+	for _, count := range []int{1000, 2000, 2500} {
+		t.Run(strconv.Itoa(count), func(t *testing.T) {
+			ctx := context.Background()
+			repoStore, _ := newSizeInfoStore(t, count)
+
+			seq, err := repoStore.ListAllSizeInfosIter(ctx)
+			if err != nil {
+				t.Fatalf("ListAllSizeInfosIter failed: %v", err)
+			}
+
+			var prev int64
+			var yielded int
+			for info, err := range seq {
+				if err != nil {
+					t.Fatalf("failed mid-iteration: %v", err)
+				}
+				if info.ID <= prev {
+					t.Fatalf("repo %d yielded after %d, want ascending IDs without repeats", info.ID, prev)
+				}
+				prev = info.ID
+				yielded++
+			}
+			if yielded != count {
+				t.Errorf("yielded %d repos, want %d", yielded, count)
+			}
+		})
+	}
+}
+
+func TestRepoStore_ListAllSizeInfosIter_StopsWhenConsumerBreaks(t *testing.T) {
+	ctx := context.Background()
+	repoStore, _ := newSizeInfoStore(t, 2500)
+
+	seq, err := repoStore.ListAllSizeInfosIter(ctx)
+	if err != nil {
+		t.Fatalf("ListAllSizeInfosIter failed: %v", err)
+	}
+
+	// 1500 is past the first page, so the break lands after a page continuation.
+	const stopAfter = 1500
+	var yielded int
+	for _, err := range seq {
+		if err != nil {
+			t.Fatalf("failed mid-iteration: %v", err)
+		}
+		yielded++
+		if yielded == stopAfter {
+			break
+		}
+	}
+	if yielded != stopAfter {
+		t.Errorf("yielded %d repos, want %d", yielded, stopAfter)
+	}
+}
+
+// A failure reading a later page must reach the consumer once and end the sequence, rather than
+// returning the pages read so far as if they were everything.
+func TestRepoStore_ListAllSizeInfosIter_ReportsNextPageFailure(t *testing.T) {
+	ctx := context.Background()
+	repoStore, db := newSizeInfoStore(t, 2500)
+
+	seq, err := repoStore.ListAllSizeInfosIter(ctx)
+	if err != nil {
+		t.Fatalf("ListAllSizeInfosIter failed: %v", err)
+	}
+
+	var yielded, failures int
+	for _, err := range seq {
+		if err != nil {
+			failures++
+			continue
+		}
+		yielded++
+		if yielded == 1000 {
+			// The first page is fully consumed; the next read has no table to hit.
+			if _, execErr := db.ExecContext(ctx, "ALTER TABLE repositories RENAME TO repositories_gone"); execErr != nil {
+				t.Fatalf("failed to break the next page: %v", execErr)
+			}
+		}
+	}
+	if yielded != 1000 {
+		t.Errorf("yielded %d repos, want only the first page's 1000", yielded)
+	}
+	if failures != 1 {
+		t.Errorf("got %d errors, want exactly 1", failures)
+	}
+}
+
+func TestRepoStore_ListAllSizeInfosIter_ReportsCancelledContextBetweenPages(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	repoStore, _ := newSizeInfoStore(t, 2500)
+
+	seq, err := repoStore.ListAllSizeInfosIter(ctx)
+	if err != nil {
+		t.Fatalf("ListAllSizeInfosIter failed: %v", err)
+	}
+
+	var yielded int
+	var gotErr error
+	for _, err := range seq {
+		if err != nil {
+			gotErr = err
+			continue
+		}
+		yielded++
+		if yielded == 1 {
+			cancel()
+		}
+	}
+	if yielded != 1000 {
+		t.Errorf("yielded %d repos, want the first page's 1000 and nothing after", yielded)
+	}
+	if !errors.Is(gotErr, context.Canceled) {
+		t.Errorf("got error %v, want context.Canceled", gotErr)
+	}
 }

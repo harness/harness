@@ -32,7 +32,14 @@ import (
 var WireSet = wire.NewSet(
 	ProvideCalculator,
 	ProvideService,
+	ProvideListener,
 )
+
+// ProvideListener wires a no-op listener for the OSS binary, which has nothing to notify.
+// harness-code's wire graph supplies a real one instead.
+func ProvideListener() Listener {
+	return noopListener{}
+}
 
 func ProvideCalculator(
 	config *types.Config,
@@ -43,6 +50,7 @@ func ProvideCalculator(
 	executor *job.Executor,
 	lfsStore store.LFSObjectStore,
 	usageMetricStore store.UsageMetricStore,
+	listener Listener,
 ) (*SizeCalculator, error) {
 	job := &SizeCalculator{
 		enabled:          config.RepoSize.Enabled,
@@ -55,6 +63,7 @@ func ProvideCalculator(
 		scheduler:        scheduler,
 		lfsStore:         lfsStore,
 		usageMetricStore: usageMetricStore,
+		listener:         listener,
 	}
 
 	err := executor.Register(jobType, job)

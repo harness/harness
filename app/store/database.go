@@ -18,6 +18,7 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"iter"
 	"time"
 
 	"github.com/harness/gitness/git/sha"
@@ -321,6 +322,11 @@ type (
 
 		// ListSizeInfos returns a list of all active repo sizes.
 		ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error)
+
+		// ListAllSizeInfosIter iterates size info for every non-deleted repository, unlike
+		// ListSizeInfos which only covers repos pushed to since their size was last updated.
+		// Iterated rather than returned whole because it covers the entire installation.
+		ListAllSizeInfosIter(ctx context.Context) (iter.Seq2[*types.RepositorySizeInfo, error], error)
 
 		// UpdateNumForks increases or decreases number of forks of the repository.
 		UpdateNumForks(ctx context.Context, repoID int64, delta int64) error

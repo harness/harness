@@ -30,6 +30,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Listener is notified once a size-calculation run has finished, with the run's end time in epoch
+// millis. It is a trigger only: implementations read whatever they need through their own stores.
+type Listener interface {
+	AfterSizeCalculation(ctx context.Context, measuredAt int64)
+}
+
+// noopListener is used when nothing is listening.
+type noopListener struct{}
+
+func (noopListener) AfterSizeCalculation(context.Context, int64) {}
+
 const jobType = "repo-size-calculator"
 
 type SizeCalculator struct {
@@ -44,6 +55,7 @@ type SizeCalculator struct {
 	repoStore        store.RepoStore
 	spaceStore       store.SpaceStore
 	usageMetricStore store.UsageMetricStore
+	listener         Listener
 }
 
 func (s *SizeCalculator) Register(ctx context.Context) error {
@@ -69,6 +81,12 @@ func (s *SizeCalculator) Handle(ctx context.Context, _ string, _ job.ProgressRep
 	if !s.enabled {
 		return "", nil
 	}
+
+	// Deferred so a run that fails partway still notifies: the listener reads the sizes that are in
+	// the database, and what it makes of earlier runs does not depend on this one.
+	defer func() {
+		s.listener.AfterSizeCalculation(ctx, time.Now().UnixMilli())
+	}()
 
 	sizeInfos, err := s.repoStore.ListSizeInfos(ctx)
 	if err != nil {
