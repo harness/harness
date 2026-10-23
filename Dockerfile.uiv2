@@ -8,7 +8,10 @@ FROM --platform=linux/arm64 harness/opensource-ui:standalone.alpha.480 as uiv2
 # ---------------------------------------------------------#
 #                   Build Harness image                    #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM golang:1.26.9-alpine3.23 as builder
+FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/go:1.26.10 AS hhi-go-toolchain-1
+FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1 as builder
+COPY --from=hhi-go-toolchain-1 /usr/lib/go /usr/lib/go
+ENV PATH=/usr/lib/go/bin:$PATH GOPATH=/go GOTOOLCHAIN=local
 
 RUN apk update \
     && apk add --no-cache protoc build-base git
@@ -52,7 +55,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CC=$CC go build -ldflags="$LDFLAGS" -o ./gitness ./cmd/gitness
 
 ### Pull CA Certs
-FROM --platform=$BUILDPLATFORM alpine:latest as cert-image
+FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1 as cert-image
 
 RUN apk --update add ca-certificates
 
