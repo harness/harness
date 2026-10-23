@@ -447,24 +447,25 @@ func (s *Service) MergeVerify(ctx context.Context, params *MergeVerifyParams) (M
 
 	var conflicts []string
 
-	err = s.sharedReadOnlyRunner.Run(ctx, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
-		var mergeErr error
-		_, conflicts, mergeErr = mergeFunc(
-			ctx,
-			r,
-			merge.Params{
-				Author:       identity,
-				Committer:    identity,
-				Message:      "merge verify",
-				MergeBaseSHA: mergeBaseCommitSHA,
-				TargetSHA:    baseCommitSHA,
-				SourceSHA:    headCommitSHA,
-			})
-		if mergeErr != nil {
-			return fmt.Errorf("failed to create merge commit: %w", mergeErr)
-		}
-		return nil
-	}, params.AlternateObjectDirs...)
+	err = s.sharedRunnerFactory.ReadOnlyRunner(params.RepoUID, repoPath, params.AlternateObjectDirs...).
+		Run(ctx, func(r *sharedrepo.SharedRepo) error {
+			var mergeErr error
+			_, conflicts, mergeErr = mergeFunc(
+				ctx,
+				r,
+				merge.Params{
+					Author:       identity,
+					Committer:    identity,
+					Message:      "merge verify",
+					MergeBaseSHA: mergeBaseCommitSHA,
+					TargetSHA:    baseCommitSHA,
+					SourceSHA:    headCommitSHA,
+				})
+			if mergeErr != nil {
+				return fmt.Errorf("failed to create merge commit: %w", mergeErr)
+			}
+			return nil
+		})
 	if err != nil {
 		return MergeVerifyOutput{}, fmt.Errorf("failed to merge verify %s to %s in %q using the %q merge method: %w",
 			headCommitSHA, baseCommitSHA, params.RepoUID, mergeMethod, err)
