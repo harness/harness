@@ -1,6 +1,9 @@
 # ---------------------------------------------------------#
 #                     Build web image                      #
 # ---------------------------------------------------------#
+FROM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1 AS hhi-ca-certificates
+RUN apk add --no-cache 'ca-certificates>=20261020-r0'
+
 FROM --platform=$BUILDPLATFORM node:16 as web
 
 WORKDIR /usr/src/app
@@ -73,6 +76,8 @@ RUN apk --update add ca-certificates
 #                   Create final image                     #
 # ---------------------------------------------------------#
 FROM --platform=$TARGETPLATFORM alpine/git:2.49.1 as final
+COPY --from=hhi-ca-certificates /etc/ssl/certs/ca-certificates.crt /etc/hhi/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/hhi/certs/ca-certificates.crt SSL_CERT_DIR=/etc/hhi/certs
 
 # setup app dir and its content
 WORKDIR /app
@@ -97,3 +102,5 @@ EXPOSE 3000
 EXPOSE 3022
 
 ENTRYPOINT [ "/app/gitness", "server" ]
+
+COPY --from=hhi-ca-certificates /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
