@@ -119,12 +119,13 @@ const (
 )
 
 // Do runs full ref update by executing all methods in the correct order.
+// It discards pre- and post-receive output messages (except Error which is returned as an error).
 func (u *RefUpdater) Do(ctx context.Context, refs []ReferenceUpdate) error {
 	if err := u.Init(ctx, refs); err != nil {
 		return fmt.Errorf("init failed: %w", err)
 	}
 
-	if err := u.Pre(ctx); err != nil {
+	if _, err := u.Pre(ctx); err != nil {
 		return fmt.Errorf("pre failed: %w", err)
 	}
 
@@ -132,7 +133,7 @@ func (u *RefUpdater) Do(ctx context.Context, refs []ReferenceUpdate) error {
 		return fmt.Errorf("update failed: %w", err)
 	}
 
-	if err := u.Post(ctx); err != nil {
+	if _, err := u.Post(ctx); err != nil {
 		return fmt.Errorf("post failed: %w", err)
 	}
 
@@ -204,19 +205,24 @@ func (u *RefUpdater) Init(ctx context.Context, refs []ReferenceUpdate) error {
 }
 
 // Pre runs the pre-receive git hook if hooks were enabled with WithHooks option.
-func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
+//
+// The returned Output holds the messages produced by the hook, and it should be inspected even if an error is returned.
+// When the hook ran and rejected the update, the error is returned together with the hook's Output, because the
+// messages explain the rejection and are meant to be shown to the user.
+// The Output is zero if the hook wasn't called or if the call to it failed.
+func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) (Output, error) {
 	if u == nil {
-		return nil
+		return Output{}, nil
 	}
 
 	if u.state != statePre {
-		return fmt.Errorf("invalid operation order: pre-receive hook requires state=%s, current state=%s",
+		return Output{}, fmt.Errorf("invalid operation order: pre-receive hook requires state=%s, current state=%s",
 			statePre, u.state)
 	}
 
 	if len(u.refs) == 0 || u.hookClient == nil {
 		u.state = stateUpdate
-		return nil
+		return Output{}, nil
 	}
 
 	out, err := u.hookClient.PreReceive(ctx, PreReceiveInput{
@@ -226,7 +232,7 @@ func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("pre-receive call failed with: %w", err)
+		return Output{}, fmt.Errorf("pre-receive call failed with: %w", err)
 	}
 	if out.Error != nil {
 		log.Ctx(ctx).Debug().
@@ -237,12 +243,12 @@ func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 		if len(out.RuleViolations) > 0 {
 			blockErr = blockErr.SetDetails(map[string]any{RuleViolationsErrorDetailsKey: out.RuleViolations})
 		}
-		return blockErr
+		return out, blockErr
 	}
 
 	u.state = stateUpdate
 
-	return nil
+	return out, nil
 }
 
 // UpdateRef updates the git reference.
@@ -301,7 +307,8 @@ func (u *RefUpdater) UpdateRef(ctx context.Context) error {
 	return nil
 }
 
-// SkipUpdateRef updates the git reference.
+// SkipUpdateRef skips the update of the git reference. The reference is left untouched, but the updater moves on to
+// the state in which Post can be called, so the post-receive hook still runs.
 func (u *RefUpdater) SkipUpdateRef(context.Context) error {
 	if u == nil {
 		return nil
@@ -316,20 +323,25 @@ func (u *RefUpdater) SkipUpdateRef(context.Context) error {
 	return nil
 }
 
-// Post runs the pre-receive git hook if hooks were enabled with WithHooks option.
-func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) error {
+// Post runs the post-receive git hook if hooks were enabled with WithHooks option.
+//
+// The returned Output holds the messages produced by the hook, and it should be inspected even if an error is returned.
+// When the hook ran and reported an error, the error is returned together with the hook's Output, because the
+// messages describe what went wrong and are meant to be shown to the user.
+// The Output is zero if the hook wasn't called or if the call to it failed.
+func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) (Output, error) {
 	if u == nil {
-		return nil
+		return Output{}, nil
 	}
 
 	if u.state != statePost {
-		return fmt.Errorf("invalid operation order: post-receive hook requires state=%s, current state=%s",
+		return Output{}, fmt.Errorf("invalid operation order: post-receive hook requires state=%s, current state=%s",
 			statePost, u.state)
 	}
 
 	if len(u.refs) == 0 || u.hookClient == nil {
 		u.state = stateDone
-		return nil
+		return Output{}, nil
 	}
 
 	out, err := u.hookClient.PostReceive(ctx, PostReceiveInput{
@@ -339,15 +351,15 @@ func (u *RefUpdater) Post(ctx context.Context, alternateDirs ...string) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("post-receive call failed with: %w", err)
+		return Output{}, fmt.Errorf("post-receive call failed with: %w", err)
 	}
 	if out.Error != nil {
-		return fmt.Errorf("post-receive call returned error: %q", *out.Error)
+		return out, fmt.Errorf("post-receive call returned error: %q", *out.Error)
 	}
 
 	u.state = stateDone
 
-	return nil
+	return out, nil
 }
 
 func (u *RefUpdater) Refs() []ReferenceUpdate {

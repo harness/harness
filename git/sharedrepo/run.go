@@ -67,7 +67,7 @@ func (r defaultRunner) Run(
 
 	alternate := s.Directory() + "/objects"
 
-	if err := refUpdater.Pre(ctx, alternate); err != nil {
+	if _, err := refUpdater.Pre(ctx, alternate); err != nil {
 		return fmt.Errorf("pre-receive hook failed: %w", err)
 	}
 
@@ -86,7 +86,7 @@ func (r defaultRunner) Run(
 		return fmt.Errorf("failed to update reference: %w", err)
 	}
 
-	if err := refUpdater.Post(ctx, alternate); err != nil {
+	if _, err := refUpdater.Post(ctx, alternate); err != nil {
 		return fmt.Errorf("post-receive hook failed: %w", err)
 	}
 

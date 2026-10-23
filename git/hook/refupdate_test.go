@@ -272,7 +272,7 @@ func TestRefUpdaterDoWithoutRefs(t *testing.T) {
 	require.Equal(t, map[string]string{}, r.refs())
 
 	// the updater is finished
-	require.Error(t, u.Post(context.Background()))
+	require.Error(t, callPost(context.Background(), u))
 }
 
 func TestRefUpdaterAlternateObjectDirs(t *testing.T) {
@@ -284,9 +284,9 @@ func TestRefUpdaterAlternateObjectDirs(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, u.Init(ctx, []ReferenceUpdate{{Ref: testBranchRef, Old: sha.Nil, New: r.c1}}))
-	require.NoError(t, u.Pre(ctx, "/pre/dir1", "/pre/dir2"))
+	require.NoError(t, callPre(ctx, u, "/pre/dir1", "/pre/dir2"))
 	require.NoError(t, u.UpdateRef(ctx))
-	require.NoError(t, u.Post(ctx, "/post/dir"))
+	require.NoError(t, callPost(ctx, u, "/post/dir"))
 
 	require.Equal(t, []string{"/pre/dir1", "/pre/dir2"}, client.preInputs[0].Environment.AlternateObjectDirs)
 	require.Equal(t, []string{"/post/dir"}, client.postInputs[0].Environment.AlternateObjectDirs)
@@ -334,7 +334,7 @@ func TestRefUpdaterPreReceiveBlocked(t *testing.T) {
 			// a blocked update can't be forced by calling the following steps
 			require.Error(t, u.UpdateRef(ctx))
 			require.Error(t, u.SkipUpdateRef(ctx))
-			require.Error(t, u.Post(ctx))
+			require.Error(t, callPost(ctx, u))
 			require.Equal(t, map[string]string{testBranchRef: "c1"}, r.refs())
 			require.Equal(t, []string{"pre"}, client.events)
 		})
@@ -461,7 +461,7 @@ func TestRefUpdaterUpdateRefFailure(t *testing.T) {
 
 			// post-receive hook must not be called for an update that didn't happen
 			require.Equal(t, []string{"pre"}, client.events)
-			require.Error(t, u.Post(ctx))
+			require.Error(t, callPost(ctx, u))
 			require.Equal(t, []string{"pre"}, client.events)
 		})
 	}
@@ -492,18 +492,18 @@ func TestRefUpdaterSkipUpdateRef(t *testing.T) {
 			require.NoError(t, err)
 
 			require.NoError(t, u.Init(ctx, []ReferenceUpdate{{Ref: testBranchRef, Old: sha.Nil, New: r.c1}}))
-			require.NoError(t, u.Pre(ctx))
+			require.NoError(t, callPre(ctx, u))
 			require.NoError(t, u.SkipUpdateRef(ctx))
 
 			// the reference isn't touched, but the hook still has to be called
 			require.Equal(t, map[string]string{}, r.refs())
 
-			require.NoError(t, u.Post(ctx))
+			require.NoError(t, callPost(ctx, u))
 			require.Equal(t, map[string]string{}, r.refs())
 			require.Equal(t, test.wantEvents, client.events)
 
 			// the updater is finished
-			require.Error(t, u.Post(ctx))
+			require.Error(t, callPost(ctx, u))
 			require.Error(t, u.SkipUpdateRef(ctx))
 		})
 	}
@@ -574,13 +574,13 @@ func TestRefUpdaterOperationOrder(t *testing.T) {
 					case stepInit:
 						return u.Init(ctx, []ReferenceUpdate{{Ref: ref, Old: sha.Nil, New: r.c1}})
 					case stepPre:
-						return u.Pre(ctx)
+						return callPre(ctx, u)
 					case stepUpd:
 						return u.UpdateRef(ctx)
 					case stepSkip:
 						return u.SkipUpdateRef(ctx)
 					case stepPost:
-						return u.Post(ctx)
+						return callPost(ctx, u)
 					}
 					t.Fatalf("unknown step %q", step)
 					return nil
@@ -604,11 +604,159 @@ func TestRefUpdaterNilReceiver(t *testing.T) {
 
 	var u *RefUpdater
 
-	require.NoError(t, u.Pre(ctx))
+	out, err := u.Pre(ctx)
+	require.NoError(t, err)
+	require.Equal(t, Output{}, out)
+
 	require.NoError(t, u.UpdateRef(ctx))
 	require.NoError(t, u.SkipUpdateRef(ctx))
-	require.NoError(t, u.Post(ctx))
+
+	out, err = u.Post(ctx)
+	require.NoError(t, err)
+	require.Equal(t, Output{}, out)
+
 	require.Nil(t, u.Refs())
+}
+
+func TestRefUpdaterHookOutput(t *testing.T) {
+	const (
+		blockMsg = "branch is protected"
+		postMsg  = "post-receive failed"
+	)
+
+	violations := json.RawMessage(`[{"rule":"protect-main"}]`)
+
+	// newUpdater creates a RefUpdater with the provided client and initializes it with a creation of a branch.
+	newUpdater := func(t *testing.T, client *recordingClient) *RefUpdater {
+		t.Helper()
+
+		r := newTestRepo(t)
+
+		u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
+		require.NoError(t, err)
+
+		refs := []ReferenceUpdate{{Ref: testBranchRef, Old: sha.Nil, New: r.c1}}
+		require.NoError(t, u.Init(context.Background(), refs))
+
+		return u
+	}
+
+	t.Run("messages are returned", func(t *testing.T) {
+		ctx := context.Background()
+		client := &recordingClient{
+			preOutput:  Output{Messages: []string{"pre message"}},
+			postOutput: Output{Messages: []string{"post message 1", "post message 2"}},
+		}
+		u := newUpdater(t, client)
+
+		out, err := u.Pre(ctx)
+		require.NoError(t, err)
+		require.Equal(t, client.preOutput, out)
+
+		require.NoError(t, u.UpdateRef(ctx))
+
+		out, err = u.Post(ctx)
+		require.NoError(t, err)
+		require.Equal(t, client.postOutput, out)
+	})
+
+	t.Run("messages are returned along with the pre-receive error", func(t *testing.T) {
+		msg := blockMsg
+		client := &recordingClient{
+			preOutput: Output{Messages: []string{"blocked message"}, Error: &msg, RuleViolations: violations},
+		}
+		u := newUpdater(t, client)
+
+		out, err := u.Pre(context.Background())
+		require.Error(t, err)
+		require.True(t, errors.IsUnprocessableEntity(err), "unexpected error: %v", err)
+		require.Equal(t, client.preOutput, out)
+	})
+
+	t.Run("messages are returned along with the post-receive error", func(t *testing.T) {
+		ctx := context.Background()
+		msg := postMsg
+		client := &recordingClient{postOutput: Output{Messages: []string{"failure message"}, Error: &msg}}
+		u := newUpdater(t, client)
+
+		_, err := u.Pre(ctx)
+		require.NoError(t, err)
+		require.NoError(t, u.UpdateRef(ctx))
+
+		out, err := u.Post(ctx)
+		require.ErrorContains(t, err, postMsg)
+		require.Equal(t, client.postOutput, out)
+	})
+
+	t.Run("output is empty if the pre-receive call fails", func(t *testing.T) {
+		callErr := errors.New("pre-receive is down")
+		client := &recordingClient{preOutput: Output{Messages: []string{"ignored"}}, preErr: callErr}
+		u := newUpdater(t, client)
+
+		out, err := u.Pre(context.Background())
+		require.ErrorIs(t, err, callErr)
+		require.Equal(t, Output{}, out)
+	})
+
+	t.Run("output is empty if the post-receive call fails", func(t *testing.T) {
+		ctx := context.Background()
+		callErr := errors.New("post-receive is down")
+		client := &recordingClient{postOutput: Output{Messages: []string{"ignored"}}, postErr: callErr}
+		u := newUpdater(t, client)
+
+		require.NoError(t, callPre(ctx, u))
+		require.NoError(t, u.UpdateRef(ctx))
+
+		out, err := u.Post(ctx)
+		require.ErrorIs(t, err, callErr)
+		require.Equal(t, Output{}, out)
+	})
+
+	t.Run("output is empty without hooks", func(t *testing.T) {
+		ctx := context.Background()
+		r := newTestRepo(t)
+
+		u, err := CreateRefUpdater(r.path)
+		require.NoError(t, err)
+		require.NoError(t, u.Init(ctx, []ReferenceUpdate{{Ref: testBranchRef, Old: sha.Nil, New: r.c1}}))
+
+		out, err := u.Pre(ctx)
+		require.NoError(t, err)
+		require.Equal(t, Output{}, out)
+
+		require.NoError(t, u.UpdateRef(ctx))
+
+		out, err = u.Post(ctx)
+		require.NoError(t, err)
+		require.Equal(t, Output{}, out)
+	})
+
+	t.Run("Do discards the messages", func(t *testing.T) {
+		r := newTestRepo(t)
+		client := &recordingClient{
+			preOutput:  Output{Messages: []string{"pre message"}},
+			postOutput: Output{Messages: []string{"post message"}},
+		}
+
+		u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
+		require.NoError(t, err)
+
+		require.NoError(t, u.DoOne(context.Background(), testBranchRef, sha.Nil, r.c1))
+		require.Equal(t, map[string]string{testBranchRef: "c1"}, r.refs())
+		require.Equal(t, []string{"pre", "post"}, client.events)
+	})
+}
+
+// callPre calls RefUpdater.Pre and discards the returned hook output.
+func callPre(ctx context.Context, u *RefUpdater, alternateDirs ...string) error {
+	_, err := u.Pre(ctx, alternateDirs...)
+	return err
+}
+
+// callPost calls RefUpdater.Post and discards the returned hook output.
+func callPost(ctx context.Context, u *RefUpdater, alternateDirs ...string) error {
+	_, err := u.Post(ctx, alternateDirs...)
+	return err
 }
 
 // recordingClient is a Client that records the hooks that have been called and the data they were called with.
