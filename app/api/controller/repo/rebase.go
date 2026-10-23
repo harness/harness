@@ -160,41 +160,46 @@ func (c *Controller) Rebase(
 		}, nil, nil
 	}
 
+	if in.DryRun {
+		verifyOutput, err := c.git.MergeVerify(ctx, &git.MergeVerifyParams{
+			ReadParams: git.CreateReadParams(repo),
+			BaseSHA:    baseCommitSHA,
+			HeadSHA:    headBranch.Branch.SHA,
+			Method:     gitenum.MergeMethodRebase,
+		})
+		if err != nil {
+			return nil, nil, fmt.Errorf("rebase dry-run failed: %w", err)
+		}
+
+		return &types.RebaseResponse{
+			RuleViolations: violations,
+			DryRun:         true,
+			ConflictFiles:  verifyOutput.ConflictFiles,
+		}, nil, nil
+	}
+
 	// Use APIRefsOnly for rebase - branch rules are verified at the controller layer.
 	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	var refs []git.RefUpdate
-	if !in.DryRun {
-		refs = append(refs, git.RefUpdate{
-			Name: git.GetBranchRefPath(in.HeadBranch),
-			Old:  headBranch.Branch.SHA,
-			New:  sha.SHA{}, // update to the result of the merge
-		})
-	}
-
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
-		WriteParams:           writeParams,
-		BaseSHA:               baseCommitSHA,
-		HeadBranch:            in.HeadBranch,
-		Refs:                  refs,
+		WriteParams: writeParams,
+		BaseSHA:     baseCommitSHA,
+		HeadBranch:  in.HeadBranch,
+		Refs: []git.RefUpdate{
+			{
+				Name: git.GetBranchRefPath(in.HeadBranch),
+				Old:  headBranch.Branch.SHA,
+				New:  sha.SHA{}, // update to the result of the merge
+			},
+		},
 		HeadBranchExpectedSHA: in.HeadCommitSHA,
 		Method:                gitenum.MergeMethodRebase,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("rebase execution failed: %w", err)
-	}
-
-	if in.DryRun {
-		// DryRun is true: Just return rule violations and list of conflicted files.
-		// No reference is updated, so don't return the resulting commit SHA.
-		return &types.RebaseResponse{
-			RuleViolations: violations,
-			DryRun:         true,
-			ConflictFiles:  mergeOutput.ConflictFiles,
-		}, nil, nil
 	}
 
 	if mergeOutput.MergeSHA.IsEmpty() || len(mergeOutput.ConflictFiles) > 0 {

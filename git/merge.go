@@ -341,6 +341,145 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}, nil
 }
 
+// MergeVerifyParams is input for a read-only merge conflict check.
+// Callers resolve branches to SHAs before calling.
+type MergeVerifyParams struct {
+	ReadParams
+
+	BaseSHA sha.SHA
+	HeadSHA sha.SHA
+
+	Method enum.MergeMethod
+}
+
+func (p *MergeVerifyParams) Validate() error {
+	if err := p.ReadParams.Validate(); err != nil {
+		return err
+	}
+
+	if p.BaseSHA.IsEmpty() {
+		return errors.InvalidArgument("base commit SHA is mandatory")
+	}
+
+	if p.HeadSHA.IsEmpty() {
+		return errors.InvalidArgument("head commit SHA is mandatory")
+	}
+
+	return nil
+}
+
+// MergeVerifyOutput is the result of a read-only merge check. No merge commit SHA is returned
+// because the temporary objects are discarded. Base and head SHAs are the caller's inputs.
+type MergeVerifyOutput struct {
+	MergeBaseSHA     sha.SHA
+	CommitCount      int
+	ChangedFileCount int
+	Additions        int
+	Deletions        int
+	ConflictFiles    []string
+}
+
+// MergeVerify dry-runs a merge using a read-only shared repo so no objects or refs are persisted.
+func (s *Service) MergeVerify(ctx context.Context, params *MergeVerifyParams) (MergeVerifyOutput, error) {
+	err := params.Validate()
+	if err != nil {
+		return MergeVerifyOutput{}, fmt.Errorf("params not valid: %w", err)
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	mergeMethod, ok := params.Method.Sanitize()
+	if !ok && params.Method != "" {
+		return MergeVerifyOutput{}, errors.InvalidArgumentf("Unsupported merge method: %q", params.Method)
+	}
+
+	var mergeFunc merge.Func
+
+	switch mergeMethod {
+	case enum.MergeMethodMerge:
+		mergeFunc = merge.Merge
+	case enum.MergeMethodSquash:
+		mergeFunc = merge.Squash
+	case enum.MergeMethodRebase:
+		mergeFunc = merge.Rebase
+	case enum.MergeMethodFastForward:
+		mergeFunc = merge.FastForward
+	default:
+		panic(fmt.Sprintf("unsupported merge method: %q", mergeMethod))
+	}
+
+	baseCommitSHA := params.BaseSHA
+	headCommitSHA := params.HeadSHA
+
+	mergeBaseCommitSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "origin",
+		baseCommitSHA.String(), headCommitSHA.String(), false)
+	if err != nil {
+		return MergeVerifyOutput{}, fmt.Errorf("failed to get merge base: %w", err)
+	}
+
+	if headCommitSHA.Equal(mergeBaseCommitSHA) {
+		return MergeVerifyOutput{}, errors.InvalidArgument("head branch doesn't contain any new commits.")
+	}
+
+	shortStat, err := s.git.DiffShortStat(
+		ctx,
+		repoPath,
+		baseCommitSHA.String(),
+		headCommitSHA.String(),
+		true,
+		false,
+	)
+	if err != nil {
+		return MergeVerifyOutput{}, errors.Internalf(err,
+			"failed to find short stat between %s and %s", baseCommitSHA, headCommitSHA)
+	}
+
+	commitCount, err := merge.CommitCount(ctx, repoPath, baseCommitSHA.String(), headCommitSHA.String())
+	if err != nil {
+		return MergeVerifyOutput{}, fmt.Errorf("failed to find commit count for merge check: %w", err)
+	}
+
+	now := time.Now().UTC()
+	identity := &api.Signature{
+		Identity: api.Identity{Name: "merge-verify", Email: "merge-verify@localhost"},
+		When:     now,
+	}
+
+	var conflicts []string
+
+	err = s.sharedReadOnlyRunner.Run(ctx, s.sharedRepoRoot, repoPath, func(r *sharedrepo.SharedRepo) error {
+		var mergeErr error
+		_, conflicts, mergeErr = mergeFunc(
+			ctx,
+			r,
+			merge.Params{
+				Author:       identity,
+				Committer:    identity,
+				Message:      "merge verify",
+				MergeBaseSHA: mergeBaseCommitSHA,
+				TargetSHA:    baseCommitSHA,
+				SourceSHA:    headCommitSHA,
+			})
+		if mergeErr != nil {
+			return fmt.Errorf("failed to create merge commit: %w", mergeErr)
+		}
+		return nil
+	}, params.AlternateObjectDirs...)
+	if err != nil {
+		return MergeVerifyOutput{}, fmt.Errorf("failed to merge verify %s to %s in %q using the %q merge method: %w",
+			headCommitSHA, baseCommitSHA, params.RepoUID, mergeMethod, err)
+	}
+
+	return MergeVerifyOutput{
+		MergeBaseSHA:     mergeBaseCommitSHA,
+		CommitCount:      commitCount,
+		ChangedFileCount: shortStat.Files,
+		Additions:        shortStat.Additions,
+		Deletions:        shortStat.Deletions,
+		ConflictFiles:    conflicts,
+	}, nil
+}
+
 type MergeBaseParams struct {
 	ReadParams
 	Ref1 string

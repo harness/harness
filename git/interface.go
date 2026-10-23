@@ -109,6 +109,8 @@ type Interface interface {
 	 * Merge services
 	 */
 	Merge(ctx context.Context, in *MergeParams) (MergeOutput, error)
+	// MergeVerify dry-runs a merge in a temp repo and discards all objects.
+	MergeVerify(ctx context.Context, in *MergeVerifyParams) (MergeVerifyOutput, error)
 
 	Revert(ctx context.Context, in *RevertParams) (RevertOutput, error)
 

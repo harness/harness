@@ -169,6 +169,24 @@ func (c *Controller) MergeCommit(
 		}, nil, nil
 	}
 
+	if in.DryRun {
+		verifyOutput, err := c.git.MergeVerify(ctx, &git.MergeVerifyParams{
+			ReadParams: git.CreateReadParams(repo),
+			BaseSHA:    baseCommitSHA,
+			HeadSHA:    headBranch.Branch.SHA,
+			Method:     gitenum.MergeMethodMerge,
+		})
+		if err != nil {
+			return nil, nil, fmt.Errorf("merge commit dry-run failed: %w", err)
+		}
+
+		return &types.MergeCommitResponse{
+			RuleViolations: violations,
+			DryRun:         true,
+			ConflictFiles:  verifyOutput.ConflictFiles,
+		}, nil, nil
+	}
+
 	author := controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
 	committer := controller.SystemServicePrincipalInfo()
 	now := time.Now()
@@ -187,21 +205,18 @@ func (c *Controller) MergeCommit(
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	var refs []git.RefUpdate
-	if !in.DryRun {
-		refs = append(refs, git.RefUpdate{
-			Name: git.GetBranchRefPath(in.HeadBranch),
-			Old:  headBranch.Branch.SHA,
-			New:  sha.SHA{}, // update to the result of the merge
-		})
-	}
-
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
-		WriteParams:           writeParams,
-		BaseSHA:               baseCommitSHA,
-		HeadBranch:            in.HeadBranch,
-		Message:               message,
-		Refs:                  refs,
+		WriteParams: writeParams,
+		BaseSHA:     baseCommitSHA,
+		HeadBranch:  in.HeadBranch,
+		Message:     message,
+		Refs: []git.RefUpdate{
+			{
+				Name: git.GetBranchRefPath(in.HeadBranch),
+				Old:  headBranch.Branch.SHA,
+				New:  sha.SHA{}, // update to the result of the merge
+			},
+		},
 		Committer:             committer,
 		CommitterDate:         &now,
 		Author:                author,
@@ -211,16 +226,6 @@ func (c *Controller) MergeCommit(
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("merge commit creation failed: %w", err)
-	}
-
-	if in.DryRun {
-		// DryRun is true: Just return rule violations and list of conflicted files.
-		// No reference is updated, so don't return the resulting commit SHA.
-		return &types.MergeCommitResponse{
-			RuleViolations: violations,
-			DryRun:         true,
-			ConflictFiles:  mergeOutput.ConflictFiles,
-		}, nil, nil
 	}
 
 	if mergeOutput.MergeSHA.IsEmpty() || len(mergeOutput.ConflictFiles) > 0 {

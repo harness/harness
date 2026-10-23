@@ -336,18 +336,11 @@ func (c *Controller) Merge(
 		}
 
 		if checkMergeability {
-			// for merge-check we can skip git hooks explicitly (we don't update any refs anyway)
-			writeParams, err := controller.CreateRPCSystemReferencesWriteParams(ctx, c.urlProvider, session, targetRepo)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
-			}
-
-			mergeOutput, err = c.git.Merge(ctx, &git.MergeParams{
-				WriteParams: writeParams,
-				BaseSHA:     targetSHA,
-				HeadSHA:     sourceSHA,
-				Refs:        nil, // update no refs -> no commit will be created
-				Method:      gitenum.MergeMethod(in.Method),
+			verifyOutput, err := c.git.MergeVerify(ctx, &git.MergeVerifyParams{
+				ReadParams: git.CreateReadParams(targetRepo),
+				BaseSHA:    targetSHA,
+				HeadSHA:    sourceSHA,
+				Method:     gitenum.MergeMethod(in.Method),
 			})
 			if errors.IsInvalidArgument(err) || gitapi.IsUnrelatedHistoriesError(err) {
 				errClose := c.pullreqService.CloseBecauseNonUniqueMergeBase(ctx, targetSHA, sourceSHA, pr)
@@ -363,7 +356,17 @@ func (c *Controller) Merge(
 				return nil, nil, fmt.Errorf("failed merge check with method=%s: %w", in.Method, err)
 			}
 
-			conflicts = mergeOutput.ConflictFiles
+			conflicts = verifyOutput.ConflictFiles
+			mergeOutput = git.MergeOutput{
+				BaseSHA:          targetSHA,
+				HeadSHA:          sourceSHA,
+				MergeBaseSHA:     verifyOutput.MergeBaseSHA,
+				CommitCount:      verifyOutput.CommitCount,
+				ChangedFileCount: verifyOutput.ChangedFileCount,
+				Additions:        verifyOutput.Additions,
+				Deletions:        verifyOutput.Deletions,
+				ConflictFiles:    verifyOutput.ConflictFiles,
+			}
 
 			_, err = c.pullreqStore.UpdateMergeCheckMetadataOptLock(ctx, pr, func(pr *types.PullReq) error {
 				if pr.SourceSHA != mergeOutput.HeadSHA.String() {

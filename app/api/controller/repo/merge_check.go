@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/git"
@@ -70,19 +69,13 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, fmt.Errorf("failed to resolve head revision %s: %w", dotRange.HeadRef, err)
 	}
 
-	// Use APIRefsOnly for merge check.
-	writeParams, err := controller.CreateRPCAPIRefsWriteParams(ctx, c.urlProvider, session, repo)
-	if err != nil {
-		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
-	}
-
-	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
-		WriteParams: writeParams,
-		BaseSHA:     baseResult.SHA,
-		HeadSHA:     headResult.SHA,
+	mergeOutput, err := c.git.MergeVerify(ctx, &git.MergeVerifyParams{
+		ReadParams: readParams,
+		BaseSHA:    baseResult.SHA,
+		HeadSHA:    headResult.SHA,
 	})
 	if err != nil {
-		// git.Merge works with commits and error is not user-friendly
+		// MergeVerify works with commits and error is not user-friendly
 		// and here we are modify base-ref and head-ref with user input
 		// values.
 		if uErr := api.AsUnrelatedHistoriesError(err); uErr != nil {
