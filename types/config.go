@@ -567,6 +567,14 @@ type Config struct {
 
 		BusyActionInMins int `envconfig:"GITNESS_BUSY_ACTION_IN_MINS" default:"15"`
 
+		// FeaturesAllowPrivateNetwork, FeaturesAllowLoopback and FeaturesAllowLinkLocal
+		// control which resolved addresses devcontainer feature downloads (tarball URLs
+		// and OCI registries from devcontainer.json) are allowed to reach. The sources
+		// are user provided, so all of them default to false.
+		FeaturesAllowPrivateNetwork bool `envconfig:"GITNESS_GITSPACE_FEATURES_ALLOW_PRIVATE_NETWORK" default:"false"`
+		FeaturesAllowLoopback       bool `envconfig:"GITNESS_GITSPACE_FEATURES_ALLOW_LOOPBACK" default:"false"`
+		FeaturesAllowLinkLocal      bool `envconfig:"GITNESS_GITSPACE_FEATURES_ALLOW_LINK_LOCAL" default:"false"`
+
 		Events struct {
 			Concurrency   int `envconfig:"GITNESS_GITSPACE_EVENTS_CONCURRENCY" default:"4"`
 			MaxRetries    int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`
