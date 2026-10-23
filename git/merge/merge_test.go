@@ -216,7 +216,8 @@ func TestRebase_ObjectsSurvivePacking(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, packs, 1)
 
-	require.NoError(t, s.MoveObjects(ctx))
+	_, err = s.MoveObjects(ctx)
+	require.NoError(t, err)
 
 	// the rebased commits and everything they point to must be readable from the original
 	// repository, without the shared repository (which is gone by then) as an alternate.

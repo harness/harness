@@ -72,8 +72,23 @@ func TestPackObjects(t *testing.T) {
 			// no matter how they are stored, all objects must still be readable
 			requireObjectsExist(t, s.Directory(), objectSHAs)
 
+			files, err := s.objectFiles()
+			require.NoError(t, err)
+
 			// and they must survive the move to the original repository
-			require.NoError(t, s.MoveObjects(ctx))
+			moved, err := s.MoveObjects(ctx)
+			require.NoError(t, err)
+
+			// every file must be reported once, as a path relative to the objects directory,
+			// and in the order of priority in which the files are moved.
+			require.Len(t, moved, len(files))
+			for i, relPath := range moved {
+				assert.False(t, filepath.IsAbs(relPath), "path %q should be relative", relPath)
+				assert.FileExists(t, filepath.Join(sourceRepoPath, "objects", relPath))
+				if i > 0 {
+					assert.LessOrEqual(t, filePriority(filepath.Base(moved[i-1])), filePriority(filepath.Base(relPath)))
+				}
+			}
 
 			requireObjectsExist(t, sourceRepoPath, objectSHAs)
 

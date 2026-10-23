@@ -78,7 +78,7 @@ func (r defaultRunner) Run(
 		return fmt.Errorf("failed to pack objects: %w", err)
 	}
 
-	if err := s.MoveObjects(ctx); err != nil {
+	if _, err := s.MoveObjects(ctx); err != nil {
 		return fmt.Errorf("failed to move objects: %w", err)
 	}
 

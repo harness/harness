@@ -996,37 +996,41 @@ func (r *SharedRepo) PackObjects(ctx context.Context, packObjectsThreshold int) 
 }
 
 // MoveObjects moves git object from the shared repository to the original repository.
-func (r *SharedRepo) MoveObjects(ctx context.Context) error {
+// It returns the paths of the moved files, relative to the objects directory and in the order in which
+// they were moved. If the move fails, no paths are returned, although some files might have been moved already.
+func (r *SharedRepo) MoveObjects(ctx context.Context) ([]string, error) {
 	if r.sourceRepoPath == "" {
-		return errors.New("shared repo not initialized with a repository")
+		return nil, errors.New("shared repo not initialized with a repository")
 	}
 
 	dstDir := path.Join(r.sourceRepoPath, "objects")
 
 	stats, err := os.Stat(dstDir)
 	if err != nil {
-		return fmt.Errorf("failed to check stats of destination directory in MoveObjects: %w", err)
+		return nil, fmt.Errorf("failed to check stats of destination directory in MoveObjects: %w", err)
 	}
 
 	if !stats.IsDir() {
-		return errors.New("destination for MoveObjects is not a directory")
+		return nil, errors.New("destination for MoveObjects is not a directory")
 	}
 
 	files, err := r.objectFiles()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sort.Slice(files, func(i, j int) bool {
 		return files[i].priority < files[j].priority // 0 is top priority, 5 is lowest priority
 	})
 
+	moved := make([]string, 0, len(files))
+
 	for _, f := range files {
 		dstPath := filepath.Join(dstDir, f.relPath)
 
 		err = os.MkdirAll(filepath.Dir(dstPath), os.ModePerm)
 		if err != nil {
-			return fmt.Errorf("failed to create directory for git object: %w", err)
+			return nil, fmt.Errorf("failed to create directory for git object: %w", err)
 		}
 
 		// Try to move the file
@@ -1036,6 +1040,7 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 			log.Ctx(ctx).Debug().
 				Str("object", f.relPath).
 				Msg("moved git object")
+			moved = append(moved, f.relPath)
 			continue
 		}
 
@@ -1074,16 +1079,18 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 				AnErr("errRemove", errRemove).
 				Msg("failed to move or copy git object")
 
-			return fmt.Errorf("failed to move or copy git object: %w", errCopy)
+			return nil, fmt.Errorf("failed to move or copy git object: %w", errCopy)
 		}
 
 		log.Ctx(ctx).Warn().
 			Str("object", f.relPath).
 			AnErr("errRename", errRename).
 			Msg("copied git object")
+
+		moved = append(moved, f.relPath)
 	}
 
-	return nil
+	return moved, nil
 }
 
 // objectFiles returns the files of the shared repository (excluding the objects/info directory).
