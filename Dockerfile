@@ -1,10 +1,10 @@
 # ---------------------------------------------------------#
 #                     Build web image                      #
 # ---------------------------------------------------------#
-FROM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1 AS hhi-ca-certificates
+FROM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1@sha256:290a37c85b4284d2c11fa0778e5da79643d912a1f5a57d6f701b77644503b7e7 AS hhi-ca-certificates
 RUN apk add --no-cache 'ca-certificates>=20261020-r0'
 
-FROM --platform=$BUILDPLATFORM node:16 as web
+FROM --platform=$BUILDPLATFORM node:22.23.4-bookworm@sha256:63538dfe497cc29dfafdda25ada09b46db68a3f4cc205abf1f5d6bf0913f3384 as web
 
 WORKDIR /usr/src/app
 
@@ -21,8 +21,8 @@ RUN yarn && yarn build && yarn cache clean
 # ---------------------------------------------------------#
 #                   Build Harness image                    #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/go:1.26.10 AS hhi-go-toolchain-1
-FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1 as builder
+FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/go:1.26.10@sha256:718fddf012b3a305e936ae9964e5a642036bcb7b4c6c0786e2f78f238d637db8 AS hhi-go-toolchain-1
+FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1@sha256:290a37c85b4284d2c11fa0778e5da79643d912a1f5a57d6f701b77644503b7e7 as builder
 COPY --from=hhi-go-toolchain-1 /usr/lib/go /usr/lib/go
 ENV PATH=/usr/lib/go/bin:$PATH GOPATH=/go GOTOOLCHAIN=local
 
@@ -68,14 +68,14 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CC=$CC go build -ldflags="$LDFLAGS" -o ./gitness ./cmd/gitness
 
 ### Pull CA Certs
-FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1 as cert-image
+FROM --platform=$BUILDPLATFORM harness0.harness.io/oci/docker_artifacts/hhi/harnessos-alpine:1@sha256:290a37c85b4284d2c11fa0778e5da79643d912a1f5a57d6f701b77644503b7e7 as cert-image
 
 RUN apk --update add ca-certificates
 
 # ---------------------------------------------------------#
 #                   Create final image                     #
 # ---------------------------------------------------------#
-FROM --platform=$TARGETPLATFORM alpine/git:2.49.1 as final
+FROM --platform=$TARGETPLATFORM alpine/git:2.49.1@sha256:c0280cf9572316299b08544065d3bf35db65043d5e3963982ec50647d2746e26 as final
 COPY --from=hhi-ca-certificates /etc/ssl/certs/ca-certificates.crt /etc/hhi/certs/ca-certificates.crt
 ENV SSL_CERT_FILE=/etc/hhi/certs/ca-certificates.crt SSL_CERT_DIR=/etc/hhi/certs
 
