@@ -10,8 +10,11 @@ FROM harness0.harness.io/oci/docker_artifacts/hhi/go:1.26.10@sha256:718fddf012b3
 FROM node:22.23.4-bookworm@sha256:63538dfe497cc29dfafdda25ada09b46db68a3f4cc205abf1f5d6bf0913f3384 AS patched-dev-node
 
 FROM mcr.microsoft.com/devcontainers/go:1-1.23@sha256:35e445a87924ae04c171d7e52e2a913050dfefbacda3756ef7a307db035704d5 AS tools
-COPY --from=hhi-ca-certificates /etc/ssl/certs/ca-certificates.crt /etc/hhi/certs/ca-certificates.crt
-ENV SSL_CERT_FILE=/etc/hhi/certs/ca-certificates.crt SSL_CERT_DIR=/etc/hhi/certs
+COPY --from=hhi-ca-certificates /usr/share/ca-certificates/ /usr/share/ca-certificates/
+COPY --from=hhi-ca-certificates /etc/ca-certificates.conf /etc/ca-certificates.conf
+RUN rm -f /usr/share/ca-certificates/mozilla/AAA_Certificate_Services.crt /usr/share/ca-certificates/mozilla/Comodo_AAA_Services_root.crt /usr/share/ca-certificates/mozilla/emSign_ECC_Root_CA_-_G3.crt \
+    && printf '%s\n' '!mozilla/AAA_Certificate_Services.crt' '!mozilla/Comodo_AAA_Services_root.crt' '!mozilla/emSign_ECC_Root_CA_-_G3.crt' >> /etc/ca-certificates.conf \
+    && update-ca-certificates --fresh
 RUN rm -rf /usr/local/go
 COPY --from=patched-dev-go /usr/lib/go /usr/local/go
 COPY --from=patched-dev-node /usr/local/ /usr/local/
@@ -108,4 +111,3 @@ RUN --mount=type=secret,id=harness_code_secret_harness0,env=HARNESS_CODE_SECRET_
     sed -i '/machine git0\.harness\.io/d' ~/.netrc
 
 WORKDIR /root/gitness
-COPY --from=hhi-ca-certificates /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
