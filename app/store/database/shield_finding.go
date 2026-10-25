@@ -201,9 +201,15 @@ func (s *ShieldFindingStore) Upsert(ctx context.Context, f *types.ShieldFinding)
 			,shield_finding_cvss_score = excluded.shield_finding_cvss_score
 			,shield_finding_epss = excluded.shield_finding_epss
 			,shield_finding_in_kev = excluded.shield_finding_in_kev
-			,shield_finding_reachable = excluded.shield_finding_reachable
+			,shield_finding_reachable = CASE
+				WHEN shield_findings.shield_finding_ai_decision_ids <> '[]'
+				THEN shield_findings.shield_finding_reachable
+				ELSE excluded.shield_finding_reachable END
 			,shield_finding_risk_score = excluded.shield_finding_risk_score
-			,shield_finding_fix_strategy = excluded.shield_finding_fix_strategy
+			,shield_finding_fix_strategy = CASE
+				WHEN shield_findings.shield_finding_ai_decision_ids <> '[]'
+				THEN shield_findings.shield_finding_fix_strategy
+				ELSE excluded.shield_finding_fix_strategy END
 			,shield_finding_min_fixed_version = excluded.shield_finding_min_fixed_version
 			,shield_finding_fixed_versions = excluded.shield_finding_fixed_versions
 			,shield_finding_last_seen_scan_id = excluded.shield_finding_last_seen_scan_id
@@ -403,6 +409,40 @@ func (s *ShieldFindingStore) UpdateState(
 
 	if _, err := db.ExecContext(ctx, sqlQuery, state, reason, fixedAt, now, id); err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "Failed to update shield finding state")
+	}
+
+	return nil
+}
+
+func (s *ShieldFindingStore) UpdateTriage(
+	ctx context.Context,
+	id int64,
+	in *types.ShieldFindingTriage,
+	now int64,
+) error {
+	ids, err := marshalJSONList(in.AIDecisionIDs)
+	if err != nil {
+		return err
+	}
+	const sqlQuery = `
+		UPDATE shield_findings
+		SET
+			 shield_finding_risk_score = $1
+			,shield_finding_reachable = $2
+			,shield_finding_fix_strategy = COALESCE($3, shield_finding_fix_strategy)
+			,shield_finding_ai_decision_ids = $4
+			,shield_finding_updated = $5
+			,shield_finding_version = shield_finding_version + 1
+		WHERE shield_finding_id = $6`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var strategy null.String
+	if in.FixStrategy != nil {
+		strategy = null.StringFrom(string(*in.FixStrategy))
+	}
+	if _, err = db.ExecContext(ctx, sqlQuery, in.RiskScore, in.Reachable, strategy, ids, now, id); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update shield finding triage")
 	}
 
 	return nil

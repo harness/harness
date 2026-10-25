@@ -109,9 +109,14 @@ type Service struct {
 	registry   *osv.Registry
 	baseCache  baseCache
 
+	triager *Triager
+
 	now         func() int64
 	principalID func() int64
 }
+
+// SetTriager enables the AI triage of findings after each scan.
+func (s *Service) SetTriager(t *Triager) { s.triager = t }
 
 // NewService creates a scan service.
 func NewService(
@@ -218,6 +223,12 @@ func (s *Service) run(
 	} else {
 		scan.Status = enum.ShieldScanStatusDone
 		scan.Error = ""
+		if s.triager != nil {
+			// triage refines the results; its failure must not fail the scan.
+			if terr := s.triager.Triage(ctx, repo, scan); terr != nil {
+				log.Ctx(ctx).Warn().Err(terr).Int64("scan_id", scan.ID).Msg("shield triage failed")
+			}
+		}
 	}
 	if uerr := s.scans.Update(ctx, scan); uerr != nil {
 		return nil, fmt.Errorf("failed to update shield scan: %w", uerr)

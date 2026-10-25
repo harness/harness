@@ -55,4 +55,11 @@ type (
 		// UpdateState sets state and reason of the finding.
 		UpdateState(ctx context.Context, id int64, state enum.ShieldFindingState, reason string, now int64) error
 	}
+
+	// ShieldFindingTriageStore stores the outcome of the AI triage of a finding.
+	ShieldFindingTriageStore interface {
+		// UpdateTriage sets risk score, reachability, fix strategy (nil keeps it) and AI decision
+		// ids of the finding.
+		UpdateTriage(ctx context.Context, id int64, in *types.ShieldFindingTriage, now int64) error
+	}
 )
