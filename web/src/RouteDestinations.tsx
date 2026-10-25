@@ -38,6 +38,9 @@ import WebhookDetails from 'pages/WebhookDetails/WebhookDetails'
 import Webhooks from 'pages/Webhooks/Webhooks'
 import Tasks from 'pages/Tasks/Tasks'
 import TaskDetail from 'pages/TaskDetail/TaskDetail'
+import Security from 'pages/Security/Security'
+import Errors from 'pages/Errors/Errors'
+import ErrorDetail from 'pages/ErrorDetail/ErrorDetail'
 import RepositorySettings from 'pages/RepositorySettings/RepositorySettings'
 import UsersListing from 'pages/UsersListing/UsersListing'
 import Home from 'pages/Home/Home'
@@ -79,6 +82,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           <LayoutWithoutSideNav title={getString('pageTitle.register')}>
             <SignUp />
           </LayoutWithoutSideNav>
+        </Route>
+
+        <Route path={routes.toCODESpaceTasks({ space: pathProps.space })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.tasks')}>
+            <Tasks spaceMode />
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODESpaceAccessControl({ space: pathProps.space })} exact>
@@ -192,6 +201,24 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toCODETasks({ repoPath })} exact>
           <LayoutWithSideNav title={getString('pageTitle.tasks')}>
             <Tasks />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODESecurity({ repoPath })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.security')}>
+            <Security />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEError({ repoPath, issueId: pathProps.issueId })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.errorDetail')}>
+            <ErrorDetail />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEErrors({ repoPath })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.errors')}>
+            <Errors />
           </LayoutWithSideNav>
         </Route>
 

@@ -479,6 +479,60 @@ export interface StringsMap {
   inactiveBranches: string
   include: string
   includeSubspacePR: string
+  'insights.allLevels': string
+  'insights.allProjects': string
+  'insights.allStatuses': string
+  'insights.copyDsn': string
+  'insights.createProject': string
+  'insights.culprit': string
+  'insights.disable': string
+  'insights.disabled': string
+  'insights.dsn': string
+  'insights.enable': string
+  'insights.firstRelease': string
+  'insights.identifier': string
+  'insights.ignore': string
+  'insights.invalidLimits': string
+  'insights.issueTitle': string
+  'insights.issueUpdated': string
+  'insights.issues': string
+  'insights.keyRotated': string
+  'insights.lastRelease': string
+  'insights.lastSeen': string
+  'insights.latestEvents': string
+  'insights.level': string
+  'insights.newProject': string
+  'insights.noEvents': string
+  'insights.noIssues': string
+  'insights.noIssuesForFilter': string
+  'insights.noProjects': string
+  'insights.projectCreated': string
+  'insights.projectUpdated': string
+  'insights.projects': string
+  'insights.rateLimit': string
+  'insights.release': string
+  'insights.releaseFilter': string
+  'insights.releaseValue': string
+  'insights.reopen': string
+  'insights.resolve': string
+  'insights.resolvedInRelease': string
+  'insights.resolvedInReleasePlaceholder': string
+  'insights.rotateKey': string
+  'insights.rotateKeyConfirm': string
+  'insights.sampleRate': string
+  'insights.searchPlaceholder': string
+  'insights.sortLastSeen': string
+  'insights.sortTimesSeen': string
+  'insights.status': string
+  'insights.statusValue.ignored': string
+  'insights.statusValue.regressed': string
+  'insights.statusValue.resolved': string
+  'insights.statusValue.unresolved': string
+  'insights.task': string
+  'insights.taskLinked': string
+  'insights.timesSeen': string
+  'insights.title': string
+  'insights.usersSeen': string
   invalidResponse: string
   isRequired: string
   italic: string
@@ -653,6 +707,8 @@ export interface StringsMap {
   'pageTitle.compare': string
   'pageTitle.createWebhook': string
   'pageTitle.editFileLocation': string
+  'pageTitle.errorDetail': string
+  'pageTitle.errors': string
   'pageTitle.executions': string
   'pageTitle.home': string
   'pageTitle.pipelines': string
@@ -664,6 +720,7 @@ export interface StringsMap {
   'pageTitle.repositorySettings': string
   'pageTitle.search': string
   'pageTitle.secrets': string
+  'pageTitle.security': string
   'pageTitle.signin': string
   'pageTitle.spaceSettings': string
   'pageTitle.tags': string
@@ -1133,6 +1190,53 @@ export interface StringsMap {
   setAsAdmin: string
   setting: string
   settings: string
+  'shield.allKinds': string
+  'shield.allStates': string
+  'shield.anyRisk': string
+  'shield.commit': string
+  'shield.dismiss': string
+  'shield.dismissFinding': string
+  'shield.error': string
+  'shield.findingUpdated': string
+  'shield.findings': string
+  'shield.fixVersion': string
+  'shield.kind': string
+  'shield.kindValue.dependency': string
+  'shield.kindValue.iac': string
+  'shield.kindValue.image': string
+  'shield.kindValue.sast': string
+  'shield.kindValue.secret': string
+  'shield.minRisk': string
+  'shield.noFindings': string
+  'shield.noFindingsForFilter': string
+  'shield.noScans': string
+  'shield.package': string
+  'shield.packages': string
+  'shield.reason': string
+  'shield.risk': string
+  'shield.riskTitle': string
+  'shield.scanNow': string
+  'shield.scanStarted': string
+  'shield.scanStatus.done': string
+  'shield.scanStatus.failed': string
+  'shield.scanStatus.pending': string
+  'shield.scanStatus.running': string
+  'shield.scans': string
+  'shield.started': string
+  'shield.state': string
+  'shield.stateValue.accepted_risk': string
+  'shield.stateValue.fixed': string
+  'shield.stateValue.ignored': string
+  'shield.stateValue.open': string
+  'shield.task': string
+  'shield.taskLinked': string
+  'shield.title': string
+  'shield.trigger': string
+  'shield.triggerValue.manual': string
+  'shield.triggerValue.pullreq': string
+  'shield.triggerValue.push': string
+  'shield.triggerValue.schedule': string
+  'shield.vulnerability': string
   showCheckAll: string
   showCommitHistory: string
   showEverything: string
@@ -1235,6 +1339,7 @@ export interface StringsMap {
   'tasks.due': string
   'tasks.edit': string
   'tasks.group': string
+  'tasks.insightsIssue': string
   'tasks.linkKind.ai_task': string
   'tasks.linkKind.insights_issue': string
   'tasks.linkKind.pullreq': string
@@ -1259,9 +1364,11 @@ export interface StringsMap {
   'tasks.principal': string
   'tasks.priority': string
   'tasks.pullRequest': string
+  'tasks.repository': string
   'tasks.resume': string
   'tasks.save': string
   'tasks.searchPlaceholder': string
+  'tasks.shieldFinding': string
   'tasks.sideStates': string
   'tasks.state': string
   'tasks.stateActions': string

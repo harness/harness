@@ -54,6 +54,7 @@ export const DefaultMenu: React.FC = () => {
     [routeMatch, isCommitSelected]
   )
   const isTaskSelected = useMemo(() => routeMatch.path.startsWith('/:space*/:repoName/tasks'), [routeMatch])
+  const isErrorsSelected = useMemo(() => routeMatch.path.startsWith('/:space*/:repoName/errors'), [routeMatch])
   const isWebhookSelected = useMemo(() => routeMatch.path.startsWith('/:space*/:repoName/webhook'), [routeMatch])
   const _gitRef = useMemo(() => {
     const ref = commitRef || gitRef
@@ -86,6 +87,12 @@ export const DefaultMenu: React.FC = () => {
             isDeselected={!!repoMetadata}
             isHighlighted={!!repoMetadata}
             customIcon={<BookmarkBook />}
+          />
+          <NavMenuItem
+            data-code-space-section="tasks"
+            label={getString('tasks.title')}
+            to={routes.toCODESpaceTasks({ space: selectedSpace?.path as string })}
+            icon="list"
           />
         </Render>
 
@@ -144,6 +151,25 @@ export const DefaultMenu: React.FC = () => {
                 isSelected={isTaskSelected}
                 label={getString('tasks.title')}
                 to={routes.toCODETasks({
+                  repoPath
+                })}
+              />
+
+              <NavMenuItem
+                data-code-repo-section="security"
+                isSubLink
+                label={getString('shield.title')}
+                to={routes.toCODESecurity({
+                  repoPath
+                })}
+              />
+
+              <NavMenuItem
+                data-code-repo-section="errors"
+                isSubLink
+                isSelected={isErrorsSelected}
+                label={getString('insights.title')}
+                to={routes.toCODEErrors({
                   repoPath
                 })}
               />

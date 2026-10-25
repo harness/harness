@@ -101,6 +101,9 @@ noResultMessage: What you searched was unfortunately not found or doesn’t exis
 noFilterResultMessage: No results were found based on the applied filters
 pageTitle:
   tasks: Tasks
+  security: Security
+  errors: Errors
+  errorDetail: Error
   taskDetail: Task
   signin: Sign In
   register: Register a new account
@@ -1421,6 +1424,9 @@ favorite:
 
 tasks:
   title: Tasks
+  repository: Repository
+  insightsIssue: 'Insights issue #{{id}}'
+  shieldFinding: 'Shield finding #{{id}}'
   newTask: New task
   createTask: Create task
   taskTitle: Title
@@ -1508,3 +1514,111 @@ tasks:
     assignment: 'changed the assignee from {{from}} to {{to}}'
     priorityChange: 'changed the priority from {{from}} to {{to}}'
     updated: 'updated {{fields}}'
+shield:
+  title: Security
+  scanNow: Scan now
+  scanStarted: Scan scheduled
+  scans: Scans
+  noScans: No scans yet
+  findings: Findings
+  noFindings: No findings. Run a scan to look for vulnerabilities.
+  noFindingsForFilter: No findings match the filters
+  risk: Risk
+  riskTitle: 'CVSS {{cvss}}'
+  vulnerability: Vulnerability
+  package: Package
+  fixVersion: Fix version
+  kind: Kind
+  state: State
+  task: Task
+  taskLinked: Task
+  dismiss: Ignore / accept risk
+  dismissFinding: Ignore finding or accept risk
+  reason: Reason
+  findingUpdated: Finding updated
+  allStates: All states
+  allKinds: All kinds
+  anyRisk: Any risk
+  minRisk: 'Risk >= {{risk}}'
+  started: Started
+  trigger: Trigger
+  commit: Commit
+  packages: Packages
+  error: Error
+  kindValue:
+    dependency: Dependency
+    sast: SAST
+    secret: Secret
+    image: Image
+    iac: IaC
+  stateValue:
+    open: Open
+    fixed: Fixed
+    ignored: Ignored
+    accepted_risk: Accepted risk
+  scanStatus:
+    pending: Pending
+    running: Running
+    done: Done
+    failed: Failed
+  triggerValue:
+    push: Push
+    pullreq: Pull request
+    schedule: Schedule
+    manual: Manual
+insights:
+  title: Errors
+  issues: Issues
+  projects: Projects
+  issueTitle: Title
+  culprit: Culprit
+  level: Level
+  timesSeen: Times seen
+  usersSeen: Users
+  lastSeen: Last seen
+  status: Status
+  release: Release
+  releaseValue: 'Release {{release}}'
+  firstRelease: First release
+  lastRelease: Last release
+  resolvedInRelease: Resolved in release
+  resolvedInReleasePlaceholder: Resolved in release (optional)
+  task: Task
+  taskLinked: Task
+  searchPlaceholder: Search issues
+  releaseFilter: Release
+  allProjects: All projects
+  allStatuses: All statuses
+  allLevels: All levels
+  sortLastSeen: Sort by last seen
+  sortTimesSeen: Sort by times seen
+  noIssues: No errors reported yet. Create a project and configure its DSN in your SDK.
+  noIssuesForFilter: No issues match the filters
+  noEvents: No events stored for this issue
+  latestEvents: Latest events
+  resolve: Resolve
+  ignore: Ignore
+  reopen: Reopen
+  issueUpdated: Issue updated
+  newProject: New project
+  createProject: Create project
+  identifier: Identifier
+  noProjects: No projects yet
+  projectCreated: Project created
+  projectUpdated: Project updated
+  invalidLimits: Rate limit must be a non-negative integer and sample rate a number between 0 and 1
+  dsn: DSN
+  copyDsn: Copy DSN
+  rateLimit: Rate limit per minute
+  sampleRate: Sample rate (0 to 1)
+  enable: Enable
+  disable: Disable
+  disabled: Disabled
+  rotateKey: Rotate key
+  rotateKeyConfirm: The current DSN stops working. Configure the new DSN in your SDKs.
+  keyRotated: Key rotated
+  statusValue:
+    unresolved: Unresolved
+    regressed: Regressed
+    resolved: Resolved
+    ignored: Ignored

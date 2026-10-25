@@ -26,6 +26,7 @@ import {
   FlexExpander,
   Layout,
   PageBody,
+  PageHeader,
   TableV2,
   Text,
   useToaster
@@ -37,6 +38,7 @@ import { Render } from 'react-jsx-match'
 import { isEmpty, noop } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { StringKeys, useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -64,7 +66,12 @@ import css from './Tasks.module.scss'
 
 const BOARD_LIMIT = 100
 
-export default function Tasks() {
+interface TasksProps {
+  // Lists the tasks of all the repositories of the space (recursively), with a repository column.
+  spaceMode?: boolean
+}
+
+export default function Tasks({ spaceMode = false }: TasksProps) {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
@@ -78,9 +85,11 @@ export default function Tasks() {
   const [originFilter, setOriginFilter] = useState('')
   const [agentOnly, setAgentOnly] = useState(false)
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
+  const space = useGetSpaceParam()
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const repoPath = repoMetadata?.path as string
-  const isBoard = view === 'board'
+  const isBoard = !spaceMode && view === 'board'
+  const tasksPath = spaceMode ? `/api/v1/spaces/${space}/+/tasks` : getTaskApiPath(repoMetadata?.path)
 
   const {
     data,
@@ -89,8 +98,9 @@ export default function Tasks() {
     refetch: refetchTasks,
     response
   } = useGet<TypesTask[]>({
-    path: getTaskApiPath(repoMetadata?.path),
+    path: tasksPath,
     queryParams: {
+      ...(spaceMode && { recursive: true }),
       page: isBoard ? 1 : page,
       limit: isBoard ? BOARD_LIMIT : LIST_FETCHING_LIMIT,
       ...(!isBoard && stateFilter && { state: stateFilter }),
@@ -100,7 +110,7 @@ export default function Tasks() {
       ...(searchTerm && { query: searchTerm })
     },
     debounce: 500,
-    lazy: !repoMetadata
+    lazy: !spaceMode && !repoMetadata
   })
 
   const { mutate: changeState } = useMutate<TypesTask, unknown, unknown, TaskStateInput, { number: number }>({
@@ -132,15 +142,35 @@ export default function Tasks() {
       },
       {
         Header: getString('tasks.taskTitle'),
-        width: 'calc(100% - 520px)',
+        width: spaceMode ? 'calc(100% - 700px)' : 'calc(100% - 520px)',
         Cell: ({ row }: CellProps<TypesTask>) => (
-          <Link className={css.rowLink} to={routes.toCODETask({ repoPath, taskNumber: String(row.original.number) })}>
+          <Link
+            className={css.rowLink}
+            to={routes.toCODETask({
+              repoPath: (spaceMode ? row.original.repo_path : repoPath) as string,
+              taskNumber: String(row.original.number)
+            })}>
             <Text color={Color.GREY_800} lineClamp={1} font={{ weight: 'semi-bold' }}>
               {row.original.title}
             </Text>
           </Link>
         )
       },
+      ...(spaceMode
+        ? [
+            {
+              Header: getString('tasks.repository'),
+              width: '180px',
+              Cell: ({ row }: CellProps<TypesTask>) => (
+                <Link className={css.rowLink} to={routes.toCODETasks({ repoPath: row.original.repo_path as string })}>
+                  <Text color={Color.GREY_700} lineClamp={1}>
+                    {row.original.repo_path}
+                  </Text>
+                </Link>
+              )
+            }
+          ]
+        : []),
       {
         Header: getString('tasks.state'),
         width: '130px',
@@ -170,7 +200,7 @@ export default function Tasks() {
           row.original.due ? <TimePopoverWithLocal time={row.original.due} inline={false} /> : <Text>-</Text>
       }
     ],
-    [getString, routes, repoPath]
+    [getString, routes, repoPath, spaceMode]
   )
 
   const allItem = (label: string) => ({ label, value: '' })
@@ -190,15 +220,19 @@ export default function Tasks() {
 
   return (
     <Container className={css.main}>
-      <RepositoryPageHeader
-        repoMetadata={repoMetadata}
-        title={getString('tasks.title')}
-        dataTooltipId="repositoryTasks"
-      />
+      {spaceMode ? (
+        <PageHeader title={getString('tasks.title')} />
+      ) : (
+        <RepositoryPageHeader
+          repoMetadata={repoMetadata}
+          title={getString('tasks.title')}
+          dataTooltipId="repositoryTasks"
+        />
+      )}
       <PageBody error={getErrorMessage(error || tasksError)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading || (tasksLoading && !searchTerm)} withBorder={!searchTerm} />
 
-        <Render when={repoMetadata}>
+        <Render when={repoMetadata || spaceMode}>
           <Layout.Vertical>
             <Container padding="xlarge">
               <Layout.Horizontal className={css.filters} spacing="medium">
@@ -247,26 +281,28 @@ export default function Tasks() {
                   }}
                 />
                 <FlexExpander />
-                <Button
-                  size={ButtonSize.SMALL}
-                  variation={isBoard ? ButtonVariation.TERTIARY : ButtonVariation.SECONDARY}
-                  text={getString('tasks.listView')}
-                  icon="list"
-                  onClick={() => setView('list')}
-                />
-                <Button
-                  size={ButtonSize.SMALL}
-                  variation={isBoard ? ButtonVariation.SECONDARY : ButtonVariation.TERTIARY}
-                  text={getString('tasks.boardView')}
-                  icon="grid-view"
-                  onClick={() => setView('board')}
-                />
-                <Button
-                  variation={ButtonVariation.PRIMARY}
-                  text={getString('tasks.newTask')}
-                  icon="plus"
-                  onClick={openModal}
-                />
+                <Render when={!spaceMode}>
+                  <Button
+                    size={ButtonSize.SMALL}
+                    variation={isBoard ? ButtonVariation.TERTIARY : ButtonVariation.SECONDARY}
+                    text={getString('tasks.listView')}
+                    icon="list"
+                    onClick={() => setView('list')}
+                  />
+                  <Button
+                    size={ButtonSize.SMALL}
+                    variation={isBoard ? ButtonVariation.SECONDARY : ButtonVariation.TERTIARY}
+                    text={getString('tasks.boardView')}
+                    icon="grid-view"
+                    onClick={() => setView('board')}
+                  />
+                  <Button
+                    variation={ButtonVariation.PRIMARY}
+                    text={getString('tasks.newTask')}
+                    icon="plus"
+                    onClick={openModal}
+                  />
+                </Render>
               </Layout.Horizontal>
             </Container>
 
@@ -277,8 +313,8 @@ export default function Tasks() {
                   forFilter={hasFilter}
                   emptyFilterMessage={getString('tasks.noTasksForFilter')}
                   message={getString('tasks.noTasks')}
-                  buttonText={getString('tasks.newTask')}
-                  onButtonClick={openModal}
+                  buttonText={spaceMode ? undefined : getString('tasks.newTask')}
+                  onButtonClick={spaceMode ? undefined : openModal}
                 />
               ) : isBoard ? (
                 <TaskBoard repoPath={repoPath} tasks={data || []} onMove={onMove} />

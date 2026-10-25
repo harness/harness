@@ -31,6 +31,7 @@ export interface CODEProps {
   pullRequestSection?: string
   webhookId?: string
   taskNumber?: string
+  issueId?: string
   pipeline?: string
   execution?: string
   commitSHA?: string
@@ -56,6 +57,7 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   pullRequestSection: ':pullRequestSection',
   webhookId: ':webhookId',
   taskNumber: ':taskNumber',
+  issueId: ':issueId',
   pipeline: ':pipeline',
   execution: ':execution',
   commitSHA: ':commitSHA',
@@ -106,6 +108,10 @@ export interface CODERoutes extends CDERoutes, ARRoutes {
   toCODETags: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODETasks: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODETask: (args: Required<Pick<CODEProps, 'repoPath' | 'taskNumber'>>) => string
+  toCODESpaceTasks: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODESecurity: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODEErrors: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODEError: (args: Required<Pick<CODEProps, 'repoPath' | 'issueId'>>) => string
   toCODEWebhooks: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
@@ -183,6 +189,10 @@ export const routes: CODERoutes = {
   toCODESemanticSearch: ({ repoPath }) => `/${repoPath}/search/semantic`,
   toCODETasks: ({ repoPath }) => `/${repoPath}/tasks`,
   toCODETask: ({ repoPath, taskNumber }) => `/${repoPath}/tasks/${taskNumber}`,
+  toCODESpaceTasks: ({ space }) => `/tasks/${space}`,
+  toCODESecurity: ({ repoPath }) => `/${repoPath}/security`,
+  toCODEErrors: ({ repoPath }) => `/${repoPath}/errors`,
+  toCODEError: ({ repoPath, issueId }) => `/${repoPath}/errors/${issueId}`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
