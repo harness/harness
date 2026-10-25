@@ -19,6 +19,8 @@ import (
 	"fmt"
 
 	aievents "github.com/harness/gitness/app/events/ai"
+	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
@@ -27,6 +29,7 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideGateway,
+	ProvideModeResolver,
 )
 
 func ProvideGateway(
@@ -56,4 +59,9 @@ func ProvideGateway(
 	g.SetEventReporter(aiReporter)
 	g.StartCatalogSync(ctx)
 	return g, nil
+}
+
+// ProvideModeResolver provides the resolver of the per-repository AI mode.
+func ProvideModeResolver(settingsSvc *settings.Service, publicAccess publicaccess.Service) *ModeResolver {
+	return NewModeResolver(settingsSvc, publicAccess)
 }

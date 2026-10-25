@@ -558,7 +558,7 @@ func directKey(p osv.Package) string {
 }
 
 // ProvideTriager builds the triager and attaches it to the scan service. It is not part of WireSet
-// yet: it needs aidecide.Service and aigateway.ModeResolver providers in the server wiring.
+// directly: the server uses ProvideWiredTriager.
 func ProvideTriager(
 	config *types.Config,
 	svc *Service,

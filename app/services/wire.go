@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/repoactivity"
+	"github.com/harness/gitness/app/services/shield"
 	"github.com/harness/gitness/app/services/shield/prcheck"
 	"github.com/harness/gitness/app/services/tasklink"
 	"github.com/harness/gitness/app/services/trigger"
@@ -74,6 +75,7 @@ type Services struct {
 	insightsTriage                 *triage.Observer
 	insightsVerify                 *insightsverify.Service
 	shieldPRCheck                  *prcheck.Service
+	shieldTriager                  *shield.Triager
 }
 
 type GitspaceServices struct {
@@ -131,6 +133,7 @@ func ProvideServices(
 	insightsTriage *triage.Observer,
 	insightsVerify *insightsverify.Service,
 	shieldPRCheck *prcheck.Service,
+	shieldTriager *shield.Triager,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -156,5 +159,6 @@ func ProvideServices(
 		insightsTriage:                 insightsTriage,
 		insightsVerify:                 insightsVerify,
 		shieldPRCheck:                  shieldPRCheck,
+		shieldTriager:                  shieldTriager,
 	}
 }

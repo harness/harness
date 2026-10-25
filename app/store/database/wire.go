@@ -105,6 +105,7 @@ var WireSet = wire.NewSet(
 	// Shield.
 	ProvideShieldScanStore,
 	ProvideShieldFindingStore,
+	ProvideShieldFindingTriageStore,
 
 	// Insights.
 	InsightsStoreWireSet,
@@ -540,6 +541,11 @@ func ProvidePullReqLabelSuggestionStore(db *sqlx.DB) store.PullReqLabelSuggestio
 // ProvideShieldScanStore provides a Shield scan store.
 func ProvideShieldScanStore(db *sqlx.DB) store.ShieldScanStore {
 	return NewShieldScanStore(db)
+}
+
+// ProvideShieldFindingTriageStore provides the store for the AI triage outcome of Shield findings.
+func ProvideShieldFindingTriageStore(db *sqlx.DB) store.ShieldFindingTriageStore {
+	return NewShieldFindingStore(db)
 }
 
 // ProvideShieldFindingStore provides a Shield finding store.

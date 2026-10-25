@@ -81,6 +81,7 @@ import (
 	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/aidecide"
 	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/autolink"
@@ -960,7 +961,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, prcheckService)
+	shieldFindingTriageStore := database.ProvideShieldFindingTriageStore(db)
+	modeResolver := aigateway.ProvideModeResolver(settingsService, publicaccessService)
+	aidecideService := aidecide.ProvideService(gateway, modeResolver, repoFinder, aiDecisionStore, taskService)
+	triager := shield.ProvideWiredTriager(config, shieldService, shieldFindingStore, shieldFindingTriageStore, taskService, aidecideService, modeResolver, settingsService)
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, prcheckService, triager)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil

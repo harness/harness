@@ -17,6 +17,9 @@ package shield
 import (
 	"context"
 	"fmt"
+	"github.com/harness/gitness/app/services/aidecide"
+	"github.com/harness/gitness/app/services/aigateway"
+	"github.com/harness/gitness/app/services/settings"
 	"path/filepath"
 	"time"
 
@@ -37,6 +40,7 @@ import (
 var WireSet = wire.NewSet(
 	ProvideSyncer,
 	ProvideService,
+	ProvideWiredTriager,
 )
 
 // dataDir returns the configured data directory or its default next to the repositories root.
@@ -97,4 +101,24 @@ func ProvideService(
 		return nil, fmt.Errorf("failed to register shield event listeners: %w", err)
 	}
 	return svc, nil
+}
+
+// triageFindingStore joins the finding store with the triage outcome store.
+type triageFindingStore struct {
+	store.ShieldFindingStore
+	store.ShieldFindingTriageStore
+}
+
+// ProvideWiredTriager provides the AI triage of Shield findings and hooks it into the scan service.
+func ProvideWiredTriager(
+	config *types.Config,
+	svc *Service,
+	findings store.ShieldFindingStore,
+	triageStore store.ShieldFindingTriageStore,
+	taskSvc *task.Service,
+	decide *aidecide.Service,
+	modes *aigateway.ModeResolver,
+	settingsSvc *settings.Service,
+) *Triager {
+	return ProvideTriager(config, svc, triageFindingStore{findings, triageStore}, taskSvc, decide, modes, settingsSvc)
 }
