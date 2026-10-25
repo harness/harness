@@ -76,6 +76,7 @@ import (
 	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/automerge"
@@ -598,7 +599,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, principalStore, spaceFinder, repoFinder, gitInterface, v2, streamer, reporter11)
-	systemController := system.NewController(principalStore, config)
+	gateway, err := aigateway.ProvideGateway(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	systemController := system.NewController(principalStore, config, gateway)
 	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore, config)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, publicaccessService, searcher, repoStore, spaceFinder, repoFinder)

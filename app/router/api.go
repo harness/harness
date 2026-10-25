@@ -164,7 +164,7 @@ func NewAPIHandler(
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, uploadCtrl,
-				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, usageSender)
+				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, usageSender, sysCtrl)
 		})
 	})
 
@@ -215,6 +215,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
 	usageSender usage.Sender,
+	sysCtrl *system.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
 	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, repoSettingsCtrl, userGroupCtrl, webhookCtrl, checkCtrl,
@@ -229,6 +230,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl, git)
 	setupAdmin(r, userCtrl)
+	setupSystemAI(r, sysCtrl)
 	setupPlugins(r, pluginCtrl)
 	setupInfraProviders(r, infraProviderCtrl)
 	setupGitspaces(r, gitspaceCtrl)
@@ -1002,6 +1004,14 @@ func setupAdmin(r chi.Router, userCtrl *user.Controller) {
 				r.Patch("/admin", handleruser.HandleUpdateAdmin(userCtrl))
 			})
 		})
+	})
+}
+
+func setupSystemAI(r chi.Router, sysCtrl *system.Controller) {
+	r.Route("/system/ai", func(r chi.Router) {
+		r.Use(middlewareprincipal.RestrictToAdmin())
+		r.Get("/models", handlersystem.HandleAIModels(sysCtrl))
+		r.Get("/quota", handlersystem.HandleAIQuota(sysCtrl))
 	})
 }
 

@@ -17,6 +17,7 @@ package system
 import (
 	"context"
 
+	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 )
@@ -24,12 +25,18 @@ import (
 type Controller struct {
 	principalStore store.PrincipalStore
 	config         *types.Config
+	aiGateway      *aigateway.Gateway
 }
 
-func NewController(principalStore store.PrincipalStore, config *types.Config) *Controller {
+func NewController(
+	principalStore store.PrincipalStore,
+	config *types.Config,
+	aiGateway *aigateway.Gateway,
+) *Controller {
 	return &Controller{
 		principalStore: principalStore,
 		config:         config,
+		aiGateway:      aiGateway,
 	}
 }
 
