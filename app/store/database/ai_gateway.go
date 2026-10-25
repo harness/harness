@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -474,6 +475,47 @@ func (s *aiQuotaStore) IncrementQuota(ctx context.Context, day, class string, li
 		return false, database.ProcessSQLErrorf(ctx, err, "Failed to get rows affected")
 	}
 	return n > 0, nil
+}
+
+// DecrementQuota gives back one unit of used; it never goes below zero and is a no-op for a missing row.
+func (s *aiQuotaStore) DecrementQuota(ctx context.Context, day, class string) error {
+	stmt := database.Builder.
+		Update(aiQuotaTable).
+		Set("aiquota_used", squirrel.Expr("aiquota_used - 1")).
+		Where("aiquota_day = ?", day).
+		Where("aiquota_class = ?", class).
+		Where("aiquota_used > 0")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to decrement ai quota %s/%s", day, class)
+	}
+	return nil
+}
+
+// RaiseQuota is a single upsert: used becomes max(used, value).
+func (s *aiQuotaStore) RaiseQuota(ctx context.Context, day, class string, used int) error {
+	stmt := database.Builder.
+		Insert(aiQuotaTable).
+		Columns("aiquota_day", "aiquota_class", "aiquota_used", "aiquota_reserved").
+		Values(day, class, used, 0).
+		Suffix(`ON CONFLICT (aiquota_day, aiquota_class) DO UPDATE SET
+			aiquota_used = ?
+			WHERE ai_quota.aiquota_used < ?`, used, used)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to raise ai quota %s/%s", day, class)
+	}
+	return nil
 }
 
 // ---------------------------------------------------------------------------

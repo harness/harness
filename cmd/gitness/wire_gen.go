@@ -599,7 +599,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, principalStore, spaceFinder, repoFinder, gitInterface, v2, streamer, reporter11)
-	gateway, err := aigateway.ProvideGateway(ctx, config)
+	aiQuotaStore := database.ProvideAIQuotaStore(db)
+	aiUsageStore := database.ProvideAIUsageStore(db)
+	gateway, err := aigateway.ProvideGateway(ctx, config, aiQuotaStore, aiUsageStore)
 	if err != nil {
 		return nil, err
 	}

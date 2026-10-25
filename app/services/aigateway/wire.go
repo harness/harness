@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -27,7 +28,12 @@ var WireSet = wire.NewSet(
 	ProvideGateway,
 )
 
-func ProvideGateway(ctx context.Context, config *types.Config) (*Gateway, error) {
+func ProvideGateway(
+	ctx context.Context,
+	config *types.Config,
+	quotaStore store.AIQuotaStore,
+	usageStore store.AIUsageStore,
+) (*Gateway, error) {
 	cfg := NewConfig(config)
 	if !cfg.Enabled {
 		return New(cfg, &Redactor{}), nil
@@ -41,7 +47,7 @@ func ProvideGateway(ctx context.Context, config *types.Config) (*Gateway, error)
 		return nil, err
 	}
 
-	g := New(cfg, redactor)
+	g := New(cfg, redactor).WithStores(quotaStore, usageStore)
 	g.StartCatalogSync(ctx)
 	return g, nil
 }
