@@ -204,6 +204,10 @@ func (f *fakeUsageStore) ListSince(context.Context, int64) ([]*types.AIUsage, er
 	return f.rows, nil
 }
 
+func (f *fakeUsageStore) SumRequestsSince(context.Context, int64, []int64, int64) (int, error) {
+	return 0, nil
+}
+
 func TestDecideRecordsUsageIncludingFailures(t *testing.T) {
 	f := &fakeOpenRouter{decisions: map[string]func(http.ResponseWriter){
 		"baseten/mammoth-1:free": answer("baseten/mammoth-1:free", 0),

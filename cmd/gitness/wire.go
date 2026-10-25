@@ -20,6 +20,7 @@ package main
 import (
 	"context"
 
+	aiagentctrl "github.com/harness/gitness/app/api/controller/aiagent"
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -227,6 +228,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		insightsctrl.WireSet,
 		shieldctrl.WireSet,
 		taskctrl.WireSet,
+		aiagentctrl.WireSet,
 		pullreq.WireSet,
 		merge.WireSet,
 		checkreq.WireSet,

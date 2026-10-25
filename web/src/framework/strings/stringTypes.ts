@@ -25,6 +25,35 @@ export interface StringsMap {
   addUserToSpace2: string
   admin: string
   aheadDivergence: string
+  'aiAgent.activeTasks': string
+  'aiAgent.disabled': string
+  'aiAgent.kind': string
+  'aiAgent.latestRuns': string
+  'aiAgent.model': string
+  'aiAgent.modelSuccess': string
+  'aiAgent.noActiveTasks': string
+  'aiAgent.noModelSuccess': string
+  'aiAgent.noRuns': string
+  'aiAgent.noWaitingQuota': string
+  'aiAgent.number': string
+  'aiAgent.outcome': string
+  'aiAgent.quota': string
+  'aiAgent.quotaClass': string
+  'aiAgent.quotaClassRemaining': string
+  'aiAgent.quotaClassUsed': string
+  'aiAgent.quotaSpace': string
+  'aiAgent.quotaUsed': string
+  'aiAgent.repository': string
+  'aiAgent.requests': string
+  'aiAgent.samples': string
+  'aiAgent.state': string
+  'aiAgent.successRate': string
+  'aiAgent.taskTitle': string
+  'aiAgent.title': string
+  'aiAgent.unknownModel': string
+  'aiAgent.waitingQuota': string
+  'aiAgent.waitingQuotaCount': string
+  'aiAgent.when': string
   aiSearch: string
   aidaGenSummary: string
   all: string
@@ -701,6 +730,7 @@ export interface StringsMap {
   pageLoading: string
   pageNotFound: string
   'pageTitle.accessControl': string
+  'pageTitle.aiAgent': string
   'pageTitle.artifactRegistries': string
   'pageTitle.branches': string
   'pageTitle.changePassword': string

@@ -94,6 +94,11 @@ export const DefaultMenu: React.FC = () => {
             to={routes.toCODESpaceTasks({ space: selectedSpace?.path as string })}
             icon="list"
           />
+          <NavMenuItem
+            isSubLink
+            label={getString('aiAgent.title')}
+            to={routes.toCODESpaceAIAgent({ space: selectedSpace?.path as string })}
+          />
         </Render>
 
         <Render when={repoMetadata}>

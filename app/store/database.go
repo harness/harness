@@ -1785,6 +1785,8 @@ type (
 		Find(ctx context.Context, id int64) (*types.AITask, error)
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.AITask, error)
 		List(ctx context.Context, filter *types.AITaskFilter) ([]*types.AITask, error)
+		// ListByTaskIDs returns the AI tasks linked to the given work items (tasks table), oldest first.
+		ListByTaskIDs(ctx context.Context, taskIDs []int64) ([]*types.AITask, error)
 		Count(ctx context.Context, filter *types.AITaskFilter) (int64, error)
 		// ChargeRequest atomically consumes one request of the task budget and returns the remaining requests.
 		// It returns ErrAITaskBudgetExhausted (and charges nothing) if the budget is used up.
@@ -1847,5 +1849,8 @@ type (
 		Create(ctx context.Context, usage *types.AIUsage) error
 		// ListSince returns the records created at or after the given unix millisecond timestamp.
 		ListSince(ctx context.Context, since int64) ([]*types.AIUsage, error)
+		// SumRequestsSince returns the requests recorded at or after the given unix millisecond timestamp for
+		// the space or any of the repositories.
+		SumRequestsSince(ctx context.Context, spaceID int64, repoIDs []int64, since int64) (int, error)
 	}
 )

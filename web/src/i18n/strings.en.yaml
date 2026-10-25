@@ -100,6 +100,7 @@ noResultTitle: Sorry, no result found
 noResultMessage: What you searched was unfortunately not found or doesn’t exist
 noFilterResultMessage: No results were found based on the applied filters
 pageTitle:
+  aiAgent: AI agent
   tasks: Tasks
   security: Security
   errors: Errors
@@ -1622,3 +1623,34 @@ insights:
     regressed: Regressed
     resolved: Resolved
     ignored: Ignored
+
+aiAgent:
+  title: AI agent
+  disabled: The AI gateway is disabled. Only the history of the agent is shown.
+  quota: Quota today
+  quotaUsed: '{{used}} of {{limit}} requests used'
+  quotaSpace: 'Requests used by this space today: {{used}}'
+  quotaClass: Class
+  quotaClassUsed: Used
+  quotaClassRemaining: Remaining
+  activeTasks: Tasks in progress
+  noActiveTasks: The agent is not working on any task.
+  waitingQuota: Waiting for quota
+  waitingQuotaCount: '{{count}} tasks are waiting for quota'
+  noWaitingQuota: No task is waiting for quota.
+  modelSuccess: Success rate per model
+  noModelSuccess: There are no observations of models yet.
+  latestRuns: Latest agent runs
+  noRuns: The agent has not run yet.
+  number: '#'
+  repository: Repository
+  taskTitle: Title
+  state: State
+  model: Model
+  unknownModel: Unknown
+  kind: Kind
+  successRate: Success rate
+  samples: Runs
+  outcome: Outcome
+  requests: Requests
+  when: When
