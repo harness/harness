@@ -56,6 +56,7 @@ type Gateway struct {
 	catalog  *Catalog
 	planner  *Planner
 	redactor *Redactor
+	events   EventReporter // optional, see SetEventReporter
 
 	cacheMu sync.Mutex
 	cache   map[string]cachedDecision
@@ -163,6 +164,7 @@ func (g *Gateway) Decide(
 		if err == nil {
 			res.Fallback = i > 0
 			g.store(key, *res)
+			g.emitDecisionMade(ctx, sessionID, res)
 			return res, nil
 		}
 		if errors.Is(err, ErrQuotaExhausted) || IsRateLimited(err) || ctx.Err() != nil {
@@ -204,6 +206,7 @@ func (g *Gateway) decideWith(
 	}
 	if err := g.guard.VerifyCost(model, resp.Usage.Cost); err != nil {
 		log.Ctx(ctx).Error().Err(err).Msg("ai gateway: free-only guarantee violated")
+		g.emitPaidModelDetected(ctx, model, resp.Usage.Cost)
 		return nil, err
 	}
 

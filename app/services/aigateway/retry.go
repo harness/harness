@@ -36,6 +36,7 @@ const (
 func (g *Gateway) withRetry(ctx context.Context, class Class, call func() error) error {
 	for attempt := 0; ; attempt++ {
 		if err := g.planner.Reserve(class); err != nil {
+			g.emitQuotaExhausted(ctx, err)
 			return err
 		}
 

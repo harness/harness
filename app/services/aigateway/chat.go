@@ -100,6 +100,7 @@ func (g *Gateway) Chat(ctx context.Context, class Class, req ChatRequest) (*Chat
 	}
 	if err := g.guard.VerifyCost(req.Model, resp.Usage.Cost); err != nil {
 		log.Ctx(ctx).Error().Err(err).Msg("ai gateway: free-only guarantee violated")
+		g.emitPaidModelDetected(ctx, req.Model, resp.Usage.Cost)
 		return nil, err
 	}
 	if len(resp.Choices) == 0 {
