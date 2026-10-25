@@ -632,3 +632,31 @@ func (s *aiUsageStore) ListSince(ctx context.Context, since int64) ([]*types.AIU
 	}
 	return out, nil
 }
+
+func (s *aiUsageStore) SumRequestsSince(
+	ctx context.Context,
+	spaceID int64,
+	repoIDs []int64,
+	since int64,
+) (int, error) {
+	scope := squirrel.Or{squirrel.Eq{"aiusage_space_id": spaceID}}
+	if len(repoIDs) > 0 {
+		scope = append(scope, squirrel.Eq{"aiusage_repo_id": repoIDs})
+	}
+	stmt := database.Builder.
+		Select("COALESCE(SUM(aiusage_requests), 0)").
+		From(aiUsageTable).
+		Where("aiusage_created >= ?", since).
+		Where(scope)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	var sum int
+	db := dbtx.GetAccessor(ctx, s.db)
+	if err := db.QueryRowContext(ctx, sql, args...).Scan(&sum); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to sum ai usage requests")
+	}
+	return sum, nil
+}

@@ -305,3 +305,24 @@ func (s aiTaskStore) mapToAITasks(aiTasks []*aiTask) []*types.AITask {
 	}
 	return res
 }
+
+func (s aiTaskStore) ListByTaskIDs(ctx context.Context, taskIDs []int64) ([]*types.AITask, error) {
+	if len(taskIDs) == 0 {
+		return []*types.AITask{}, nil
+	}
+	stmt := database.Builder.
+		Select(aiTaskSelectColumns).
+		From(aiTaskTable).
+		Where(squirrel.Eq{"aitask_task_id": taskIDs}).
+		OrderBy("aitask_created ASC", "aitask_id ASC")
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	var dst []*aiTask
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing list ai task by task ids query")
+	}
+	return s.mapToAITasks(dst), nil
+}

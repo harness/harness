@@ -84,6 +84,7 @@ func (*OpenAPI) Generate() *openapi3.Spec {
 	resourceOperations(&reflector)
 	pullReqOperations(&reflector)
 	taskOperations(&reflector)
+	aiAgentOperations(&reflector)
 	webhookOperations(&reflector)
 	checkOperations(&reflector)
 	uploadOperations(&reflector)

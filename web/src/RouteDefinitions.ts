@@ -73,6 +73,7 @@ export interface CODERoutes extends CDERoutes, ARRoutes {
   toCODEHome: () => string
 
   toCODESpaceAccessControl: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODESpaceAIAgent: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODESpaceSettings: (
     args: RequiredField<Pick<CODEProps, 'space' | 'settingSection' | 'ruleId' | 'settingSectionMode'>, 'space'>
   ) => string
@@ -136,6 +137,7 @@ export const routes: CODERoutes = {
   toCODEHome: () => `/`,
 
   toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
+  toCODESpaceAIAgent: ({ space }) => `/${space}/ai-agent`,
   toCODESpaceSettings: ({ space, settingSection, ruleId, settingSectionMode }) =>
     `/settings/${space}/project${settingSection ? '/' + settingSection : ''}${ruleId ? '/' + ruleId : ''}${
       settingSectionMode ? '/' + settingSectionMode : ''

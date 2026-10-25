@@ -125,6 +125,12 @@ func (f *fakeActivities) ListByKind(
 	return out, nil
 }
 
+func (f *fakeActivities) ListLatestByKindForRepos(
+	context.Context, []int64, enum.TaskActivityKind, int,
+) ([]*types.TaskActivity, error) {
+	return nil, nil
+}
+
 func (f *fakeActivities) Create(_ context.Context, a *types.TaskActivity) error {
 	a.ID = int64(len(f.list) + 1)
 	f.list = append(f.list, a)

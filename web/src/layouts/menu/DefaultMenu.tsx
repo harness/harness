@@ -87,6 +87,11 @@ export const DefaultMenu: React.FC = () => {
             isHighlighted={!!repoMetadata}
             customIcon={<BookmarkBook />}
           />
+          <NavMenuItem
+            isSubLink
+            label={getString('aiAgent.title')}
+            to={routes.toCODESpaceAIAgent({ space: selectedSpace?.path as string })}
+          />
         </Render>
 
         <Render when={repoMetadata}>

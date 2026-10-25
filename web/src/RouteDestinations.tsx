@@ -37,6 +37,7 @@ import WebhookNew from 'pages/WebhookNew/WebhookNew'
 import WebhookDetails from 'pages/WebhookDetails/WebhookDetails'
 import Webhooks from 'pages/Webhooks/Webhooks'
 import Tasks from 'pages/Tasks/Tasks'
+import AIAgent from 'pages/AIAgent/AIAgent'
 import TaskDetail from 'pages/TaskDetail/TaskDetail'
 import RepositorySettings from 'pages/RepositorySettings/RepositorySettings'
 import UsersListing from 'pages/UsersListing/UsersListing'
@@ -84,6 +85,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toCODESpaceAccessControl({ space: pathProps.space })} exact>
           <LayoutWithSideNav title={getString('pageTitle.accessControl')}>
             <SpaceAccessControl />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODESpaceAIAgent({ space: pathProps.space })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.aiAgent')}>
+            <AIAgent />
           </LayoutWithSideNav>
         </Route>
 

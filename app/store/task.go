@@ -74,6 +74,12 @@ type (
 
 		// ListByKind lists all activities of the given kind of a task ordered by creation time.
 		ListByKind(ctx context.Context, taskID int64, kind enum.TaskActivityKind) ([]*types.TaskActivity, error)
+
+		// ListLatestByKindForRepos lists the latest activities of the given kind of the tasks of the given
+		// repositories, newest first.
+		ListLatestByKindForRepos(
+			ctx context.Context, repoIDs []int64, kind enum.TaskActivityKind, limit int,
+		) ([]*types.TaskActivity, error)
 	}
 
 	// TaskLinkStore defines the storage of links between tasks and other entities.

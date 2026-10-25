@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/app/api/controller/aiagent"
 	check2 "github.com/harness/gitness/app/api/controller/check"
 	connector2 "github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -811,7 +812,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	shieldController := shield2.ProvideController(authorizer, repoFinder, gitInterface, shieldService, shieldScanStore, shieldFindingStore)
 	taskController := task2.ProvideController(authorizer, repoFinder, spaceFinder, repoStore, taskStore, taskActivityStore, taskLinkStore, taskService)
-	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController, insightsController, shieldController, insightsService, taskController)
+	aiTaskStore := database.ProvideAITaskStore(db)
+	aiagentController := aiagent.ProvideController(authorizer, spaceFinder, repoFinder, repoStore, taskStore, taskActivityStore, aiTaskStore, aiModelStore, aiUsageStore, gateway)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController, insightsController, shieldController, insightsService, taskController, aiagentController)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	sshAuthService := publickey.ProvideSSHAuthService(publicKeyStore, principalInfoCache)
 	sshServer := ssh.ProvideServer(config, sshAuthService, repoController, lfsController)
@@ -912,7 +915,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	aiTaskStore := database.ProvideAITaskStore(db)
 	aitaskeventService, err := aitaskevent.ProvideService(ctx, gitspaceeventConfig, readerFactory13, orchestratorOrchestrator, gitspaceService, aiTaskStore)
 	if err != nil {
 		return nil, err

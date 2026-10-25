@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 )
@@ -161,6 +162,52 @@ func (s *TaskActivityStore) ListByKind(
 	dst := []*taskActivity{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing task activity list by kind query")
+	}
+
+	out := make([]*types.TaskActivity, len(dst))
+	for i, d := range dst {
+		out[i] = &types.TaskActivity{
+			ID:          d.ID,
+			TaskID:      d.TaskID,
+			Kind:        d.Kind,
+			Payload:     json.RawMessage(d.Payload),
+			PrincipalID: d.PrincipalID.Ptr(),
+			Created:     d.Created,
+		}
+	}
+
+	return out, nil
+}
+
+func (s *TaskActivityStore) ListLatestByKindForRepos(
+	ctx context.Context,
+	repoIDs []int64,
+	kind enum.TaskActivityKind,
+	limit int,
+) ([]*types.TaskActivity, error) {
+	if len(repoIDs) == 0 || limit <= 0 {
+		return []*types.TaskActivity{}, nil
+	}
+
+	stmt := database.Builder.
+		Select(taskActivityColumns).
+		From("task_activities").
+		Join("tasks ON task_id = task_activity_task_id").
+		Where(squirrel.Eq{"task_repo_id": repoIDs}).
+		Where("task_activity_kind = ?", kind).
+		OrderBy("task_activity_created DESC", "task_activity_id DESC").
+		Limit(uint64(limit)) //nolint:gosec // limit is positive
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert task activity latest by kind query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*taskActivity{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing task activity latest by kind query")
 	}
 
 	out := make([]*types.TaskActivity, len(dst))
