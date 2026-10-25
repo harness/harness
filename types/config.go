@@ -299,6 +299,12 @@ type Config struct {
 		MaxFailedAttempts int `envconfig:"GITNESS_AI_AGENTS_MAX_FAILED_ATTEMPTS" default:"3"`
 		// AttemptCooldown is the minimum time between two attempts for the same task.
 		AttemptCooldown time.Duration `envconfig:"GITNESS_AI_AGENTS_ATTEMPT_COOLDOWN" default:"30m"`
+		// PriorityThreshold is the lowest task priority (p0 is the highest) that may launch a fix agent.
+		PriorityThreshold string `envconfig:"GITNESS_AI_AGENTS_PRIORITY_THRESHOLD" default:"p1"`
+		// HighConfidence is the minimum confidence of the decisions that launch a fix agent.
+		HighConfidence float64 `envconfig:"GITNESS_AI_AGENTS_HIGH_CONFIDENCE" default:"0.8"`
+		// AgentBudget is the number of agent class requests that must be left in the daily quota.
+		AgentBudget int `envconfig:"GITNESS_AI_AGENTS_AGENT_BUDGET" default:"60"`
 	}
 
 	Redis struct {
