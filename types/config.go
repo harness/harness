@@ -730,6 +730,8 @@ type Config struct {
 		PatchThreshold int `envconfig:"GITNESS_SHIELD_PATCH_THRESHOLD" default:"70"`
 		// Ecosystems are the OSV ecosystems to synchronize and scan.
 		Ecosystems []string `envconfig:"GITNESS_SHIELD_ECOSYSTEMS" default:"Go,npm,PyPI"`
+		// GoProxy is the Go module proxy used by deterministic dependency bumps.
+		GoProxy string `envconfig:"GITNESS_SHIELD_GO_PROXY" default:"https://proxy.golang.org"`
 		// OSVBaseURL overrides the OSV data bucket URL.
 		OSVBaseURL string `envconfig:"GITNESS_SHIELD_OSV_BASE_URL"`
 		// EPSSURL overrides the EPSS scores feed URL.

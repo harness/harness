@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/repoactivity"
+	shieldbump "github.com/harness/gitness/app/services/shield/bump"
 	"github.com/harness/gitness/app/services/tasklink"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
@@ -70,6 +71,7 @@ type Services struct {
 	registryAsyncProcessingService *registryasyncprocessing.Service
 	languageAnalyzer               languageanalyzer.LanguageAnalyzer
 	taskLink                       *tasklink.Service
+	shieldBump                     *shieldbump.Service
 	insightsTriage                 *triage.Observer
 	insightsVerify                 *insightsverify.Service
 }
@@ -126,6 +128,7 @@ func ProvideServices(
 	registryJobRpmRegistryIndex *handler.JobRpmRegistryIndex,
 	languageAnalyzer languageanalyzer.LanguageAnalyzer,
 	taskLinkSvc *tasklink.Service,
+	shieldBumpSvc *shieldbump.Service,
 	insightsTriage *triage.Observer,
 	insightsVerify *insightsverify.Service,
 ) Services {
@@ -150,6 +153,7 @@ func ProvideServices(
 		registryAsyncProcessingService: registryAsyncProcessingService,
 		languageAnalyzer:               languageAnalyzer,
 		taskLink:                       taskLinkSvc,
+		shieldBump:                     shieldBumpSvc,
 		insightsTriage:                 insightsTriage,
 		insightsVerify:                 insightsVerify,
 	}

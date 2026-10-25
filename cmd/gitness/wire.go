@@ -93,6 +93,7 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/agentguard"
 	"github.com/harness/gitness/app/services/aigateway"
 	aitaskeventservice "github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/autolink"
@@ -138,6 +139,7 @@ import (
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/shield"
+	shieldbump "github.com/harness/gitness/app/services/shield/bump"
 	spaceSvc "github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tasklink"
@@ -370,6 +372,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		insights.WireSet,
 		triage.WireSet,
 		shield.WireSet,
+		shieldbump.WireSet,
+		agentguard.WireSet,
 		insightsverify.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
