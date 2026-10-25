@@ -88,6 +88,9 @@ type Guard struct {
 	mu          sync.RWMutex
 	allowed     map[string]struct{}
 	quarantined map[string]string
+
+	// onQuarantine is called (outside the lock) when a model gets newly quarantined at runtime.
+	onQuarantine func(id, reason string)
 }
 
 func NewGuard() *Guard {
@@ -142,7 +145,35 @@ func (g *Guard) VerifyCost(id string, cost float64) error {
 
 func (g *Guard) Quarantine(id, reason string) {
 	g.mu.Lock()
+	_, existed := g.quarantined[id]
 	g.quarantined[id] = reason
+	cb := g.onQuarantine
+	g.mu.Unlock()
+
+	if !existed && cb != nil {
+		cb(id, reason)
+	}
+}
+
+// restoreQuarantine marks a model as quarantined without notifying the persistence callback.
+func (g *Guard) restoreQuarantine(id, reason string) {
+	g.mu.Lock()
+	g.quarantined[id] = reason
+	g.mu.Unlock()
+}
+
+// QuarantineReason returns the quarantine reason of the model, if it is quarantined.
+func (g *Guard) QuarantineReason(id string) (string, bool) {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	reason, ok := g.quarantined[id]
+	return reason, ok
+}
+
+// setOnQuarantine registers the callback used to persist new quarantines.
+func (g *Guard) setOnQuarantine(fn func(id, reason string)) {
+	g.mu.Lock()
+	g.onQuarantine = fn
 	g.mu.Unlock()
 }
 
