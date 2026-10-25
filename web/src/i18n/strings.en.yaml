@@ -100,6 +100,8 @@ noResultTitle: Sorry, no result found
 noResultMessage: What you searched was unfortunately not found or doesn’t exist
 noFilterResultMessage: No results were found based on the applied filters
 pageTitle:
+  tasks: Tasks
+  taskDetail: Task
   signin: Sign In
   register: Register a new account
   accessControl: Access Control
@@ -1416,3 +1418,93 @@ favorite:
   remove: Remove from Favorites
   errorFavorite: Failed to mark this entity as a favorite.
   errorUnFavorite: Failed to remove this entity from your favorites.
+
+tasks:
+  title: Tasks
+  newTask: New task
+  createTask: Create task
+  taskTitle: Title
+  description: Description
+  number: '#'
+  state: State
+  priority: Priority
+  origin: Origin
+  assignee: Assignee
+  due: Due
+  unassigned: Unassigned
+  agent: Agent
+  me: Me
+  principal: 'User #{{id}}'
+  group: 'Group #{{id}}'
+  agentOnly: Agent only
+  allStates: All states
+  allPriorities: All priorities
+  allOrigins: All origins
+  searchPlaceholder: Search tasks
+  listView: List
+  boardView: Board
+  mainFlow: Main flow
+  sideStates: Side states
+  noTasks: There are no tasks yet
+  noTasksForFilter: No tasks match the filters
+  moveFailed: The task could not be moved
+  stateChanged: Task moved to {{state}}
+  taskCreated: Task created
+  taskUpdated: Task updated
+  commentAdded: Comment added
+  edit: Edit
+  save: Save
+  cancel: Cancel
+  stateActions: Move to
+  dismissTitle: Dismiss task
+  dismissReason: Reason
+  dismissReasonRequired: A reason is required to dismiss a task
+  dismiss: Dismiss
+  resume: Resume
+  originRef: Origin reference
+  noOriginRef: Created manually
+  links: Links
+  noLinks: No links
+  pullRequest: 'Pull request #{{id}}'
+  timeline: Activity
+  noActivity: No activity yet
+  addComment: Add a comment
+  comment: Comment
+  clearDue: Clear due date
+  system: System
+  stateValue:
+    abierta: Open
+    triage: Triage
+    en_curso: In progress
+    en_revision: In review
+    resuelta: Resolved
+    verificada: Verified
+    esperando_cuota: Waiting for quota
+    bloqueada: Blocked
+    descartada: Dismissed
+    reabierta: Reopened
+  originValue:
+    insights: Insights
+    shield: Shield
+    manual: Manual
+  linkKind:
+    pullreq: Pull request
+    ai_task: AI task
+    insights_issue: Insights issue
+    shield_finding: Shield finding
+  activity:
+    created: 'created the task "{{title}}"'
+    stateChange: 'moved the task from {{from}} to {{to}}'
+    reason: 'Reason: {{reason}}'
+    decision: Decision
+    decisionLine: '{{question}}: {{value}} ({{confidence}})'
+    fallback: fallback
+    agentRun: 'Agent run: {{outcome}} ({{model}}, {{requests}} requests)'
+    prLinked: 'linked pull request #{{id}}'
+    prUnlinked: 'unlinked pull request #{{id}}'
+    linked: 'linked {{kind}} {{id}}'
+    unlinked: 'unlinked {{kind}} {{id}}'
+    commented: commented
+    assignment: 'changed the assignee from {{from}} to {{to}}'
+    priorityChange: 'changed the priority from {{from}} to {{to}}'
+    updated: 'updated {{fields}}'

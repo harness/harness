@@ -30,6 +30,7 @@ export interface CODEProps {
   pullRequestId?: string
   pullRequestSection?: string
   webhookId?: string
+  taskNumber?: string
   pipeline?: string
   execution?: string
   commitSHA?: string
@@ -54,6 +55,7 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   pullRequestId: ':pullRequestId',
   pullRequestSection: ':pullRequestSection',
   webhookId: ':webhookId',
+  taskNumber: ':taskNumber',
   pipeline: ':pipeline',
   execution: ':execution',
   commitSHA: ':commitSHA',
@@ -102,6 +104,8 @@ export interface CODERoutes extends CDERoutes, ARRoutes {
   toCODECompare: (args: Required<Pick<CODEProps, 'repoPath' | 'diffRefs'>>) => string
   toCODEBranches: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODETags: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODETasks: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODETask: (args: Required<Pick<CODEProps, 'repoPath' | 'taskNumber'>>) => string
   toCODEWebhooks: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
@@ -177,6 +181,8 @@ export const routes: CODERoutes = {
   toCODESpaceSearch: ({ space }) => `/${space}/search`,
   toCODERepositorySearch: ({ repoPath }) => `/${repoPath}/search`,
   toCODESemanticSearch: ({ repoPath }) => `/${repoPath}/search/semantic`,
+  toCODETasks: ({ repoPath }) => `/${repoPath}/tasks`,
+  toCODETask: ({ repoPath, taskNumber }) => `/${repoPath}/tasks/${taskNumber}`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
