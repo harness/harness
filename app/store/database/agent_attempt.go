@@ -116,9 +116,14 @@ func (s *agentAttemptStore) TryStart(
 		}
 
 		var active int
+		// running attempts older than the timeout are stale and don't occupy a slot
+		var staleBefore int64
+		if in.ActiveTimeout > 0 {
+			staleBefore = in.At.Add(-in.ActiveTimeout).UnixMilli()
+		}
 		const activeSQL = `SELECT COUNT(*) FROM agent_attempts
-			WHERE agent_attempt_repo_id = $1 AND agent_attempt_state = 'running'`
-		if err := db.GetContext(ctx, &active, activeSQL, in.RepoID); err != nil {
+			WHERE agent_attempt_repo_id = $1 AND agent_attempt_state = 'running' AND agent_attempt_started >= $2`
+		if err := db.GetContext(ctx, &active, activeSQL, in.RepoID, staleBefore); err != nil {
 			return database.ProcessSQLErrorf(ctx, err, "Failed to count active attempts of repo %d", in.RepoID)
 		}
 		if active >= in.MaxActive {
@@ -213,4 +218,33 @@ func (s *agentAttemptStore) CountActive(ctx context.Context, repoID int64) (int,
 		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to count active attempts of repo %d", repoID)
 	}
 	return n, nil
+}
+
+// ExpireRunning marks the running attempts started before olderThan as failed with the error "expired".
+func (s *agentAttemptStore) ExpireRunning(ctx context.Context, olderThan, now int64) ([]*types.AgentAttempt, error) {
+	stmt := database.Builder.
+		Update(agentAttemptTable).
+		Set("agent_attempt_state", types.AgentAttemptFailed).
+		Set("agent_attempt_finished", now).
+		Set("agent_attempt_error", types.AgentAttemptExpiredError).
+		Where("agent_attempt_state = ?", types.AgentAttemptRunning).
+		Where("agent_attempt_started < ?", olderThan).
+		Suffix("RETURNING " + agentAttemptSelectColumns)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	var dst []*agentAttempt
+	db := dbtx.GetAccessor(ctx, s.db)
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to expire running agent attempts")
+	}
+	out := make([]*types.AgentAttempt, len(dst))
+	for i, a := range dst {
+		out[i] = &types.AgentAttempt{
+			ID: a.ID, RepoID: a.RepoID, TaskKey: a.TaskKey, Model: a.Model, State: a.State,
+			Started: a.Started, Finished: a.Finished, Error: a.Error,
+		}
+	}
+	return out, nil
 }

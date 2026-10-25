@@ -15,6 +15,7 @@
 package services
 
 import (
+	"github.com/harness/gitness/app/services/agentexpiry"
 	"github.com/harness/gitness/app/services/agentlauncher"
 	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/branch"
@@ -84,6 +85,7 @@ type Services struct {
 	quotaResume                    *quotaresume.Service
 	agentLauncher                  *agentlauncher.Launcher
 	taskSLA                        *tasksla.Service
+	agentExpiry                    *agentexpiry.Service
 }
 
 type GitspaceServices struct {
@@ -146,6 +148,7 @@ func ProvideServices(
 	quotaResumeSvc *quotaresume.Service,
 	agentLauncher *agentlauncher.Launcher,
 	taskSLA *tasksla.Service,
+	agentExpiry *agentexpiry.Service,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -176,5 +179,6 @@ func ProvideServices(
 		quotaResume:                    quotaResumeSvc,
 		agentLauncher:                  agentLauncher,
 		taskSLA:                        taskSLA,
+		agentExpiry:                    agentExpiry,
 	}
 }

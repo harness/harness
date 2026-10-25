@@ -50,7 +50,13 @@ type AgentAttemptStart struct {
 	MaxFailed int
 	// At is the start time of the attempt.
 	At time.Time
+	// ActiveTimeout, if positive, makes running attempts started before At-ActiveTimeout
+	// not count as active (they are expired by AgentAttemptStore.ExpireRunning).
+	ActiveTimeout time.Duration
 }
+
+// AgentAttemptExpiredError is the error recorded on the attempts expired by AgentAttemptStore.ExpireRunning.
+const AgentAttemptExpiredError = "expired"
 
 // Deny reasons returned by AgentAttemptStore.TryStart. They match the agentguard reasons.
 const (

@@ -94,7 +94,8 @@ func (s *MemoryAttemptStore) TryStart(_ context.Context, p TryStartParams) (int6
 				last = a.StartedAt
 			}
 		}
-		if a.RepoID == p.RepoID && a.Status == AttemptRunning {
+		stale := p.ActiveTimeout > 0 && a.StartedAt.Before(p.At.Add(-p.ActiveTimeout))
+		if a.RepoID == p.RepoID && a.Status == AttemptRunning && !stale {
 			active++
 		}
 	}

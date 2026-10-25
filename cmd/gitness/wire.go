@@ -95,6 +95,7 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/agentexpiry"
 	"github.com/harness/gitness/app/services/agentguard"
 	"github.com/harness/gitness/app/services/agentlauncher"
 	"github.com/harness/gitness/app/services/agentpolicy"
@@ -383,6 +384,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		insights.WireSet,
 		triage.WireSet,
 		agentguard.WireSet,
+		agentexpiry.WireSet,
 		agentpolicy.WireSet,
 		taskassign.WireSet,
 		agentmodel.WireSet,

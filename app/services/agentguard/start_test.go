@@ -21,6 +21,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/harness/gitness/app/services/settings"
 
@@ -69,5 +70,27 @@ func TestGuardStartAttemptSkipCooldown(t *testing.T) {
 	require.ErrorContains(t, err, string(ReasonCooldown))
 
 	_, err = g.TryStartAttempt(ctx, Request{RepoID: 1, TaskKey: "t"}, StartOptions{SkipCooldown: true})
+	require.NoError(t, err)
+}
+
+func TestGuardStartAttemptIgnoresStaleRunning(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	maxActive := 1
+	s := &settings.AgentSettings{MaxActive: &maxActive}
+	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	attempts := NewMemoryAttemptStore()
+	_, err := attempts.Start(ctx, "stale", 1, now.Add(-3*time.Hour))
+	require.NoError(t, err)
+
+	g := New(Config{GatewayEnabled: true}, fakeSettings{s: s}, attempts, nil, nil)
+	g.now = func() time.Time { return now }
+	_, err = g.TryStartAttempt(ctx, Request{RepoID: 1, TaskKey: "a"}, StartOptions{})
+	require.ErrorIs(t, err, ErrAttemptDenied)
+
+	g = New(Config{GatewayEnabled: true, AttemptTimeout: 2 * time.Hour}, fakeSettings{s: s}, attempts, nil, nil)
+	g.now = func() time.Time { return now }
+	_, err = g.TryStartAttempt(ctx, Request{RepoID: 1, TaskKey: "a"}, StartOptions{})
 	require.NoError(t, err)
 }

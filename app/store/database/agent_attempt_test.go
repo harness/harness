@@ -155,3 +155,78 @@ func TestAgentAttemptStorePersistsAcrossStoreInstances(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, types.AgentAttemptDenyMaxActive, deny)
 }
+
+func TestAgentAttemptStoreExpireRunning(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+	ctx := context.Background()
+	s := database.NewAgentAttemptStore(db, dbtx.New(db))
+
+	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	start := func(key string, at time.Time) int64 {
+		id, deny, err := s.TryStart(ctx, types.AgentAttemptStart{
+			RepoID: 1, TaskKey: key, MaxActive: 10, Cooldown: time.Minute, MaxFailed: 3, At: at,
+		})
+		require.NoError(t, err)
+		require.Empty(t, deny)
+		return id
+	}
+	oldID := start("old", now.Add(-3*time.Hour))
+	doneID := start("done", now.Add(-4*time.Hour))
+	require.NoError(t, s.Finish(ctx, doneID, types.AgentAttemptSucceeded, ""))
+	newID := start("new", now.Add(-time.Hour))
+
+	expired, err := s.ExpireRunning(ctx, now.Add(-2*time.Hour).UnixMilli(), now.UnixMilli())
+	require.NoError(t, err)
+	require.Len(t, expired, 1)
+	require.Equal(t, oldID, expired[0].ID)
+	require.Equal(t, "old", expired[0].TaskKey)
+
+	old, err := s.ListByTask(ctx, "old")
+	require.NoError(t, err)
+	require.Equal(t, types.AgentAttemptFailed, old[0].State)
+	require.Equal(t, "expired", old[0].Error)
+	require.Equal(t, now.UnixMilli(), *old[0].Finished)
+
+	done, err := s.ListByTask(ctx, "done")
+	require.NoError(t, err)
+	require.Equal(t, types.AgentAttemptSucceeded, done[0].State)
+	cur, err := s.ListByTask(ctx, "new")
+	require.NoError(t, err)
+	require.Equal(t, newID, cur[0].ID)
+	require.Equal(t, types.AgentAttemptRunning, cur[0].State)
+
+	// nothing left to expire
+	expired, err = s.ExpireRunning(ctx, now.Add(-2*time.Hour).UnixMilli(), now.UnixMilli())
+	require.NoError(t, err)
+	require.Empty(t, expired)
+}
+
+func TestAgentAttemptStoreTryStartIgnoresStaleRunning(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+	ctx := context.Background()
+	s := database.NewAgentAttemptStore(db, dbtx.New(db))
+
+	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	try := func(key string, timeout time.Duration) string {
+		_, deny, err := s.TryStart(ctx, types.AgentAttemptStart{
+			RepoID: 1, TaskKey: key, MaxActive: 1, Cooldown: time.Minute, MaxFailed: 3,
+			At: now, ActiveTimeout: timeout,
+		})
+		require.NoError(t, err)
+		return deny
+	}
+	// a crashed attempt started 3h ago still occupies the only slot
+	_, deny, err := s.TryStart(ctx, types.AgentAttemptStart{
+		RepoID: 1, TaskKey: "stale", MaxActive: 1, Cooldown: time.Minute, MaxFailed: 3, At: now.Add(-3 * time.Hour),
+	})
+	require.NoError(t, err)
+	require.Empty(t, deny)
+	require.Equal(t, types.AgentAttemptDenyMaxActive, try("a", 0))
+	require.Equal(t, types.AgentAttemptDenyMaxActive, try("a", 4*time.Hour))
+
+	// with a 2h timeout it is ignored; the fresh attempt then takes the slot
+	require.Empty(t, try("a", 2*time.Hour))
+	require.Equal(t, types.AgentAttemptDenyMaxActive, try("b", 2*time.Hour))
+}

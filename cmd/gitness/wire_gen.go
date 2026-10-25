@@ -83,6 +83,7 @@ import (
 	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/agentexpiry"
 	"github.com/harness/gitness/app/services/agentguard"
 	"github.com/harness/gitness/app/services/agentlauncher"
 	"github.com/harness/gitness/app/services/agentpolicy"
@@ -997,7 +998,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, bumpService, observer, verifyService, prcheckService, triager, quotaresumeService, launcher, taskslaService)
+	agentexpiryService, err := agentexpiry.ProvideService(ctx, config, agentAttemptStore, taskService, mutexManager, jobScheduler, executor)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, bumpService, observer, verifyService, prcheckService, triager, quotaresumeService, launcher, taskslaService, agentexpiryService)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil

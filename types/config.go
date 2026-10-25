@@ -305,6 +305,9 @@ type Config struct {
 		HighConfidence float64 `envconfig:"GITNESS_AI_AGENTS_HIGH_CONFIDENCE" default:"0.8"`
 		// AgentBudget is the number of agent class requests that must be left in the daily quota.
 		AgentBudget int `envconfig:"GITNESS_AI_AGENTS_AGENT_BUDGET" default:"60"`
+		// AttemptTimeout is the time after which a running attempt that never reported completion
+		// (e.g. left by a crashed replica) is expired and no longer occupies a max active slot.
+		AttemptTimeout time.Duration `envconfig:"GITNESS_AI_AGENTS_ATTEMPT_TIMEOUT" default:"2h"`
 	}
 
 	Redis struct {

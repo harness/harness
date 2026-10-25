@@ -40,6 +40,8 @@ type TryStartParams struct {
 	MaxFailed int
 	// At is the start time of the attempt.
 	At time.Time
+	// ActiveTimeout, if positive, excludes running attempts older than it from the max active count.
+	ActiveTimeout time.Duration
 }
 
 // StartOptions tune the reservation done by TryStartAttempt.
@@ -75,6 +77,8 @@ func (g *Guard) TryStartAttempt(ctx context.Context, req Request, opts StartOpti
 		Cooldown:  cooldown,
 		MaxFailed: g.config.MaxFailedAttempts,
 		At:        at,
+
+		ActiveTimeout: g.config.AttemptTimeout,
 	})
 	if err != nil {
 		return Attempt{}, err
@@ -106,6 +110,8 @@ func (s *DBAttemptStore) TryStart(ctx context.Context, p TryStartParams) (int64,
 		Cooldown:  p.Cooldown,
 		MaxFailed: p.MaxFailed,
 		At:        p.At,
+
+		ActiveTimeout: p.ActiveTimeout,
 	})
 	return id, Reason(deny), err
 }

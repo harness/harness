@@ -67,6 +67,8 @@ type Config struct {
 	MaxFailedAttempts int
 	// Cooldown is the minimum time between attempts of the same task.
 	Cooldown time.Duration
+	// AttemptTimeout is the age after which a running attempt no longer counts as active. 0 disables it.
+	AttemptTimeout time.Duration
 }
 
 const (
@@ -81,6 +83,7 @@ func NewConfig(global *types.Config) Config {
 		KillSwitch:        global.AIAgents.KillSwitch,
 		MaxFailedAttempts: global.AIAgents.MaxFailedAttempts,
 		Cooldown:          global.AIAgents.AttemptCooldown,
+		AttemptTimeout:    global.AIAgents.AttemptTimeout,
 	}
 }
 

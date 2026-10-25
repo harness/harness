@@ -1842,6 +1842,9 @@ type (
 		ListByTask(ctx context.Context, taskKey string) ([]*types.AgentAttempt, error)
 		// CountActive returns the number of running attempts of a repo.
 		CountActive(ctx context.Context, repoID int64) (int, error)
+		// ExpireRunning marks the running attempts started before olderThan (unix millis) as failed with
+		// the error "expired", finished at now (unix millis), and returns them.
+		ExpireRunning(ctx context.Context, olderThan, now int64) ([]*types.AgentAttempt, error)
 	}
 
 	// AIUsageStore defines the store for AI usage records.
