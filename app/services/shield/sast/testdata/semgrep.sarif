@@ -1,0 +1,91 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Semgrep OSS",
+          "semanticVersion": "1.80.0",
+          "version": "1.80.0",
+          "rules": [
+            {
+              "id": "python.flask.security.injection.tainted-sql-string.tainted-sql-string",
+              "name": "python.flask.security.injection.tainted-sql-string.tainted-sql-string",
+              "shortDescription": {"text": "Detected user input used to manually construct a SQL string."},
+              "fullDescription": {"text": "Detected user input used to manually construct a SQL string. Use parameterized queries."},
+              "help": {"text": "Use parameterized queries.", "markdown": "Use **parameterized** queries."},
+              "defaultConfiguration": {"level": "error"},
+              "properties": {
+                "precision": "very-high",
+                "tags": ["CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')", "OWASP-A03:2021 - Injection", "security"],
+                "security-severity": "9.1"
+              }
+            },
+            {
+              "id": "generic.secrets.weak-hash",
+              "name": "generic.secrets.weak-hash",
+              "shortDescription": {"text": "Use of weak hash MD5"},
+              "fullDescription": {"text": "MD5 is a weak hash."},
+              "properties": {
+                "tags": ["CWE-327: Use of a Broken or Risky Cryptographic Algorithm"],
+                "cwe": ["CWE-327: Use of a Broken or Risky Cryptographic Algorithm", "CWE-328"],
+                "security-severity": 5.3
+              }
+            },
+            {
+              "id": "go.lang.best-practice.todo",
+              "name": "go.lang.best-practice.todo",
+              "shortDescription": {"text": "Leftover TODO"}
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "python.flask.security.injection.tainted-sql-string.tainted-sql-string",
+          "ruleIndex": 0,
+          "message": {"text": "Detected user input used to manually construct a SQL string."},
+          "level": "error",
+          "locations": [{
+            "physicalLocation": {
+              "artifactLocation": {"uri": "app/db.py", "uriBaseId": "%SRCROOT%"},
+              "region": {"startLine": 42, "startColumn": 5, "endLine": 42, "endColumn": 60,
+                "snippet": {"text": "    cur.execute(\"SELECT * FROM t WHERE id=\" + uid)"}}
+            }
+          }],
+          "fingerprints": {"matchBasedId/v1": "abc123"},
+          "partialFingerprints": {"matchBasedId/v1": "abc123"}
+        },
+        {
+          "ruleId": "generic.secrets.weak-hash",
+          "ruleIndex": 1,
+          "message": {"text": "Use of weak hash MD5"},
+          "level": "warning",
+          "locations": [{
+            "physicalLocation": {
+              "artifactLocation": {"uri": "file:///src/util/hash.go"},
+              "region": {"startLine": 10, "endLine": 10}
+            }
+          }],
+          "partialFingerprints": {"matchBasedId/v1": "zzz999", "other": "x"}
+        },
+        {
+          "ruleId": "go.lang.best-practice.todo",
+          "ruleIndex": 2,
+          "message": {"text": "TODO found"},
+          "level": "note",
+          "locations": [{
+            "physicalLocation": {
+              "artifactLocation": {"uri": "main.go"},
+              "region": {"startLine": 3, "snippet": {"text": "// TODO\n"}}
+            }
+          }]
+        },
+        {
+          "message": {"text": "result without rule is skipped"}
+        }
+      ]
+    }
+  ]
+}
