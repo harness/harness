@@ -1,0 +1,13 @@
+{
+  "id": "PYSEC-2018-28",
+  "modified": "2022-01-01T00:00:00Z",
+  "aliases": ["CVE-2018-18074"],
+  "summary": "requests leaks Authorization header",
+  "severity": [{"type": "CVSS_V3", "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"}],
+  "affected": [
+    {
+      "package": {"ecosystem": "PyPI", "name": "requests"},
+      "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "2.20.0"}]}]
+    }
+  ]
+}

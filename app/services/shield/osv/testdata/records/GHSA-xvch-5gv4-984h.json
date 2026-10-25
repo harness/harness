@@ -1,0 +1,16 @@
+{
+  "id": "GHSA-xvch-5gv4-984h",
+  "modified": "2023-11-01T00:00:00Z",
+  "aliases": ["CVE-2021-44906"],
+  "summary": "Prototype Pollution in minimist",
+  "severity": [{"type": "CVSS_V3", "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}],
+  "affected": [
+    {
+      "package": {"ecosystem": "npm", "name": "minimist"},
+      "ranges": [
+        {"type": "SEMVER", "events": [{"introduced": "1.0.0"}, {"fixed": "1.2.6"}]},
+        {"type": "SEMVER", "events": [{"introduced": "0.0.0"}, {"fixed": "0.2.4"}]}
+      ]
+    }
+  ]
+}

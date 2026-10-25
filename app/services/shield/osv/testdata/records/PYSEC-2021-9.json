@@ -1,0 +1,18 @@
+{
+  "id": "PYSEC-2021-9",
+  "modified": "2022-01-01T00:00:00Z",
+  "aliases": ["CVE-2021-28658", "GHSA-xxxx-yyyy-zzzz"],
+  "details": "Django 2.2 before 2.2.20, 3.0 before 3.0.14, and 3.1 before 3.1.8 allows directory traversal.\nSecond line.",
+  "affected": [
+    {
+      "package": {"ecosystem": "PyPI", "name": "django", "purl": "pkg:pypi/django"},
+      "ranges": [
+        {"type": "ECOSYSTEM", "events": [{"introduced": "2.2"}, {"fixed": "2.2.20"}]},
+        {"type": "ECOSYSTEM", "events": [{"introduced": "3.0"}, {"fixed": "3.0.14"}]},
+        {"type": "ECOSYSTEM", "events": [{"introduced": "3.1"}, {"fixed": "3.1.8"}]},
+        {"type": "GIT", "repo": "https://github.com/django/django", "events": [{"introduced": "0"}, {"fixed": "deadbeef"}]}
+      ],
+      "versions": ["2.2", "2.2.1", "3.0", "3.0.1", "3.1", "3.1.1"]
+    }
+  ]
+}

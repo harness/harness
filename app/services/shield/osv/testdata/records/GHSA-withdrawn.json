@@ -1,0 +1,7 @@
+{
+  "id": "GHSA-wwww-wwww-wwww",
+  "modified": "2023-11-01T00:00:00Z",
+  "withdrawn": "2023-11-02T00:00:00Z",
+  "summary": "withdrawn",
+  "affected": [{"package": {"ecosystem": "npm", "name": "lodash"}, "versions": ["4.17.15"]}]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-p6mc-m468-83gw",
+  "modified": "2023-11-01T00:00:00Z",
+  "aliases": ["CVE-2020-8203"],
+  "summary": "Prototype Pollution in lodash",
+  "severity": [{"type": "CVSS_V3", "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H"}],
+  "affected": [
+    {
+      "package": {"ecosystem": "npm", "name": "lodash"},
+      "ranges": [{"type": "SEMVER", "events": [{"introduced": "0"}, {"fixed": "4.17.19"}]}]
+    }
+  ],
+  "database_specific": {"severity": "HIGH"}
+}
