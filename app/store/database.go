@@ -1787,4 +1787,42 @@ type (
 		List(ctx context.Context, filter *types.AITaskFilter) ([]*types.AITask, error)
 		Count(ctx context.Context, filter *types.AITaskFilter) (int64, error)
 	}
+
+	// AIModelStore defines the store for the free model catalog.
+	AIModelStore interface {
+		// Upsert inserts the model or updates all its fields except created.
+		Upsert(ctx context.Context, model *types.AIModel) error
+		// Find returns the model with the given OpenRouter id.
+		Find(ctx context.Context, id string) (*types.AIModel, error)
+		// List returns the models matching the filter ordered by id.
+		List(ctx context.Context, filter types.AIModelFilter) ([]*types.AIModel, error)
+		// UpdateStatus sets status and quarantine reason of an existing model.
+		UpdateStatus(ctx context.Context, id string, status enum.AIModelStatus, reason string) error
+	}
+
+	// AIDecisionStore defines the store for AI decision audit records.
+	AIDecisionStore interface {
+		Create(ctx context.Context, decision *types.AIDecision) error
+		Find(ctx context.Context, id int64) (*types.AIDecision, error)
+		// ListByTask returns the decisions of a task ordered by creation.
+		ListByTask(ctx context.Context, taskID int64) ([]*types.AIDecision, error)
+		// SetOutcome records the observed outcome of a decision.
+		SetOutcome(ctx context.Context, id int64, outcome enum.AIDecisionOutcome) error
+	}
+
+	// AIQuotaStore defines the store for the daily request quota.
+	AIQuotaStore interface {
+		// Find returns the quota row; a missing row yields zero counters.
+		Find(ctx context.Context, day, class string) (*types.AIQuota, error)
+		// IncrementQuota atomically increments used if it is below limit
+		// and reports whether the increment happened.
+		IncrementQuota(ctx context.Context, day, class string, limit int) (bool, error)
+	}
+
+	// AIUsageStore defines the store for AI usage records.
+	AIUsageStore interface {
+		Create(ctx context.Context, usage *types.AIUsage) error
+		// ListSince returns the records created at or after the given unix millisecond timestamp.
+		ListSince(ctx context.Context, since int64) ([]*types.AIUsage, error)
+	}
 )
