@@ -76,6 +76,13 @@ type TriageTasks interface {
 	AddComment(ctx context.Context, principalID, taskID int64, text string) error
 }
 
+// AgentLauncher offers a finding to the fix agent. decisionID and confidence describe the decision that
+// proposes the agent. It is implemented by agentlauncher.Launcher; the interface keeps the import graph acyclic.
+type AgentLauncher interface {
+	ConsiderFinding(ctx context.Context, repo *types.RepositoryCore, f *types.ShieldFinding, decisionID int64,
+		confidence float64)
+}
+
 // TriageConfig configures the triage.
 type TriageConfig struct {
 	// Threshold is the risk score from which findings are triaged; zero means DefaultTriageThreshold.
@@ -112,7 +119,11 @@ type Triager struct {
 	decider  Decider
 	modes    ModeResolver
 	autonomy AutonomyResolver
+	agent    AgentLauncher
 }
+
+// SetAgentLauncher sets the launcher that is offered the findings whose fix strategy is the agent.
+func (t *Triager) SetAgentLauncher(a AgentLauncher) { t.agent = a }
 
 // NewTriager creates a triager over the scan service.
 func NewTriager(
@@ -367,7 +378,25 @@ func (r *triageRun) apply(ctx context.Context, f *types.ShieldFinding, out *tria
 	}
 
 	r.t.syncTask(ctx, r.repo, f, oldRisk)
+	r.t.launchAgent(ctx, r.repo, f, strategy, res.DecisionIDs[questions.QFixStrategy], t.FixStrategyConfidence)
 	return nil
+}
+
+// launchAgent offers an open finding with a task to the fix agent when the triage chose the agent strategy
+// and its risk reaches the patch threshold.
+func (t *Triager) launchAgent(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	f *types.ShieldFinding,
+	strategy *enum.ShieldFixStrategy,
+	decisionID int64,
+	confidence float64,
+) {
+	if t.agent == nil || strategy == nil || *strategy != enum.ShieldFixStrategyPatch ||
+		f.State != enum.ShieldFindingStateOpen || f.TaskID == nil || f.RiskScore < t.svc.config.PatchThreshold {
+		return
+	}
+	t.agent.ConsiderFinding(ctx, repo, f, decisionID, confidence)
 }
 
 // syncTask creates the task of a finding whose risk now reaches the patch threshold and moves the

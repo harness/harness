@@ -25,9 +25,12 @@ import (
 	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/insights/triage"
 	"github.com/harness/gitness/app/services/refcache"
+	"github.com/harness/gitness/app/services/shield"
+	"github.com/harness/gitness/app/services/shield/bump"
 	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/taskassign"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -37,8 +40,9 @@ var WireSet = wire.NewSet(
 	ProvideLauncher,
 )
 
-// ProvideLauncher creates the launcher and hooks it into the Insights triage (autofix candidates) and into
-// the AI task event service (finished AI tasks).
+// ProvideLauncher creates the launcher and hooks it into the Insights triage (autofix candidates), into
+// Shield (findings whose fix strategy is the agent, bumps that need the agent) and into the AI task event
+// service (finished AI tasks).
 func ProvideLauncher(
 	policy *agentpolicy.Evaluator,
 	gateway *aigateway.Gateway,
@@ -54,6 +58,13 @@ func ProvideLauncher(
 	assign *taskassign.Service,
 	triageObserver *triage.Observer,
 	aiTaskEvents *aitaskevent.Service,
+	shieldTriager *shield.Triager,
+	bumpSvc *bump.Service,
+	taskLinks store.TaskLinkStore,
+	insightsEvents store.InsightsEventStore,
+	findings store.ShieldFindingStore,
+	pullReqs store.PullReqStore,
+	gitSvc git.Interface,
 ) *Launcher {
 	l := New(Deps{
 		Policy:     policy,
@@ -68,10 +79,16 @@ func ProvideLauncher(
 		Registry:   registry,
 		Decider:    decide,
 		Assigner:   assign,
-		Redactor:   gateway,
-		Principal:  bootstrap.GetAgentServicePrincipal,
+		Paths: StorePathResolver{
+			Links: taskLinks, Events: insightsEvents, Findings: findings, PullReqs: pullReqs,
+			PRFiles: GitPRFiles{Git: gitSvc, Repos: repoFinder},
+		},
+		Redactor:  gateway,
+		Principal: bootstrap.GetAgentServicePrincipal,
 	})
 	triageObserver.SetAutofixObserver(l)
+	shieldTriager.SetAgentLauncher(l)
+	bumpSvc.SetAgentLauncher(l)
 	aiTaskEvents.SetFinishObserver(l)
 	return l
 }

@@ -88,6 +88,20 @@ func TestGuardCheck(t *testing.T) {
 	}{
 		{name: "allowed by defaults", wantOK: true, wantWhy: ReasonAllowed},
 		{name: "gateway disabled", cfg: Config{MaxFailedAttempts: 3}, wantWhy: ReasonGatewayDisabled},
+		{
+			name: "deterministic action ignores a disabled gateway", cfg: Config{MaxFailedAttempts: 3},
+			req: Request{NoAI: true}, wantOK: true, wantWhy: ReasonAllowed,
+		},
+		{
+			name: "deterministic action still honors the global kill switch",
+			cfg:  Config{MaxFailedAttempts: 3, KillSwitch: true}, req: Request{NoAI: true},
+			wantWhy: ReasonGlobalKillSwitch,
+		},
+		{
+			name: "deterministic action still honors the repo kill switch", cfg: Config{MaxFailedAttempts: 3},
+			repo: &settings.AgentSettings{KillSwitch: ptr.Bool(true)}, req: Request{NoAI: true},
+			wantWhy: ReasonRepoKillSwitch,
+		},
 		{name: "global kill switch", cfg: Config{GatewayEnabled: true, KillSwitch: true}, wantWhy: ReasonGlobalKillSwitch},
 		{
 			name:    "repo kill switch",
@@ -135,6 +149,26 @@ func TestGuardCheck(t *testing.T) {
 				_ = s.Finish(ctx, a.ID, AttemptSucceeded)
 			},
 			wantWhy: ReasonCooldown,
+		},
+		{
+			name: "retry with another model bypasses the cooldown",
+			req:  Request{RetryOtherModel: true},
+			seed: func(ctx context.Context, s *MemoryAttemptStore) {
+				a, _ := s.Start(ctx, task, repoID, now.Add(-time.Minute))
+				_ = s.Finish(ctx, a.ID, AttemptFailed)
+			},
+			wantOK: true, wantWhy: ReasonAllowed,
+		},
+		{
+			name: "retry with another model is bounded by max failed attempts",
+			req:  Request{RetryOtherModel: true},
+			seed: func(ctx context.Context, s *MemoryAttemptStore) {
+				for range 3 {
+					a, _ := s.Start(ctx, task, repoID, now.Add(-time.Minute))
+					_ = s.Finish(ctx, a.ID, AttemptFailed)
+				}
+			},
+			wantWhy: ReasonTooManyFailures,
 		},
 		{
 			name: "cooldown elapsed",

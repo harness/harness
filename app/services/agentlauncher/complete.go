@@ -112,7 +112,7 @@ func (l *Launcher) afterFailure(ctx context.Context, taskID int64, meta metadata
 			return fmt.Errorf("failed to find repo %d: %w", t.RepoID, rerr)
 		}
 		res, cerr := l.Consider(ctx, ConsiderInput{
-			Task: t, Repo: repo, Kind: meta.Kind, PreviousAttempts: prev,
+			Task: t, Repo: repo, Kind: meta.Kind, PreviousAttempts: prev, RetryOtherModel: true,
 			TriggerDecision: agentpolicy.TriggerDecision{
 				ID: meta.TriggerID, Value: meta.TriggerValue, Confidence: meta.TriggerConfidence,
 			},
@@ -189,7 +189,7 @@ func (l *Launcher) release(ctx context.Context, pid int64, t *types.Task) {
 func (l *Launcher) escalate(ctx context.Context, pid int64, t *types.Task, why string) {
 	assignee := &task.AssigneeInput{}
 	if l.deps.Assigner != nil {
-		_, in, err := l.deps.Assigner.SuggestForTask(ctx, t, nil)
+		_, in, err := l.deps.Assigner.SuggestForTask(ctx, t, l.taskPaths(ctx, t))
 		switch {
 		case err != nil && !errors.Is(err, context.Canceled):
 			log.Ctx(ctx).Warn().Err(err).Msg("agent launcher: failed to suggest a human assignee")
@@ -204,4 +204,17 @@ func (l *Launcher) escalate(ctx context.Context, pid int64, t *types.Task, why s
 		"Needs a human: "+why); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("agent launcher: failed to block the task")
 	}
+}
+
+// taskPaths returns the paths the task touches; it is best effort and empty on any problem.
+func (l *Launcher) taskPaths(ctx context.Context, t *types.Task) []string {
+	if l.deps.Paths == nil {
+		return nil
+	}
+	paths, err := l.deps.Paths.TaskPaths(ctx, t)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Int64("task_id", t.ID).Msg("agent launcher: failed to resolve task paths")
+		return nil
+	}
+	return paths
 }

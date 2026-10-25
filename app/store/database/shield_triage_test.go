@@ -58,3 +58,24 @@ func TestShieldFindingStore_UpdateTriageSurvivesRescan(t *testing.T) {
 		t.Errorf("ai decision ids = %v", again.AIDecisionIDs)
 	}
 }
+
+func TestShieldFindingStore_SetFixStrategy(t *testing.T) {
+	ctx, env, teardown := setupShieldEnv(t)
+	defer teardown()
+
+	scan := newShieldScan(t, ctx, env, 1)
+	f := newShieldFinding(1, scan.ID, "a", 90, 1000)
+	if err := env.findings.Upsert(ctx, f); err != nil {
+		t.Fatalf("Upsert() error = %v", err)
+	}
+	if err := env.findings.SetFixStrategy(ctx, f.ID, enum.ShieldFixStrategyPatch, 1500); err != nil {
+		t.Fatalf("SetFixStrategy() error = %v", err)
+	}
+	got, err := env.findings.Find(ctx, f.ID)
+	if err != nil {
+		t.Fatalf("Find() error = %v", err)
+	}
+	if got.FixStrategy == nil || *got.FixStrategy != enum.ShieldFixStrategyPatch || got.Updated != 1500 {
+		t.Errorf("fix strategy = %v updated = %d", got.FixStrategy, got.Updated)
+	}
+}

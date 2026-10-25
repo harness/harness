@@ -35,11 +35,13 @@ import (
 )
 
 type fakePolicy struct {
-	v   *agentpolicy.Verdict
-	err error
+	v      *agentpolicy.Verdict
+	err    error
+	inputs []agentpolicy.EvaluateInput
 }
 
-func (f *fakePolicy) Evaluate(context.Context, agentpolicy.EvaluateInput) (*agentpolicy.Verdict, error) {
+func (f *fakePolicy) Evaluate(_ context.Context, in agentpolicy.EvaluateInput) (*agentpolicy.Verdict, error) {
+	f.inputs = append(f.inputs, in)
 	return f.v, f.err
 }
 
@@ -182,11 +184,26 @@ func (f *fakeDecider) Decide(_ context.Context, in aidecide.DecideInput) (*aidec
 	}}, nil
 }
 
-type fakeAssigner struct{ in *task.AssigneeInput }
+type fakeAssigner struct {
+	in    *task.AssigneeInput
+	paths *[]string
+}
 
-func (f fakeAssigner) SuggestForTask(context.Context, *types.Task, []string) (taskassign.Suggestion, *task.AssigneeInput, error) {
+func (f fakeAssigner) SuggestForTask(
+	_ context.Context, _ *types.Task, paths []string,
+) (taskassign.Suggestion, *task.AssigneeInput, error) {
+	if f.paths != nil {
+		*f.paths = paths
+	}
 	return taskassign.Suggestion{}, f.in, nil
 }
+
+type fakePaths struct {
+	paths []string
+	err   error
+}
+
+func (f fakePaths) TaskPaths(context.Context, *types.Task) ([]string, error) { return f.paths, f.err }
 
 type rig struct {
 	l        *Launcher
@@ -447,6 +464,77 @@ func TestCompletionFailureRetryOtherModel(t *testing.T) {
 		if s == enum.TaskStateBlocked {
 			t.Fatal("must not block")
 		}
+	}
+}
+
+func TestCompletionRetryIsMarkedSoTheCooldownDoesNotApply(t *testing.T) {
+	r := newRig()
+	ai := launched(t, r, enum.AITaskStateError)
+	r.decider.step = questions.NextRetryOtherModel
+	r.models.model = "free/model-b:free"
+	if err := r.l.AITaskFinished(context.Background(), ai); err != nil {
+		t.Fatal(err)
+	}
+	if len(r.policy.inputs) != 2 || r.policy.inputs[0].RetryOtherModel || !r.policy.inputs[1].RetryOtherModel {
+		t.Fatalf("policy inputs %+v", r.policy.inputs)
+	}
+}
+
+func TestEscalationPassesTaskPathsToAssigner(t *testing.T) {
+	r := newRig()
+	ai := launched(t, r, enum.AITaskStateError)
+	var got []string
+	r.l.deps.Assigner = fakeAssigner{paths: &got}
+	r.l.deps.Paths = fakePaths{paths: []string{"pay/charge.go", "go.mod"}}
+	if err := r.l.AITaskFinished(context.Background(), ai); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 || got[0] != "pay/charge.go" {
+		t.Fatalf("paths %v", got)
+	}
+}
+
+func TestEscalationPathErrorIsBestEffort(t *testing.T) {
+	r := newRig()
+	ai := launched(t, r, enum.AITaskStateError)
+	var got []string
+	r.l.deps.Assigner = fakeAssigner{paths: &got}
+	r.l.deps.Paths = fakePaths{err: errors.New("boom")}
+	if err := r.l.AITaskFinished(context.Background(), ai); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 0 || len(r.tasks.transitions) != 1 || r.tasks.transitions[0] != enum.TaskStateBlocked {
+		t.Fatalf("paths=%v transitions=%v", got, r.tasks.transitions)
+	}
+}
+
+func TestConsiderFindingKinds(t *testing.T) {
+	for _, tc := range []struct {
+		kind enum.ShieldFindingKind
+		want string
+	}{
+		{enum.ShieldFindingKindDependency, "fix_dependency"},
+		{enum.ShieldFindingKindSAST, "fix_sast"},
+	} {
+		r := newRig()
+		tid := r.in.Task.ID
+		r.l.ConsiderFinding(context.Background(), r.in.Repo,
+			&types.ShieldFinding{ID: 4, Kind: tc.kind, TaskID: &tid}, 12, 0.9)
+		if len(r.models.reqs) != 1 || r.models.reqs[0].Kind != tc.want {
+			t.Fatalf("%s: select requests %+v", tc.kind, r.models.reqs)
+		}
+		td := r.policy.inputs[0].TriggerDecision
+		if td.ID != 12 || td.Value != "agent" || td.Confidence != 0.9 {
+			t.Fatalf("%s: trigger %+v", tc.kind, td)
+		}
+	}
+}
+
+func TestConsiderFindingWithoutTaskDoesNothing(t *testing.T) {
+	r := newRig()
+	r.l.ConsiderFinding(context.Background(), r.in.Repo, &types.ShieldFinding{ID: 4}, 12, 1)
+	if len(r.policy.inputs) != 0 {
+		t.Fatal("policy must not be asked")
 	}
 }
 

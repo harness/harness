@@ -19,6 +19,7 @@ import (
 
 	"github.com/harness/gitness/app/services/agentpolicy"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -44,4 +45,31 @@ func (l *Launcher) ConsiderTrigger(
 		return
 	}
 	log.Ctx(ctx).Debug().Int64("task_id", t.ID).Str("outcome", string(res.Outcome)).Msg("agent launcher: considered task")
+}
+
+// ConsiderFinding is the entry point for Shield: a finding whose fix strategy is the agent (or whose
+// deterministic bump needs it) is offered to the policy as a fix_dependency launch, or fix_sast for SAST
+// findings. decisionID and confidence describe the fix_strategy decision (or the rules decision) that proposes
+// the agent. It does nothing when the finding has no task.
+func (l *Launcher) ConsiderFinding(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	f *types.ShieldFinding,
+	decisionID int64,
+	confidence float64,
+) {
+	if f == nil || f.TaskID == nil {
+		return
+	}
+	t, err := l.deps.TaskFinder.Find(ctx, *f.TaskID)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Int64("finding_id", f.ID).Msg("agent launcher: failed to find the task of the finding")
+		return
+	}
+	kind := KindFixDependency
+	if f.Kind == enum.ShieldFindingKindSAST {
+		kind = KindFixSAST
+	}
+	l.ConsiderTrigger(ctx, repo, t, kind,
+		agentpolicy.TriggerDecision{ID: decisionID, Value: "agent", Confidence: confidence})
 }

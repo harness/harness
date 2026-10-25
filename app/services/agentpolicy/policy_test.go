@@ -243,9 +243,13 @@ func TestEvaluateGuardRequestAndState(t *testing.T) {
 		TriggerPrincipalID: 42,
 		ModelSuccessRate:   0.7,
 		PreviousAttempts:   []questions.Attempt{{Model: "m", Outcome: "failed"}},
+		RetryOtherModel:    true,
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if guard.req.NoAI || !guard.req.RetryOtherModel {
+		t.Errorf("agents are AI actions and the retry flag must reach the guard: %+v", guard.req)
 	}
 	if guard.req.RepoID != 5 || guard.req.TriggeredByPrincipalID != 42 || guard.req.MinAutonomy != 2 ||
 		guard.req.SpacePath != "space" {

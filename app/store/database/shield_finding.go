@@ -383,6 +383,29 @@ func (s *ShieldFindingStore) SetTask(ctx context.Context, id int64, taskID *int6
 	return nil
 }
 
+func (s *ShieldFindingStore) SetFixStrategy(
+	ctx context.Context,
+	id int64,
+	strategy enum.ShieldFixStrategy,
+	now int64,
+) error {
+	const sqlQuery = `
+		UPDATE shield_findings
+		SET
+			 shield_finding_fix_strategy = $1
+			,shield_finding_updated = $2
+			,shield_finding_version = shield_finding_version + 1
+		WHERE shield_finding_id = $3`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, sqlQuery, string(strategy), now, id); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to set shield finding fix strategy")
+	}
+
+	return nil
+}
+
 func (s *ShieldFindingStore) UpdateState(
 	ctx context.Context,
 	id int64,

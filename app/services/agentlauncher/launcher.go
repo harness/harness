@@ -147,7 +147,9 @@ type Deps struct {
 	Registry   ModelRegistry
 	Decider    Decider
 	Assigner   Assigner
-	Redactor   Redactor
+	// Paths gives the paths a task touches for the human suggestion on escalation (optional).
+	Paths    PathResolver
+	Redactor Redactor
 	// Principal returns the agent service principal (nil if not bootstrapped).
 	Principal func() *types.Principal
 }
@@ -174,6 +176,9 @@ type ConsiderInput struct {
 	TriggerPrincipalID int64
 	// PreviousAttempts are earlier attempts at the task, oldest first. Their models are not selected again.
 	PreviousAttempts []questions.Attempt
+	// RetryOtherModel is true when this is the retry of a failed attempt with another model (the guard
+	// cooldown does not apply).
+	RetryOtherModel bool
 }
 
 // Outcome tells what Consider did.
@@ -232,6 +237,7 @@ func (l *Launcher) Consider(ctx context.Context, in ConsiderInput) (*Result, err
 		TriggerPrincipalID: in.TriggerPrincipalID,
 		SessionID:          fmt.Sprintf("agent-task-%d", in.Task.ID),
 		PreviousAttempts:   in.PreviousAttempts,
+		RetryOtherModel:    in.RetryOtherModel,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to evaluate agent policy: %w", err)
@@ -390,8 +396,9 @@ func (l *Launcher) start(
 	}
 
 	attempt, err := l.deps.Guard.StartAttempt(ctx, agentguard.Request{
-		RepoID:  in.Repo.ID,
-		TaskKey: taskKey(in.Task.ID),
+		RepoID:          in.Repo.ID,
+		TaskKey:         taskKey(in.Task.ID),
+		RetryOtherModel: in.RetryOtherModel,
 	})
 	if err != nil {
 		return fail("start attempt", err)

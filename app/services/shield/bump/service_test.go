@@ -34,9 +34,13 @@ type fakeGuard struct {
 	deny     bool
 	checks   int
 	attempts []agentguard.AttemptStatus
+	onCheck  func(agentguard.Request)
 }
 
-func (g *fakeGuard) Check(context.Context, agentguard.Request) agentguard.Decision {
+func (g *fakeGuard) Check(_ context.Context, r agentguard.Request) agentguard.Decision {
+	if g.onCheck != nil {
+		g.onCheck(r)
+	}
 	g.checks++
 	if g.deny {
 		return agentguard.Decision{Reason: agentguard.ReasonRepoKillSwitch, Detail: "off"}
@@ -129,6 +133,33 @@ func (t *fakeTasks) AddComment(_ context.Context, _, _ int64, text string) error
 	return nil
 }
 
+type fakeFindings struct {
+	strategies map[int64]enum.ShieldFixStrategy
+}
+
+func (f *fakeFindings) Find(context.Context, int64) (*types.ShieldFinding, error) {
+	return goFinding(), nil
+}
+
+func (f *fakeFindings) SetFixStrategy(_ context.Context, id int64, s enum.ShieldFixStrategy, _ int64) error {
+	f.strategies[id] = s
+	return nil
+}
+
+type launch struct {
+	finding    *types.ShieldFinding
+	decisionID int64
+	confidence float64
+}
+
+type fakeLauncher struct{ calls []launch }
+
+func (l *fakeLauncher) ConsiderFinding(
+	_ context.Context, _ *types.RepositoryCore, f *types.ShieldFinding, decisionID int64, confidence float64,
+) {
+	l.calls = append(l.calls, launch{finding: f, decisionID: decisionID, confidence: confidence})
+}
+
 type fakeSched struct{ defs []job.Definition }
 
 func (s *fakeSched) RunJob(_ context.Context, d job.Definition) error {
@@ -143,6 +174,9 @@ type env struct {
 	prs   *fakePRs
 	tasks *fakeTasks
 	sched *fakeSched
+
+	findings *fakeFindings
+	launcher *fakeLauncher
 }
 
 func newEnv(t *testing.T, autonomy int) *env {
@@ -153,9 +187,13 @@ func newEnv(t *testing.T, autonomy int) *env {
 		prs:   &fakePRs{},
 		tasks: &fakeTasks{},
 		sched: &fakeSched{},
+
+		findings: &fakeFindings{strategies: map[int64]enum.ShieldFixStrategy{}},
+		launcher: &fakeLauncher{},
 	}
 	e.svc = NewService(Config{Enabled: true, PatchThreshold: 70}, e.guard, fakeSettings{autonomy},
-		e.repo, e.prs, e.tasks, nil, nil, e.sched, func() *types.Principal { return &types.Principal{ID: 77} })
+		e.repo, e.prs, e.tasks, e.findings, nil, e.sched, func() *types.Principal { return &types.Principal{ID: 77} })
+	e.svc.SetAgentLauncher(e.launcher)
 	return e
 }
 
@@ -266,6 +304,39 @@ func TestBumpNeedsAgent(t *testing.T) {
 	require.Empty(t, e.prs.created)
 	require.Len(t, e.tasks.comments, 1)
 	require.Contains(t, e.tasks.comments[0], "fix agent is needed")
+
+	// the finding becomes a job for the agent: strategy persisted, launcher called with a rules decision
+	require.Equal(t, enum.ShieldFixStrategyPatch, e.findings.strategies[3])
+	require.Len(t, e.launcher.calls, 1)
+	require.Equal(t, int64(0), e.launcher.calls[0].decisionID)
+	require.InDelta(t, 1.0, e.launcher.calls[0].confidence, 0)
+	require.False(t, Eligible(e.launcher.calls[0].finding, 0), "no further bumps are tried")
+}
+
+func TestBumpNeedsAgentUsesTriageFixStrategyDecision(t *testing.T) {
+	e := newEnv(t, 2)
+	e.withGoFiles(t)
+	e.svc.SetProxy(fakeProxy(t, map[string]string{
+		"v1.2.5": "module example.com/vuln\n\ngo 1.30\n",
+	}))
+	f := goFinding()
+	f.AIDecisionIDs = []int64{20, 21, 22} // sorted by question id: false_positive, fix_strategy, reachable
+	_, err := e.svc.Bump(context.Background(), testRepo, f)
+	require.True(t, IsNeedsAgent(err), err)
+	require.Len(t, e.launcher.calls, 1)
+	require.Equal(t, int64(21), e.launcher.calls[0].decisionID)
+	require.InDelta(t, 1.0, e.launcher.calls[0].confidence, 0)
+}
+
+func TestBumpRunsWithGatewayDisabledRequest(t *testing.T) {
+	e := newEnv(t, 2)
+	e.withGoFiles(t)
+	var got agentguard.Request
+	e.guard.onCheck = func(r agentguard.Request) { got = r }
+	_, err := e.svc.Bump(context.Background(), testRepo, goFinding())
+	require.NoError(t, err)
+	require.True(t, got.NoAI, "deterministic bumps must not need the AI gateway")
+	require.Empty(t, e.launcher.calls)
 }
 
 func TestBumpNpmUnsupported(t *testing.T) {

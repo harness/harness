@@ -21,11 +21,13 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/services/agentguard"
+	"github.com/harness/gitness/app/services/aigateway/questions"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/shield/osv"
 	"github.com/harness/gitness/job"
@@ -118,6 +120,14 @@ type Tasks interface {
 // Findings is the subset of the finding store used by the service.
 type Findings interface {
 	Find(ctx context.Context, id int64) (*types.ShieldFinding, error)
+	SetFixStrategy(ctx context.Context, id int64, strategy enum.ShieldFixStrategy, now int64) error
+}
+
+// AgentLauncher offers a finding to the fix agent (agentlauncher.Launcher). The interface keeps the import
+// graph acyclic.
+type AgentLauncher interface {
+	ConsiderFinding(ctx context.Context, repo *types.RepositoryCore, f *types.ShieldFinding, decisionID int64,
+		confidence float64)
 }
 
 // Repos finds repositories.
@@ -154,7 +164,12 @@ type Service struct {
 
 	agent func() *types.Principal
 	now   func() time.Time
+
+	launcher AgentLauncher
 }
+
+// SetAgentLauncher sets the launcher that takes over the findings that cannot be bumped deterministically.
+func (s *Service) SetAgentLauncher(l AgentLauncher) { s.launcher = l }
 
 // NewService creates the service. agent returns the harness-agent principal.
 func NewService(
@@ -271,6 +286,7 @@ func (s *Service) Bump(ctx context.Context, repo *types.RepositoryCore, f *types
 		RepoPath:    repo.Path,
 		TaskKey:     taskKey(f.ID),
 		MinAutonomy: settings.AutonomyDraftPR,
+		NoAI:        true, // deterministic: works with the AI gateway off
 	}
 	if d := s.guard.Check(ctx, req); !d.Allowed {
 		return &Result{Skipped: string(d.Reason) + ": " + d.Detail}, nil
@@ -298,8 +314,39 @@ func (s *Service) Bump(ctx context.Context, repo *types.RepositoryCore, f *types
 		if cerr := s.tasks.AddComment(ctx, agent.ID, *f.TaskID, text); cerr != nil {
 			log.Ctx(ctx).Warn().Err(cerr).Int64("finding_id", f.ID).Msg("failed to comment bump refusal")
 		}
+		s.handOver(ctx, repo, f)
 	}
 	return res, err
+}
+
+// handOver marks the finding as a job for the agent so no more bumps are tried, and offers it to the agent.
+func (s *Service) handOver(ctx context.Context, repo *types.RepositoryCore, f *types.ShieldFinding) {
+	if err := s.findings.SetFixStrategy(ctx, f.ID, enum.ShieldFixStrategyPatch, s.now().UnixMilli()); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Int64("finding_id", f.ID).Msg("failed to set the agent fix strategy")
+	}
+	strategy := enum.ShieldFixStrategyPatch
+	f.FixStrategy = &strategy
+	if s.launcher == nil {
+		return
+	}
+	// the strategy decision of the triage if there is one, otherwise a rules decision
+	s.launcher.ConsiderFinding(ctx, repo, f, fixStrategyDecisionID(f), 1.0)
+}
+
+// fixStrategyDecisionID returns the id of the fix_strategy decision of the triage, or 0. The triage stores
+// the decision ids ordered by question id.
+func fixStrategyDecisionID(f *types.ShieldFinding) int64 {
+	qids := []string{questions.QReachable, questions.QFalsePositive, questions.QFixStrategy}
+	sort.Strings(qids)
+	if len(f.AIDecisionIDs) != len(qids) {
+		return 0
+	}
+	for i, q := range qids {
+		if q == questions.QFixStrategy {
+			return f.AIDecisionIDs[i]
+		}
+	}
+	return 0
 }
 
 func (s *Service) run(

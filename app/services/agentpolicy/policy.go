@@ -111,6 +111,9 @@ type EvaluateInput struct {
 	// TriggerPrincipalID is the principal that caused the triggering event (0 if unknown).
 	TriggerPrincipalID int64
 	SessionID          string
+	// RetryOtherModel is true when the launch retries a failed attempt with a different model; the guard
+	// cooldown does not apply to it.
+	RetryOtherModel bool
 
 	// ModelSuccessRate is the success rate of the model that would run, between 0 and 1 (0 if unknown).
 	// It is the success probability proxy of the worth_agent_budget decision.
@@ -198,6 +201,7 @@ func (e *Evaluator) Evaluate(ctx context.Context, in EvaluateInput) (*Verdict, e
 		TaskKey:                fmt.Sprintf("task:%d", in.Task.ID),
 		MinAutonomy:            settings.AutonomyDraftPR,
 		TriggeredByPrincipalID: in.TriggerPrincipalID,
+		RetryOtherModel:        in.RetryOtherModel,
 	})
 	if !gd.Allowed {
 		v := deny(ReasonGuardDenied, "%s: %s", gd.Reason, gd.Detail)

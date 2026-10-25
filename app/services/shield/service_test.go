@@ -186,6 +186,15 @@ func (f *fakeFindings) SetTask(_ context.Context, id int64, taskID *int64, _ int
 	return nil
 }
 
+func (f *fakeFindings) SetFixStrategy(_ context.Context, id int64, s enum.ShieldFixStrategy, _ int64) error {
+	for _, r := range f.rows {
+		if r.ID == id {
+			r.FixStrategy = &s
+		}
+	}
+	return nil
+}
+
 func (f *fakeFindings) UpdateState(
 	_ context.Context, id int64, state enum.ShieldFindingState, reason string, _ int64,
 ) error {

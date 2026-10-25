@@ -52,6 +52,8 @@ type (
 		MarkFixedNotSeenIn(ctx context.Context, repoID, scanID, now int64) (int64, error)
 		// SetTask links the finding to a task (nil unlinks).
 		SetTask(ctx context.Context, id int64, taskID *int64, now int64) error
+		// SetFixStrategy sets the fix strategy of the finding.
+		SetFixStrategy(ctx context.Context, id int64, strategy enum.ShieldFixStrategy, now int64) error
 		// UpdateState sets state and reason of the finding.
 		UpdateState(ctx context.Context, id int64, state enum.ShieldFindingState, reason string, now int64) error
 	}

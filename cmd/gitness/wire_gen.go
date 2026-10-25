@@ -990,7 +990,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	taskassignService := taskassign.ProvideService(codeownersService, repoStore, principalStore, usergroupResolver)
-	launcher := agentlauncher.ProvideLauncher(evaluator, gateway, guard, taskService, taskStore, repoFinder, aiTaskStore, reporter15, gitspaceConfigStore, registry, aidecideService, taskassignService, observer, aitaskeventService)
+	launcher := agentlauncher.ProvideLauncher(evaluator, gateway, guard, taskService, taskStore, repoFinder, aiTaskStore, reporter15, gitspaceConfigStore, registry, aidecideService, taskassignService, observer, aitaskeventService, triager, bumpService, taskLinkStore, insightsEventStore, shieldFindingStore, pullReqStore, gitInterface)
 	taskslaService, err := tasksla.NewService(ctx, config, taskStore, taskActivityStore, notificationService, jobScheduler, executor)
 	if err != nil {
 		return nil, err

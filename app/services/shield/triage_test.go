@@ -340,3 +340,56 @@ func TestTriageReapplyKeepsReachability(t *testing.T) {
 		t.Fatalf("risk = %d, want %d", e.f.rows[0].RiskScore, want)
 	}
 }
+
+type agentCall struct {
+	findingID  int64
+	decisionID int64
+	confidence float64
+}
+
+type fakeAgent struct{ calls []agentCall }
+
+func (a *fakeAgent) ConsiderFinding(
+	_ context.Context, _ *types.RepositoryCore, f *types.ShieldFinding, decisionID int64, confidence float64,
+) {
+	a.calls = append(a.calls, agentCall{findingID: f.ID, decisionID: decisionID, confidence: confidence})
+}
+
+func TestTriageLaunchesAgent(t *testing.T) {
+	withTask := func(f *types.ShieldFinding) *types.ShieldFinding {
+		tid := int64(7)
+		f.TaskID = &tid
+		return f
+	}
+	tests := []struct {
+		name string
+		fix  string
+		f    *types.ShieldFinding
+		want bool
+	}{
+		{"agent strategy with task", "agent", withTask(vulnFinding("lodash", 9.0, 90)), true},
+		{"below patch threshold", "agent", withTask(vulnFinding("lodash", 5.0, 50)), false},
+		{"bump strategy", "deterministic_bump", withTask(vulnFinding("lodash", 9.0, 90)), false},
+		{"manual strategy", "manual", withTask(vulnFinding("lodash", 9.0, 90)), false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dec := &fakeDecide{reach: "unknown", reachConf: 0.9, fp: "false", fpConf: 0.9, fix: tt.fix}
+			e := newTriageEnv(t, enum.AIModeFull, 1, dec, tt.f)
+			agent := &fakeAgent{}
+			e.tr.SetAgentLauncher(agent)
+			if err := e.tr.Triage(context.Background(), e.repo, e.scan); err != nil {
+				t.Fatal(err)
+			}
+			if !tt.want {
+				if len(agent.calls) != 0 {
+					t.Fatalf("unexpected agent calls %+v", agent.calls)
+				}
+				return
+			}
+			if len(agent.calls) != 1 || agent.calls[0].decisionID != 12 || agent.calls[0].confidence != 0.9 {
+				t.Fatalf("agent calls %+v", agent.calls)
+			}
+		})
+	}
+}

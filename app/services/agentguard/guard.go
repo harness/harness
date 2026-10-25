@@ -95,6 +95,13 @@ type Request struct {
 	MinAutonomy int
 	// TriggeredByPrincipalID is the principal that caused the triggering event (0 if unknown).
 	TriggeredByPrincipalID int64
+	// NoAI marks deterministic actions that use no AI (for example a dependency bump): they are not denied
+	// because the AI gateway is disabled. Kill switches, autonomy and loop prevention still apply. The zero
+	// value is an AI agent, so a caller that forgets the flag stays denied when the gateway is off.
+	NoAI bool
+	// RetryOtherModel marks the retry of a failed attempt with a different model: the cooldown does not
+	// apply to it. The maximum number of failed attempts still does.
+	RetryOtherModel bool
 }
 
 // Decision is the outcome of Check.
@@ -147,9 +154,9 @@ func (g *Guard) Check(ctx context.Context, req Request) Decision {
 }
 
 // StartAttempt atomically reserves and records the start of an agent attempt for the task.
-// See TryStartAttempt.
+// See TryStartAttempt. A request marked RetryOtherModel skips the cooldown.
 func (g *Guard) StartAttempt(ctx context.Context, req Request) (Attempt, error) {
-	return g.TryStartAttempt(ctx, req, StartOptions{})
+	return g.TryStartAttempt(ctx, req, StartOptions{SkipCooldown: req.RetryOtherModel})
 }
 
 // FinishAttempt records the outcome of an attempt.
@@ -167,7 +174,7 @@ func (g *Guard) decide(ctx context.Context, req Request) Decision {
 	if agent == nil {
 		return deny(ReasonAgentNotConfigured, "agent service principal is not set up")
 	}
-	if !g.config.GatewayEnabled {
+	if !req.NoAI && !g.config.GatewayEnabled {
 		return deny(ReasonGatewayDisabled, "ai gateway is disabled")
 	}
 	if g.config.KillSwitch {
@@ -206,7 +213,7 @@ func (g *Guard) decide(ctx context.Context, req Request) Decision {
 	if failed >= g.config.MaxFailedAttempts {
 		return deny(ReasonTooManyFailures, "task failed %d times (max %d)", failed, g.config.MaxFailedAttempts)
 	}
-	if !last.IsZero() && g.now().Sub(last) < g.config.Cooldown {
+	if !req.RetryOtherModel && !last.IsZero() && g.now().Sub(last) < g.config.Cooldown {
 		return deny(ReasonCooldown, "last attempt started %s ago (cooldown %s)",
 			g.now().Sub(last).Round(time.Second), g.config.Cooldown)
 	}
