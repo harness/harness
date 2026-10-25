@@ -38,9 +38,11 @@ type Attempt struct {
 	Status    AttemptStatus
 }
 
-// AttemptStore keeps the attempt bookkeeping of the guard. It is an interface so that
-// it can later be backed by the ai_tasks table.
+// AttemptStore keeps the attempt bookkeeping of the guard.
 type AttemptStore interface {
+	// TryStart atomically enforces failed count, cooldown and max active and records a running
+	// attempt. If refused it returns attempt id 0 and the reason.
+	TryStart(ctx context.Context, p TryStartParams) (attemptID int64, denied Reason, err error)
 	// Start records a new running attempt.
 	Start(ctx context.Context, taskKey string, repoID int64, at time.Time) (Attempt, error)
 	// Finish sets the final status of an attempt.
@@ -75,6 +77,41 @@ func (s *MemoryAttemptStore) Start(
 	a := Attempt{ID: s.nextID, TaskKey: taskKey, RepoID: repoID, StartedAt: at, Status: AttemptRunning}
 	s.attempts = append(s.attempts, a)
 	return a, nil
+}
+
+func (s *MemoryAttemptStore) TryStart(_ context.Context, p TryStartParams) (int64, Reason, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	failed, active := 0, 0
+	var last time.Time
+	for _, a := range s.attempts {
+		if a.TaskKey == p.TaskKey {
+			if a.Status == AttemptFailed {
+				failed++
+			}
+			if a.StartedAt.After(last) {
+				last = a.StartedAt
+			}
+		}
+		if a.RepoID == p.RepoID && a.Status == AttemptRunning {
+			active++
+		}
+	}
+	switch {
+	case p.MaxFailed > 0 && failed >= p.MaxFailed:
+		return 0, ReasonTooManyFailures, nil
+	case !last.IsZero() && p.At.Sub(last) < p.Cooldown:
+		return 0, ReasonCooldown, nil
+	case active >= p.MaxActive:
+		return 0, ReasonMaxActiveAgents, nil
+	}
+
+	s.nextID++
+	s.attempts = append(s.attempts, Attempt{
+		ID: s.nextID, TaskKey: p.TaskKey, RepoID: p.RepoID, StartedAt: p.At, Status: AttemptRunning,
+	})
+	return s.nextID, "", nil
 }
 
 func (s *MemoryAttemptStore) Finish(_ context.Context, attemptID int64, status AttemptStatus) error {

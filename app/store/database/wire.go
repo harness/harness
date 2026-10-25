@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/store/database/migrate"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/store/database/pool"
 
 	"github.com/google/wire"
@@ -97,6 +98,7 @@ var WireSet = wire.NewSet(
 	ProvideAIDecisionStore,
 	ProvideAIQuotaStore,
 	ProvideAIUsageStore,
+	ProvideAgentAttemptStore,
 	ProvideTaskStore,
 	ProvideTaskActivityStore,
 	ProvideTaskLinkStore,
@@ -511,6 +513,11 @@ func ProvideAIQuotaStore(db *sqlx.DB) store.AIQuotaStore {
 // ProvideAIUsageStore provides an AI usage store.
 func ProvideAIUsageStore(db *sqlx.DB) store.AIUsageStore {
 	return NewAIUsageStore(db)
+}
+
+// ProvideAgentAttemptStore provides an agent attempt store.
+func ProvideAgentAttemptStore(db *sqlx.DB, tx dbtx.Transactor) store.AgentAttemptStore {
+	return NewAgentAttemptStore(db, tx)
 }
 
 // ProvideTaskStore provides a task store.

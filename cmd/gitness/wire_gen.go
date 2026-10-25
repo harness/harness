@@ -959,7 +959,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	guard := agentguard.ProvideGuard(config, settingsService, auditService)
+	agentAttemptStore := database.ProvideAgentAttemptStore(db, transactor)
+	guard := agentguard.ProvideGuard(config, settingsService, agentAttemptStore, auditService)
 	bumpService, err := bump.ProvideService(config, guard, settingsService, gitInterface, pullreqController, pullReqStore, provider, taskService, taskStore, shieldFindingStore, repoFinder, jobScheduler, executor, shieldService)
 	if err != nil {
 		return nil, err

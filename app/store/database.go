@@ -1828,6 +1828,20 @@ type (
 		RaiseQuota(ctx context.Context, day, class string, used int) error
 	}
 
+	// AgentAttemptStore defines the store for the attempts of autonomous agents.
+	AgentAttemptStore interface {
+		// TryStart atomically checks failed count, cooldown and max active of the repo and inserts a
+		// running attempt. On denial it returns attemptID 0 and the deny reason
+		// (types.AgentAttemptDeny*) without an error.
+		TryStart(ctx context.Context, in types.AgentAttemptStart) (attemptID int64, denyReason string, err error)
+		// Finish sets the final state of a running attempt.
+		Finish(ctx context.Context, attemptID int64, state types.AgentAttemptState, errMsg string) error
+		// ListByTask returns the attempts of a task key ordered by start.
+		ListByTask(ctx context.Context, taskKey string) ([]*types.AgentAttempt, error)
+		// CountActive returns the number of running attempts of a repo.
+		CountActive(ctx context.Context, repoID int64) (int, error)
+	}
+
 	// AIUsageStore defines the store for AI usage records.
 	AIUsageStore interface {
 		Create(ctx context.Context, usage *types.AIUsage) error
