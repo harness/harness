@@ -17,6 +17,7 @@ package reposettings
 import (
 	"context"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/settings"
@@ -33,6 +34,10 @@ func (c *Controller) GeneralUpdate(
 	repoRef string,
 	in *settings.GeneralSettings,
 ) (*settings.GeneralSettings, error) {
+	if err := settings.ValidateAIMode(in.AIMode); err != nil {
+		return nil, usererror.BadRequest(err.Error())
+	}
+
 	// migrating repos need to adjust repo settings (like file-size-limit) during the migration.
 	var additionalAllowedRepoStates = []enum.RepoState{enum.RepoStateMigrateGitPush}
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, additionalAllowedRepoStates...)
