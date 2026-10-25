@@ -113,10 +113,18 @@ type Service struct {
 
 	now         func() int64
 	principalID func() int64
+
+	hook FindingsHook
 }
 
 // SetTriager enables the AI triage of findings after each scan.
 func (s *Service) SetTriager(t *Triager) { s.triager = t }
+
+// FindingsHook is called after a scan with the stored findings (tasks already ensured).
+type FindingsHook func(ctx context.Context, repo *types.RepositoryCore, findings []*types.ShieldFinding)
+
+// SetFindingsHook sets the hook called after every successful scan. It must be set before scans run.
+func (s *Service) SetFindingsHook(h FindingsHook) { s.hook = h }
 
 // NewService creates a scan service.
 func NewService(
@@ -304,6 +312,10 @@ func (s *Service) execute(
 			// a task failure must not lose the scan results; the next scan retries it.
 			log.Ctx(ctx).Warn().Err(terr).Int64("finding_id", f.ID).Msg("failed to create shield task")
 		}
+	}
+
+	if s.hook != nil {
+		s.hook(ctx, repo, stored)
 	}
 
 	return len(pkgs), len(stored), nil

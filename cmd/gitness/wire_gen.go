@@ -81,6 +81,7 @@ import (
 	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/agentguard"
 	"github.com/harness/gitness/app/services/aidecide"
 	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/services/aitaskevent"
@@ -129,6 +130,7 @@ import (
 	secret3 "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/shield"
+	"github.com/harness/gitness/app/services/shield/bump"
 	"github.com/harness/gitness/app/services/shield/prcheck"
 	"github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/task"
@@ -951,6 +953,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	guard := agentguard.ProvideGuard(config, settingsService, auditService)
+	bumpService, err := bump.ProvideService(config, guard, settingsService, gitInterface, pullreqController, pullReqStore, provider, taskService, taskStore, shieldFindingStore, repoFinder, jobScheduler, executor, shieldService)
+	if err != nil {
+		return nil, err
+	}
 	observer := triage.ProvideObserver(ctx, insightsService, gateway, insightsIssueStore, insightsEventStore, repoFinder, settingsService, publicaccessService, gitInterface, taskService)
 	taskLinkedRefStore := database.ProvideTaskLinkedRefStore(db)
 	insightsReleaseStore := database.ProvideInsightsReleaseStore(db)
@@ -970,7 +977,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, prcheckService, triager, quotaresumeService)
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, bumpService, observer, verifyService, prcheckService, triager, quotaresumeService)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil
