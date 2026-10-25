@@ -122,6 +122,8 @@ import (
 	secret3 "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/space"
+	"github.com/harness/gitness/app/services/task"
+	"github.com/harness/gitness/app/services/tasklink"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -914,7 +916,15 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer)
+	taskStore := database.ProvideTaskStore(db)
+	taskActivityStore := database.ProvideTaskActivityStore(db)
+	taskLinkStore := database.ProvideTaskLinkStore(db)
+	taskService := task.ProvideService(transactor, taskStore, taskActivityStore, taskLinkStore)
+	tasklinkService, err := tasklink.ProvideService(ctx, config, readerFactory3, taskService, taskStore, taskLinkStore, pullReqStore, principalStore)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil
