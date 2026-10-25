@@ -37,6 +37,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
+	shieldctrl "github.com/harness/gitness/app/api/controller/shield"
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/controller/template"
@@ -65,6 +66,7 @@ import (
 	"github.com/harness/gitness/app/api/handler/resource"
 	handlersecret "github.com/harness/gitness/app/api/handler/secret"
 	handlerserviceaccount "github.com/harness/gitness/app/api/handler/serviceaccount"
+	handlershield "github.com/harness/gitness/app/api/handler/shield"
 	handlerspace "github.com/harness/gitness/app/api/handler/space"
 	handlersystem "github.com/harness/gitness/app/api/handler/system"
 	handlertemplate "github.com/harness/gitness/app/api/handler/template"
@@ -135,6 +137,7 @@ func NewAPIHandler(
 	gitspaceCtrl *gitspace.Controller,
 	usageSender usage.Sender,
 	insightsCtrl *insightsctrl.Controller,
+	shieldCtrl *shieldctrl.Controller,
 ) http.Handler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -167,7 +170,7 @@ func NewAPIHandler(
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, uploadCtrl,
-				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, usageSender, sysCtrl, insightsCtrl)
+				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, usageSender, sysCtrl, insightsCtrl, shieldCtrl)
 		})
 	})
 
@@ -220,12 +223,13 @@ func setupRoutesV1WithAuth(r chi.Router,
 	usageSender usage.Sender,
 	sysCtrl *system.Controller,
 	insightsCtrl *insightsctrl.Controller,
+	shieldCtrl *shieldctrl.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
 	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, repoSettingsCtrl, userGroupCtrl, webhookCtrl, checkCtrl,
 		searchCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
-		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, searchCtrl, usageSender, insightsCtrl)
+		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, searchCtrl, usageSender, insightsCtrl, shieldCtrl)
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
@@ -400,6 +404,7 @@ func setupRepos(r chi.Router,
 	searchCtrl *keywordsearch.Controller,
 	usageSender usage.Sender,
 	insightsCtrl *insightsctrl.Controller,
+	shieldCtrl *shieldctrl.Controller,
 ) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -431,6 +436,14 @@ func setupRepos(r chi.Router,
 			r.Route("/insights", func(r chi.Router) {
 				r.Get("/projects", handlerinsights.HandleListProjects(insightsCtrl))
 				r.Post("/projects", handlerinsights.HandleCreateProject(insightsCtrl))
+			})
+
+			r.Route("/shield", func(r chi.Router) {
+				r.Get("/scans", handlershield.HandleListScans(shieldCtrl))
+				r.Post("/scans", handlershield.HandleCreateScan(shieldCtrl))
+				r.Get("/findings", handlershield.HandleListFindings(shieldCtrl))
+				r.Patch("/findings/{"+handlershield.PathParamFindingID+"}",
+					handlershield.HandleUpdateFinding(shieldCtrl))
 			})
 
 			r.Get("/summary", handlerrepo.HandleSummary(repoCtrl))

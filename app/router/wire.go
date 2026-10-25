@@ -37,6 +37,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
+	shieldctrl "github.com/harness/gitness/app/api/controller/shield"
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/controller/template"
@@ -115,6 +116,7 @@ func ProvideRouter(
 	usageSender usage.Sender,
 	lfsCtrl *lfs.Controller,
 	insightsCtrl *insightsctrl.Controller,
+	shieldCtrl *shieldctrl.Controller,
 	insightsSvc *insights.Service,
 ) *Router {
 	routers := make([]Interface, 5)
@@ -136,7 +138,7 @@ func ProvideRouter(
 		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
-		infraProviderCtrl, migrateCtrl, gitspaceCtrl, usageSender, insightsCtrl)
+		infraProviderCtrl, migrateCtrl, gitspaceCtrl, usageSender, insightsCtrl, shieldCtrl)
 	// the Sentry compatible ingestion endpoints must be matched before the generic api router.
 	routers[2] = NewInsightsIngestRouter(insightsSvc)
 	routers[3] = NewAPIRouter(apiHandler)

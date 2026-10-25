@@ -41,6 +41,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/api/controller/service"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
+	shieldctrl "github.com/harness/gitness/app/api/controller/shield"
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/controller/template"
@@ -132,7 +133,9 @@ import (
 	"github.com/harness/gitness/app/services/rules"
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/services/shield"
 	spaceSvc "github.com/harness/gitness/app/services/space"
+	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -207,6 +210,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		repo.WireSet,
 		reposettings.WireSet,
 		insightsctrl.WireSet,
+		shieldctrl.WireSet,
 		pullreq.WireSet,
 		merge.WireSet,
 		checkreq.WireSet,
@@ -355,6 +359,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		runarg.WireSet,
 		lfs.WireSet,
 		insights.WireSet,
+		shield.WireSet,
+		task.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,
