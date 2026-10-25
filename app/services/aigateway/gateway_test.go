@@ -133,6 +133,7 @@ func newTestGateway(t *testing.T, f *fakeOpenRouter, daily int) *Gateway {
 	if _, err := g.Catalog().Sync(context.Background()); err != nil {
 		t.Fatalf("catalog sync failed: %v", err)
 	}
+	recordSleeps(g) // no real backoff in tests
 	return g
 }
 
@@ -229,9 +230,9 @@ func TestDecideFallsBackToElephant(t *testing.T) {
 	if !res.Fallback || res.Model != DefaultDecisionFallbackModel+"-build" {
 		t.Errorf("expected fallback result, got %+v", res)
 	}
-	// both attempts count against the quota, failed requests included
-	if used := g.Quota().Used; used != 2 {
-		t.Errorf("expected 2 requests charged, got %d", used)
+	// each model gets all 3 attempts (the 502 is retried), failed requests count against the quota
+	if used := g.Quota().Used; used != 4 {
+		t.Errorf("expected 4 requests charged, got %d", used)
 	}
 }
 
@@ -245,7 +246,8 @@ func TestDecideDoesNotFallBackOnRateLimit(t *testing.T) {
 	if _, err := g.Decide(context.Background(), "", "state", fixQuestion); !IsRateLimited(err) {
 		t.Fatalf("expected rate limit error, got %v", err)
 	}
-	if n := f.count("/api/alpha/decisions"); n != 1 {
+	// 3 attempts on the primary model (retries included), no attempt on the fallback
+	if n := f.count("/api/alpha/decisions"); n != 3 {
 		t.Errorf("rate limits are per account, fallback must not be tried, got %d requests", n)
 	}
 }
