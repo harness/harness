@@ -15,6 +15,8 @@
 package settings
 
 import (
+	"github.com/harness/gitness/types/enum"
+
 	"github.com/gotidy/ptr"
 )
 
@@ -23,6 +25,8 @@ type GeneralSettings struct {
 	FileSizeLimit    *int64 `json:"file_size_limit" yaml:"file_size_limit" description:"file size limit in bytes"`
 	GitLFSEnabled    *bool  `json:"git_lfs_enabled" yaml:"git_lfs_enabled"`
 	AutoMergeEnabled *bool  `json:"auto_merge_enabled" yaml:"auto_merge_enabled"`
+	// AIMode is empty when unset, meaning the default for the repo's visibility applies.
+	AIMode *enum.AIMode `json:"ai_mode" yaml:"ai_mode" description:"full, decisions-only, off or empty for the default"`
 }
 
 func GetDefaultGeneralSettings() *GeneralSettings {
@@ -30,6 +34,7 @@ func GetDefaultGeneralSettings() *GeneralSettings {
 		FileSizeLimit:    ptr.Int64(DefaultFileSizeLimit),
 		GitLFSEnabled:    ptr.Bool(DefaultGitLFSEnabled),
 		AutoMergeEnabled: ptr.Bool(DefaultAutoMergeEnabled),
+		AIMode:           defaultAIModePtr(),
 	}
 }
 
@@ -38,6 +43,7 @@ func GetGeneralSettingsMappings(s *GeneralSettings) []SettingHandler {
 		Mapping(KeyFileSizeLimit, s.FileSizeLimit),
 		Mapping(KeyGitLFSEnabled, s.GitLFSEnabled),
 		Mapping(KeyAutoMergeEnabled, s.AutoMergeEnabled),
+		Mapping(KeyAIMode, s.AIMode),
 	}
 }
 
@@ -62,6 +68,13 @@ func GetGeneralSettingsAsKeyValues(s *GeneralSettings) []KeyValue {
 		kvs = append(kvs, KeyValue{
 			Key:   KeyAutoMergeEnabled,
 			Value: s.AutoMergeEnabled,
+		})
+	}
+
+	if s.AIMode != nil {
+		kvs = append(kvs, KeyValue{
+			Key:   KeyAIMode,
+			Value: s.AIMode,
 		})
 	}
 
