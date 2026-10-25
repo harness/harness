@@ -62,11 +62,14 @@ const (
 	ActionDownloaded Action = "downloaded" // artifact download
 	ActionBypassed   Action = "bypassed"
 	ActionForcePush  Action = "forcePush"
+	ActionAllowed    Action = "allowed" // e.g. autonomous agent permitted to act
+	ActionDenied     Action = "denied"  // e.g. autonomous agent refused to act
 )
 
 func (a Action) Validate() error {
 	switch a {
-	case ActionCreated, ActionUpdated, ActionDeleted, ActionUploaded, ActionDownloaded, ActionBypassed, ActionForcePush:
+	case ActionCreated, ActionUpdated, ActionDeleted, ActionUploaded, ActionDownloaded, ActionBypassed, ActionForcePush,
+		ActionAllowed, ActionDenied:
 		return nil
 	default:
 		return ErrActionUndefined
@@ -90,6 +93,7 @@ const (
 	ResourceTypeRegistryUpstreamProxy ResourceType = "registry_upstream_proxy"
 	ResourceTypeRegistryWebhook       ResourceType = "registry_webhook"
 	ResourceTypeRegistryArtifact      ResourceType = "registry_artifact"
+	ResourceTypeAgentTask             ResourceType = "agent_task"
 )
 
 func (a ResourceType) Validate() error {
@@ -107,7 +111,8 @@ func (a ResourceType) Validate() error {
 		ResourceTypeRegistry,
 		ResourceTypeRegistryUpstreamProxy,
 		ResourceTypeRegistryWebhook,
-		ResourceTypeRegistryArtifact:
+		ResourceTypeRegistryArtifact,
+		ResourceTypeAgentTask:
 		return nil
 
 	default:

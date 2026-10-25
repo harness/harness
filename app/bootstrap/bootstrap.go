@@ -63,6 +63,22 @@ func NewGitspaceServiceSession() *auth.Session {
 	}
 }
 
+// agentServicePrincipal is the principal that is used by autonomous agents
+// (for example to open pull requests).
+var agentServicePrincipal *types.Principal
+
+func NewAgentServiceSession() *auth.Session {
+	return &auth.Session{
+		Principal: *agentServicePrincipal,
+		Metadata:  &auth.EmptyMetadata{},
+	}
+}
+
+// GetAgentServicePrincipal returns the principal of the autonomous agent service.
+func GetAgentServicePrincipal() *types.Principal {
+	return agentServicePrincipal
+}
+
 // Bootstrap is an abstraction of a function that bootstraps a system.
 type Bootstrap func(context.Context) error
 
@@ -78,6 +94,10 @@ func System(config *types.Config, userCtrl *user.Controller,
 		}
 		if err := GitspaceService(ctx, config, serviceCtrl); err != nil {
 			return fmt.Errorf("failed to setup gitspace service: %w", err)
+		}
+
+		if err := AgentService(ctx, config, serviceCtrl); err != nil {
+			return fmt.Errorf("failed to setup agent service: %w", err)
 		}
 
 		if err := AdminUser(ctx, config, userCtrl); err != nil {
@@ -236,6 +256,35 @@ func GitspaceService(
 	gitspaceServicePrincipal = svc.ToPrincipal()
 
 	log.Ctx(ctx).Info().Msgf("Completed setup of gitspace service '%s' (id: %d).", svc.UID, svc.ID)
+
+	return nil
+}
+
+// AgentService sets up the service principal used by autonomous agents.
+func AgentService(
+	ctx context.Context,
+	config *types.Config,
+	serviceCtrl *service.Controller,
+) error {
+	svc, err := serviceCtrl.FindNoAuth(ctx, config.Principal.Agent.UID)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		svc, err = createServicePrincipal(
+			ctx,
+			serviceCtrl,
+			config.Principal.Agent.UID,
+			config.Principal.Agent.Email,
+			config.Principal.Agent.DisplayName,
+			false,
+		)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to setup agent service: %w", err)
+	}
+
+	agentServicePrincipal = svc.ToPrincipal()
+
+	log.Ctx(ctx).Info().Msgf("Completed setup of agent service '%s' (id: %d).", svc.UID, svc.ID)
 
 	return nil
 }
