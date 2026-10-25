@@ -127,6 +127,7 @@ import (
 	secret3 "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/shield"
+	"github.com/harness/gitness/app/services/shield/prcheck"
 	"github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tasklink"
@@ -955,7 +956,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService)
+	prcheckService, err := prcheck.ProvideService(ctx, config, shieldService, pullReqStore, repoFinder, checkStore, reporter12, readerFactory3)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, prcheckService)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil

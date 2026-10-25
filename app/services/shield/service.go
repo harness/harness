@@ -107,6 +107,7 @@ type Service struct {
 	repos      RepoFinder
 	scheduler  JobScheduler
 	registry   *osv.Registry
+	baseCache  baseCache
 
 	now         func() int64
 	principalID func() int64
