@@ -1,0 +1,10 @@
+{
+  "title": "CISA Catalog of Known Exploited Vulnerabilities",
+  "catalogVersion": "2026.10.20",
+  "dateReleased": "2026-10-20T14:00:00.000Z",
+  "count": 2,
+  "vulnerabilities": [
+    {"cveID": "CVE-2021-44228", "vendorProject": "Apache", "product": "Log4j2", "vulnerabilityName": "Log4Shell", "dateAdded": "2021-12-10", "dueDate": "2021-12-24", "knownRansomwareCampaignUse": "Known"},
+    {"cveID": "cve-2023-1111", "vendorProject": "Acme", "product": "Widget", "dateAdded": "2023-05-01", "dueDate": "2023-05-22", "knownRansomwareCampaignUse": "Unknown"}
+  ]
+}
