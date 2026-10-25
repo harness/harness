@@ -17,6 +17,7 @@ package agentguard
 import (
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 
@@ -30,12 +31,13 @@ var WireSet = wire.NewSet(
 func ProvideGuard(
 	config *types.Config,
 	settingsService *settings.Service,
+	attemptStore store.AgentAttemptStore,
 	auditService audit.Service,
 ) *Guard {
 	return New(
 		NewConfig(config),
 		ServiceSettings{Service: settingsService},
-		NewMemoryAttemptStore(),
+		NewDBAttemptStore(attemptStore),
 		auditService,
 		bootstrap.GetAgentServicePrincipal,
 	)

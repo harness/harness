@@ -146,9 +146,10 @@ func (g *Guard) Check(ctx context.Context, req Request) Decision {
 	return d
 }
 
-// StartAttempt records the start of an agent attempt for the task.
+// StartAttempt atomically reserves and records the start of an agent attempt for the task.
+// See TryStartAttempt.
 func (g *Guard) StartAttempt(ctx context.Context, req Request) (Attempt, error) {
-	return g.attempts.Start(ctx, req.TaskKey, req.RepoID, g.now())
+	return g.TryStartAttempt(ctx, req, StartOptions{})
 }
 
 // FinishAttempt records the outcome of an attempt.

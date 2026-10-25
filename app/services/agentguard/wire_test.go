@@ -25,6 +25,6 @@ import (
 func TestProvideGuard(t *testing.T) {
 	t.Parallel()
 
-	guard := ProvideGuard(&types.Config{}, nil, nil)
+	guard := ProvideGuard(&types.Config{}, nil, nil, nil)
 	require.NotNil(t, guard)
 }
