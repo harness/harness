@@ -706,4 +706,25 @@ type Config struct {
 		CatalogSyncInterval   time.Duration `envconfig:"GITNESS_AI_GATEWAY_CATALOG_SYNC_INTERVAL" default:"6h"`
 		HTTPTimeout           time.Duration `envconfig:"GITNESS_AI_GATEWAY_HTTP_TIMEOUT" default:"60s"`
 	}
+
+	// Shield defines the configuration of the Shield vulnerability scanner.
+	Shield struct {
+		// Enabled turns the Shield scan service (vulnerability data sync, push scans) on.
+		Enabled bool `envconfig:"GITNESS_SHIELD_ENABLED" default:"false"`
+		// DataDir is the directory holding the downloaded vulnerability data. If empty it is
+		// a "shield" directory next to the repositories root (or ./shield if none is set).
+		DataDir string `envconfig:"GITNESS_SHIELD_DATA_DIR"`
+		// SyncInterval is how often the vulnerability data (OSV, EPSS, KEV) is refreshed.
+		SyncInterval time.Duration `envconfig:"GITNESS_SHIELD_SYNC_INTERVAL" default:"6h"`
+		// PatchThreshold is the risk score (0-100) from which a finding produces a task.
+		PatchThreshold int `envconfig:"GITNESS_SHIELD_PATCH_THRESHOLD" default:"70"`
+		// Ecosystems are the OSV ecosystems to synchronize and scan.
+		Ecosystems []string `envconfig:"GITNESS_SHIELD_ECOSYSTEMS" default:"Go,npm,PyPI"`
+		// OSVBaseURL overrides the OSV data bucket URL.
+		OSVBaseURL string `envconfig:"GITNESS_SHIELD_OSV_BASE_URL"`
+		// EPSSURL overrides the EPSS scores feed URL.
+		EPSSURL string `envconfig:"GITNESS_SHIELD_EPSS_URL"`
+		// KEVURL overrides the CISA KEV catalog URL.
+		KEVURL string `envconfig:"GITNESS_SHIELD_KEV_URL"`
+	}
 }
