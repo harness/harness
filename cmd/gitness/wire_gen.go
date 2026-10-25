@@ -514,7 +514,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, platformSecret, infraProvisioner, containerFactory, reporter6, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService, spaceStore, infraproviderService)
+	gateway, err := aigateway.ProvideGateway(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, platformSecret, infraProvisioner, containerFactory, reporter6, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService, spaceStore, infraproviderService, gateway)
 	reporter9, err := events12.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -599,10 +603,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	checkController := check2.ProvideController(transactor, authorizer, spaceStore, checkStore, principalStore, spaceFinder, repoFinder, gitInterface, v2, streamer, reporter11)
-	gateway, err := aigateway.ProvideGateway(ctx, config)
-	if err != nil {
-		return nil, err
-	}
 	systemController := system.NewController(principalStore, config, gateway)
 	uploadController := upload.ProvideController(authorizer, repoFinder, blobStore, config)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)

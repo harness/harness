@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/platformsecret"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
+	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
@@ -60,6 +61,8 @@ type Orchestrator struct {
 	settingsService              gitspacesettings.Service
 	spaceStore                   store.SpaceStore
 	infraProviderSvc             *infraprovider.Service
+	aiGateway                    agentGateway
+	agentModelSelector           AgentModelSelector
 }
 
 func NewOrchestrator(
@@ -77,6 +80,7 @@ func NewOrchestrator(
 	settingsService gitspacesettings.Service,
 	spaceStore store.SpaceStore,
 	infraProviderSvc *infraprovider.Service,
+	aiGateway *aigateway.Gateway,
 ) Orchestrator {
 	return Orchestrator{
 		scm:                          scm,
@@ -93,6 +97,8 @@ func NewOrchestrator(
 		settingsService:              settingsService,
 		spaceStore:                   spaceStore,
 		infraProviderSvc:             infraProviderSvc,
+		aiGateway:                    aiGateway,
+		agentModelSelector:           newDeterministicModelSelector(aiGateway),
 	}
 }
 
