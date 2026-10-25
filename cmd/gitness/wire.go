@@ -109,6 +109,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/insights"
+	insightsverify "github.com/harness/gitness/app/services/insights/verify"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -133,6 +134,7 @@ import (
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	spaceSvc "github.com/harness/gitness/app/services/space"
+	taskservice "github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -355,6 +357,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		runarg.WireSet,
 		lfs.WireSet,
 		insights.WireSet,
+		insightsverify.WireSet,
+		taskservice.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,

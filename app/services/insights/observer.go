@@ -16,6 +16,7 @@ package insights
 
 import (
 	"context"
+	"errors"
 
 	"github.com/harness/gitness/types"
 )
@@ -46,4 +47,45 @@ func (NoopObserver) OnIssueCreated(context.Context, *types.InsightsProject, *typ
 func (NoopObserver) OnIssueRegressed(context.Context, *types.InsightsProject, *types.InsightsIssue,
 	*types.InsightsEvent) error {
 	return nil
+}
+
+// MultiObserver notifies several observers in order. Every observer is called even if an
+// earlier one failed; the errors are joined.
+type MultiObserver []IssueObserver
+
+func (m MultiObserver) OnIssueCreated(ctx context.Context, project *types.InsightsProject,
+	issue *types.InsightsIssue, event *types.InsightsEvent) error {
+	var errs []error
+	for _, o := range m {
+		errs = append(errs, o.OnIssueCreated(ctx, project, issue, event))
+	}
+	return errors.Join(errs...)
+}
+
+func (m MultiObserver) OnIssueRegressed(ctx context.Context, project *types.InsightsProject,
+	issue *types.InsightsIssue, event *types.InsightsEvent) error {
+	var errs []error
+	for _, o := range m {
+		errs = append(errs, o.OnIssueRegressed(ctx, project, issue, event))
+	}
+	return errors.Join(errs...)
+}
+
+// AddObserver registers an additional observer next to the current one, so several
+// features (triage, verification) can listen without replacing each other.
+// SetObserver still replaces everything.
+func (s *Service) AddObserver(o IssueObserver) {
+	if o == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	switch cur := s.observer.(type) {
+	case NoopObserver, nil:
+		s.observer = o
+	case MultiObserver:
+		s.observer = append(append(MultiObserver{}, cur...), o)
+	default:
+		s.observer = MultiObserver{cur, o}
+	}
 }

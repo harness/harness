@@ -62,3 +62,7 @@ func compareSemver(a, b string) (int, bool) {
 	}
 	return 0, true
 }
+
+// CompareReleases compares two releases as semantic versions: -1, 0 or 1.
+// ok is false if either side does not look like a version.
+func CompareReleases(a, b string) (int, bool) { return compareSemver(a, b) }

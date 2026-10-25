@@ -62,3 +62,12 @@ type (
 		ListByIssue(ctx context.Context, issueID int64, limit int) ([]*types.InsightsEvent, error)
 	}
 )
+
+type (
+	// InsightsReleaseStore reads the releases seen in the events of a project.
+	InsightsReleaseStore interface {
+		// ListReleases returns the distinct non-empty releases of the project's events
+		// with the timestamp of the first event of each, ordered by that timestamp.
+		ListReleases(ctx context.Context, projectID int64) ([]*types.InsightsReleaseInfo, error)
+	}
+)

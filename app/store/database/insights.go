@@ -726,3 +726,37 @@ func mapInternalInsightsEvent(e *types.InsightsEvent) *insightsEvent {
 		Level: e.Level, Message: e.Message, Payload: e.Payload, Created: e.Created,
 	}
 }
+
+var _ store.InsightsReleaseStore = (*InsightsEventStore)(nil)
+
+// ListReleases implements store.InsightsReleaseStore.
+func (s *InsightsEventStore) ListReleases(
+	ctx context.Context,
+	projectID int64,
+) ([]*types.InsightsReleaseInfo, error) {
+	const sqlQuery = `
+		SELECT insights_event_release AS release_name, MIN(insights_event_timestamp) AS first_seen
+		FROM insights_events
+		WHERE insights_event_project_id = $1 AND insights_event_release <> ''
+		GROUP BY insights_event_release
+		ORDER BY first_seen, release_name`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	type row struct {
+		Release   string `db:"release_name"`
+		FirstSeen int64  `db:"first_seen"`
+	}
+
+	dst := []*row{}
+	if err := db.SelectContext(ctx, &dst, sqlQuery, projectID); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list insights releases")
+	}
+
+	out := make([]*types.InsightsReleaseInfo, len(dst))
+	for i, r := range dst {
+		out[i] = &types.InsightsReleaseInfo{Release: r.Release, FirstSeen: r.FirstSeen}
+	}
+
+	return out, nil
+}
