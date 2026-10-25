@@ -88,3 +88,12 @@ type ShieldFindingFilter struct {
 	Kinds        []enum.ShieldFindingKind  `json:"kind"`
 	MinRiskScore int                       `json:"min_risk_score"`
 }
+
+// ShieldFindingTriage is the outcome of the AI triage of a finding.
+type ShieldFindingTriage struct {
+	RiskScore int
+	Reachable enum.ShieldReachability
+	// FixStrategy keeps the stored strategy when nil.
+	FixStrategy   *enum.ShieldFixStrategy
+	AIDecisionIDs []int64
+}

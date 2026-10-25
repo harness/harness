@@ -728,6 +728,9 @@ type Config struct {
 		SyncInterval time.Duration `envconfig:"GITNESS_SHIELD_SYNC_INTERVAL" default:"6h"`
 		// PatchThreshold is the risk score (0-100) from which a finding produces a task.
 		PatchThreshold int `envconfig:"GITNESS_SHIELD_PATCH_THRESHOLD" default:"70"`
+		// TriageThreshold is the risk score (0-100) from which a finding is triaged by the AI
+		// (reachability, false positive, fix strategy) after a scan.
+		TriageThreshold int `envconfig:"GITNESS_SHIELD_TRIAGE_THRESHOLD" default:"40"`
 		// Ecosystems are the OSV ecosystems to synchronize and scan.
 		Ecosystems []string `envconfig:"GITNESS_SHIELD_ECOSYSTEMS" default:"Go,npm,PyPI"`
 		// OSVBaseURL overrides the OSV data bucket URL.
