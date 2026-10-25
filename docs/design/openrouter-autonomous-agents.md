@@ -10,19 +10,38 @@ Cambios respecto de v1:
 
 ## Estado de implementación
 
-**Fase 0, en curso.** Ya está en `app/services/aigateway`:
+Todo lo listado abajo está implementado, probado con fakes y sqlite, y deshabilitado por defecto.
 
-| Pieza | Archivo | Sección |
+| Área | Qué hay | Paquetes |
 |---|---|---|
-| Guardia de solo-gratuito: allowlist, cuarentena y verificación de costo | `freeguard.go` | 4.1 (capas 1–4) |
-| Catálogo de modelos gratuitos, sincronizado en memoria por réplica | `catalog.go` | 4.2 |
-| Planificador de cuota: reservas por clase, pool compartido desde el mediodía UTC, límite por minuto | `quota.go` | 4.4 |
-| Redacción con gitleaks y reglas para PII y credenciales | `redact.go` | 4.6 |
-| Contrato de la Decisions API, con parseo estricto | `decisions/` | 5.5 |
-| Gateway: Mammoth → Elephant, cache de decisiones, chat sin fallback pago, entorno del agente | `gateway.go`, `chat.go` | 4, 5.5 |
-| Config `GITNESS_AI_GATEWAY_*` y `ProvideGateway` | `config.go`, `wire.go`, `types/config.go` | 4 |
+| IA gratuita (AI Gateway) | Guardia solo-gratuito; catálogo persistido en `ai_models` con cuarentenas; cuota en base compartida entre réplicas con reservas por clase; reintentos con backoff; redacción con gitleaks; Mammoth → Elephant; cache; escalamiento por confianza con segunda opinión; elección de modelo `model_for_task`; latencia p95; atribución de uso; eventos `ai.*`. Migración 0192. | `app/services/aigateway` |
+| Contrato de decisiones y preguntas | Contrato de la Decisions API; preguntas tipadas (Shield, Insights y genéricas) | `aigateway/decisions`, `aigateway/questions` |
+| Capa común de decisiones | Registra decisiones en `ai_decisions` y en el historial; respaldo por reglas; modos de IA | `app/services/aidecide` |
+| Modos de IA por repo | Setting `ai_mode` | `aigateway/mode.go` |
+| API de IA | `/api/v1/system/ai/models` y `/quota` | `/api/v1/system/ai/*` |
+| Tareas | Estados, historial, SLA y reapertura; API REST por repo y por space; eventos y webhooks `task_created`, `task_updated`, `task_resolved`; labels; enlace con PRs (`Fixes TASK-n`); sugerencia de asignación por CODEOWNERS. Migraciones 0193 y 0197 (índice único de deduplicación). | `app/services/task`, `app/events/task`, `app/services/tasklink`, `app/services/taskassign`, `/api/v1/repos/{repo}/tasks`, `/api/v1/spaces/{space}/tasks` |
+| Shield | Escaneo de dependencias con OSV (Go, npm, PyPI); riesgo como CVSS × EPSS × KEV × alcanzabilidad × exposición, normalizado contra CVSS 10; SAST con SARIF de Opengrep/Semgrep; Trivy para imágenes e IaC; sync de datos; disparo en push a la rama por defecto; creación de tareas; API `/shield/scans` y `/shield/findings`. Migración 0194. | `app/services/shield`, `shield/osv`, `shield/risk`, `shield/sast`, `shield/trivy` |
+| Insights | Ingesta de envelopes Sentry, DSN y fingerprinting; endpoints `POST /api/{project}/envelope/` y `/store/`; API de administración de proyectos, issues y eventos; suspect commits; source maps; triage (Mammoth → tareas, duplicados, prioridad); verificación y reapertura automática. Migración 0195. | `insights/ingest`, `insights/suspect`, `insights/sourcemap`, `insights/triage`, `insights/verify` |
+| Agentes | Principal `harness-agent`; kill switch, autonomía, loops y audit; lanzamiento de fix agent por política (`lanzar_fix_agent`); presupuesto de requests por AITask (migración 0196); Claude Code con modelo gratuito vía OpenRouter. | `app/services/agentguard`, `app/services/agentpolicy`, `app/services/aitaskbudget`, `orchestrator/ai_auth.go` |
 
-Además, Claude Code acepta la auth `openrouter-api-key`, que solo admite modelos `:free` (`orchestrator/utils/ai_agent.go` y `configure_claude_code.sh`).
+**Pendiente**
+
+- En curso:
+  - Notificaciones de Tareas.
+  - Bumps de dependencias sin LLM.
+  - UI de Tareas.
+  - Check de Shield/security en PRs.
+  - Triage de Shield con Mammoth.
+  - Lanzamiento de AITask por política.
+  - Reanudación de `esperando_cuota`.
+- Bloqueado por red o key:
+  - Prueba real de la Decisions API.
+  - Spike de Claude Code.
+  - Calibración con set de evaluación.
+  - Agente real abriendo PRs.
+  - Auto-merge.
+  - Embeddings.
+- Las migraciones de postgres no están probadas en este entorno (solo sqlite).
 
 ## Orden de ejecución
 
