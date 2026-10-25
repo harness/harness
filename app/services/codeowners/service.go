@@ -430,6 +430,54 @@ func (s *Service) GetApplicableCodeOwners(
 	}, err
 }
 
+// PathMatch is the CODEOWNERS entry that owns a path.
+type PathMatch struct {
+	Path  string
+	Entry Entry
+}
+
+// PathMatches is the result of MatchPaths.
+type PathMatches struct {
+	FileSHA string
+	// Matches has one item per input path that is owned by a rule (the last matching rule wins).
+	// Paths without a rule, or whose last matching rule resets ownership, are omitted.
+	Matches []PathMatch
+}
+
+// MatchPaths resolves, for each of the given repository paths, the CODEOWNERS entry owning it at ref
+// (default branch if ref is empty). It returns ErrNotFound (wrapped) if the repo has no CODEOWNERS file.
+func (s *Service) MatchPaths(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	ref string,
+	paths []string,
+) (*PathMatches, error) {
+	owners, err := s.get(ctx, repo, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &PathMatches{FileSHA: owners.FileSHA}
+	for _, path := range paths {
+		// last rule that matches wins (hence simply go in reverse order)
+		for i := len(owners.Entries) - 1; i >= 0; i-- {
+			pattern := owners.Entries[i].Pattern
+			ok, matchErr := match(pattern, path)
+			if matchErr != nil {
+				return nil, fmt.Errorf("failed to match pattern %q for file %q: %w", pattern, path, matchErr)
+			}
+			if !ok {
+				continue
+			}
+			if !owners.Entries[i].IsOwnershipReset() {
+				res.Matches = append(res.Matches, PathMatch{Path: path, Entry: owners.Entries[i]})
+			}
+			break
+		}
+	}
+	return res, nil
+}
+
 // Evaluate evaluates the code owners for a given pull request.
 //
 //nolint:gocognit
