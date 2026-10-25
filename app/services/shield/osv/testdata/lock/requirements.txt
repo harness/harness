@@ -1,0 +1,14 @@
+# comment
+-r base.txt
+--index-url https://example.com/simple
+Django==3.2.0  # pinned
+requests[security]==2.19.0 ; python_version >= "3.6"
+Flask_Login==0.4.1 \
+    --hash=sha256:aaaa \
+    --hash=sha256:bbbb
+numpy>=1.20
+pyyaml
+urllib3~=1.26.0
+six==1.*
+git+https://github.com/x/y.git#egg=y
+./local/pkg

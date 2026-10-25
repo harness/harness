@@ -1,0 +1,21 @@
+{
+  "id": "GO-2022-0001",
+  "modified": "2023-01-01T00:00:00Z",
+  "aliases": ["CVE-2022-0001"],
+  "summary": "last_affected and pseudo-version example",
+  "severity": [{"type": "CVSS_V4", "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"}],
+  "affected": [
+    {
+      "package": {"ecosystem": "Go", "name": "golang.org/x/crypto"},
+      "ranges": [{"type": "SEMVER", "events": [{"introduced": "0"}, {"fixed": "0.0.0-20220314234659-1baeb1ce4c0b"}]}]
+    },
+    {
+      "package": {"ecosystem": "Go", "name": "github.com/gin-gonic/gin"},
+      "ranges": [{"type": "SEMVER", "events": [{"introduced": "1.7.0"}, {"last_affected": "1.7.0"}]}]
+    },
+    {
+      "package": {"ecosystem": "Go", "name": "github.com/foo/bar"},
+      "ranges": [{"type": "GIT", "repo": "https://github.com/foo/bar", "events": [{"introduced": "0"}]}]
+    }
+  ]
+}
