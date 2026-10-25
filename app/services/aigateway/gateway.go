@@ -241,6 +241,11 @@ func (g *Gateway) decideWith(
 	return &DecideResult{Model: resp.Model, Decisions: parsed}, nil
 }
 
+// RedactState returns the state as it is sent to the models, after redaction.
+func (g *Gateway) RedactState(state any) (any, error) {
+	return g.redactState(state)
+}
+
 // redactState redacts the state through its JSON form. Placeholders never contain quotes,
 // so the redacted JSON stays valid; if it doesn't, the redacted text is sent as a string state.
 func (g *Gateway) redactState(state any) (any, error) {

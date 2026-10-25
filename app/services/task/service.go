@@ -609,6 +609,33 @@ func (s *Service) RecordDecision(ctx context.Context, principalID int64, taskID 
 	return s.recordOnly(ctx, taskID, enum.TaskActivityKindDecision, principalID, in)
 }
 
+// DecisionSummaryInput is one history entry that summarizes all answers of a batch of decisions.
+type DecisionSummaryInput struct {
+	// Summary is the human-readable line, e.g. "severity: high (0.81) · action: fix (0.74)".
+	Summary   string          `json:"summary"`
+	Decisions []DecisionInput `json:"decisions"`
+	// Outcome is the escalation outcome (act, human), when the decisions were escalated.
+	Outcome string `json:"outcome,omitempty"`
+	// SecondOpinion is the System 2 analysis (truncated by the caller) and the model that wrote it.
+	SecondOpinion      string `json:"second_opinion,omitempty"`
+	SecondOpinionModel string `json:"second_opinion_model,omitempty"`
+	// Reason explains a human outcome not caused by low confidence.
+	Reason string `json:"reason,omitempty"`
+}
+
+// RecordDecisionSummary adds one decision entry summarizing several answers. principalID may be 0 for the system.
+func (s *Service) RecordDecisionSummary(
+	ctx context.Context,
+	principalID int64,
+	taskID int64,
+	in DecisionSummaryInput,
+) error {
+	if len(in.Decisions) == 0 {
+		return usererror.BadRequest("Decision summary needs at least one decision")
+	}
+	return s.recordOnly(ctx, taskID, enum.TaskActivityKindDecision, principalID, in)
+}
+
 // AgentRunInput describes a run of the agent on a task.
 type AgentRunInput struct {
 	Model        string `json:"model"`
