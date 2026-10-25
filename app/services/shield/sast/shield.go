@@ -22,9 +22,7 @@ import (
 )
 
 // ScannerSAST identifies SAST results in types.ShieldFinding.Scanner.
-// It is package-local because enum.ShieldScanner only lists "osv" so far;
-// add it to the enum before persisting these findings with validation.
-const ScannerSAST enum.ShieldScanner = "sast"
+const ScannerSAST = enum.ShieldScannerSAST
 
 // ToShieldFinding maps a SAST finding to a new open Shield finding (kind sast) observed in scanID.
 // The file path is stored in ManifestPath, the CWE ids in Aliases and the CVSS-like score scaled
