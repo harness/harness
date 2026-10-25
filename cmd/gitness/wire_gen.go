@@ -130,6 +130,7 @@ import (
 	"github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tasklink"
+	"github.com/harness/gitness/app/services/tasksla"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -854,7 +855,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	mailerMailer := mailer.ProvideMailClient(config)
 	notificationClient := notification.ProvideMailClient(mailerMailer)
 	notificationConfig := server.ProvideNotificationConfig(config)
-	notificationService, err := notification.ProvideNotificationService(ctx, notificationClient, notificationConfig, readerFactory3, pullReqStore, repoStore, principalInfoView, principalInfoCache, pullReqReviewerStore, userGroupReviewerStore, usergroupService, pullReqActivityStore, spacePathStore, provider)
+	notificationService, err := notification.ProvideNotificationService(ctx, notificationClient, notificationConfig, readerFactory3, pullReqStore, repoStore, principalInfoView, principalInfoCache, pullReqReviewerStore, userGroupReviewerStore, usergroupService, pullReqActivityStore, spacePathStore, provider, readerFactory4, taskStore, taskActivityStore)
 	if err != nil {
 		return nil, err
 	}
@@ -955,7 +956,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService)
+	taskslaService, err := tasksla.NewService(ctx, config, taskStore, taskActivityStore, notificationService, jobScheduler, executor)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, taskslaService)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil

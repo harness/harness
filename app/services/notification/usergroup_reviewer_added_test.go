@@ -225,6 +225,10 @@ func (c *testNotificationClient) SendReviewSubmitted(
 	_ context.Context, _ []*types.PrincipalInfo, _ *ReviewSubmittedPayload) error {
 	return nil
 }
+func (c *testNotificationClient) SendTaskNotification(
+	_ context.Context, _ []*types.PrincipalInfo, _ *TaskPayload) error {
+	return nil
+}
 func (c *testNotificationClient) SendPullReqStateChanged(
 	_ context.Context, _ []*types.PrincipalInfo, _ *PullReqStateChangedPayload) error {
 	return nil

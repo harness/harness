@@ -63,6 +63,11 @@ type Client interface {
 		recipients []*types.PrincipalInfo,
 		payload *ReviewSubmittedPayload,
 	) error
+	SendTaskNotification(
+		ctx context.Context,
+		recipients []*types.PrincipalInfo,
+		payload *TaskPayload,
+	) error
 	SendPullReqStateChanged(
 		ctx context.Context,
 		recipients []*types.PrincipalInfo,

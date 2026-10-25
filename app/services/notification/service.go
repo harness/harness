@@ -23,6 +23,7 @@ import (
 	"path"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	taskevents "github.com/harness/gitness/app/events/task"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -99,6 +100,9 @@ type Service struct {
 	pullReqActivityStore   store.PullReqActivityStore
 	spacePathStore         store.SpacePathStore
 	urlProvider            url.Provider
+	taskReaderFactory      *events.ReaderFactory[*taskevents.Reader]
+	taskStore              store.TaskStore
+	taskActivityStore      store.TaskActivityStore
 }
 
 func NewService(
@@ -116,6 +120,9 @@ func NewService(
 	pullReqActivityStore store.PullReqActivityStore,
 	spacePathStore store.SpacePathStore,
 	urlProvider url.Provider,
+	taskReaderFactory *events.ReaderFactory[*taskevents.Reader],
+	taskStore store.TaskStore,
+	taskActivityStore store.TaskActivityStore,
 ) (*Service, error) {
 	service := &Service{
 		config:                 config,
@@ -131,6 +138,9 @@ func NewService(
 		pullReqActivityStore:   pullReqActivityStore,
 		spacePathStore:         spacePathStore,
 		urlProvider:            urlProvider,
+		taskReaderFactory:      taskReaderFactory,
+		taskStore:              taskStore,
+		taskActivityStore:      taskActivityStore,
 	}
 
 	_, err := service.prReaderFactory.Launch(
@@ -161,6 +171,23 @@ func NewService(
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch event reader for %s: %w", eventReaderGroupName, err)
+	}
+
+	_, err = service.taskReaderFactory.Launch(
+		ctx,
+		eventReaderGroupName,
+		config.EventReaderName,
+		func(r *taskevents.Reader) error {
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithMaxRetries(config.MaxRetries),
+				))
+			service.registerTaskHandlers(r)
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch task event reader for %s: %w", eventReaderGroupName, err)
 	}
 
 	return service, nil

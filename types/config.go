@@ -487,6 +487,13 @@ type Config struct {
 		Concurrency int `envconfig:"GITNESS_NOTIFICATION_CONCURRENCY" default:"4"`
 	}
 
+	// TaskSLA configures the job notifying about tasks that are about to be due or overdue.
+	TaskSLA struct {
+		Enabled bool          `envconfig:"GITNESS_TASK_SLA_ENABLED" default:"true"`
+		Cron    string        `envconfig:"GITNESS_TASK_SLA_CRON" default:"23 * * * *"`
+		Window  time.Duration `envconfig:"GITNESS_TASK_SLA_WINDOW" default:"24h"`
+	}
+
 	KeywordSearch struct {
 		Concurrency int `envconfig:"GITNESS_KEYWORD_SEARCH_CONCURRENCY" default:"4"`
 		MaxRetries  int `envconfig:"GITNESS_KEYWORD_SEARCH_MAX_RETRIES" default:"3"`

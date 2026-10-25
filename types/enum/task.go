@@ -118,6 +118,8 @@ const (
 	TaskActivityKindAssignment     TaskActivityKind = "assignment"
 	TaskActivityKindPriorityChange TaskActivityKind = "priority_change"
 	TaskActivityKindUpdated        TaskActivityKind = "updated"
+	// TaskActivityKindSLAWarning marks that the due date warning or the overdue notification was sent.
+	TaskActivityKindSLAWarning TaskActivityKind = "sla_warning"
 )
 
 var taskActivityKinds = sortEnum([]TaskActivityKind{
@@ -130,6 +132,7 @@ var taskActivityKinds = sortEnum([]TaskActivityKind{
 	TaskActivityKindAssignment,
 	TaskActivityKindPriorityChange,
 	TaskActivityKindUpdated,
+	TaskActivityKindSLAWarning,
 })
 
 // TaskLinkKind defines the kind of entity a task is linked to.

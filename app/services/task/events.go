@@ -33,6 +33,7 @@ type EventReporter interface {
 	Verified(ctx context.Context, payload *taskevents.VerifiedPayload)
 	Reopened(ctx context.Context, payload *taskevents.ReopenedPayload)
 	CommentCreated(ctx context.Context, payload *taskevents.CommentCreatedPayload)
+	AgentNeedsHelp(ctx context.Context, payload *taskevents.AgentNeedsHelpPayload)
 }
 
 func baseOf(principalID int64, t *types.Task) taskevents.Base {
@@ -51,6 +52,13 @@ func (s *Service) emitCommentCreated(ctx context.Context, principalID int64, t *
 		return
 	}
 	s.events.CommentCreated(ctx, &taskevents.CommentCreatedPayload{Base: baseOf(principalID, t)})
+}
+
+func (s *Service) emitAgentNeedsHelp(ctx context.Context, principalID int64, t *types.Task, model string) {
+	if s.events == nil || t == nil {
+		return
+	}
+	s.events.AgentNeedsHelp(ctx, &taskevents.AgentNeedsHelpPayload{Base: baseOf(principalID, t), Model: model})
 }
 
 // emitChanges reports the events of the history entries written for a task by a committed change.

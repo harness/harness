@@ -141,6 +141,7 @@ import (
 	spaceSvc "github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tasklink"
+	"github.com/harness/gitness/app/services/tasksla"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -371,6 +372,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		triage.WireSet,
 		shield.WireSet,
 		insightsverify.WireSet,
+		tasksla.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,

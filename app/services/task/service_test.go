@@ -103,7 +103,23 @@ func (f *fakeTasks) CountByRepos(context.Context, []int64, *types.TaskFilter) (i
 	return 0, nil
 }
 
+func (f *fakeTasks) ListDueBefore(context.Context, int64, int64, int) ([]*types.Task, error) {
+	return nil, nil
+}
+
 type fakeActivities struct{ list []*types.TaskActivity }
+
+func (f *fakeActivities) ListByKind(
+	_ context.Context, taskID int64, kind enum.TaskActivityKind,
+) ([]*types.TaskActivity, error) {
+	var out []*types.TaskActivity
+	for _, a := range f.list {
+		if a.TaskID == taskID && a.Kind == kind {
+			out = append(out, a)
+		}
+	}
+	return out, nil
+}
 
 func (f *fakeActivities) Create(_ context.Context, a *types.TaskActivity) error {
 	a.ID = int64(len(f.list) + 1)

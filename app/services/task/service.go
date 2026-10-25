@@ -678,6 +678,9 @@ func (s *Service) RecordDecisionSummary(
 	return s.recordOnly(ctx, taskID, enum.TaskActivityKindDecision, principalID, in)
 }
 
+// AgentOutcomeNeedsHuman is the agent run outcome reporting that the agent can't continue without a human.
+const AgentOutcomeNeedsHuman = "needs_human"
+
 // AgentRunInput describes a run of the agent on a task.
 type AgentRunInput struct {
 	Model        string `json:"model"`
@@ -695,7 +698,15 @@ func (s *Service) RecordAgentRun(ctx context.Context, principalID int64, taskID 
 	if in.RequestsUsed < 0 {
 		return usererror.BadRequest("Agent run requests used can't be negative")
 	}
-	return s.recordOnly(ctx, taskID, enum.TaskActivityKindAgentRun, principalID, in)
+	if err := s.recordOnly(ctx, taskID, enum.TaskActivityKindAgentRun, principalID, in); err != nil {
+		return err
+	}
+	if in.Outcome == AgentOutcomeNeedsHuman && s.events != nil {
+		if t, err := s.tasks.Find(ctx, taskID); err == nil {
+			s.emitAgentNeedsHelp(ctx, principalID, t, in.Model)
+		}
+	}
+	return nil
 }
 
 // recordOnly writes a history entry without changing the task row.
