@@ -197,6 +197,30 @@ func (s *TaskStore) FindByNumber(ctx context.Context, repoID, number int64) (*ty
 	return mapTask(dst), nil
 }
 
+// FindActiveByOrigin finds the active (neither dismissed nor verified) task by origin and origin reference.
+func (s *TaskStore) FindActiveByOrigin(
+	ctx context.Context,
+	repoID int64,
+	origin enum.TaskOrigin,
+	originRef string,
+) (*types.Task, error) {
+	const sqlQuery = taskSelectBase + `
+		WHERE task_repo_id = $1 AND task_origin = $2 AND task_origin_ref = $3
+			AND task_state NOT IN ($4, $5)
+		ORDER BY task_number ASC
+		LIMIT 1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := &task{}
+	if err := db.GetContext(ctx, dst, sqlQuery, repoID, origin, originRef,
+		enum.TaskStateDismissed, enum.TaskStateVerified); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find active task by origin")
+	}
+
+	return mapTask(dst), nil
+}
+
 // Update updates the task using optimistic locking.
 func (s *TaskStore) Update(ctx context.Context, t *types.Task) error {
 	const sqlQuery = `

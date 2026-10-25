@@ -35,6 +35,11 @@ type (
 		// FindByNumber finds the task by repo id and per-repo task number.
 		FindByNumber(ctx context.Context, repoID, number int64) (*types.Task, error)
 
+		// FindActiveByOrigin finds the active task of the repository created from the given origin
+		// and origin reference. A task is active unless it is dismissed or verified.
+		// It returns store.ErrResourceNotFound if there is none.
+		FindActiveByOrigin(ctx context.Context, repoID int64, origin enum.TaskOrigin, originRef string) (*types.Task, error)
+
 		// Update updates the task using optimistic locking on its version.
 		// It returns store.ErrVersionConflict if the version doesn't match.
 		Update(ctx context.Context, task *types.Task) error
