@@ -59,6 +59,9 @@ type Gateway struct {
 
 	cacheMu sync.Mutex
 	cache   map[string]cachedDecision
+
+	// sleep waits between retries; tests replace it to avoid real delays.
+	sleep func(ctx context.Context, d time.Duration) error
 }
 
 type cachedDecision struct {
@@ -84,6 +87,7 @@ func New(config Config, redactor *Redactor) *Gateway {
 		planner:  NewPlanner(config.DailyRequestLimit, config.RequestsPerMinute, nil),
 		redactor: redactor,
 		cache:    map[string]cachedDecision{},
+		sleep:    sleepContext,
 	}
 }
 
@@ -191,12 +195,11 @@ func (g *Gateway) decideWith(
 		return nil, err
 	}
 
-	if err := g.planner.Reserve(ClassDecision); err != nil {
-		return nil, err
-	}
-
 	var resp decisions.Response
-	if err := g.client.doJSON(ctx, http.MethodPost, decisions.Path, req, &resp); err != nil {
+	err := g.withRetry(ctx, ClassDecision, func() error {
+		return g.client.doJSON(ctx, http.MethodPost, decisions.Path, req, &resp)
+	})
+	if err != nil {
 		return nil, err
 	}
 	if err := g.guard.VerifyCost(model, resp.Usage.Cost); err != nil {

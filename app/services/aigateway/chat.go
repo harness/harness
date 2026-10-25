@@ -91,12 +91,11 @@ func (g *Gateway) Chat(ctx context.Context, class Class, req ChatRequest) (*Chat
 		wire.Messages[i] = ChatMessage{Role: m.Role, Content: g.redactor.Redact(m.Content)}
 	}
 
-	if err := g.planner.Reserve(class); err != nil {
-		return nil, err
-	}
-
 	var resp ChatResponse
-	if err := g.client.doJSON(ctx, http.MethodPost, chatPath, wire, &resp); err != nil {
+	err := g.withRetry(ctx, class, func() error {
+		return g.client.doJSON(ctx, http.MethodPost, chatPath, wire, &resp)
+	})
+	if err != nil {
 		return nil, err
 	}
 	if err := g.guard.VerifyCost(req.Model, resp.Usage.Cost); err != nil {

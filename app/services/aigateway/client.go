@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const maxResponseBytes = 8 << 20
@@ -30,6 +31,8 @@ const maxResponseBytes = 8 << 20
 type APIError struct {
 	StatusCode int
 	Body       string
+	// RetryAfter is the delay from the Retry-After header in seconds, zero if absent.
+	RetryAfter time.Duration
 }
 
 func (e *APIError) Error() string {
@@ -87,7 +90,11 @@ func (c *httpClient) doJSON(ctx context.Context, method, path string, in, out an
 		if len(data) > maxErrBody {
 			data = data[:maxErrBody]
 		}
-		return &APIError{StatusCode: resp.StatusCode, Body: string(data)}
+		return &APIError{
+			StatusCode: resp.StatusCode,
+			Body:       string(data),
+			RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After")),
+		}
 	}
 
 	if err := json.Unmarshal(data, out); err != nil {
