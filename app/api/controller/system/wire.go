@@ -15,6 +15,7 @@
 package system
 
 import (
+	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
@@ -26,6 +27,10 @@ var WireSet = wire.NewSet(
 	NewController,
 )
 
-func ProvideController(principalStore store.PrincipalStore, config *types.Config) *Controller {
-	return NewController(principalStore, config)
+func ProvideController(
+	principalStore store.PrincipalStore,
+	config *types.Config,
+	aiGateway *aigateway.Gateway,
+) *Controller {
+	return NewController(principalStore, config, aiGateway)
 }

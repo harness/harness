@@ -88,6 +88,7 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/aigateway"
 	aitaskeventservice "github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/automerge"
@@ -218,6 +219,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		principal.WireSet,
 		usergroupservice.WireSet,
 		system.WireSet,
+		aigateway.WireSet,
 		authn.WireSet,
 		authz.WireSet,
 		infrastructure.WireSet,
