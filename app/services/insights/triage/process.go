@@ -330,6 +330,7 @@ func (o *Observer) apply(
 			QuestionID: QAutofixCandidate, Value: "true", Confidence: clamp01(out.triage.ActionConfidence),
 			Model: out.model, Fallback: out.fallback,
 		})
+		o.notifyAutofix(ctx, repo, tk, clamp01(out.triage.ActionConfidence))
 	}
 	if note := triageNote(mode, out); note != "" {
 		if err = o.deps.Tasks.AddComment(ctx, pid, tk.ID, note); err != nil {

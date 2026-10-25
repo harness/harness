@@ -15,6 +15,7 @@
 package services
 
 import (
+	"github.com/harness/gitness/app/services/agentlauncher"
 	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/branch"
 	"github.com/harness/gitness/app/services/cleanup"
@@ -72,6 +73,7 @@ type Services struct {
 	taskLink                       *tasklink.Service
 	insightsTriage                 *triage.Observer
 	insightsVerify                 *insightsverify.Service
+	agentLauncher                  *agentlauncher.Launcher
 }
 
 type GitspaceServices struct {
@@ -128,6 +130,7 @@ func ProvideServices(
 	taskLinkSvc *tasklink.Service,
 	insightsTriage *triage.Observer,
 	insightsVerify *insightsverify.Service,
+	agentLauncher *agentlauncher.Launcher,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -152,5 +155,6 @@ func ProvideServices(
 		taskLink:                       taskLinkSvc,
 		insightsTriage:                 insightsTriage,
 		insightsVerify:                 insightsVerify,
+		agentLauncher:                  agentLauncher,
 	}
 }

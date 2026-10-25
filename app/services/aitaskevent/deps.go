@@ -27,3 +27,8 @@ import (
 type Orchestrator interface {
 	TriggerAITask(ctx context.Context, aiTask types.AITask, gitspaceConfig types.GitspaceConfig) error
 }
+
+// FinishObserver is told when an AI task reached a final state (completed or error).
+type FinishObserver interface {
+	AITaskFinished(ctx context.Context, aiTask *types.AITask) error
+}

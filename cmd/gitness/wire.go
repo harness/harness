@@ -71,6 +71,7 @@ import (
 	ruleevents "github.com/harness/gitness/app/events/rule"
 	taskevents "github.com/harness/gitness/app/events/task"
 	userevents "github.com/harness/gitness/app/events/user"
+	"github.com/harness/gitness/app/gitspace/agentmodel"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
@@ -93,6 +94,10 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/agentguard"
+	"github.com/harness/gitness/app/services/agentlauncher"
+	"github.com/harness/gitness/app/services/agentpolicy"
+	"github.com/harness/gitness/app/services/aidecide"
 	"github.com/harness/gitness/app/services/aigateway"
 	aitaskeventservice "github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/autolink"
@@ -140,6 +145,7 @@ import (
 	"github.com/harness/gitness/app/services/shield"
 	spaceSvc "github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/task"
+	"github.com/harness/gitness/app/services/taskassign"
 	"github.com/harness/gitness/app/services/tasklink"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
@@ -369,6 +375,12 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		lfs.WireSet,
 		insights.WireSet,
 		triage.WireSet,
+		agentguard.WireSet,
+		agentpolicy.WireSet,
+		aidecide.WireSet,
+		taskassign.WireSet,
+		agentmodel.WireSet,
+		agentlauncher.WireSet,
 		shield.WireSet,
 		insightsverify.WireSet,
 		usage.WireSet,

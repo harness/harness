@@ -17,6 +17,7 @@ package aitaskevent
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	aitaskevents "github.com/harness/gitness/app/events/aitask"
@@ -25,6 +26,9 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/stream"
+	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 const groupAITaskEvents = "gitness:aitask"
@@ -34,6 +38,28 @@ type Service struct {
 	orchestrator Orchestrator
 	gitspaceSvc  *gitspace.Service
 	aiTaskStore  store.AITaskStore
+
+	observerMu sync.RWMutex
+	observer   FinishObserver
+}
+
+// SetFinishObserver registers the observer notified when an AI task reaches a final state (nil removes it).
+func (s *Service) SetFinishObserver(o FinishObserver) {
+	s.observerMu.Lock()
+	s.observer = o
+	s.observerMu.Unlock()
+}
+
+func (s *Service) notifyFinished(ctx context.Context, aiTask *types.AITask) {
+	s.observerMu.RLock()
+	o := s.observer
+	s.observerMu.RUnlock()
+	if o == nil || !aiTask.State.IsFinalStatus() {
+		return
+	}
+	if err := o.AITaskFinished(ctx, aiTask); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to handle finished AI task %s", aiTask.Identifier)
+	}
 }
 
 func NewService(

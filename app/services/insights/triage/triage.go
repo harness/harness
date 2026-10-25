@@ -106,6 +106,12 @@ type TaskService interface {
 	RecordDecision(ctx context.Context, principalID, taskID int64, in task.DecisionInput) error
 }
 
+// AutofixObserver is told about tasks that the triage marked as autofix candidates (action=fix with enough
+// confidence in a repository that allows agents). It decides by itself whether to launch an agent.
+type AutofixObserver interface {
+	AutofixCandidate(ctx context.Context, repo *types.RepositoryCore, t *types.Task, confidence float64)
+}
+
 // Config tunes the observer. Zero values pick defaults.
 type Config struct {
 	// Workers is the number of triage goroutines (default 2).
@@ -156,8 +162,9 @@ type job struct {
 
 // Observer implements insights.IssueObserver.
 type Observer struct {
-	cfg  Config
-	deps Deps
+	cfg     Config
+	deps    Deps
+	autofix AutofixObserver
 
 	queue chan job
 	wg    sync.WaitGroup
@@ -172,6 +179,22 @@ var _ insights.IssueObserver = (*Observer)(nil)
 func New(cfg Config, deps Deps) *Observer {
 	cfg = cfg.withDefaults()
 	return &Observer{cfg: cfg, deps: deps, queue: make(chan job, cfg.QueueSize)}
+}
+
+// SetAutofixObserver registers the observer of autofix candidates (nil disables it). Safe to call while running.
+func (o *Observer) SetAutofixObserver(a AutofixObserver) {
+	o.mu.Lock()
+	o.autofix = a
+	o.mu.Unlock()
+}
+
+func (o *Observer) notifyAutofix(ctx context.Context, repo *types.RepositoryCore, t *types.Task, confidence float64) {
+	o.mu.Lock()
+	a := o.autofix
+	o.mu.Unlock()
+	if a != nil {
+		a.AutofixCandidate(ctx, repo, t, confidence)
+	}
 }
 
 // Start launches the workers; they stop when ctx is done or Stop is called.

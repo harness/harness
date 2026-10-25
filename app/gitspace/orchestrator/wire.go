@@ -16,6 +16,7 @@ package orchestrator
 
 import (
 	events "github.com/harness/gitness/app/events/gitspace"
+	"github.com/harness/gitness/app/gitspace/agentmodel"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
@@ -52,6 +53,7 @@ func ProvideOrchestrator(
 	spaceStore store.SpaceStore,
 	infraProviderSvc *infraprovider.Service,
 	aiGateway *aigateway.Gateway,
+	modelHints *agentmodel.Registry,
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
@@ -69,5 +71,6 @@ func ProvideOrchestrator(
 		spaceStore,
 		infraProviderSvc,
 		aiGateway,
+		modelHints,
 	)
 }

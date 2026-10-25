@@ -59,6 +59,7 @@ import (
 	events4 "github.com/harness/gitness/app/events/rule"
 	events15 "github.com/harness/gitness/app/events/task"
 	events2 "github.com/harness/gitness/app/events/user"
+	"github.com/harness/gitness/app/gitspace/agentmodel"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
@@ -81,6 +82,10 @@ import (
 	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/agentguard"
+	"github.com/harness/gitness/app/services/agentlauncher"
+	"github.com/harness/gitness/app/services/agentpolicy"
+	"github.com/harness/gitness/app/services/aidecide"
 	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/autolink"
@@ -129,6 +134,7 @@ import (
 	"github.com/harness/gitness/app/services/shield"
 	"github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/task"
+	"github.com/harness/gitness/app/services/taskassign"
 	"github.com/harness/gitness/app/services/tasklink"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
@@ -538,7 +544,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, platformSecret, infraProvisioner, containerFactory, reporter6, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService, spaceStore, infraproviderService, gateway)
+	registry := agentmodel.NewRegistry()
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, platformSecret, infraProvisioner, containerFactory, reporter6, orchestratorConfig, ideFactory, resolverFactory, gitspaceInstanceStore, gitspaceConfigStore, gitspacesettingsService, spaceStore, infraproviderService, gateway, registry)
 	reporter10, err := events13.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -955,7 +962,17 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService)
+	modeResolver := agentlauncher.ProvideModeResolver(settingsService, publicaccessService)
+	guard := agentguard.ProvideGuard(config, settingsService, auditService)
+	aidecideService := aidecide.ProvideService(gateway, modeResolver, repoFinder, aiDecisionStore, taskService)
+	evaluator := agentpolicy.ProvideEvaluator(config, modeResolver, guard, gateway, aidecideService)
+	reporter15, err := events16.ProvideReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	taskassignService := taskassign.ProvideService(codeownersService, repoStore, principalStore, usergroupResolver)
+	launcher := agentlauncher.ProvideLauncher(evaluator, gateway, guard, taskService, taskStore, repoFinder, aiTaskStore, reporter15, gitspaceConfigStore, registry, aidecideService, taskassignService, observer, aitaskeventService)
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, launcher)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil

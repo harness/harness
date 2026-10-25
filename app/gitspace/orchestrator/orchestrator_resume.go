@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/harness/gitness/app/gitspace/agentmodel"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
@@ -124,7 +125,8 @@ func (o Orchestrator) ResumeStartGitspace(
 	}
 
 	if aiAPIKeySecretRef != "" || (o.aiGatewayEnabled() && gitspaceSpecs != nil && gitspaceSpecs.AIAgent != nil) {
-		aiAgentAuth, err := o.decryptAIAuth(ctx, gitspaceConfig.SpacePath, aiAPIKeySecretRef)
+		aiAgentAuth, err := o.decryptAIAuth(
+			agentmodel.WithConfigID(ctx, gitspaceConfig.ID), gitspaceConfig.SpacePath, aiAPIKeySecretRef)
 		if err != nil {
 			return *gitspaceInstance, newGitspaceError(
 				fmt.Errorf("failed to decrypt AI agent auth: %w", err),

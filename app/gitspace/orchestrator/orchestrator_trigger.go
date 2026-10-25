@@ -20,6 +20,7 @@ import (
 	"time"
 
 	events "github.com/harness/gitness/app/events/gitspace"
+	"github.com/harness/gitness/app/gitspace/agentmodel"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
@@ -81,7 +82,12 @@ func NewOrchestrator(
 	spaceStore store.SpaceStore,
 	infraProviderSvc *infraprovider.Service,
 	aiGateway *aigateway.Gateway,
+	modelHints *agentmodel.Registry,
 ) Orchestrator {
+	var hints ModelHints
+	if modelHints != nil {
+		hints = modelHints
+	}
 	return Orchestrator{
 		scm:                          scm,
 		platformConnector:            platformConnector,
@@ -98,7 +104,10 @@ func NewOrchestrator(
 		spaceStore:                   spaceStore,
 		infraProviderSvc:             infraProviderSvc,
 		aiGateway:                    aiGateway,
-		agentModelSelector:           newDeterministicModelSelector(aiGateway),
+		agentModelSelector: hintedModelSelector{
+			hints:    hints,
+			fallback: newDeterministicModelSelector(aiGateway),
+		},
 	}
 }
 

@@ -100,6 +100,8 @@ func (s *Service) handleAITaskEvent(
 		return fmt.Errorf("failed to update aiTask state: %w", err)
 	}
 
+	s.notifyFinished(ctx, aiTask)
+
 	return nil
 }
 
