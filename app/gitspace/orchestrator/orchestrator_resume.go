@@ -123,7 +123,7 @@ func (o Orchestrator) ResumeStartGitspace(
 		gitspaceConfig.Connectors = connectors
 	}
 
-	if aiAPIKeySecretRef != "" {
+	if aiAPIKeySecretRef != "" || (o.aiGatewayEnabled() && gitspaceSpecs != nil && gitspaceSpecs.AIAgent != nil) {
 		aiAgentAuth, err := o.decryptAIAuth(ctx, gitspaceConfig.SpacePath, aiAPIKeySecretRef)
 		if err != nil {
 			return *gitspaceInstance, newGitspaceError(
@@ -413,6 +413,11 @@ func (o Orchestrator) decryptAIAuth(
 	ctx context.Context,
 	spacePath, authSecretRef string,
 ) (map[enum.AIAgent]types.AIAgentAuth, error) {
+	// When the AI gateway is enabled the agent always runs against it, never silently against Anthropic.
+	if o.aiGatewayEnabled() {
+		return openRouterAIAuth(ctx, o.aiGateway, o.agentModelSelector)
+	}
+
 	apiKey, err := o.platformSecret.FetchSecret(ctx, authSecretRef, spacePath)
 	if err != nil {
 		return nil, err

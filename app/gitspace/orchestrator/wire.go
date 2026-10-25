@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/platformsecret"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
+	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
@@ -50,6 +51,7 @@ func ProvideOrchestrator(
 	settingsService gitspacesettings.Service,
 	spaceStore store.SpaceStore,
 	infraProviderSvc *infraprovider.Service,
+	aiGateway *aigateway.Gateway,
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
@@ -66,5 +68,6 @@ func ProvideOrchestrator(
 		settingsService,
 		spaceStore,
 		infraProviderSvc,
+		aiGateway,
 	)
 }
