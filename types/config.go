@@ -274,6 +274,13 @@ type Config struct {
 			Email       string `envconfig:"GITNESS_PRINCIPAL_GITSPACE_EMAIL"        default:"gitspace@gitness.io"`
 		}
 
+		// Agent defines the principal information used to create the autonomous agent service.
+		Agent struct {
+			UID         string `envconfig:"GITNESS_PRINCIPAL_AGENT_UID"          default:"harness-agent"`
+			DisplayName string `envconfig:"GITNESS_PRINCIPAL_AGENT_DISPLAY_NAME" default:"Harness Agent"`
+			Email       string `envconfig:"GITNESS_PRINCIPAL_AGENT_EMAIL"        default:"harness-agent@gitness.io"`
+		}
+
 		// Admin defines the principal information used to create the admin user.
 		// NOTE: The admin user is only auto-created in case a password and an email is provided.
 		Admin struct {
@@ -282,6 +289,16 @@ type Config struct {
 			Email       string `envconfig:"GITNESS_PRINCIPAL_ADMIN_EMAIL"`    // No default email
 			Password    string `envconfig:"GITNESS_PRINCIPAL_ADMIN_PASSWORD"` // No default password
 		}
+	}
+
+	// AIAgents defines the guardrails for autonomous agents.
+	AIAgents struct {
+		// KillSwitch disables all autonomous agent activity globally if set to true.
+		KillSwitch bool `envconfig:"GITNESS_AI_AGENTS_KILL_SWITCH" default:"false"`
+		// MaxFailedAttempts is the number of failed attempts after which a task is no longer retried.
+		MaxFailedAttempts int `envconfig:"GITNESS_AI_AGENTS_MAX_FAILED_ATTEMPTS" default:"3"`
+		// AttemptCooldown is the minimum time between two attempts for the same task.
+		AttemptCooldown time.Duration `envconfig:"GITNESS_AI_AGENTS_ATTEMPT_COOLDOWN" default:"30m"`
 	}
 
 	Redis struct {
