@@ -456,3 +456,33 @@ func mapTasks(in []*task) []*types.Task {
 	}
 	return out
 }
+
+// ListWaitingQuota lists the tasks waiting for the AI quota in resume order: p0, regressions, p1, the rest,
+// oldest first within each group. A regression is a task whose description says so (Insights triage).
+func (s *TaskStore) ListWaitingQuota(ctx context.Context, limit int) ([]*types.Task, error) {
+	if limit <= 0 {
+		return []*types.Task{}, nil
+	}
+
+	const sqlQuery = taskSelectBase + `
+		WHERE task_state = $1
+		ORDER BY
+			CASE
+				WHEN task_priority = 'p0' THEN 0
+				WHEN task_description LIKE '%- Regression:%' THEN 1
+				WHEN task_priority = 'p1' THEN 2
+				ELSE 3
+			END ASC,
+			task_created ASC,
+			task_id ASC
+		LIMIT $2`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*task{}
+	if err := db.SelectContext(ctx, &dst, sqlQuery, enum.TaskStateWaitingQuota, limit); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing waiting quota task query")
+	}
+
+	return mapTasks(dst), nil
+}
