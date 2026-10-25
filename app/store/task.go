@@ -49,6 +49,12 @@ type (
 
 		// Count counts the tasks of a repository matching the filter.
 		Count(ctx context.Context, repoID int64, filter *types.TaskFilter) (int64, error)
+
+		// ListByRepos lists the tasks of the given repositories matching the filter, newest first.
+		ListByRepos(ctx context.Context, repoIDs []int64, filter *types.TaskFilter) ([]*types.Task, error)
+
+		// CountByRepos counts the tasks of the given repositories matching the filter.
+		CountByRepos(ctx context.Context, repoIDs []int64, filter *types.TaskFilter) (int64, error)
 	}
 
 	// TaskActivityStore defines the task timeline storage.

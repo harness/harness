@@ -273,15 +273,37 @@ func (s *TaskStore) Update(ctx context.Context, t *types.Task) error {
 }
 
 func (s *TaskStore) List(ctx context.Context, repoID int64, filter *types.TaskFilter) ([]*types.Task, error) {
+	return s.ListByRepos(ctx, []int64{repoID}, filter)
+}
+
+func (s *TaskStore) Count(ctx context.Context, repoID int64, filter *types.TaskFilter) (int64, error) {
+	return s.CountByRepos(ctx, []int64{repoID}, filter)
+}
+
+// ListByRepos lists the tasks of the repositories ordered from the newest to the oldest.
+func (s *TaskStore) ListByRepos(
+	ctx context.Context,
+	repoIDs []int64,
+	filter *types.TaskFilter,
+) ([]*types.Task, error) {
+	if len(repoIDs) == 0 {
+		return []*types.Task{}, nil
+	}
+
 	stmt := database.Builder.
 		Select(taskColumns).
 		From("tasks").
-		Where("task_repo_id = ?", repoID)
+		Where(squirrel.Eq{"task_repo_id": repoIDs})
 
 	stmt = applyTaskFilter(stmt, filter)
 
+	if len(repoIDs) == 1 {
+		stmt = stmt.OrderBy("task_number DESC")
+	} else {
+		stmt = stmt.OrderBy("task_created DESC", "task_id DESC")
+	}
+
 	stmt = stmt.
-		OrderBy("task_number DESC").
 		Limit(database.Limit(filter.Size)).
 		Offset(database.Offset(filter.Page, filter.Size))
 
@@ -300,11 +322,16 @@ func (s *TaskStore) List(ctx context.Context, repoID int64, filter *types.TaskFi
 	return mapTasks(dst), nil
 }
 
-func (s *TaskStore) Count(ctx context.Context, repoID int64, filter *types.TaskFilter) (int64, error) {
+// CountByRepos counts the tasks of the repositories.
+func (s *TaskStore) CountByRepos(ctx context.Context, repoIDs []int64, filter *types.TaskFilter) (int64, error) {
+	if len(repoIDs) == 0 {
+		return 0, nil
+	}
+
 	stmt := database.Builder.
 		Select("COUNT(*)").
 		From("tasks").
-		Where("task_repo_id = ?", repoID)
+		Where(squirrel.Eq{"task_repo_id": repoIDs})
 
 	stmt = applyTaskFilter(stmt, filter)
 

@@ -196,8 +196,32 @@ func (s *Service) Create(
 		}
 	}
 
+	in.Title = title
 	dedup := origin != enum.TaskOriginManual && in.OriginRef != ""
 
+	for try := 0; try < maxTxRetries; try++ {
+		task, created, err = s.createOnce(ctx, principalID, in, origin, priority, dedup)
+		// A concurrent create of the same origin hit the unique index of active tasks.
+		// Its transaction is gone, so look the winner up again in a new one.
+		if dedup && errors.Is(err, gitness_store.ErrDuplicate) {
+			continue
+		}
+		break
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return task, created, nil
+}
+
+func (s *Service) createOnce(
+	ctx context.Context,
+	principalID int64,
+	in CreateInput,
+	origin enum.TaskOrigin,
+	priority enum.TaskPriority,
+	dedup bool,
+) (task *types.Task, created bool, err error) {
 	err = s.tx.WithTx(ctx, func(ctx context.Context) error {
 		if dedup {
 			existing, findErr := s.tasks.FindActiveByOrigin(ctx, in.RepoID, origin, in.OriginRef)
@@ -228,7 +252,7 @@ func (s *Service) Create(
 
 		t := &types.Task{
 			RepoID:      in.RepoID,
-			Title:       title,
+			Title:       in.Title,
 			Description: in.Description,
 			Origin:      origin,
 			OriginRef:   in.OriginRef,

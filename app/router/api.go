@@ -39,6 +39,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/controller/system"
+	taskctrl "github.com/harness/gitness/app/api/controller/task"
 	"github.com/harness/gitness/app/api/controller/template"
 	"github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
@@ -67,6 +68,7 @@ import (
 	handlerserviceaccount "github.com/harness/gitness/app/api/handler/serviceaccount"
 	handlerspace "github.com/harness/gitness/app/api/handler/space"
 	handlersystem "github.com/harness/gitness/app/api/handler/system"
+	handlertask "github.com/harness/gitness/app/api/handler/task"
 	handlertemplate "github.com/harness/gitness/app/api/handler/template"
 	handlertrigger "github.com/harness/gitness/app/api/handler/trigger"
 	handlerupload "github.com/harness/gitness/app/api/handler/upload"
@@ -135,6 +137,7 @@ func NewAPIHandler(
 	gitspaceCtrl *gitspace.Controller,
 	usageSender usage.Sender,
 	insightsCtrl *insightsctrl.Controller,
+	taskCtrl *taskctrl.Controller,
 ) http.Handler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -167,7 +170,7 @@ func NewAPIHandler(
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, uploadCtrl,
-				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, usageSender, sysCtrl, insightsCtrl)
+				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, usageSender, sysCtrl, insightsCtrl, taskCtrl)
 		})
 	})
 
@@ -220,12 +223,13 @@ func setupRoutesV1WithAuth(r chi.Router,
 	usageSender usage.Sender,
 	sysCtrl *system.Controller,
 	insightsCtrl *insightsctrl.Controller,
+	taskCtrl *taskctrl.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
 	setupSpaces(r, appCtx, infraProviderCtrl, spaceCtrl, repoSettingsCtrl, userGroupCtrl, webhookCtrl, checkCtrl,
-		searchCtrl)
+		searchCtrl, taskCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
-		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, searchCtrl, usageSender, insightsCtrl)
+		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, searchCtrl, usageSender, insightsCtrl, taskCtrl)
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
@@ -252,6 +256,7 @@ func setupSpaces(
 	webhookCtrl *webhook.Controller,
 	checkCtrl *check.Controller,
 	searchCtrl *keywordsearch.Controller,
+	taskCtrl *taskctrl.Controller,
 ) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -287,6 +292,7 @@ func setupSpaces(
 			r.Post("/public-access", handlerspace.HandleUpdatePublicAccess(spaceCtrl))
 			r.Get("/pullreq", handlerspace.HandleListPullReqs(spaceCtrl))
 			r.Get("/pullreq/count", handlerspace.HandleCountPullReqs(spaceCtrl))
+			r.Get("/tasks", handlertask.HandleListForSpace(taskCtrl))
 
 			r.Route("/members", func(r chi.Router) {
 				r.Get("/", handlerspace.HandleMembershipList(spaceCtrl))
@@ -400,6 +406,7 @@ func setupRepos(r chi.Router,
 	searchCtrl *keywordsearch.Controller,
 	usageSender usage.Sender,
 	insightsCtrl *insightsctrl.Controller,
+	taskCtrl *taskctrl.Controller,
 ) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -523,6 +530,8 @@ func setupRepos(r chi.Router,
 			).Get(fmt.Sprintf("/archive/%s", request.PathParamArchiveGitRef), handlerrepo.HandleArchive(repoCtrl))
 
 			SetupPullReq(r, pullreqCtrl)
+
+			SetupTasks(r, taskCtrl)
 
 			SetupWebhookRepo(r, webhookCtrl)
 
@@ -1057,6 +1066,24 @@ func setupMigrate(r chi.Router, migCtrl *migrate.Controller) {
 				r.Post("/webhooks", handlermigrate.HandleWebhooks(migCtrl))
 				r.Post("/rules", handlermigrate.HandleRules(migCtrl))
 			})
+		})
+	})
+}
+
+// SetupTasks registers the repository scoped Tasks API.
+func SetupTasks(r chi.Router, taskCtrl *taskctrl.Controller) {
+	r.Route("/tasks", func(r chi.Router) {
+		r.Get("/", handlertask.HandleList(taskCtrl))
+		r.Post("/", handlertask.HandleCreate(taskCtrl))
+
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamTaskNumber), func(r chi.Router) {
+			r.Get("/", handlertask.HandleFind(taskCtrl))
+			r.Patch("/", handlertask.HandleUpdate(taskCtrl))
+			r.Post("/state", handlertask.HandleState(taskCtrl))
+			r.Post("/resume", handlertask.HandleResume(taskCtrl))
+			r.Get("/activities", handlertask.HandleListActivities(taskCtrl))
+			r.Post("/comments", handlertask.HandleCreateComment(taskCtrl))
+			r.Get("/links", handlertask.HandleListLinks(taskCtrl))
 		})
 	})
 }

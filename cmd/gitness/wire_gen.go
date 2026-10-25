@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	space2 "github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/controller/system"
+	task2 "github.com/harness/gitness/app/api/controller/task"
 	"github.com/harness/gitness/app/api/controller/template"
 	"github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
@@ -122,6 +123,7 @@ import (
 	secret3 "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/space"
+	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -770,7 +772,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	insightsEventStore := database.ProvideInsightsEventStore(db)
 	insightsService := insights.ProvideService(insightsProjectStore, insightsIssueStore, insightsEventStore)
 	insightsController := insights2.ProvideController(authorizer, repoFinder, provider, insightsService)
-	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController, insightsController, insightsService)
+	taskStore := database.ProvideTaskStore(db)
+	taskActivityStore := database.ProvideTaskActivityStore(db)
+	taskLinkStore := database.ProvideTaskLinkStore(db)
+	taskService := task.ProvideService(transactor, taskStore, taskActivityStore, taskLinkStore)
+	taskController := task2.ProvideController(authorizer, repoFinder, spaceFinder, repoStore, taskStore, taskActivityStore, taskLinkStore, taskService)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController, insightsController, insightsService, taskController)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	sshAuthService := publickey.ProvideSSHAuthService(publicKeyStore, principalInfoCache)
 	sshServer := ssh.ProvideServer(config, sshAuthService, repoController, lfsController)

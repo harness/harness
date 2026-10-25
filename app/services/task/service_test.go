@@ -95,6 +95,14 @@ func (f *fakeTasks) List(context.Context, int64, *types.TaskFilter) ([]*types.Ta
 }
 func (f *fakeTasks) Count(context.Context, int64, *types.TaskFilter) (int64, error) { return 0, nil }
 
+func (f *fakeTasks) ListByRepos(context.Context, []int64, *types.TaskFilter) ([]*types.Task, error) {
+	return nil, nil
+}
+
+func (f *fakeTasks) CountByRepos(context.Context, []int64, *types.TaskFilter) (int64, error) {
+	return 0, nil
+}
+
 type fakeActivities struct{ list []*types.TaskActivity }
 
 func (f *fakeActivities) Create(_ context.Context, a *types.TaskActivity) error {

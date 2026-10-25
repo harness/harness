@@ -43,6 +43,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/controller/system"
+	taskctrl "github.com/harness/gitness/app/api/controller/task"
 	"github.com/harness/gitness/app/api/controller/template"
 	controllertrigger "github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
@@ -133,6 +134,7 @@ import (
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	spaceSvc "github.com/harness/gitness/app/services/space"
+	taskservice "github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -207,6 +209,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		repo.WireSet,
 		reposettings.WireSet,
 		insightsctrl.WireSet,
+		taskctrl.WireSet,
 		pullreq.WireSet,
 		merge.WireSet,
 		checkreq.WireSet,
@@ -355,6 +358,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		runarg.WireSet,
 		lfs.WireSet,
 		insights.WireSet,
+		taskservice.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,
