@@ -59,6 +59,9 @@ type (
 		// ListWaitingQuota lists up to limit tasks in esperando_cuota across all repositories in the order they
 		// should resume: p0 first, then regressions, then p1, then the rest; by creation within each group.
 		ListWaitingQuota(ctx context.Context, limit int) ([]*types.Task, error)
+		// ListDueBefore lists the active tasks (not resolved, verified or dismissed) with a due date at or before
+		// the given time (unix millis) ordered by id, starting after the given task id.
+		ListDueBefore(ctx context.Context, before int64, afterID int64, limit int) ([]*types.Task, error)
 	}
 
 	// TaskActivityStore defines the task timeline storage.
@@ -68,6 +71,9 @@ type (
 
 		// List lists the activities of a task ordered by creation time.
 		List(ctx context.Context, taskID int64, pagination types.Pagination) ([]*types.TaskActivity, error)
+
+		// ListByKind lists all activities of the given kind of a task ordered by creation time.
+		ListByKind(ctx context.Context, taskID int64, kind enum.TaskActivityKind) ([]*types.TaskActivity, error)
 	}
 
 	// TaskLinkStore defines the storage of links between tasks and other entities.

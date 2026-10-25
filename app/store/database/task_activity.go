@@ -138,3 +138,42 @@ func (s *TaskActivityStore) List(
 
 	return out, nil
 }
+
+func (s *TaskActivityStore) ListByKind(
+	ctx context.Context,
+	taskID int64,
+	kind enum.TaskActivityKind,
+) ([]*types.TaskActivity, error) {
+	stmt := database.Builder.
+		Select(taskActivityColumns).
+		From("task_activities").
+		Where("task_activity_task_id = ?", taskID).
+		Where("task_activity_kind = ?", kind).
+		OrderBy("task_activity_created ASC", "task_activity_id ASC")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert task activity list by kind query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*taskActivity{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing task activity list by kind query")
+	}
+
+	out := make([]*types.TaskActivity, len(dst))
+	for i, d := range dst {
+		out[i] = &types.TaskActivity{
+			ID:          d.ID,
+			TaskID:      d.TaskID,
+			Kind:        d.Kind,
+			Payload:     json.RawMessage(d.Payload),
+			PrincipalID: d.PrincipalID.Ptr(),
+			Created:     d.Created,
+		}
+	}
+
+	return out, nil
+}

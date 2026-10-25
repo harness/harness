@@ -257,3 +257,45 @@ func RetrieveEmailsFromPrincipals(principals []*types.PrincipalInfo) []string {
 	}
 	return emails
 }
+
+var taskTemplates = map[TaskNotificationKind]string{
+	TaskNotificationAssigned:       "task_assigned.html",
+	TaskNotificationStateChanged:   "task_state_changed.html",
+	TaskNotificationReopened:       "task_reopened.html",
+	TaskNotificationCommentCreated: "task_comment_created.html",
+	TaskNotificationAgentNeedsHelp: "task_agent_needs_help.html",
+	TaskNotificationSLAWarning:     "task_sla_warning.html",
+	TaskNotificationSLAOverdue:     "task_sla_overdue.html",
+}
+
+var taskSubjectPrefixes = map[TaskNotificationKind]string{
+	TaskNotificationAssigned:       "Assigned",
+	TaskNotificationStateChanged:   "State changed",
+	TaskNotificationReopened:       "Reopened",
+	TaskNotificationCommentCreated: "New comment",
+	TaskNotificationAgentNeedsHelp: "Agent needs help",
+	TaskNotificationSLAWarning:     "Due soon",
+	TaskNotificationSLAOverdue:     "Overdue",
+}
+
+func (m MailClient) SendTaskNotification(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *TaskPayload,
+) error {
+	templateName, ok := taskTemplates[payload.Kind]
+	if !ok {
+		return fmt.Errorf("unknown task notification kind %q", payload.Kind)
+	}
+	body, err := GetHTMLBody(templateName, payload)
+	if err != nil {
+		return fmt.Errorf("failed to generate mail for task %s notification: %w", payload.Kind, err)
+	}
+	return m.Mailer.Send(ctx, mailer.Payload{
+		Subject: fmt.Sprintf("[%s] %s: %s (Task #%d)", payload.Repo.Identifier,
+			taskSubjectPrefixes[payload.Kind], payload.Task.Title, payload.Task.Number),
+		Body:         string(body),
+		RepoRef:      payload.Repo.Path,
+		ToRecipients: RetrieveEmailsFromPrincipals(recipients),
+	})
+}

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<p>
+    {{if .Actor}}<b>@{{.Actor.DisplayName}}</b>{{else}}The system{{end}} commented on task #{{.Task.Number}}: {{.Task.Title}}.
+</p>
+<p>
+<a href="{{.TaskURL}}">View task #{{.Task.Number}}</a>
+</p>
+
+</body>
+</html>

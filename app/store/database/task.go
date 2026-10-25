@@ -350,6 +350,40 @@ func (s *TaskStore) CountByRepos(ctx context.Context, repoIDs []int64, filter *t
 	return count, nil
 }
 
+// ListDueBefore lists the active tasks due at or before the given time ordered by id.
+func (s *TaskStore) ListDueBefore(
+	ctx context.Context,
+	before int64,
+	afterID int64,
+	limit int,
+) ([]*types.Task, error) {
+	stmt := database.Builder.
+		Select(taskColumns).
+		From("tasks").
+		Where("task_due IS NOT NULL").
+		Where("task_due <= ?", before).
+		Where("task_id > ?", afterID).
+		Where(squirrel.NotEq{"task_state": []enum.TaskState{
+			enum.TaskStateResolved, enum.TaskStateVerified, enum.TaskStateDismissed,
+		}}).
+		OrderBy("task_id ASC").
+		Limit(uint64(limit)) //nolint:gosec
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert task due list query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*task{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing task due list query")
+	}
+
+	return mapTasks(dst), nil
+}
+
 func applyTaskFilter(stmt squirrel.SelectBuilder, filter *types.TaskFilter) squirrel.SelectBuilder {
 	if filter == nil {
 		return stmt

@@ -66,6 +66,10 @@ func (f *fakeReporter) CommentCreated(context.Context, *taskevents.CommentCreate
 	f.names = append(f.names, "comment_created")
 }
 
+func (f *fakeReporter) AgentNeedsHelp(context.Context, *taskevents.AgentNeedsHelpPayload) {
+	f.names = append(f.names, "agent_needs_help")
+}
+
 func (f *fakeReporter) reset() { f.names = nil }
 
 func TestEventsEmission(t *testing.T) {

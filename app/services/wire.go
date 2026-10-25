@@ -40,6 +40,7 @@ import (
 	shieldbump "github.com/harness/gitness/app/services/shield/bump"
 	"github.com/harness/gitness/app/services/shield/prcheck"
 	"github.com/harness/gitness/app/services/tasklink"
+	"github.com/harness/gitness/app/services/tasksla"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
@@ -82,6 +83,7 @@ type Services struct {
 	shieldTriager                  *shield.Triager
 	quotaResume                    *quotaresume.Service
 	agentLauncher                  *agentlauncher.Launcher
+	taskSLA                        *tasksla.Service
 }
 
 type GitspaceServices struct {
@@ -143,6 +145,7 @@ func ProvideServices(
 	shieldTriager *shield.Triager,
 	quotaResumeSvc *quotaresume.Service,
 	agentLauncher *agentlauncher.Launcher,
+	taskSLA *tasksla.Service,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -172,5 +175,6 @@ func ProvideServices(
 		shieldTriager:                  shieldTriager,
 		quotaResume:                    quotaResumeSvc,
 		agentLauncher:                  agentLauncher,
+		taskSLA:                        taskSLA,
 	}
 }

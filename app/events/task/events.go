@@ -39,6 +39,8 @@ const (
 	ReopenedEvent events.EventType = "reopened"
 	// CommentCreatedEvent is emitted after a comment was added to a task.
 	CommentCreatedEvent events.EventType = "comment_created"
+	// AgentNeedsHelpEvent is emitted after an agent run on a task reported that it needs a human.
+	AgentNeedsHelpEvent events.EventType = "agent_needs_help"
 )
 
 // Base is the common part of all task event payloads.
@@ -90,6 +92,11 @@ type (
 	CommentCreatedPayload struct {
 		Base
 	}
+
+	AgentNeedsHelpPayload struct {
+		Base
+		Model string `json:"model,omitempty"`
+	}
 )
 
 // Created reports a task created event.
@@ -130,6 +137,11 @@ func (r *Reporter) Reopened(ctx context.Context, payload *ReopenedPayload) {
 // CommentCreated reports a task comment created event.
 func (r *Reporter) CommentCreated(ctx context.Context, payload *CommentCreatedPayload) {
 	r.send(ctx, CommentCreatedEvent, payload, payload != nil)
+}
+
+// AgentNeedsHelp reports that an agent run on a task needs a human.
+func (r *Reporter) AgentNeedsHelp(ctx context.Context, payload *AgentNeedsHelpPayload) {
+	r.send(ctx, AgentNeedsHelpEvent, payload, payload != nil)
 }
 
 func (r *Reporter) send(ctx context.Context, event events.EventType, payload any, ok bool) {
@@ -180,4 +192,10 @@ func (r *Reader) RegisterCommentCreated(
 	fn events.HandlerFunc[*CommentCreatedPayload], opts ...events.HandlerOption,
 ) error {
 	return events.ReaderRegisterEvent(r.innerReader, CommentCreatedEvent, fn, opts...)
+}
+
+func (r *Reader) RegisterAgentNeedsHelp(
+	fn events.HandlerFunc[*AgentNeedsHelpPayload], opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, AgentNeedsHelpEvent, fn, opts...)
 }

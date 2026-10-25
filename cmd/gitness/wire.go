@@ -150,6 +150,7 @@ import (
 	"github.com/harness/gitness/app/services/task"
 	"github.com/harness/gitness/app/services/taskassign"
 	"github.com/harness/gitness/app/services/tasklink"
+	"github.com/harness/gitness/app/services/tasksla"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -389,6 +390,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		shieldbump.WireSet,
 		insightsverify.WireSet,
 		quotaresume.WireSet,
+		tasksla.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,

@@ -18,6 +18,7 @@ import (
 	"context"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	taskevents "github.com/harness/gitness/app/events/task"
 	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
@@ -47,6 +48,9 @@ func ProvideNotificationService(
 	pullReqActivityStore store.PullReqActivityStore,
 	spacePathStore store.SpacePathStore,
 	urlProvider url.Provider,
+	taskReaderFactory *events.ReaderFactory[*taskevents.Reader],
+	taskStore store.TaskStore,
+	taskActivityStore store.TaskActivityStore,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -63,6 +67,9 @@ func ProvideNotificationService(
 		pullReqActivityStore,
 		spacePathStore,
 		urlProvider,
+		taskReaderFactory,
+		taskStore,
+		taskActivityStore,
 	)
 }
 
