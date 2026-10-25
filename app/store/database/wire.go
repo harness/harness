@@ -93,6 +93,10 @@ var WireSet = wire.NewSet(
 	ProvideAutolinkStore,
 	ProvideGitspaceSettingsStore,
 	ProvideAITaskStore,
+	ProvideAIModelStore,
+	ProvideAIDecisionStore,
+	ProvideAIQuotaStore,
+	ProvideAIUsageStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -475,6 +479,26 @@ func ProvideAutolinkStore(db *sqlx.DB) store.AutoLinkStore {
 
 func ProvideAITaskStore(db *sqlx.DB) store.AITaskStore {
 	return NewAITaskStore(db)
+}
+
+// ProvideAIModelStore provides an AI model catalog store.
+func ProvideAIModelStore(db *sqlx.DB) store.AIModelStore {
+	return NewAIModelStore(db)
+}
+
+// ProvideAIDecisionStore provides an AI decision store.
+func ProvideAIDecisionStore(db *sqlx.DB) store.AIDecisionStore {
+	return NewAIDecisionStore(db)
+}
+
+// ProvideAIQuotaStore provides an AI quota store.
+func ProvideAIQuotaStore(db *sqlx.DB) store.AIQuotaStore {
+	return NewAIQuotaStore(db)
+}
+
+// ProvideAIUsageStore provides an AI usage store.
+func ProvideAIUsageStore(db *sqlx.DB) store.AIUsageStore {
+	return NewAIUsageStore(db)
 }
 
 // ProvidePullReqLabelSuggestionStore provides a pull request label suggestion store.
