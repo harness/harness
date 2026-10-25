@@ -109,6 +109,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/insights"
+	"github.com/harness/gitness/app/services/insights/triage"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -359,6 +360,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		runarg.WireSet,
 		lfs.WireSet,
 		insights.WireSet,
+		triage.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,

@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspaceinfraevent"
 	"github.com/harness/gitness/app/services/gitspaceoperationsevent"
 	"github.com/harness/gitness/app/services/infraprovider"
+	"github.com/harness/gitness/app/services/insights/triage"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/languageanalyzer"
@@ -68,6 +69,7 @@ type Services struct {
 	registryAsyncProcessingService *registryasyncprocessing.Service
 	languageAnalyzer               languageanalyzer.LanguageAnalyzer
 	taskLink                       *tasklink.Service
+	insightsTriage                 *triage.Observer
 }
 
 type GitspaceServices struct {
@@ -122,6 +124,7 @@ func ProvideServices(
 	registryJobRpmRegistryIndex *handler.JobRpmRegistryIndex,
 	languageAnalyzer languageanalyzer.LanguageAnalyzer,
 	taskLinkSvc *tasklink.Service,
+	insightsTriage *triage.Observer,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -144,5 +147,6 @@ func ProvideServices(
 		registryAsyncProcessingService: registryAsyncProcessingService,
 		languageAnalyzer:               languageAnalyzer,
 		taskLink:                       taskLinkSvc,
+		insightsTriage:                 insightsTriage,
 	}
 }
