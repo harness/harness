@@ -19,6 +19,9 @@ import "github.com/harness/gitness/types/enum"
 type AIAgentAuth struct {
 	AuthType enum.AIAgentAuth `json:"type"`
 	APIKey   APIKey           `json:"api_key,omitempty"`
+	// BaseURL and Model are only used with OpenRouterAPIKeyAuth.
+	BaseURL string `json:"base_url,omitempty"`
+	Model   string `json:"model,omitempty"`
 }
 
 type APIKey struct {

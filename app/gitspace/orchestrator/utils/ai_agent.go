@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/types"
+	"github.com/harness/gitness/app/services/aigateway"
 	gitnessTypes "github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -128,26 +129,53 @@ func configureClaudeCode(
 		return fmt.Errorf("auth not available for %s", enum.AIAgentClaudeCode)
 	}
 
-	if claudeAuth.AuthType != enum.AnthropicAPIKeyAuth || claudeAuth.APIKey.Value == nil {
-		gitspaceLogger.Info(fmt.Sprintf("%s is not available for claude code", claudeAuth.AuthType))
-		return fmt.Errorf("auth type not available for %s", enum.AIAgentClaudeCode)
+	payload, err := claudeCodePayload(claudeAuth)
+	if err != nil {
+		gitspaceLogger.Info(fmt.Sprintf("%s is not available for claude code: %s", claudeAuth.AuthType, err))
+		return fmt.Errorf("auth type not available for %s: %w", enum.AIAgentClaudeCode, err)
 	}
 
-	script, err := GenerateScriptFromTemplate(
-		templateClaudeCodeConfigureScript, &types.ConfigureClaudeCodePayload{
-			AnthropicAPIKey: claudeAuth.APIKey.Value.Value(),
-		})
+	script, err := GenerateScriptFromTemplate(templateClaudeCodeConfigureScript, payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate script to configure claude code from template %s: %w",
 			templateClaudeCodeInstallScript, err)
 	}
 	gitspaceLogger.Info("configuring claude code output...")
-	gitspaceLogger.Info("claude code is setup using anthropic api key")
+	gitspaceLogger.Info(fmt.Sprintf("claude code is setup using %s", claudeAuth.AuthType))
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to configure claude code : %w", err)
 	}
 	gitspaceLogger.Info("Successfully configured claude code")
 	return nil
+}
+
+func claudeCodePayload(auth gitnessTypes.AIAgentAuth) (*types.ConfigureClaudeCodePayload, error) {
+	if auth.APIKey.Value == nil {
+		return nil, fmt.Errorf("api key is missing")
+	}
+
+	switch auth.AuthType {
+	case enum.AnthropicAPIKeyAuth:
+		return &types.ConfigureClaudeCodePayload{
+			AnthropicAPIKey: auth.APIKey.Value.Value(),
+		}, nil
+	case enum.OpenRouterAPIKeyAuth:
+		// only free models may run through OpenRouter
+		if !aigateway.IsFreeModelID(auth.Model) {
+			return nil, fmt.Errorf("model %q is not a free OpenRouter model", auth.Model)
+		}
+		baseURL := auth.BaseURL
+		if baseURL == "" {
+			baseURL = aigateway.DefaultBaseURL
+		}
+		return &types.ConfigureClaudeCodePayload{
+			BaseURL:   baseURL,
+			AuthToken: auth.APIKey.Value.Value(),
+			Model:     auth.Model,
+		}, nil
+	default:
+		return nil, fmt.Errorf("unsupported auth type %q", auth.AuthType)
+	}
 }

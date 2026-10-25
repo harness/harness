@@ -105,4 +105,8 @@ type SetupClaudeCodePayload struct {
 
 type ConfigureClaudeCodePayload struct {
 	AnthropicAPIKey string
+	// OpenRouter mode: when BaseURL is set, Claude Code talks to OpenRouter with AuthToken and Model.
+	BaseURL   string
+	AuthToken string
+	Model     string
 }

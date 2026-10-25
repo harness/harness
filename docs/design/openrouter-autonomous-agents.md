@@ -8,6 +8,31 @@ Cambios respecto de v1:
 - Se agrega un **módulo de Tareas** para registrar y seguir cada issue.
 - El diseño ahora contempla las cuotas del plan gratuito.
 
+## Estado de implementación
+
+**Fase 0, en curso.** Ya está en `app/services/aigateway`:
+
+| Pieza | Archivo | Sección |
+|---|---|---|
+| Guardia de solo-gratuito: allowlist, cuarentena y verificación de costo | `freeguard.go` | 4.1 (capas 1–4) |
+| Catálogo de modelos gratuitos, sincronizado en memoria por réplica | `catalog.go` | 4.2 |
+| Planificador de cuota: reservas por clase, pool compartido desde el mediodía UTC, límite por minuto | `quota.go` | 4.4 |
+| Redacción con gitleaks y reglas para PII y credenciales | `redact.go` | 4.6 |
+| Contrato de la Decisions API, con parseo estricto | `decisions/` | 5.5 |
+| Gateway: Mammoth → Elephant, cache de decisiones, chat sin fallback pago, entorno del agente | `gateway.go`, `chat.go` | 4, 5.5 |
+| Config `GITNESS_AI_GATEWAY_*` y `ProvideGateway` | `config.go`, `wire.go`, `types/config.go` | 4 |
+
+Además, Claude Code acepta la auth `openrouter-api-key`, que solo admite modelos `:free` (`orchestrator/utils/ai_agent.go` y `configure_claude_code.sh`).
+
+Pendiente de la fase 0:
+- Conectar `aigateway.WireSet` en `cmd/gitness/wire.go` y regenerar `wire_gen.go`.
+- Persistir la cuota (`ai_quota`) y compartirla entre réplicas.
+- Tablas `ai_models`, `ai_decisions` y `ai_usage`.
+- Modos de IA por repo.
+- Elegir el modelo del agente en `decryptAIAuth`.
+- Spike de Claude Code con modelos gratuitos.
+- Validar el límite de crédito en la key (capa 5).
+
 ## 1. Objetivo
 
 Agregar a Harness tres productos que comparten una misma base de IA:

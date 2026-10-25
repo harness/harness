@@ -31,11 +31,15 @@ func (a AIAgentAuth) String() string {
 
 var AIAgentAuthTypes = []AIAgentAuth{
 	AnthropicAPIKeyAuth,
+	OpenRouterAPIKeyAuth,
 }
 
 const (
 	//nolint:gosec // this is not hardcoded credentials
 	AnthropicAPIKeyAuth AIAgentAuth = "anthropic-api-key"
+	// OpenRouterAPIKeyAuth runs the agent against OpenRouter's Anthropic-compatible API with a free model.
+	//nolint:gosec // this is not hardcoded credentials
+	OpenRouterAPIKeyAuth AIAgentAuth = "openrouter-api-key"
 )
 
 func (a *AIAgentAuth) UnmarshalJSON(data []byte) error {

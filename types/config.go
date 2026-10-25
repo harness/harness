@@ -667,4 +667,17 @@ type Config struct {
 	Development struct {
 		UISourceOverride string `envconfig:"GITNESS_DEVELOPMENT_UI_SOURCE_OVERRIDE"`
 	}
+
+	// AIGateway configures access to OpenRouter. Only free models are ever used.
+	AIGateway struct {
+		Enabled               bool          `envconfig:"GITNESS_AI_GATEWAY_ENABLED" default:"false"`
+		BaseURL               string        `envconfig:"GITNESS_AI_GATEWAY_BASE_URL" default:"https://openrouter.ai/api"`
+		APIKey                string        `envconfig:"GITNESS_AI_GATEWAY_API_KEY"`
+		DecisionModel         string        `envconfig:"GITNESS_AI_GATEWAY_DECISION_MODEL" default:"baseten/mammoth-1:free"`
+		DecisionFallbackModel string        `envconfig:"GITNESS_AI_GATEWAY_DECISION_FALLBACK_MODEL" default:"baseten/elephant-1:free"` //nolint:lll
+		DailyRequestLimit     int           `envconfig:"GITNESS_AI_GATEWAY_DAILY_REQUEST_LIMIT" default:"50"`
+		RequestsPerMinute     int           `envconfig:"GITNESS_AI_GATEWAY_REQUESTS_PER_MINUTE" default:"18"`
+		CatalogSyncInterval   time.Duration `envconfig:"GITNESS_AI_GATEWAY_CATALOG_SYNC_INTERVAL" default:"6h"`
+		HTTPTimeout           time.Duration `envconfig:"GITNESS_AI_GATEWAY_HTTP_TIMEOUT" default:"60s"`
+	}
 }
