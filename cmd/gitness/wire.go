@@ -26,6 +26,7 @@ import (
 	githookCtrl "github.com/harness/gitness/app/api/controller/githook"
 	gitspaceCtrl "github.com/harness/gitness/app/api/controller/gitspace"
 	infraproviderCtrl "github.com/harness/gitness/app/api/controller/infraprovider"
+	insightsctrl "github.com/harness/gitness/app/api/controller/insights"
 	controllerkeywordsearch "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -106,6 +107,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspaceservice"
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/insights"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -203,6 +205,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		publicaccess.WireSet,
 		repo.WireSet,
 		reposettings.WireSet,
+		insightsctrl.WireSet,
 		pullreq.WireSet,
 		merge.WireSet,
 		checkreq.WireSet,
@@ -349,6 +352,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		secretservice.WireSet,
 		runarg.WireSet,
 		lfs.WireSet,
+		insights.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,

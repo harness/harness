@@ -101,6 +101,7 @@ var WireSet = wire.NewSet(
 	ProvideTaskActivityStore,
 	ProvideTaskLinkStore,
 	ProvideTaskLabelStore,
+	InsightsStoreWireSet,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -529,3 +530,25 @@ func ProvideTaskLabelStore(db *sqlx.DB) store.TaskLabelStore {
 func ProvidePullReqLabelSuggestionStore(db *sqlx.DB) store.PullReqLabelSuggestionStore {
 	return NewPullReqLabelSuggestionStore(db)
 }
+
+// ProvideInsightsProjectStore provides an insights project store.
+func ProvideInsightsProjectStore(db *sqlx.DB) store.InsightsProjectStore {
+	return NewInsightsProjectStore(db)
+}
+
+// ProvideInsightsIssueStore provides an insights issue store.
+func ProvideInsightsIssueStore(db *sqlx.DB) store.InsightsIssueStore {
+	return NewInsightsIssueStore(db)
+}
+
+// ProvideInsightsEventStore provides an insights event store.
+func ProvideInsightsEventStore(db *sqlx.DB) store.InsightsEventStore {
+	return NewInsightsEventStore(db)
+}
+
+// InsightsStoreWireSet provides the Insights stores.
+var InsightsStoreWireSet = wire.NewSet(
+	ProvideInsightsProjectStore,
+	ProvideInsightsIssueStore,
+	ProvideInsightsEventStore,
+)

@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/controller/gitspace"
 	infraprovider2 "github.com/harness/gitness/app/api/controller/infraprovider"
+	insights2 "github.com/harness/gitness/app/api/controller/insights"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -95,6 +96,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspacesettings"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/infraprovider/infraproviderwire"
+	"github.com/harness/gitness/app/services/insights"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keyfetcher"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -754,7 +756,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController)
+	insightsProjectStore := database.ProvideInsightsProjectStore(db)
+	insightsIssueStore := database.ProvideInsightsIssueStore(db)
+	insightsEventStore := database.ProvideInsightsEventStore(db)
+	insightsService := insights.ProvideService(insightsProjectStore, insightsIssueStore, insightsEventStore)
+	insightsController := insights2.ProvideController(authorizer, repoFinder, provider, insightsService)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController, insightsController, insightsService)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	sshAuthService := publickey.ProvideSSHAuthService(publicKeyStore, principalInfoCache)
 	sshServer := ssh.ProvideServer(config, sshAuthService, repoController, lfsController)
