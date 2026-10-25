@@ -92,6 +92,36 @@ func TestTaskStore_CreateAllocatesNumberPerRepo(t *testing.T) {
 	}
 }
 
+func TestTaskStore_FindActiveByOrigin(t *testing.T) {
+	ctx, env, teardown := setupTaskEnv(t)
+	defer teardown()
+
+	mk := func(repoID int64, origin enum.TaskOrigin, ref string, state enum.TaskState) *types.Task {
+		tk := newTask(repoID, "t")
+		tk.Origin, tk.OriginRef, tk.State = origin, ref, state
+		if err := env.tasks.Create(ctx, tk); err != nil {
+			t.Fatalf("Create() error = %v", err)
+		}
+		return tk
+	}
+
+	mk(1, enum.TaskOriginInsights, "i-1", enum.TaskStateDismissed)
+	mk(1, enum.TaskOriginInsights, "i-1", enum.TaskStateVerified)
+	_, err := env.tasks.FindActiveByOrigin(ctx, 1, enum.TaskOriginInsights, "i-1")
+	if !errors.Is(err, gitness_store.ErrResourceNotFound) {
+		t.Fatalf("expected not found for inactive tasks, got %v", err)
+	}
+
+	active := mk(1, enum.TaskOriginInsights, "i-1", enum.TaskStateResolved)
+	mk(2, enum.TaskOriginInsights, "i-1", enum.TaskStateOpen)
+	mk(1, enum.TaskOriginShield, "i-1", enum.TaskStateOpen)
+
+	got, err := env.tasks.FindActiveByOrigin(ctx, 1, enum.TaskOriginInsights, "i-1")
+	if err != nil || got.ID != active.ID {
+		t.Fatalf("FindActiveByOrigin() = %+v, %v; want id %d", got, err, active.ID)
+	}
+}
+
 func TestTaskStore_UpdateOptimisticLock(t *testing.T) {
 	ctx, env, teardown := setupTaskEnv(t)
 	defer teardown()

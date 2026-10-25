@@ -117,6 +117,7 @@ const (
 	TaskActivityKindComment        TaskActivityKind = "comment"
 	TaskActivityKindAssignment     TaskActivityKind = "assignment"
 	TaskActivityKindPriorityChange TaskActivityKind = "priority_change"
+	TaskActivityKindUpdated        TaskActivityKind = "updated"
 )
 
 var taskActivityKinds = sortEnum([]TaskActivityKind{
@@ -128,6 +129,7 @@ var taskActivityKinds = sortEnum([]TaskActivityKind{
 	TaskActivityKindComment,
 	TaskActivityKindAssignment,
 	TaskActivityKindPriorityChange,
+	TaskActivityKindUpdated,
 })
 
 // TaskLinkKind defines the kind of entity a task is linked to.
