@@ -667,6 +667,8 @@ export interface StringsMap {
   'pageTitle.signin': string
   'pageTitle.spaceSettings': string
   'pageTitle.tags': string
+  'pageTitle.taskDetail': string
+  'pageTitle.tasks': string
   'pageTitle.userProfile': string
   'pageTitle.users': string
   'pageTitle.webhooks': string
@@ -1197,6 +1199,90 @@ export interface StringsMap {
   tagNotFound: string
   tagger: string
   tags: string
+  'tasks.activity.agentRun': string
+  'tasks.activity.assignment': string
+  'tasks.activity.commented': string
+  'tasks.activity.created': string
+  'tasks.activity.decision': string
+  'tasks.activity.decisionLine': string
+  'tasks.activity.fallback': string
+  'tasks.activity.linked': string
+  'tasks.activity.prLinked': string
+  'tasks.activity.prUnlinked': string
+  'tasks.activity.priorityChange': string
+  'tasks.activity.reason': string
+  'tasks.activity.stateChange': string
+  'tasks.activity.unlinked': string
+  'tasks.activity.updated': string
+  'tasks.addComment': string
+  'tasks.agent': string
+  'tasks.agentOnly': string
+  'tasks.allOrigins': string
+  'tasks.allPriorities': string
+  'tasks.allStates': string
+  'tasks.assignee': string
+  'tasks.boardView': string
+  'tasks.cancel': string
+  'tasks.clearDue': string
+  'tasks.comment': string
+  'tasks.commentAdded': string
+  'tasks.createTask': string
+  'tasks.description': string
+  'tasks.dismiss': string
+  'tasks.dismissReason': string
+  'tasks.dismissReasonRequired': string
+  'tasks.dismissTitle': string
+  'tasks.due': string
+  'tasks.edit': string
+  'tasks.group': string
+  'tasks.linkKind.ai_task': string
+  'tasks.linkKind.insights_issue': string
+  'tasks.linkKind.pullreq': string
+  'tasks.linkKind.shield_finding': string
+  'tasks.links': string
+  'tasks.listView': string
+  'tasks.mainFlow': string
+  'tasks.me': string
+  'tasks.moveFailed': string
+  'tasks.newTask': string
+  'tasks.noActivity': string
+  'tasks.noLinks': string
+  'tasks.noOriginRef': string
+  'tasks.noTasks': string
+  'tasks.noTasksForFilter': string
+  'tasks.number': string
+  'tasks.origin': string
+  'tasks.originRef': string
+  'tasks.originValue.insights': string
+  'tasks.originValue.manual': string
+  'tasks.originValue.shield': string
+  'tasks.principal': string
+  'tasks.priority': string
+  'tasks.pullRequest': string
+  'tasks.resume': string
+  'tasks.save': string
+  'tasks.searchPlaceholder': string
+  'tasks.sideStates': string
+  'tasks.state': string
+  'tasks.stateActions': string
+  'tasks.stateChanged': string
+  'tasks.stateValue.abierta': string
+  'tasks.stateValue.bloqueada': string
+  'tasks.stateValue.descartada': string
+  'tasks.stateValue.en_curso': string
+  'tasks.stateValue.en_revision': string
+  'tasks.stateValue.esperando_cuota': string
+  'tasks.stateValue.reabierta': string
+  'tasks.stateValue.resuelta': string
+  'tasks.stateValue.triage': string
+  'tasks.stateValue.verificada': string
+  'tasks.system': string
+  'tasks.taskCreated': string
+  'tasks.taskTitle': string
+  'tasks.taskUpdated': string
+  'tasks.timeline': string
+  'tasks.title': string
+  'tasks.unassigned': string
   termsOfUse: string
   thisRefHas: string
   title: string

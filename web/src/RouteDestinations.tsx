@@ -36,6 +36,8 @@ import PullRequests from 'pages/PullRequests/PullRequests'
 import WebhookNew from 'pages/WebhookNew/WebhookNew'
 import WebhookDetails from 'pages/WebhookDetails/WebhookDetails'
 import Webhooks from 'pages/Webhooks/Webhooks'
+import Tasks from 'pages/Tasks/Tasks'
+import TaskDetail from 'pages/TaskDetail/TaskDetail'
 import RepositorySettings from 'pages/RepositorySettings/RepositorySettings'
 import UsersListing from 'pages/UsersListing/UsersListing'
 import Home from 'pages/Home/Home'
@@ -178,6 +180,18 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toCODEPullRequests({ repoPath })} exact>
           <LayoutWithSideNav title={getString('pageTitle.pullRequests')}>
             <PullRequests />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODETask({ repoPath, taskNumber: pathProps.taskNumber })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.taskDetail')}>
+            <TaskDetail />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODETasks({ repoPath })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.tasks')}>
+            <Tasks />
           </LayoutWithSideNav>
         </Route>
 

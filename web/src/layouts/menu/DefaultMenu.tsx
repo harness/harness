@@ -53,6 +53,7 @@ export const DefaultMenu: React.FC = () => {
       (routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit')),
     [routeMatch, isCommitSelected]
   )
+  const isTaskSelected = useMemo(() => routeMatch.path.startsWith('/:space*/:repoName/tasks'), [routeMatch])
   const isWebhookSelected = useMemo(() => routeMatch.path.startsWith('/:space*/:repoName/webhook'), [routeMatch])
   const _gitRef = useMemo(() => {
     const ref = commitRef || gitRef
@@ -133,6 +134,16 @@ export const DefaultMenu: React.FC = () => {
                 isSubLink
                 label={getString('pullRequests')}
                 to={routes.toCODEPullRequests({
+                  repoPath
+                })}
+              />
+
+              <NavMenuItem
+                data-code-repo-section="tasks"
+                isSubLink
+                isSelected={isTaskSelected}
+                label={getString('tasks.title')}
+                to={routes.toCODETasks({
                   repoPath
                 })}
               />
