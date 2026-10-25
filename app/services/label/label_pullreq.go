@@ -307,6 +307,23 @@ func (s *Service) ListPullReqLabels(
 	pullreqID int64,
 	filter *types.AssignableLabelFilter,
 ) (*types.ScopesLabels, int64, error) {
+	pullreqAssignments, err := s.pullReqLabelAssignmentStore.ListAssigned(ctx, pullreqID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list labels assigned to pullreq: %w", err)
+	}
+
+	return s.listWithAssignments(ctx, repo, spaceID, pullreqAssignments, filter)
+}
+
+// listWithAssignments lists the labels of the scopes of the repository grouped by scope.
+// Depending on the filter it returns only the assigned labels or all assignable labels, marking the assigned ones.
+func (s *Service) listWithAssignments(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	spaceID int64,
+	assignments map[int64]*types.LabelAssignment,
+	filter *types.AssignableLabelFilter,
+) (*types.ScopesLabels, int64, error) {
 	spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, spaceID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get space hierarchy: %w", err)
@@ -322,13 +339,8 @@ func (s *Service) ListPullReqLabels(
 
 	scopeLabelsMap := make(map[int64]*types.ScopeData)
 
-	pullreqAssignments, err := s.pullReqLabelAssignmentStore.ListAssigned(ctx, pullreqID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list labels assigned to pullreq: %w", err)
-	}
-
 	if !filter.Assignable {
-		sortedAssignments := maps.Values(pullreqAssignments)
+		sortedAssignments := maps.Values(assignments)
 		sort.Slice(sortedAssignments, func(i, j int) bool {
 			if sortedAssignments[i].Key != sortedAssignments[j].Key {
 				return sortedAssignments[i].Key < sortedAssignments[j].Key
@@ -366,7 +378,7 @@ func (s *Service) ListPullReqLabels(
 
 	allAssignments := make([]*types.LabelAssignment, len(labelInfos))
 	for i, labelInfo := range labelInfos {
-		assignment, ok := pullreqAssignments[labelInfo.ID]
+		assignment, ok := assignments[labelInfo.ID]
 		if !ok {
 			assignment = &types.LabelAssignment{
 				LabelInfo: *labelInfo,

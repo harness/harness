@@ -25,6 +25,7 @@ import (
 	gitevents "github.com/harness/gitness/app/events/git"
 	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	taskevents "github.com/harness/gitness/app/events/task"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -191,6 +192,7 @@ type Service struct {
 	auditService          audit.Service
 	sseStreamer           sse.Streamer
 	userGroupStore        store.UserGroupStore
+	taskStore             store.TaskStore
 }
 
 func NewService(
@@ -201,6 +203,7 @@ func NewService(
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	mqReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
 	checkReaderFactory *events.ReaderFactory[*checkevents.Reader],
+	taskReaderFactory *events.ReaderFactory[*taskevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
 	spaceStore store.SpaceStore,
@@ -219,6 +222,7 @@ func NewService(
 	secretService secret.Service,
 	spacePathStore store.SpacePathStore,
 	userGroupStore store.UserGroupStore,
+	taskStore store.TaskStore,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service Config is invalid: %w", err)
@@ -249,6 +253,7 @@ func NewService(
 		auditService:          auditService,
 		sseStreamer:           sseStreamer,
 		userGroupStore:        userGroupStore,
+		taskStore:             taskStore,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
@@ -345,6 +350,28 @@ func NewService(
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch merge queue event reader for webhooks: %w", err)
+	}
+
+	_, err = taskReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+		func(r *taskevents.Reader) error {
+			const idleTimeout = 1 * time.Minute
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
+
+			_ = r.RegisterCreated(service.handleEventTaskCreated)
+			_ = r.RegisterStateChanged(service.handleEventTaskStateChanged)
+			_ = r.RegisterAssigned(service.handleEventTaskAssigned)
+			_ = r.RegisterPriorityChanged(service.handleEventTaskPriorityChanged)
+			_ = r.RegisterResolved(service.handleEventTaskResolved)
+
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch task event reader for webhooks: %w", err)
 	}
 
 	return service, nil

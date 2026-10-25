@@ -87,6 +87,7 @@ type Service struct {
 	tasks      store.TaskStore
 	activities store.TaskActivityStore
 	links      store.TaskLinkStore
+	events     EventReporter
 	now        func() int64
 }
 
@@ -97,6 +98,7 @@ func NewService(
 	tasks store.TaskStore,
 	activities store.TaskActivityStore,
 	links store.TaskLinkStore,
+	events EventReporter,
 ) *Service {
 	return &Service{
 		config:     config,
@@ -104,6 +106,7 @@ func NewService(
 		tasks:      tasks,
 		activities: activities,
 		links:      links,
+		events:     events,
 		now:        func() int64 { return time.Now().UnixMilli() },
 	}
 }
@@ -266,6 +269,9 @@ func (s *Service) Create(
 	})
 	if err != nil {
 		return nil, false, err
+	}
+	if created {
+		s.emitCreated(ctx, principalID, task)
 	}
 	return task, created, nil
 }
@@ -583,7 +589,19 @@ func (s *Service) AddComment(ctx context.Context, principalID int64, taskID int6
 	if strings.TrimSpace(text) == "" {
 		return usererror.BadRequest("Comment text is required")
 	}
-	return s.recordOnly(ctx, taskID, enum.TaskActivityKindComment, principalID, commentPayload{Text: text})
+	var t *types.Task
+	err := s.tx.WithTx(ctx, func(ctx context.Context) error {
+		var findErr error
+		if t, findErr = s.tasks.Find(ctx, taskID); findErr != nil {
+			return fmt.Errorf("failed to find task: %w", findErr)
+		}
+		return s.addActivity(ctx, taskID, enum.TaskActivityKindComment, principalID, commentPayload{Text: text})
+	})
+	if err != nil {
+		return err
+	}
+	s.emitCommentCreated(ctx, principalID, t)
+	return nil
 }
 
 // DecisionInput is the outcome of a model decision about a task.
@@ -659,9 +677,10 @@ func (s *Service) modify(
 	principalID int64,
 ) (*types.Task, error) {
 	var result *types.Task
+	var written []activity
 	var err error
 	for try := 0; try < maxTxRetries; try++ {
-		result = nil
+		result, written = nil, nil
 		err = s.tx.WithTx(ctx, func(ctx context.Context) error {
 			t, findErr := s.tasks.Find(ctx, taskID)
 			if findErr != nil {
@@ -684,7 +703,7 @@ func (s *Service) modify(
 					return actErr
 				}
 			}
-			result = t
+			result, written = t, acts
 			return nil
 		})
 		if !errors.Is(err, gitness_store.ErrVersionConflict) {
@@ -694,6 +713,7 @@ func (s *Service) modify(
 	if err != nil {
 		return nil, err
 	}
+	s.emitChanges(ctx, principalID, result, written)
 	return result, nil
 }
 

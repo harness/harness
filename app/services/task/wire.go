@@ -15,6 +15,7 @@
 package task
 
 import (
+	taskevents "github.com/harness/gitness/app/events/task"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -32,6 +33,11 @@ func ProvideService(
 	tasks store.TaskStore,
 	activities store.TaskActivityStore,
 	links store.TaskLinkStore,
+	reporter *taskevents.Reporter,
 ) *Service {
-	return NewService(DefaultConfig(), tx, tasks, activities, links)
+	var events EventReporter
+	if reporter != nil {
+		events = reporter
+	}
+	return NewService(DefaultConfig(), tx, tasks, activities, links, events)
 }
