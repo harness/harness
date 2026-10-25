@@ -451,3 +451,36 @@ func TestQueueFullDrops(t *testing.T) {
 		t.Fatal("expected backpressure error")
 	}
 }
+
+type fakeAutofix struct {
+	tasks []*types.Task
+	conf  []float64
+}
+
+func (f *fakeAutofix) AutofixCandidate(_ context.Context, _ *types.RepositoryCore, t *types.Task, c float64) {
+	f.tasks = append(f.tasks, t)
+	f.conf = append(f.conf, c)
+}
+
+func TestAutofixObserverNotifiedOnMarker(t *testing.T) {
+	e := newEnv(t, enum.AIModeFull)
+	af := &fakeAutofix{}
+	e.obs.SetAutofixObserver(af)
+	e.decider.overrides = highSeverity()
+	issue, ev := e.addIssue("fp1", "error", "TypeError", "1.1.0", nil)
+	e.run(issue, ev, false)
+	if len(af.tasks) != 1 || af.conf[0] != 0.92 {
+		t.Fatalf("notified %d times, conf %v", len(af.tasks), af.conf)
+	}
+}
+
+func TestAutofixObserverNotNotifiedWithoutMarker(t *testing.T) {
+	e := newEnv(t, enum.AIModeDecisionsOnly)
+	af := &fakeAutofix{}
+	e.obs.SetAutofixObserver(af)
+	issue, ev := e.addIssue("fp1", "error", "TypeError", "1.1.0", nil)
+	e.run(issue, ev, false)
+	if len(af.tasks) != 0 {
+		t.Fatal("unexpected notification")
+	}
+}

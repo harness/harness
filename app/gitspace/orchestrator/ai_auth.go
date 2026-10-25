@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/app/gitspace/agentmodel"
 	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -39,6 +40,29 @@ var ErrNoAgentModel = errors.New("no free model with tool calling is available f
 // It is a seam so a smarter selection can replace the deterministic default.
 type AgentModelSelector interface {
 	SelectModel(ctx context.Context) (string, error)
+}
+
+// ModelHints tells the model chosen for a gitspace config (see agentmodel.Registry).
+type ModelHints interface {
+	Get(gitspaceConfigID int64) (string, bool)
+}
+
+// hintedModelSelector uses the model chosen by the agent launcher for the gitspace config in the context
+// (agentmodel.WithConfigID) and falls back to another selector when there is none.
+type hintedModelSelector struct {
+	hints    ModelHints
+	fallback AgentModelSelector
+}
+
+func (s hintedModelSelector) SelectModel(ctx context.Context) (string, error) {
+	if s.hints != nil {
+		if id, ok := agentmodel.ConfigIDFrom(ctx); ok {
+			if m, found := s.hints.Get(id); found && m != "" {
+				return m, nil
+			}
+		}
+	}
+	return s.fallback.SelectModel(ctx)
 }
 
 // agentGateway is the subset of the AI gateway used to configure a coding agent.

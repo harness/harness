@@ -103,6 +103,10 @@ func (f *fakeTasks) CountByRepos(context.Context, []int64, *types.TaskFilter) (i
 	return 0, nil
 }
 
+func (f *fakeTasks) ListWaitingQuota(context.Context, int) ([]*types.Task, error) {
+	return nil, nil
+}
+
 type fakeActivities struct{ list []*types.TaskActivity }
 
 func (f *fakeActivities) Create(_ context.Context, a *types.TaskActivity) error {

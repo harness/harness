@@ -15,6 +15,7 @@
 package services
 
 import (
+	"github.com/harness/gitness/app/services/agentlauncher"
 	"github.com/harness/gitness/app/services/aitaskevent"
 	"github.com/harness/gitness/app/services/branch"
 	"github.com/harness/gitness/app/services/cleanup"
@@ -80,6 +81,7 @@ type Services struct {
 	shieldPRCheck                  *prcheck.Service
 	shieldTriager                  *shield.Triager
 	quotaResume                    *quotaresume.Service
+	agentLauncher                  *agentlauncher.Launcher
 }
 
 type GitspaceServices struct {
@@ -140,6 +142,7 @@ func ProvideServices(
 	shieldPRCheck *prcheck.Service,
 	shieldTriager *shield.Triager,
 	quotaResumeSvc *quotaresume.Service,
+	agentLauncher *agentlauncher.Launcher,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -168,5 +171,6 @@ func ProvideServices(
 		shieldPRCheck:                  shieldPRCheck,
 		shieldTriager:                  shieldTriager,
 		quotaResume:                    quotaResumeSvc,
+		agentLauncher:                  agentLauncher,
 	}
 }
