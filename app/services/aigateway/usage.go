@@ -28,7 +28,7 @@ import (
 // Without stores the quota is kept in memory and usage isn't recorded.
 func (g *Gateway) WithStores(quotaStore store.AIQuotaStore, usageStore store.AIUsageStore) *Gateway {
 	if quotaStore != nil {
-		g.planner = NewStorePlanner(g.config.DailyRequestLimit, g.config.RequestsPerMinute, nil, quotaStore)
+		g.planner = NewStorePlanner(g.config.DailyRequestLimit, g.config.perReplicaRPM(), nil, quotaStore)
 	}
 	g.usage = usageStore
 	return g
@@ -51,7 +51,10 @@ func (g *Gateway) recordUsage(
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), quotaStoreTimeout)
 	defer cancel()
 
+	spaceID, repoID := AttributionFrom(ctx)
 	err := g.usage.Create(ctx, &types.AIUsage{
+		SpaceID:   spaceID,
+		RepoID:    repoID,
 		Feature:   string(class),
 		Model:     model,
 		Requests:  requests,

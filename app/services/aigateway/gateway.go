@@ -57,6 +57,7 @@ type Gateway struct {
 	catalog  *Catalog
 	planner  *Planner
 	usage    store.AIUsageStore
+	latency  *latencyTracker
 	redactor *Redactor
 	events   EventReporter // optional, see SetEventReporter
 
@@ -70,6 +71,8 @@ type Gateway struct {
 
 	// sleep waits between retries; tests replace it to avoid real delays.
 	sleep func(ctx context.Context, d time.Duration) error
+	// now is the clock used to time model calls; tests replace it.
+	now func() time.Time
 }
 
 type cachedDecision struct {
@@ -92,10 +95,12 @@ func New(config Config, redactor *Redactor) *Gateway {
 		client:   client,
 		guard:    guard,
 		catalog:  NewCatalog(client, guard),
-		planner:  NewPlanner(config.DailyRequestLimit, config.RequestsPerMinute, nil),
+		planner:  NewPlanner(config.DailyRequestLimit, config.perReplicaRPM(), nil),
 		redactor: redactor,
 		cache:    map[string]cachedDecision{},
 		sleep:    sleepContext,
+		now:      time.Now,
+		latency:  newLatencyTracker(),
 	}
 }
 
@@ -133,6 +138,7 @@ func (g *Gateway) StartCatalogSync(ctx context.Context) {
 			} else {
 				log.Ctx(ctx).Info().Int("free_models", n).Msg("ai gateway: synced free model catalog")
 			}
+			g.flushLatency(ctx)
 			select {
 			case <-ctx.Done():
 				return
@@ -216,7 +222,9 @@ func (g *Gateway) decideWith(
 	attempts := 0
 	err := g.withRetry(ctx, ClassDecision, func() error {
 		attempts++
-		return g.client.doJSON(ctx, http.MethodPost, decisions.Path, req, &resp)
+		return g.timedCall(ctx, model, func() error {
+			return g.client.doJSON(ctx, http.MethodPost, decisions.Path, req, &resp)
+		})
 	})
 	usedModel := model
 	if resp.Model != "" {

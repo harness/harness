@@ -38,6 +38,7 @@ type Config struct {
 	DecisionFallbackModel string
 	DailyRequestLimit     int
 	RequestsPerMinute     int
+	Replicas              int
 	CatalogSyncInterval   time.Duration
 	HTTPTimeout           time.Duration
 }
@@ -59,12 +60,21 @@ func (c *Config) Sanitize() {
 	if c.RequestsPerMinute <= 0 || c.RequestsPerMinute > freeTierRPM {
 		c.RequestsPerMinute = freeTierRPM - 2
 	}
+	if c.Replicas < 1 {
+		c.Replicas = 1
+	}
 	if c.CatalogSyncInterval < time.Hour {
 		c.CatalogSyncInterval = 6 * time.Hour
 	}
 	if c.HTTPTimeout <= 0 {
 		c.HTTPTimeout = time.Minute
 	}
+}
+
+// perReplicaRPM is the share of the account-wide per-minute limit one replica may use (at least 1).
+// The per-minute window is kept in memory, so every replica enforces its own share.
+func (c *Config) perReplicaRPM() int {
+	return max(1, c.RequestsPerMinute/max(1, c.Replicas))
 }
 
 func NewConfig(global *types.Config) Config {
@@ -76,6 +86,7 @@ func NewConfig(global *types.Config) Config {
 		DecisionFallbackModel: global.AIGateway.DecisionFallbackModel,
 		DailyRequestLimit:     global.AIGateway.DailyRequestLimit,
 		RequestsPerMinute:     global.AIGateway.RequestsPerMinute,
+		Replicas:              global.AIGateway.Replicas,
 		CatalogSyncInterval:   global.AIGateway.CatalogSyncInterval,
 		HTTPTimeout:           global.AIGateway.HTTPTimeout,
 	}

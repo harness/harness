@@ -115,3 +115,28 @@ func TestAIQuota(t *testing.T) {
 		}
 	}
 }
+
+func TestMapAIModelsIncludesP95(t *testing.T) {
+	gw := newTestGateway(t, true)
+	if _, err := gw.Catalog().Sync(context.Background()); err != nil {
+		t.Fatalf("sync: %v", err)
+	}
+	p95 := func(id string) (int, bool) {
+		if id == "vendor/coder:free" {
+			return 850, true
+		}
+		return 0, false
+	}
+
+	out := mapAIModels(gw.Catalog(), gw.Guard(), p95)
+
+	for _, m := range out.Models {
+		want := 0
+		if m.ID == "vendor/coder:free" {
+			want = 850
+		}
+		if m.P95LatencyMS != want {
+			t.Fatalf("model %s: expected p95 %d, got %d", m.ID, want, m.P95LatencyMS)
+		}
+	}
+}

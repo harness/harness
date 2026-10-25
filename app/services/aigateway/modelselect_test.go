@@ -86,6 +86,17 @@ func (f *fakeModelStore) UpdateStatus(_ context.Context, id string, st enum.AIMo
 	return nil
 }
 
+func (f *fakeModelStore) UpdateLatency(_ context.Context, id string, p95 int) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	m, ok := f.models[id]
+	if !ok {
+		return gitnessstore.ErrResourceNotFound
+	}
+	m.P95LatencyMS = p95
+	return nil
+}
+
 type fakeDecisionStore struct {
 	mu   sync.Mutex
 	rows []*types.AIDecision

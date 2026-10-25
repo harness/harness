@@ -692,6 +692,8 @@ type Config struct {
 	}
 
 	// AIGateway configures access to OpenRouter. Only free models are ever used.
+	// Replicas is the number of Harness replicas sharing the account: the per-minute window is kept
+	// in memory per replica, so RequestsPerMinute is divided by Replicas.
 	AIGateway struct {
 		Enabled               bool          `envconfig:"GITNESS_AI_GATEWAY_ENABLED" default:"false"`
 		BaseURL               string        `envconfig:"GITNESS_AI_GATEWAY_BASE_URL" default:"https://openrouter.ai/api"`
@@ -700,6 +702,7 @@ type Config struct {
 		DecisionFallbackModel string        `envconfig:"GITNESS_AI_GATEWAY_DECISION_FALLBACK_MODEL" default:"baseten/elephant-1:free"` //nolint:lll
 		DailyRequestLimit     int           `envconfig:"GITNESS_AI_GATEWAY_DAILY_REQUEST_LIMIT" default:"50"`
 		RequestsPerMinute     int           `envconfig:"GITNESS_AI_GATEWAY_REQUESTS_PER_MINUTE" default:"18"`
+		Replicas              int           `envconfig:"GITNESS_AI_GATEWAY_REPLICAS" default:"1"`
 		CatalogSyncInterval   time.Duration `envconfig:"GITNESS_AI_GATEWAY_CATALOG_SYNC_INTERVAL" default:"6h"`
 		HTTPTimeout           time.Duration `envconfig:"GITNESS_AI_GATEWAY_HTTP_TIMEOUT" default:"60s"`
 	}

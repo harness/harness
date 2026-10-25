@@ -148,10 +148,12 @@ func (s *Service) Decide(ctx context.Context, in DecideInput) (*Result, error) {
 		}
 	}
 
-	mode, err := s.mode(ctx, in.RepoID)
+	mode, repo, err := s.mode(ctx, in.RepoID)
 	if err != nil {
 		return nil, err
 	}
+	// usage records of the gateway requests made for this decision belong to the repo
+	ctx = aigateway.WithAttribution(ctx, repo.ParentID, repo.ID)
 
 	stateHash := s.stateHash(in.State)
 
@@ -179,16 +181,16 @@ func (s *Service) Decide(ctx context.Context, in DecideInput) (*Result, error) {
 	return res, nil
 }
 
-func (s *Service) mode(ctx context.Context, repoID int64) (enum.AIMode, error) {
+func (s *Service) mode(ctx context.Context, repoID int64) (enum.AIMode, *types.RepositoryCore, error) {
 	repo, err := s.repos.FindByID(ctx, repoID)
 	if err != nil {
-		return "", fmt.Errorf("failed to find repo %d: %w", repoID, err)
+		return "", nil, fmt.Errorf("failed to find repo %d: %w", repoID, err)
 	}
 	mode, err := s.modes.Resolve(ctx, repo)
 	if err != nil {
-		return "", fmt.Errorf("failed to resolve ai mode: %w", err)
+		return "", nil, fmt.Errorf("failed to resolve ai mode: %w", err)
 	}
-	return mode, nil
+	return mode, repo, nil
 }
 
 // canUseRules tells whether an error from the gateway lets the caller's rules answer.

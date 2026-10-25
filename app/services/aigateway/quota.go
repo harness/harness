@@ -93,9 +93,9 @@ type QuotaSnapshot struct {
 // updated in one statement, so the class counter is charged first and given back with
 // Decrement if the total is already spent. Giving it back is best effort: if that write fails
 // the class loses one unit for the day, which under-spends but never overspends.
-// The per-minute window is kept in memory, so each replica allows RequestsPerMinute
-// requests per minute: with N replicas, configure RequestsPerMinute as the account limit
-// divided by N.
+// The per-minute window is kept in memory, so the rpm given here is a per-replica limit.
+// The gateway passes Config.RequestsPerMinute divided by Config.Replicas
+// (GITNESS_AI_GATEWAY_REPLICAS), so N replicas together stay below the account limit.
 type Planner struct {
 	mu sync.Mutex
 
