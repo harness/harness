@@ -174,7 +174,7 @@ func newEnv() *env {
 		acts:  &fakeActivities{},
 		links: &fakeLinks{},
 	}
-	e.svc = NewService(DefaultConfig(), fakeTx{}, e.tasks, e.acts, e.links)
+	e.svc = NewService(DefaultConfig(), fakeTx{}, e.tasks, e.acts, e.links, nil)
 	e.svc.now = func() int64 { return fixedNow }
 	return e
 }

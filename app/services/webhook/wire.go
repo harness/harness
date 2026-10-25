@@ -21,6 +21,7 @@ import (
 	gitevents "github.com/harness/gitness/app/events/git"
 	mergequeueevents "github.com/harness/gitness/app/events/mergequeue"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	taskevents "github.com/harness/gitness/app/events/task"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -48,6 +49,7 @@ func ProvideService(
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	mqReaderFactory *events.ReaderFactory[*mergequeueevents.Reader],
 	checkReaderFactory *events.ReaderFactory[*checkevents.Reader],
+	taskReaderFactory *events.ReaderFactory[*taskevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
 	spaceStore store.SpaceStore,
@@ -66,6 +68,7 @@ func ProvideService(
 	secretService secret.Service,
 	spacePathStore store.SpacePathStore,
 	userGroupStore store.UserGroupStore,
+	taskStore store.TaskStore,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -75,6 +78,7 @@ func ProvideService(
 		prReaderFactory,
 		mqReaderFactory,
 		checkReaderFactory,
+		taskReaderFactory,
 		webhookStore,
 		webhookExecutionStore,
 		spaceStore, repoStore,
@@ -92,6 +96,7 @@ func ProvideService(
 		secretService,
 		spacePathStore,
 		userGroupStore,
+		taskStore,
 	)
 }
 

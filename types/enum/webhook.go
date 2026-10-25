@@ -208,6 +208,13 @@ const (
 	// WebhookTriggerMergeQueueChecksCanceled gets triggered when merge queue checks are canceled.
 	WebhookTriggerMergeQueueChecksCanceled WebhookTrigger = "merge_queue_checks_canceled"
 
+	// WebhookTriggerTaskCreated gets triggered when a task gets created.
+	WebhookTriggerTaskCreated WebhookTrigger = "task_created"
+	// WebhookTriggerTaskUpdated gets triggered when the state, assignee or priority of a task changes.
+	WebhookTriggerTaskUpdated WebhookTrigger = "task_updated"
+	// WebhookTriggerTaskResolved gets triggered when a task gets resolved.
+	WebhookTriggerTaskResolved WebhookTrigger = "task_resolved"
+
 	// WebhookTriggerArtifactCreated gets triggered when an artifact gets created.
 	WebhookTriggerArtifactCreated WebhookTrigger = "artifact_created"
 	// WebhookTriggerArtifactDeleted gets triggered when an artifact gets deleted.
@@ -238,6 +245,9 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqTargetBranchChanged,
 	WebhookTriggerMergeQueueChecksRequested,
 	WebhookTriggerMergeQueueChecksCanceled,
+	WebhookTriggerTaskCreated,
+	WebhookTriggerTaskUpdated,
+	WebhookTriggerTaskResolved,
 	WebhookTriggerArtifactCreated,
 	WebhookTriggerArtifactDeleted,
 })

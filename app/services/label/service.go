@@ -27,6 +27,7 @@ type Service struct {
 	labelValueStore             store.LabelValueStore
 	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore
 	pullreqLabelSuggestionStore store.PullReqLabelSuggestionStore
+	taskLabelStore              store.TaskLabelStore
 	principalInfoCache          store.PrincipalInfoCache
 	spaceFinder                 refcache.SpaceFinder
 }
