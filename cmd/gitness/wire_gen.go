@@ -514,7 +514,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	gateway, err := aigateway.ProvideGateway(ctx, config)
+	aiModelStore := database.ProvideAIModelStore(db)
+	aiDecisionStore := database.ProvideAIDecisionStore(db)
+	gateway, err := aigateway.ProvideGateway(ctx, config, aiModelStore, aiDecisionStore)
 	if err != nil {
 		return nil, err
 	}

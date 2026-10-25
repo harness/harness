@@ -22,6 +22,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/harness/gitness/app/store"
 )
 
 // Model is a free model from the OpenRouter catalog.
@@ -65,6 +67,10 @@ type Catalog struct {
 	mu       sync.RWMutex
 	models   map[string]Model
 	syncedAt time.Time
+
+	// store is optional: nil keeps the catalog in memory only.
+	store          store.AIModelStore
+	decisionModels map[string]struct{}
 }
 
 func NewCatalog(client *httpClient, guard *Guard) *Catalog {
@@ -101,6 +107,8 @@ func (c *Catalog) Sync(ctx context.Context) (int, error) {
 	c.mu.Unlock()
 
 	c.guard.SetAllowed(ids)
+
+	c.persist(ctx, models)
 
 	return len(models), nil
 }

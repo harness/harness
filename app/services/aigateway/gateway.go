@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/services/aigateway/decisions"
+	"github.com/harness/gitness/app/store"
 
 	"github.com/rs/zerolog/log"
 )
@@ -57,6 +58,11 @@ type Gateway struct {
 	planner  *Planner
 	redactor *Redactor
 	events   EventReporter // optional, see SetEventReporter
+
+	// stores are optional: nil means in-memory only.
+	modelStore    store.AIModelStore
+	decisionStore store.AIDecisionStore
+	outcomeMu     sync.Mutex
 
 	cacheMu sync.Mutex
 	cache   map[string]cachedDecision
@@ -90,6 +96,14 @@ func New(config Config, redactor *Redactor) *Gateway {
 		cache:    map[string]cachedDecision{},
 		sleep:    sleepContext,
 	}
+}
+
+// SetStores enables persistence of the model catalog and of the decision audit records.
+// Quarantines stored earlier are restored. Either store may be nil.
+func (g *Gateway) SetStores(ctx context.Context, models store.AIModelStore, decisionStore store.AIDecisionStore) {
+	g.modelStore = models
+	g.decisionStore = decisionStore
+	g.catalog.SetStore(ctx, models, g.config.DecisionModel, g.config.DecisionFallbackModel)
 }
 
 func (g *Gateway) Enabled() bool { return g != nil && g.config.Enabled }
