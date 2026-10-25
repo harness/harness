@@ -166,14 +166,50 @@ export default function TaskDetail() {
     setEditing(true)
   }
 
+  // Links to the pages of the linked entities. Insights issues and Shield findings have their own pages.
+  const renderLink = (link: TypesTaskLink) => {
+    switch (link.kind) {
+      case 'pullreq':
+        return (
+          <Link to={routes.toCODEPullRequest({ repoPath, pullRequestId: String(link.ref_id) })}>
+            {getString('tasks.pullRequest', { id: link.ref_id })}
+          </Link>
+        )
+      case 'insights_issue':
+        return (
+          <Link to={routes.toCODEError({ repoPath, issueId: String(link.ref_id) })}>
+            {getString('tasks.insightsIssue', { id: link.ref_id })}
+          </Link>
+        )
+      case 'shield_finding':
+        return (
+          <Link to={routes.toCODESecurity({ repoPath })}>{getString('tasks.shieldFinding', { id: link.ref_id })}</Link>
+        )
+      default:
+        return (
+          <Text>
+            {getString(`tasks.linkKind.${link.kind}` as StringKeys)}: {link.ref_id}
+          </Text>
+        )
+    }
+  }
+
   const renderOrigin = () => {
     if (!task?.origin_ref) {
       return <Text>{getString('tasks.noOriginRef')}</Text>
     }
-    // Insights issues and Shield findings have no pages yet, their ids are shown as text.
+    const originLink = links?.find(
+      link => link.kind === (task.origin === 'insights' ? 'insights_issue' : 'shield_finding')
+    )
     return (
       <Text>
-        {getString(`tasks.originValue.${task.origin}` as StringKeys)}: {task.origin_ref}
+        {originLink ? (
+          renderLink(originLink)
+        ) : (
+          <>
+            {getString(`tasks.originValue.${task.origin}` as StringKeys)}: {task.origin_ref}
+          </>
+        )}
       </Text>
     )
   }
@@ -326,19 +362,7 @@ export default function TaskDetail() {
                 <div className={css.field}>
                   <Text color={Color.GREY_500}>{getString('tasks.links')}</Text>
                   {links?.length ? (
-                    links.map(link => (
-                      <div key={`${link.kind}-${link.ref_id}`}>
-                        {link.kind === 'pullreq' ? (
-                          <Link to={routes.toCODEPullRequest({ repoPath, pullRequestId: String(link.ref_id) })}>
-                            {getString('tasks.pullRequest', { id: link.ref_id })}
-                          </Link>
-                        ) : (
-                          <Text>
-                            {getString(`tasks.linkKind.${link.kind}` as StringKeys)}: {link.ref_id}
-                          </Text>
-                        )}
-                      </div>
-                    ))
+                    links.map(link => <div key={`${link.kind}-${link.ref_id}`}>{renderLink(link)}</div>)
                   ) : (
                     <Text>{getString('tasks.noLinks')}</Text>
                   )}
