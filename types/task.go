@@ -61,6 +61,12 @@ type TaskFilter struct {
 	Query           string              `json:"query"`
 }
 
+// TaskRepo is a task together with the path of its repository, used by the aggregated listings.
+type TaskRepo struct {
+	*Task
+	RepoPath string `json:"repo_path"`
+}
+
 // TaskActivity is an entry of the task timeline.
 type TaskActivity struct {
 	ID          int64                 `json:"id"`

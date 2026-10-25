@@ -44,6 +44,7 @@ import (
 	shieldctrl "github.com/harness/gitness/app/api/controller/shield"
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/controller/system"
+	taskctrl "github.com/harness/gitness/app/api/controller/task"
 	"github.com/harness/gitness/app/api/controller/template"
 	controllertrigger "github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
@@ -214,6 +215,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		reposettings.WireSet,
 		insightsctrl.WireSet,
 		shieldctrl.WireSet,
+		taskctrl.WireSet,
 		pullreq.WireSet,
 		merge.WireSet,
 		checkreq.WireSet,

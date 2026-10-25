@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS tasks_repo_id_origin_origin_ref_active;
