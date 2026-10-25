@@ -769,7 +769,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	insightsIssueStore := database.ProvideInsightsIssueStore(db)
 	insightsEventStore := database.ProvideInsightsEventStore(db)
 	insightsService := insights.ProvideService(insightsProjectStore, insightsIssueStore, insightsEventStore)
-	insightsController := insights2.ProvideController(authorizer, repoFinder, provider, insightsService)
+	insightsController := insights2.ProvideController(authorizer, repoFinder, provider, insightsService, auditService)
 	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService, appRouter, sender, lfsController, insightsController, insightsService)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	sshAuthService := publickey.ProvideSSHAuthService(publicKeyStore, principalInfoCache)

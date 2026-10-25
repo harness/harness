@@ -18,10 +18,12 @@ package insightstest
 import (
 	"context"
 	"sort"
+	"strings"
 	"sync"
 
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // Store implements the three Insights stores in memory.
@@ -199,15 +201,42 @@ func (i *issues) List(_ context.Context, repoID int64, f *types.InsightsIssueFil
 				continue
 			}
 		}
+		if f != nil && ((f.ProjectID > 0 && f.ProjectID != e.ProjectID) ||
+			(f.Level != "" && f.Level != e.Level) ||
+			(f.Release != "" && f.Release != e.FirstRelease && f.Release != e.LastRelease) ||
+			(f.Query != "" && !strings.Contains(strings.ToLower(e.Title), strings.ToLower(f.Query)))) {
+			continue
+		}
 		c := *e
 		out = append(out, &c)
 	}
-	sort.Slice(out, func(a, b int) bool { return out[a].LastSeen > out[b].LastSeen })
+	key := func(x *types.InsightsIssue) int64 {
+		if f != nil && f.Sort == enum.InsightsIssueSortTimesSeen {
+			return x.TimesSeen
+		}
+		return x.LastSeen
+	}
+	sort.Slice(out, func(a, b int) bool {
+		if f != nil && f.Order == enum.OrderAsc {
+			return key(out[a]) < key(out[b])
+		}
+		return key(out[a]) > key(out[b])
+	})
+	if f != nil && f.Size > 0 {
+		from := min((max(f.Page, 1)-1)*f.Size, len(out))
+		out = out[from:min(from+f.Size, len(out))]
+	}
 	return out, nil
 }
 
 func (i *issues) Count(ctx context.Context, repoID int64, f *types.InsightsIssueFilter) (int64, error) {
-	l, err := i.List(ctx, repoID, f)
+	var nf *types.InsightsIssueFilter
+	if f != nil {
+		c := *f
+		c.Size = 0
+		nf = &c
+	}
+	l, err := i.List(ctx, repoID, nf)
 	return int64(len(l)), err
 }
 
@@ -253,4 +282,22 @@ func (e *events) ListByIssue(_ context.Context, issueID int64, limit int) ([]*ty
 		out = out[:limit]
 	}
 	return out, nil
+}
+
+func (e *events) List(
+	ctx context.Context,
+	issueID int64,
+	p types.Pagination,
+) ([]*types.InsightsEvent, error) {
+	all, _ := e.ListByIssue(ctx, issueID, 0)
+	if p.Size <= 0 {
+		return all, nil
+	}
+	from := min((max(p.Page, 1)-1)*p.Size, len(all))
+	return all[from:min(from+p.Size, len(all))], nil
+}
+
+func (e *events) Count(ctx context.Context, issueID int64) (int64, error) {
+	all, _ := e.ListByIssue(ctx, issueID, 0)
+	return int64(len(all)), nil
 }

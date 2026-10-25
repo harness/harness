@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/services/insights/ingest"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -45,6 +46,7 @@ type Controller struct {
 	repoFinder  refcache.RepoFinder
 	urlProvider url.Provider
 	service     *insights.Service
+	audit       audit.Service
 }
 
 // NewController returns a new Controller.
@@ -53,12 +55,14 @@ func NewController(
 	repoFinder refcache.RepoFinder,
 	urlProvider url.Provider,
 	service *insights.Service,
+	auditService audit.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:  authorizer,
 		repoFinder:  repoFinder,
 		urlProvider: urlProvider,
 		service:     service,
+		audit:       auditService,
 	}
 }
 
@@ -68,8 +72,9 @@ func ProvideController(
 	repoFinder refcache.RepoFinder,
 	urlProvider url.Provider,
 	service *insights.Service,
+	auditService audit.Service,
 ) *Controller {
-	return NewController(authorizer, repoFinder, urlProvider, service)
+	return NewController(authorizer, repoFinder, urlProvider, service, auditService)
 }
 
 func (c *Controller) getRepoCheckAccess(
@@ -117,6 +122,8 @@ func (c *Controller) CreateProject(
 	if err != nil {
 		return nil, err
 	}
+
+	c.logProject(ctx, session, r, audit.ActionCreated, p, nil, p)
 
 	return c.withDSN(ctx, p), nil
 }

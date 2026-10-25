@@ -311,3 +311,96 @@ func TestInsightsProjectDelete_Cascades(t *testing.T) {
 		t.Error("event still there")
 	}
 }
+
+func TestInsightsIssueStore_AdminFilters(t *testing.T) {
+	ctx, env, teardown := setupInsightsEnv(t)
+	defer teardown()
+
+	p1 := newInsightsProject(1, "api", "key-1")
+	p2 := newInsightsProject(1, "web", "key-2")
+	for _, p := range []*types.InsightsProject{p1, p2} {
+		if err := env.projects.Create(ctx, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	a := newInsightsIssue(p1, "fp-a", 100)
+	a.TimesSeen = 7
+	b := newInsightsIssue(p1, "fp-b", 300)
+	b.Level, b.LastRelease = "warning", "1.1.0"
+	c := newInsightsIssue(p2, "fp-c", 200)
+	c.TimesSeen = 3
+	for _, i := range []*types.InsightsIssue{a, b, c} {
+		if err := env.issues.Create(ctx, i); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	list := func(f types.InsightsIssueFilter) []int64 {
+		t.Helper()
+		f.Pagination = types.Pagination{Page: 1, Size: 10}
+		got, err := env.issues.List(ctx, 1, &f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := make([]int64, len(got))
+		for i, x := range got {
+			out[i] = x.ID
+		}
+		return out
+	}
+	eq := func(got []int64, want ...*types.InsightsIssue) {
+		t.Helper()
+		if len(got) != len(want) {
+			t.Fatalf("got %v, want %d issues", got, len(want))
+		}
+		for i := range want {
+			if got[i] != want[i].ID {
+				t.Fatalf("got %v, want position %d = %d", got, i, want[i].ID)
+			}
+		}
+	}
+
+	eq(list(types.InsightsIssueFilter{}), b, c, a)
+	eq(list(types.InsightsIssueFilter{Order: enum.OrderAsc}), a, c, b)
+	eq(list(types.InsightsIssueFilter{Sort: enum.InsightsIssueSortTimesSeen}), a, c, b)
+	eq(list(types.InsightsIssueFilter{ProjectID: p2.ID}), c)
+	eq(list(types.InsightsIssueFilter{Level: "warning"}), b)
+	eq(list(types.InsightsIssueFilter{Release: "1.1.0"}), b)
+
+	n, err := env.issues.Count(ctx, 1, &types.InsightsIssueFilter{ProjectID: p1.ID})
+	if err != nil || n != 2 {
+		t.Errorf("Count() = %d, %v; want 2", n, err)
+	}
+}
+
+func TestInsightsEventStore_ListAndCount(t *testing.T) {
+	ctx, env, teardown := setupInsightsEnv(t)
+	defer teardown()
+
+	p := newInsightsProject(1, "api", "key-1")
+	if err := env.projects.Create(ctx, p); err != nil {
+		t.Fatal(err)
+	}
+	issue := newInsightsIssue(p, "fp", 100)
+	if err := env.issues.Create(ctx, issue); err != nil {
+		t.Fatal(err)
+	}
+	for i := int64(1); i <= 5; i++ {
+		ev := &types.InsightsEvent{
+			IssueID: issue.ID, ProjectID: p.ID, EventID: string(rune('a' + i)), Timestamp: i * 10,
+			Payload: `{"x":1}`, Created: i,
+		}
+		if err := env.events.Create(ctx, ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	got, err := env.events.List(ctx, issue.ID, types.Pagination{Page: 2, Size: 2})
+	if err != nil || len(got) != 2 || got[0].Timestamp != 30 || got[1].Timestamp != 20 || got[0].Payload == "" {
+		t.Fatalf("List() page 2 = %v, %v", got, err)
+	}
+	n, err := env.events.Count(ctx, issue.ID)
+	if err != nil || n != 5 {
+		t.Errorf("Count() = %d, %v; want 5", n, err)
+	}
+}

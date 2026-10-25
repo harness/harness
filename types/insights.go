@@ -74,7 +74,27 @@ type InsightsIssue struct {
 // InsightsIssueFilter stores Insights issue list query parameters.
 type InsightsIssueFilter struct {
 	ListQueryFilter
-	Statuses []enum.InsightsIssueStatus `json:"status"`
+	Statuses  []enum.InsightsIssueStatus `json:"status"`
+	ProjectID int64                      `json:"project_id"`
+	Level     string                     `json:"level"`
+	// Release matches issues first or last seen in the release.
+	Release string                 `json:"release"`
+	Sort    enum.InsightsIssueSort `json:"sort"`
+	Order   enum.Order             `json:"order"`
+}
+
+// InsightsProjectUpdateInput is the input for updating an Insights project.
+type InsightsProjectUpdateInput struct {
+	Enabled            *bool    `json:"enabled,omitempty"`
+	RateLimitPerMinute *int     `json:"rate_limit_per_minute,omitempty"`
+	SampleRate         *float64 `json:"sample_rate,omitempty"`
+}
+
+// InsightsIssueUpdateInput is the input for updating the status of an Insights issue.
+type InsightsIssueUpdateInput struct {
+	// Status is one of resolved, ignored and unresolved.
+	Status            enum.InsightsIssueStatus `json:"status"`
+	ResolvedInRelease *string                  `json:"resolved_in_release,omitempty"`
 }
 
 // InsightsEvent is a single stored occurrence of an issue.

@@ -467,7 +467,7 @@ func (s *InsightsIssueStore) List(
 	}
 
 	stmt = stmt.
-		OrderBy("insights_issue_last_seen DESC", "insights_issue_id DESC").
+		OrderBy(insightsIssueOrder(filter)...).
 		Limit(database.Limit(size)).
 		Offset(database.Offset(page, size))
 
@@ -518,6 +518,20 @@ func (s *InsightsIssueStore) Count(
 	return count, nil
 }
 
+func insightsIssueOrder(filter *types.InsightsIssueFilter) []string {
+	col := "insights_issue_last_seen"
+	dir := "DESC"
+	if filter != nil {
+		if filter.Sort == enum.InsightsIssueSortTimesSeen {
+			col = "insights_issue_times_seen"
+		}
+		if filter.Order == enum.OrderAsc {
+			dir = "ASC"
+		}
+	}
+	return []string{col + " " + dir, "insights_issue_id " + dir}
+}
+
 func applyInsightsIssueFilter(
 	stmt squirrel.SelectBuilder,
 	filter *types.InsightsIssueFilter,
@@ -527,6 +541,16 @@ func applyInsightsIssueFilter(
 	}
 	if len(filter.Statuses) > 0 {
 		stmt = stmt.Where(squirrel.Eq{"insights_issue_status": filter.Statuses})
+	}
+	if filter.ProjectID > 0 {
+		stmt = stmt.Where("insights_issue_project_id = ?", filter.ProjectID)
+	}
+	if filter.Level != "" {
+		stmt = stmt.Where("insights_issue_level = ?", filter.Level)
+	}
+	if filter.Release != "" {
+		stmt = stmt.Where("(insights_issue_first_release = ? OR insights_issue_last_release = ?)",
+			filter.Release, filter.Release)
 	}
 	if filter.Query != "" {
 		stmt = stmt.Where("LOWER(insights_issue_title) LIKE ?", "%"+strings.ToLower(filter.Query)+"%")
@@ -725,4 +749,48 @@ func mapInternalInsightsEvent(e *types.InsightsEvent) *insightsEvent {
 		Timestamp: e.Timestamp, Release: e.Release, Environment: e.Environment,
 		Level: e.Level, Message: e.Message, Payload: e.Payload, Created: e.Created,
 	}
+}
+
+func (s *InsightsEventStore) List(
+	ctx context.Context,
+	issueID int64,
+	pagination types.Pagination,
+) ([]*types.InsightsEvent, error) {
+	const sqlQuery = `SELECT` + insightsEventColumns + `
+		FROM insights_events
+		WHERE insights_event_issue_id = $1
+		ORDER BY insights_event_timestamp DESC, insights_event_id DESC
+		LIMIT $2 OFFSET $3`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*insightsEvent{}
+	if err := db.SelectContext(ctx, &dst, sqlQuery, issueID,
+		database.Limit(pagination.Size), database.Offset(pagination.Page, pagination.Size)); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list insights events")
+	}
+
+	out := make([]*types.InsightsEvent, len(dst))
+	for i, e := range dst {
+		out[i] = &types.InsightsEvent{
+			ID: e.ID, IssueID: e.IssueID, ProjectID: e.ProjectID, EventID: e.EventID,
+			Timestamp: e.Timestamp, Release: e.Release, Environment: e.Environment,
+			Level: e.Level, Message: e.Message, Payload: e.Payload, Created: e.Created,
+		}
+	}
+
+	return out, nil
+}
+
+func (s *InsightsEventStore) Count(ctx context.Context, issueID int64) (int64, error) {
+	const sqlQuery = `SELECT COUNT(*) FROM insights_events WHERE insights_event_issue_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	if err := db.QueryRowContext(ctx, sqlQuery, issueID).Scan(&count); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to count insights events")
+	}
+
+	return count, nil
 }
