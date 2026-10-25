@@ -1,291 +1,424 @@
-# Plan: errores y vulnerabilidades con agentes autónomos vía OpenRouter
+# Plan: errores y vulnerabilidades con agentes autónomos vía OpenRouter (solo modelos gratuitos)
 
-Estado: propuesta · Autor: Claude Code a pedido de @juhasztobias · Fecha: 2026-10-25
+Estado: propuesta v2 · Autor: Claude Code a pedido de @juhasztobias · Fecha: 2026-10-25
+
+Cambios respecto de v1:
+- Se usan **solo modelos gratuitos** de OpenRouter, siempre y sin excepciones.
+- **Mammoth 1** (`baseten/mammoth-1:free`) es el "Sistema 1": toma las decisiones y elige qué modelo hace cada tarea.
+- Se agrega un **módulo de Tareas** para registrar y seguir cada issue.
+- El diseño ahora contempla las cuotas del plan gratuito.
 
 ## 1. Objetivo
 
-Agregar a Harness dos productos que comparten una misma base de IA:
+Agregar a Harness tres productos que comparten una misma base de IA:
 
-- **Insights**: error tracking estilo Sentry, integrado con el código, los pipelines y los releases de Harness.
+- **Insights**: error tracking estilo Sentry, integrado con el código, los pipelines y los releases.
 - **Shield**: análisis de vulnerabilidades estilo Snyk (dependencias, código, secretos, imágenes del registry).
+- **Tareas**: un registro único de los problemas detectados (errores, vulnerabilidades y tareas manuales), con estado, responsable (humano o agente), prioridad e historial.
 
-En los dos casos, cuando aparece un problema que supera un umbral configurable, un **agente** lo valida, reproduce y corrige, y abre un PR. Los modelos se consumen vía **OpenRouter**, con routing por tarea, fallbacks, límites de gasto y políticas de datos.
+Cuando un problema supera un umbral, un **agente** lo valida, lo corrige y abre un PR. Todo queda registrado en su tarea. **Toda inferencia usa modelos gratuitos de OpenRouter.** Las decisiones las toma Mammoth 1, y la generación de texto y código la hacen modelos gratuitos elegidos por Mammoth para cada tarea.
 
-## 2. Lo que ya existe y se reutiliza
+## 2. Restricciones del plan gratuito y cómo las absorbe el diseño
+
+| Restricción | Detalle | Respuesta del diseño |
+|---|---|---|
+| Cuota diaria | 50 requests por día sin créditos; **1000 por día** si la cuenta compró al menos 10 USD de créditos alguna vez. Los requests fallidos también cuentan. | Planificador de cuota global, con reservas por clase de trabajo y caminos determinísticos sin LLM siempre que se pueda (sección 4.4). Recomendación: cargar 10 USD una única vez para pasar a 1000 por día. Los créditos no se consumen porque solo se usan modelos gratuitos. |
+| Ritmo | 20 requests por minuto | Token bucket local a 18 por minuto con margen; las colas se procesan por prioridad. |
+| La cuota es por cuenta | Usar otro modelo `:free` o generar otra API key no aumenta el límite. | Una sola cuota compartida por toda la instalación. No se intenta esquivarla con varias cuentas, que además iría contra los términos de OpenRouter. |
+| El catálogo cambia | Los modelos gratuitos aparecen, desaparecen o cambian de proveedor. | Un job sincroniza el catálogo y Mammoth elige entre los gratuitos disponibles en ese momento. No hay modelos fijos en el código (sección 4.2). |
+| Privacidad | Algunos proveedores gratuitos exigen permitir logging o entrenamiento con los prompts. Esto **reemplaza** el requisito de v1 de usar solo proveedores que no retienen datos. | Redacción obligatoria antes de cada envío, IA desactivable por repo, y un modo "solo decisiones" para repos sensibles (sección 4.6). |
+| Decisions API en alpha | El endpoint `/api/alpha/decisions` puede cambiar. | Adaptador aislado con tests de contrato y degradación a reglas determinísticas si falla (sección 5.5). |
+| Contexto de Mammoth | 16K tokens | Se construye un `state` compacto: resúmenes, top-N frames y metadatos, no payloads crudos. |
+
+## 3. Lo que ya existe y se reutiliza
 
 | Pieza existente | Dónde | Uso en este plan |
 |---|---|---|
-| `AITask`: tareas de IA que corren Claude Code dentro de un Gitspace | `types/ai_task.go`, `app/services/aitaskevent`, `app/gitspace/orchestrator` | Runtime de los agentes que arreglan código. Ya registra costo, tokens y modelos (`AIUsageMetric`). |
-| Auth de agentes (`AIAgentAuth`, hoy solo `anthropic-api-key`) | `types/enum/ai_agent_auth.go`, `orchestrator/utils/ai_agent.go` | Se agrega `openrouter-api-key`. |
-| Script de configuración de Claude Code | `orchestrator/utils/script_templates/configure_claude_code.sh` | Se apunta Claude Code a OpenRouter (`ANTHROPIC_BASE_URL`). |
-| Sistema de eventos (streams, readers, reporters) | `events/`, `app/events/*` | Nuevas categorías `insights` y `shield`, y consumo de `pipeline.executed` y eventos de git. |
-| Scheduler de jobs (recurrentes y one-shot) | `job/` | Scans periódicos, sync de bases de vulnerabilidades, agrupación de errores. |
-| Principals de servicio | `app/bootstrap` (`systemServicePrincipal`, etc.) | Nuevo principal `harness-agent` que firma commits y PRs de los agentes. |
-| Protection rules con status checks requeridos | `app/services/protection` | Gate de merge: el check `shield/security` bloquea PRs que superan el umbral. |
-| Automerge | `app/services/automerge` | Nivel máximo de autonomía (solo si se habilita explícitamente). |
-| Secret scanning (`SecretScanningEnabled`) | `app/services/settings/security.go` | Shield lo absorbe como un scanner más. |
-| Settings de repo y space | `app/services/settings` | Umbrales, nivel de autonomía, modelos y presupuesto por scope. |
-| Gestor de secretos | `app/services/secret`, `platformSecret` | Guarda las API keys de OpenRouter (BYOK por space). |
-| Artifact registry | `registry/` | Guarda source maps y símbolos (Insights) y escanea imágenes y paquetes (Shield). |
-| Language analyzer | `app/services/languageanalyzer` | Detecta ecosistemas para elegir scanners y manifiestos. |
+| `AITask`: Claude Code dentro de un Gitspace | `types/ai_task.go`, `app/services/aitaskevent`, `app/gitspace/orchestrator` | Runtime de los fix agents. Ya registra tokens y modelos en `AIUsageMetric`. |
+| `AIAgentAuth` (hoy solo `anthropic-api-key`) y `installationMap` | `types/enum/ai_agent_auth.go`, `orchestrator/utils/ai_agent.go` | Se agrega `openrouter-api-key` y la posibilidad de enchufar agentes alternativos. |
+| `configure_claude_code.sh` | `orchestrator/utils/script_templates/` | Apunta Claude Code a OpenRouter con el modelo gratuito que elija Mammoth. |
+| Sistema de eventos | `events/`, `app/events/*` | Nuevas categorías `insights`, `shield` y `task`. |
+| Scheduler de jobs | `job/` | Scans, sync del catálogo de modelos, cola de trabajo con cuota. |
+| Principals de servicio | `app/bootstrap` | Nuevo principal `harness-agent`. |
+| Protection rules y status checks | `app/services/protection` | Gate de merge `shield/security`. |
+| Automerge | `app/services/automerge` | Nivel de autonomía 3. |
+| Secret scanning | `app/services/settings/security.go` | Es un scanner más de Shield y también se usa para redactar prompts. |
+| Settings de repo y space | `app/services/settings` | Umbrales, autonomía, reservas de cuota y modo de privacidad. |
+| Labels de space y repo | `types/label.go`, `app/services/label` (hoy ligadas a PRs) | Se extienden a tareas con `label_task`, siguiendo el patrón de `label_pullreq`. |
+| Notificaciones | `app/services/notification` | Asignación, cambios de estado y vencimiento de SLA de tareas. |
+| Gestor de secretos | `app/services/secret` | Guarda la API key de OpenRouter. |
+| Artifact registry | `registry/` | Source maps (Insights) y escaneo de imágenes (Shield). |
 | Audit | `audit/` | Registro de toda acción autónoma. |
 
-## 3. Arquitectura
+Harness no tiene hoy un tracker de issues, así que el módulo de Tareas es nuevo, aunque se apoya en labels, notificaciones y eventos que ya existen.
 
-```
-                 ┌───────────────── Harness ─────────────────┐
- SDKs Sentry ───▶│ Insights ingest ─▶ grouping ─▶ issues ─┐  │
-                 │                                        │  │
- push / cron ───▶│ Shield scanners ─▶ findings ─▶ score ──┤  │
-                 │                                        ▼  │
-                 │                    Policy engine (umbral, │
-                 │                    autonomía, presupuesto)│
-                 │                                        │  │
-                 │                Triage agent (LLM, sin   │  │
-                 │                ejecutar código) ◀──────┘  │
-                 │                         │ decide "fix"     │
-                 │                         ▼                  │
-                 │   AITask ─▶ Gitspace + Claude Code ─▶ PR   │
-                 │                         │                  │
-                 │   Pipeline + check shield ─▶ review/merge  │
-                 └──────────────┬─────────────────────────────┘
-                                ▼
-                     AI Gateway ─▶ OpenRouter ─▶ N modelos
-```
+## 4. Base compartida: AI Gateway solo gratuito
 
-Hay dos tipos de agente:
+Es un paquete Go en `app/services/aigateway` por el que pasa toda llamada a un modelo. Tiene tres clientes:
 
-1. **Triage agent** (en el server, sin ejecución de código). Hace llamadas LLM cortas para clasificar, deduplicar, explicar, estimar severidad, decidir si una vulnerabilidad es alcanzable y elegir commits sospechosos. Es barato y rápido.
-2. **Fix agent** (en un Gitspace aislado). Es un `AITask` con Claude Code, u otro agente en el futuro, que clona el repo, reproduce el problema, escribe un test, aplica el fix, corre los tests y abre un PR.
+- **Decisions**: `POST /api/alpha/decisions`, para Mammoth 1 y Elephant 1.
+- **Chat**: `POST /api/v1/chat/completions`, compatible con OpenAI, para la generación de texto con modelos gratuitos.
+- **Configuración de agentes**: base URL, token y modelo para Claude Code u otro agente dentro del Gitspace.
 
-## 4. Base compartida
+### 4.1 Garantía de "siempre gratuito"
 
-### 4.1 AI Gateway (`app/services/aigateway`)
+La regla se aplica en varias capas, y cualquiera de ellas alcanza para bloquear un modelo pago:
 
-Es un paquete Go que encapsula OpenRouter. Toda feature de IA pasa por acá.
+1. **Allowlist del catálogo**: solo se aceptan modelos con `pricing.prompt == 0` y `pricing.completion == 0` en `/api/v1/models`, o los que tienen sufijo `:free`, más el router `openrouter/free`.
+2. **Precio máximo en cada request**: se envía `provider.max_price` con prompt y completion en 0, para que OpenRouter nunca enrute a un endpoint pago.
+3. **Validación en el gateway**: el gateway rechaza cualquier ID de modelo fuera de la allowlist, aunque venga de una configuración de usuario o de la salida de Mammoth.
+4. **Verificación posterior**: si `usage.cost > 0` en una respuesta, se dispara una alerta, el modelo se pone en cuarentena y el evento queda en el audit log.
+5. **Límite de crédito en la API key**: la key de OpenRouter se crea con un límite de crédito mínimo como red de seguridad. Hay que validar que un límite en 0 no bloquee los modelos gratuitos.
 
-- **Cliente**: API compatible con OpenAI (`/api/v1/chat/completions`), streaming, tool calling y structured outputs (JSON schema) para respuestas parseables.
-- **Perfiles por tarea**: en lugar de nombres de modelo dispersos en el código, cada llamada declara un perfil.
+**No hay fallback a modelos pagos.** Si no queda cuota ni modelos gratuitos disponibles, el trabajo espera en la cola o se resuelve por el camino determinístico.
 
-  | Perfil | Uso | Ejemplo de routing |
-  |---|---|---|
-  | `triage-fast` | clasificación y dedupe | modelo chico y barato, `sort: price` |
-  | `reasoning` | causa raíz, alcanzabilidad | modelo grande con fallback |
-  | `embed` | similitud de errores y de findings | modelo de embeddings |
-  | `agent` | fix agent (Claude Code) | endpoint compatible con Anthropic |
+### 4.2 Catálogo de modelos gratuitos
 
-  Los perfiles se configuran a nivel sistema y se pueden sobrescribir por space o repo.
-- **Fallbacks**: se usa el array `models` de OpenRouter más reintentos con backoff propios.
-- **Políticas de datos**: `provider.data_collection: "deny"`, filtro de proveedores ZDR y allowlist o denylist de proveedores por space. Esto es crítico porque los eventos de error pueden contener PII.
-- **Redacción** antes de enviar: se eliminan secretos (reutilizando el detector de secret scanning), emails, tokens y headers de auth del payload.
-- **Presupuestos**: límite mensual en USD por space, repo y feature. Se lleva contabilidad con el `usage` que devuelve OpenRouter. Al superar el límite, la feature se degrada a modo sin IA y no falla.
-- **Métricas**: costo, tokens, latencia, modelo y tasa de fallback, expuestos en Prometheus (`app/services/metric`) y en una tabla `ai_usage`.
-- **Claves**: BYOK por space mediante el gestor de secretos, con fallback a una clave de sistema en la config.
+El job `ai-catalog-sync` corre cada 6 horas y guarda en `ai_models` los modelos gratuitos disponibles. Para cada uno registra:
 
-### 4.2 Fix agents vía OpenRouter
+- **Capacidades**, tomadas del catálogo: contexto máximo, soporte de tool calling, structured outputs y modalidades.
+- **Rendimiento observado**, calculado por Harness: tasa de éxito por tipo de tarea (por ejemplo, PR mergeado o JSON válido), latencia p50 y p95, y tasa de errores 429 y 5xx.
+- **Estado**: activo, degradado, en cuarentena o retirado.
+
+Mammoth recibe estos datos como descripción de cada opción. Así elige con información actual y no con un listado fijo.
+
+### 4.3 Clases de modelo
+
+| Clase | Qué hace | Modelos |
+|---|---|---|
+| **Sistema 1 (decisión)** | sí/no, elegir entre opciones, puntuar | Mammoth 1 (`baseten/mammoth-1:free`), con Elephant 1 (`baseten/elephant-1:free`, 9B) como respaldo o para decisiones triviales |
+| **Sistema 2 (generación)** | resúmenes, explicaciones, análisis de causa raíz | modelos de chat gratuitos elegidos por Mammoth |
+| **Agente (código)** | reproducir, testear y parchear dentro del Gitspace | modelo gratuito con tool calling elegido por Mammoth |
+| **Embeddings** | dedupe semántico de errores y findings | solo si hay un modelo de embeddings gratuito; si no, dedupe solo con fingerprints determinísticos |
+| **Último recurso** | cuando falla la elección de Mammoth o no hay candidatos | el router `openrouter/free`, solo para tareas sin tool calling |
+
+### 4.4 Planificador de cuota
+
+Con 1000 requests por día para toda la instalación, la cuota es el recurso más escaso, así que la gestiona un componente propio:
+
+- **Contador global** sincronizado entre réplicas mediante `pubsub` o `lock` y persistido. Lee también los headers de rate limit de OpenRouter cuando están disponibles.
+- **Reservas por clase**, configurables. Un reparto inicial razonable:
+
+  | Clase | Reserva diaria |
+  |---|---|
+  | Decisiones (Mammoth y Elephant) | 25 % |
+  | Generación del triage | 25 % |
+  | Fix agents | 40 % |
+  | Interacciones manuales (por ejemplo, "explicar esto" en la UI) | 10 % |
+
+  Lo que una clase no usa se libera para las demás a partir del mediodía UTC.
+- **Prioridad de la cola**, de mayor a menor: tarea crítica, luego regresión, luego tarea alta, luego el resto. Las tareas de un mismo issue se agrupan.
+- **Presupuesto por fix agent**: cada `AITask` tiene un tope de requests (por ejemplo, 60). Si lo alcanza, se detiene, guarda su progreso en la tarea y pasa a revisión humana.
+- **Ahorro antes que todo**:
+  - Cache de decisiones por hash del `state`.
+  - Bumps de dependencias sin LLM.
+  - Dedupe por fingerprint antes de consultar a ningún modelo.
+  - Varias preguntas agrupadas en una sola llamada a la Decisions API.
+- Cuando la cuota se agota, el trabajo queda en estado `esperando_cuota` dentro de la tarea y se reanuda al reiniciarse el día UTC.
+
+### 4.5 Fix agents con modelos gratuitos
 
 - Nuevo `enum.AIAgentAuth`: `openrouter-api-key`.
-- `configure_claude_code.sh` acepta un `BaseURL` y un modelo opcionales: `ANTHROPIC_BASE_URL=https://openrouter.ai/api`, `ANTHROPIC_AUTH_TOKEN=<key>`, `ANTHROPIC_MODEL=<perfil agent>`. Hay que validar la compatibilidad exacta con la versión de Claude Code que se instale.
-- `decryptAIAuth` deja de asumir Anthropic y lee el tipo de auth guardado.
-- El `AITask` gana dos campos: `Origin` (manual, `insights` o `shield`) y `OriginRef`, el ID del issue o finding.
-- Se agrega un *prompt template* versionado por tipo de tarea: fix de error, bump de dependencia o fix de SAST.
-- Los permisos de Claude Code se restringen por tipo de tarea, partiendo de la allowlist actual del script, y se suman los comandos de test que detecte el agente o que declare el repo.
+- `configure_claude_code.sh` recibe `BaseURL`, `AuthToken` y `Model`: `ANTHROPIC_BASE_URL=https://openrouter.ai/api`, `ANTHROPIC_AUTH_TOKEN=<key>`, `ANTHROPIC_MODEL=<modelo gratuito elegido por Mammoth>`.
+- **Spike en la fase 0**: hay que verificar que Claude Code funcione bien con modelos gratuitos vía el endpoint compatible con Anthropic de OpenRouter, sobre todo en tool calling y en contexto largo. Si no rinde, se agrega un agente alternativo compatible con OpenAI (por ejemplo, Aider u OpenHands) usando el `installationMap` existente. El runner es agnóstico al agente.
+- `AITask` gana los campos `TaskID`, que lo enlaza al módulo de Tareas, y `ModelDecisionID`, que registra qué decisión eligió el modelo.
+- Hay prompt templates versionados por tipo de tarea: fix de error, bump con breaking changes y fix de SAST. Todos siguen el enfoque test-first.
 
-### 4.3 Policy engine y niveles de autonomía
+### 4.6 Privacidad con proveedores gratuitos
 
-Se configura por space con herencia a repo, siguiendo el patrón actual de `settings`:
+Como algunos proveedores gratuitos pueden registrar o entrenar con los datos, la privacidad se resuelve del lado de Harness:
 
-| Nivel | Nombre | Qué hace el agente |
-|---|---|---|
-| 0 | Observe | Solo registra y clasifica. |
-| 1 | Suggest | Comenta en el issue o PR con el análisis y un parche propuesto, sin tocar el repo. |
-| 2 | Draft PR | Abre un PR draft desde una rama `agent/...`. Requiere review humano. **Default recomendado.** |
-| 3 | Auto-merge | Igual que el nivel 2, pero activa automerge si el pipeline y los checks pasan y el cambio es de bajo riesgo (por ejemplo, un bump patch con tests verdes). |
+- **Redacción obligatoria** antes de cada envío: secretos (con el detector de secret scanning), emails, IPs, tokens, cookies, headers de auth y valores de variables locales en los stack traces.
+- **Modo de IA por repo**:
 
-Además se configuran los umbrales que disparan cada nivel (sección 5.4 y 6.4), los límites de concurrencia (máximo de agentes simultáneos por repo y por space), el presupuesto, ventanas horarias y un **kill switch** global y por repo.
+  | Modo | Qué se envía |
+  |---|---|
+  | `completo` | todo lo redactado, incluido código (fix agents) |
+  | `solo-decisiones` | solo metadatos compactos a Mammoth; ni código ni payloads a modelos generativos; no hay fix agents |
+  | `apagado` | nada |
 
-### 4.4 Guardrails
+  Los repos privados arrancan en `solo-decisiones` y un admin puede subirlos a `completo`.
+- La UI avisa de forma clara que los modelos gratuitos pueden retener datos según el proveedor.
 
-- El agente actúa como el principal de servicio `harness-agent`. Nunca pushea a ramas protegidas: las protection rules existentes se aplican igual.
-- **Prevención de loops**: si un PR del agente genera errores nuevos o regresiones, se marca, se suspende la autonomía para ese issue y se avisa.
-- **Deduplicación**: un issue o finding tiene a lo sumo un `AITask` activo, y un PR abierto se actualiza en vez de crear otro.
-- **Auditoría**: cada decisión del triage agent, con su input resumido, modelo, salida y costo, y cada acción del fix agent quedan en `audit`.
-- **Evaluación offline**: un set de casos dorados (errores y CVEs con fix conocido) para medir los prompts y modelos antes de cambiarlos.
+## 5. Sistema 1: Mammoth como cerebro de decisiones
 
-## 5. Insights: error tracking
+### 5.1 Idea
 
-### 5.1 Ingesta compatible con Sentry
+Se usa la división Sistema 1 / Sistema 2:
 
-La decisión clave es implementar el **protocolo de envelopes de Sentry** (`/api/{project}/envelope/` y `/store/`) con autenticación por DSN. Así cualquier SDK oficial de Sentry funciona solo con cambiar el DSN, y no hace falta escribir ni mantener SDKs propios.
+- **Sistema 1 (Mammoth)** responde rápido, barato y con probabilidades calibradas: ¿es un duplicado?, ¿qué tan grave es?, ¿se arregla solo?, ¿qué modelo lo hace?
+- **Sistema 2 (modelos generativos y agentes)** se usa solo cuando hace falta pensar o escribir: explicar, analizar la causa raíz o programar.
 
-- Un **proyecto Insights** pertenece a un repo de Harness. Así cada error está ligado al código.
-- Hay rate limiting y sampling por proyecto, reutilizando `app/services/usage` y `limiter`.
-- Se ingiere a un stream de eventos y se procesa de forma asíncrona.
+Como Mammoth devuelve probabilidades y no texto, cada decisión tiene una **confianza numérica** que se compara directamente con los umbrales del policy engine.
 
-### 5.2 Procesamiento
+### 5.2 Decisiones que toma Mammoth
 
-- **Fingerprinting determinístico**: tipo de excepción más frames "in-app" normalizados. Los embeddings (`embed`) son una segunda pasada para unir issues casi idénticos y no son el mecanismo principal.
-- **Simbolicación y source maps**: los artefactos se suben al artifact registry desde el pipeline y se resuelven por `release`.
-- **Releases**: `release` se asocia al commit SHA. Los pipelines de Harness lo inyectan automáticamente, de modo que cada issue sabe en qué commit apareció.
-- **Estados del issue**: nuevo, en curso, resuelto, regresión e ignorado. La regresión se detecta cuando un issue resuelto reaparece en un release posterior al fix.
+Cada fila es una pregunta de la Decisions API, y varias se agrupan en un solo request:
 
-### 5.3 Triage agent
+| Momento | Pregunta (`id`) | Tipo | Opciones |
+|---|---|---|---|
+| Error nuevo | `is_duplicate_of_candidate` | noul | el error se compara con hasta 3 issues candidatos por fingerprint cercano |
+| Error nuevo | `severity` | score | bajo, medio, alto, crítico |
+| Error nuevo | `action` | choice | `ignorar`, `notificar`, `sugerir`, `arreglar` |
+| Error nuevo | `suspect_commit` | choice | top-5 commits sospechosos (git blame) más `ninguno` |
+| Finding nuevo | `reachable` | choice | `alcanzable`, `no_alcanzable`, `desconocido` |
+| Finding nuevo | `false_positive` | noul | el hallazgo es real o un falso positivo |
+| Finding nuevo | `fix_strategy` | choice | `bump_deterministico`, `agente`, `manual`, `aceptar_riesgo` |
+| Cualquier trabajo generativo | `model_for_task` | choice | los modelos gratuitos candidatos (sección 5.3) |
+| Antes de lanzar un fix agent | `worth_agent_budget` | noul | si vale la pena gastar la cuota del agente hoy, considerando cuota restante, prioridad y probabilidad de éxito |
+| Tras un intento fallido | `next_step` | choice | `reintentar_otro_modelo`, `escalar_humano`, `abandonar` |
+| Tarea nueva | `assignee_kind` | choice | `agente`, `equipo_X`, `code_owner` (con `codeowners`) |
 
-Se dispara cuando hay un issue nuevo, una regresión o un pico de frecuencia (por ejemplo, x10 en 15 minutos). Hace lo siguiente:
+### 5.3 Elección de modelo
 
-1. Resume el error en lenguaje natural.
-2. Hace **suspect commits**: cruza los frames del stack con `git blame` y con los commits entre el último release sano y el actual. Esto es determinístico, y el LLM solo los rankea y explica.
-3. Clasifica la severidad según usuarios afectados, frecuencia, si es una ruta crítica y si es una regresión.
-4. Decide la acción: ignorar, notificar, sugerir o arreglar, con un `confidence` en 0..1 en salida estructurada.
+1. **Filtro determinístico**: se descartan los modelos que no cumplen los requisitos duros (contexto mínimo, tool calling si es un agente, estado activo, sin cuarentena).
+2. **Pregunta `model_for_task` a Mammoth**:
+   - El `state` describe la tarea: tipo, lenguaje, tamaño del diff o contexto, dificultad estimada e intentos previos con sus modelos.
+   - Los `criteria` describen cada candidato: capacidades más la tasa de éxito observada para ese tipo de tarea.
+3. **Uso de la confianza**:
+   - Si `confidence >= 0.6`, se usa el modelo elegido.
+   - Si es menor, se usa el modelo con mejor tasa de éxito histórica para ese tipo de tarea, como desempate determinístico.
+4. **Registro**: la decisión se guarda en `ai_decisions` y su resultado (éxito o fallo) vuelve al catálogo como rendimiento observado. Así, con el tiempo, Mammoth recibe descripciones cada vez más precisas.
 
-### 5.4 Disparo del fix agent
+### 5.4 Escalamiento por confianza
 
-El fix agent se dispara si se cumplen las tres condiciones:
+Cada decisión tiene dos umbrales configurables, `alto` y `bajo`:
 
-- `severity >= umbral_severidad`, con default `high`.
-- `confidence >= umbral_confianza`, con default 0.7.
-- El nivel de autonomía del repo es 2 o más, y hay presupuesto y cupo de concurrencia.
+- **Confianza mayor o igual a `alto`**: se actúa según el nivel de autonomía.
+- **Confianza entre `bajo` y `alto`**: se consulta al Sistema 2 (un modelo generativo gratuito) para obtener un segundo análisis con justificación, y se vuelve a preguntar a Mammoth con ese análisis incluido en el `state`.
+- **Confianza menor que `bajo`**: la tarea se asigna a un humano con el análisis disponible.
 
-El prompt del agente incluye el stack trace simbolizado, breadcrumbs y contexto redactados, los suspect commits y la instrucción de **escribir primero un test que reproduzca el error**. El PR resultante enlaza al issue, y el issue se cierra automáticamente cuando el release con el fix deja de reportarlo.
+### 5.5 Robustez
 
-### 5.5 UI
+- **Adaptador aislado** (`aigateway/decisions`) con el contrato de request y respuesta de la Decisions API, verificado con tests de contrato. El parseo es estricto: siempre se verifica `type`, y una clave faltante cuenta como error.
+- **Respaldo**: si Mammoth falla, se usa Elephant 1. Si fallan los dos, se aplican reglas determinísticas (CVSS más KEV para findings, frecuencia más regresión para errores) y la decisión queda marcada como `fallback`.
+- **Set de evaluación**: un conjunto de casos etiquetados por humanos (errores y CVEs conocidos) sirve para calibrar umbrales y detectar regresiones cuando cambia la versión de Mammoth. El campo `model` de la respuesta trae el build exacto.
 
-Muestra la lista de issues por repo con gráfico de frecuencia, el detalle del issue (stack, contexto, suspect commits, análisis del agente) y el estado del `AITask` y el PR asociado. En la vista del PR aparece un banner que dice: "Este PR toca código involucrado en N errores activos".
+## 6. Módulo de Tareas
 
-## 6. Shield: vulnerabilidades
+### 6.1 Propósito
 
-### 6.1 Scanners
+Es la fuente única de verdad del seguimiento de trabajo. Cada problema relevante de Insights o Shield genera o actualiza una tarea, y también se pueden crear tareas a mano. Toda acción, humana o del agente, queda en el historial de la tarea.
 
-Se usan herramientas open source maduras. El valor diferencial está en la orquestación y el agente, no en reinventar los scanners.
+### 6.2 Modelo
 
-| Tipo | Herramienta propuesta | Disparo |
-|---|---|---|
-| SCA (dependencias) | OSV-Scanner y base OSV (con mirror local para entornos offline) | push a la rama default, PR y cron diario |
-| SAST | Opengrep o Semgrep con reglas de la comunidad | PR y push |
-| Secretos | el secret scanning existente | push (ya existe) |
-| Imágenes y paquetes | Trivy o Grype sobre el artifact registry | push de imagen o paquete al registry |
-| IaC | Trivy config | PR |
+- **Alcance**: la tarea pertenece a un repo, con vista agregada por space.
+- **Campos**: título, descripción, `origen` (`insights`, `shield` o `manual`), `origen_ref`, prioridad (P0 a P3), estado, responsable (un usuario, un grupo con `usergroup` o el agente), labels, fecha límite según el SLA de la prioridad, PRs vinculados y `AITask` vinculados.
+- **Estados**:
+  - `abierta` → `triage` → `en_curso` → `en_revision` → `resuelta` → `verificada`
+  - Estados laterales: `esperando_cuota`, `bloqueada`, `descartada` (con motivo) y `reabierta`.
+- **Transiciones automáticas**:
+  - Al abrir un PR del agente o de una persona que la referencia, pasa a `en_revision`.
+  - Al mergear el PR, pasa a `resuelta`.
+  - Pasa a `verificada` cuando Insights deja de recibir el error en el release con el fix, o cuando Shield no detecta el finding en el siguiente scan.
+  - Si el error reaparece, pasa a `reabierta` y su prioridad sube.
+- **Deduplicación**: un issue de Insights o un finding de Shield tiene a lo sumo una tarea activa. Si Mammoth detecta un duplicado, la tarea se vincula a la existente.
+- **Agrupación**: los findings del mismo paquete o los errores con la misma causa raíz pueden agruparse en una tarea padre con subtareas.
 
-Los scanners corren como jobs (`job/`) en un runner aislado, o como steps de pipeline para repos con CI. Las bases de vulnerabilidades se sincronizan con un job recurrente.
+### 6.3 Historial
 
-### 6.2 Modelo de findings
+Es una línea de tiempo por tarea, con estas entradas:
 
-Cada finding se deduplica por `(repo, tipo, regla o CVE, paquete y versión, o archivo y línea normalizada)` y tiene un ciclo de vida: abierto, validado, falso positivo, aceptado (con vencimiento), en fix y resuelto.
+- Creación con su origen y datos clave.
+- Cada decisión de Mammoth con sus probabilidades. Por ejemplo: "severidad: alto (0.81) · acción: arreglar (0.74) · modelo: X (0.66)".
+- Inicio y fin de cada `AITask`, con el modelo usado y los requests consumidos.
+- PRs abiertos y mergeados, y resultados del pipeline.
+- Cambios de estado, de responsable y de prioridad.
+- Comentarios de personas.
 
-### 6.3 Score de riesgo
+Esto da trazabilidad completa de por qué el sistema hizo cada cosa.
+
+### 6.4 Integraciones
+
+- **Labels**: se reutiliza `app/services/label` con un nuevo `label_task`.
+- **Notificaciones**: asignación, cambio de estado, SLA por vencer y "el agente necesita ayuda".
+- **Webhooks**: `task_created`, `task_updated` y `task_resolved`, para Slack o integraciones externas.
+- **PRs**: la sintaxis `Fixes TASK-123` en el título o la descripción vincula el PR y cierra la tarea al mergear, reutilizando el patrón de `autolink`.
+- **Codeowners**: sugiere el responsable humano según los archivos del stack o del finding.
+
+### 6.5 UI
+
+- **Lista** de tareas por repo y space, con filtros por estado, prioridad, origen, responsable (incluido "agente") y label.
+- **Tablero kanban** por estado.
+- **Detalle**: descripción, origen (con link al issue o finding), historial, PRs y estado del agente en vivo.
+- **Panel del agente**: tareas en curso, cuota usada y restante del día, cola `esperando_cuota` y tasa de éxito por modelo.
+
+## 7. Insights: error tracking
+
+Sigue lo definido en v1, con estos ajustes.
+
+### 7.1 Ingesta compatible con Sentry
+Se implementa el protocolo de envelopes de Sentry (`/api/{project}/envelope/`) con autenticación por DSN, así que funcionan los SDKs oficiales de Sentry. Cada proyecto pertenece a un repo, y hay rate limiting y sampling por proyecto.
+
+### 7.2 Procesamiento
+- Fingerprinting determinístico (tipo de excepción más frames "in-app" normalizados).
+- Source maps en el artifact registry.
+- Releases ligados al commit SHA, inyectado por los pipelines.
+- Detección de regresiones.
+- **Antes de usar IA**: los suspect commits se calculan de forma determinística (frames del stack cruzados con `git blame` y los commits entre releases), y Mammoth solo elige entre ellos.
+
+### 7.3 Flujo con IA
+1. Llega un issue nuevo, una regresión o un pico de frecuencia.
+2. Se dedupe por fingerprint, sin gastar cuota.
+3. Mammoth recibe un request agrupado con `is_duplicate_of_candidate`, `severity`, `action` y `suspect_commit`.
+4. Se crea o actualiza la tarea con la prioridad derivada de `severity`.
+5. Si `action = arreglar` y se cumplen confianza, autonomía, modo de IA `completo` y `worth_agent_budget`, Mammoth elige el modelo (`model_for_task`) y se lanza un `AITask` con test-first.
+6. Se abre un PR que referencia la tarea. La verificación es automática por release.
+
+## 8. Shield: vulnerabilidades
+
+Sigue lo definido en v1, con estos ajustes.
+
+### 8.1 Scanners
+OSV-Scanner (SCA), Opengrep o Semgrep (SAST), el secret scanning existente, Trivy o Grype (imágenes del registry y IaC). Todos corren como jobs o como steps de pipeline. Las bases de vulnerabilidades se sincronizan con un job.
+
+### 8.2 Score de riesgo
+```
+riesgo = CVSS × factor EPSS × (1.5 si está en KEV) × factor de alcanzabilidad × factor de exposición
+```
+Normalizado a 0–100. La alcanzabilidad sale de la pregunta `reachable` de Mammoth y se pondera por su confianza:
+- `alcanzable`: factor 1.3
+- `desconocido`: factor 1.0
+- `no_alcanzable`: factor 0.2, aplicado solo si la confianza es alta; si no, se usa 1.0
+
+### 8.3 Flujo
+1. Se escanea y se dedupe el finding.
+2. Se calcula el riesgo base de forma determinística.
+3. Mammoth responde `reachable`, `false_positive` y `fix_strategy` en un único request.
+4. Se crea o actualiza la tarea.
+5. Si `riesgo >= umbral_parche` (default 70):
+   - Con `bump_deterministico`, se elige la versión mínima que corrige el CVE, se actualiza el lockfile con la herramienta del ecosistema y se abre el PR **sin consumir cuota de LLM**.
+   - Si ese bump rompe los tests, o si la estrategia es `agente`, se lanza el fix agent con el modelo elegido por Mammoth.
+   - Con un secreto expuesto, no se parchea: se notifica con urgencia y se crea una tarea P0 para rotarlo.
+6. El check `shield/security` bloquea los PRs que introducen findings por encima del umbral, en integración con las protection rules.
+
+## 9. Policy engine y autonomía
+
+Los cuatro niveles siguen igual que en v1: 0 = observar, 1 = sugerir, 2 = PR draft (es el default), 3 = auto-merge.
+
+Las condiciones para que un agente actúe solo se juntan en un único punto de decisión:
 
 ```
-riesgo = CVSS base
-       × factor EPSS (probabilidad de explotación)
-       × 1.5 si está en CISA KEV
-       × factor de alcanzabilidad (0.2 no alcanzable · 1.0 desconocido · 1.3 alcanzable)
-       × factor de exposición (servicio público vs. tooling interno, configurable por repo)
+lanzar_fix_agent =
+     autonomía(repo) >= 2
+  && modo_ia(repo) == completo
+  && decision(action|fix_strategy).confidence >= umbral_alto
+  && prioridad(tarea) >= umbral_prioridad
+  && cuota.disponible(clase=agentes) >= presupuesto_agente
+  && decision(worth_agent_budget) == true
+  && agentes_activos(repo) < máximo
+  && !kill_switch
 ```
 
-Normalizado a 0–100.
+Se mantienen los guardrails de v1:
+- Principal `harness-agent`, sin push a ramas protegidas.
+- Prevención de loops.
+- Un PR por tarea.
+- Audit log de cada acción.
+- Kill switch global y por repo.
 
-### 6.4 Validación por el agente
-
-Es la diferencia principal frente a un scanner tradicional:
-
-1. **Alcanzabilidad**: el triage agent recibe el CVE (descripción y funciones afectadas según OSV o el advisory) y los usos del paquete en el repo, obtenidos con búsqueda de código (`keywordsearch`) y el grafo de imports. Decide si es alcanzable, no alcanzable o desconocido y justifica la decisión.
-2. **Falsos positivos de SAST y secretos**: decide si el hallazgo es real según el contexto (código de test, valores de ejemplo, input ya sanitizado).
-3. La decisión queda registrada y es **revisable por humanos**. Un humano puede marcar falso positivo y eso se usa como señal para futuras evaluaciones.
-
-### 6.5 Parcheo
-
-Si `riesgo >= umbral_parche` (default 70) y la autonomía es 2 o más:
-
-- **Bump de dependencia**: primero se intenta de forma determinística, eligiendo la versión mínima que corrige el CVE y actualizando el lockfile con la herramienta del ecosistema. Si los tests pasan, se abre el PR directamente, sin LLM. Si fallan por breaking changes, se lanza el fix agent con el changelog de la dependencia y los errores de compilación o tests.
-- **Fix de SAST**: se lanza el fix agent con la regla, el fragmento y la guía de remediación.
-- **Secreto expuesto**: no se parchea automáticamente. Se notifica con urgencia, se sugiere rotar el secreto y se abre un PR que lo saca del código hacia el gestor de secretos.
-
-Los PRs se agrupan por repo y ecosistema (por ejemplo, "Shield: 3 dependencias npm") para no inundar a los reviewers.
-
-### 6.6 Gate de merge
-
-- Hay un status check `shield/security` en cada PR que falla si el PR **introduce** findings por encima del umbral de bloqueo.
-- Se integra con las protection rules existentes: se puede marcar como check requerido.
-- Se agregan comentarios inline en el PR con la explicación generada por el triage agent.
-
-### 6.7 UI
-
-Muestra un dashboard por space (riesgo agregado, tendencias, MTTR), la lista de findings por repo con filtros por tipo, riesgo y estado, el detalle con la explicación del agente y la evidencia de alcanzabilidad, y la bandeja de PRs abiertos por Shield.
-
-## 7. Modelo de datos (nuevas tablas)
+## 10. Modelo de datos (nuevas tablas)
 
 | Tabla | Campos clave |
 |---|---|
-| `insights_projects` | id, repo_id, dsn_public_key, rate_limit, created |
-| `insights_issues` | id, project_id, fingerprint, title, level, status, first_seen, last_seen, event_count, user_count, first_release, resolved_in_release, ai_summary, ai_severity, ai_confidence |
-| `insights_events` | id, issue_id, received, release, environment, payload (redactado y comprimido) con retención configurable; a gran escala se movería a blob storage |
-| `shield_scans` | id, repo_id, commit_sha, scanner, status, started, finished |
-| `shield_findings` | id, repo_id, type, rule_or_cve, package, version, path, line, cvss, epss, kev, reachability, risk_score, status, ai_verdict, ai_reasoning, accepted_until |
-| `agent_actions` | id, origin (`insights` o `shield`), origin_id, ai_task_id, pr_id, level, decision, cost_usd, created |
-| `ai_usage` | id, space_id, repo_id, feature, profile, model, tokens_in, tokens_out, cost_usd, created |
+| `tasks` | id, repo_id, number (por repo, `TASK-123`), title, description, origin, origin_ref, priority, state, assignee_principal_id, assignee_group_id, assignee_is_agent, due, parent_id, created_by, created, updated, resolved, verified |
+| `task_activities` | id, task_id, kind (state_change, decision, agent_run, pr_link, comment…), payload JSON, principal_id, created |
+| `task_labels` | task_id, label_id, value_id (patrón de `pullreq_labels`) |
+| `task_links` | task_id, kind (pullreq, ai_task, insights_issue, shield_finding), ref_id |
+| `ai_models` | id (ID de OpenRouter), kind (decision, chat, embed), context_length, supports_tools, status, success_rate_by_task JSON, p95_latency_ms, last_seen, quarantined_reason |
+| `ai_decisions` | id, task_id, question_id, model_build, state_hash, answer JSON (probabilidades y confianza), fallback bool, outcome, created |
+| `ai_quota` | day, class, used, reserved |
+| `ai_usage` | id, space_id, repo_id, feature, model, requests, tokens_in, tokens_out, cost_usd (debe ser 0), created |
+| `insights_projects`, `insights_issues`, `insights_events` | igual que en v1, más `task_id` |
+| `shield_scans`, `shield_findings` | igual que en v1, más `task_id` y `ai_decision_ids` |
 
-También se agregan campos nuevos en `ai_tasks`: `origin` y `origin_ref`. Las migraciones van en `app/store/database/migrate/{postgres,sqlite}` a partir de la `0192`.
+Nuevos campos en `ai_tasks`: `task_id`, `model_decision_id` y `request_budget`. Las migraciones empiezan en la `0192`, en `app/store/database/migrate/{postgres,sqlite}`.
 
-## 8. Eventos nuevos
+## 11. Eventos nuevos
 
-- `insights`: `issue_created`, `issue_regressed`, `issue_spiked`, `issue_resolved`
-- `shield`: `scan_completed`, `finding_opened`, `finding_validated`, `finding_resolved`
-- Consumo de eventos existentes: `pipeline.executed` (asocia releases y verifica fixes), eventos de `pullreq` (merge del PR del agente) y eventos de push de `git`.
+- `task`: `created`, `state_changed`, `assigned`, `resolved`, `verified`, `reopened`
+- `insights`: `issue_created`, `issue_regressed`, `issue_spiked`
+- `shield`: `scan_completed`, `finding_opened`
+- `ai`: `decision_made`, `quota_exhausted`, `paid_model_detected` (alerta; no debería ocurrir nunca)
 
-Estos eventos también se exponen como **webhooks** (`app/services/webhook`) para integrar con Slack o PagerDuty.
+Todos se exponen también como webhooks.
 
-## 9. API (resumen)
+## 12. API (resumen)
 
 ```
-POST   /api/{project}/envelope/                         # ingesta compatible con Sentry
+# Tareas
+GET    /api/v1/repos/{repo}/tasks
+POST   /api/v1/repos/{repo}/tasks
+GET    /api/v1/repos/{repo}/tasks/{number}
+PATCH  /api/v1/repos/{repo}/tasks/{number}               # estado, responsable, prioridad
+GET    /api/v1/repos/{repo}/tasks/{number}/activities
+POST   /api/v1/repos/{repo}/tasks/{number}/comments
+POST   /api/v1/repos/{repo}/tasks/{number}/agent         # lanzar el agente manualmente (respeta la cuota)
+GET    /api/v1/spaces/{space}/tasks                      # vista agregada
+
+# Insights y Shield
+POST   /api/{project}/envelope/                          # ingesta compatible con Sentry
 GET    /api/v1/repos/{repo}/insights/issues
-GET    /api/v1/repos/{repo}/insights/issues/{id}
-PATCH  /api/v1/repos/{repo}/insights/issues/{id}        # estado, asignación
-POST   /api/v1/repos/{repo}/insights/issues/{id}/fix    # lanzar el agente manualmente
 GET    /api/v1/repos/{repo}/shield/findings
-PATCH  /api/v1/repos/{repo}/shield/findings/{id}        # falso positivo, aceptar riesgo
-POST   /api/v1/repos/{repo}/shield/scans                # scan on-demand
-POST   /api/v1/repos/{repo}/shield/findings/{id}/fix
-GET    /api/v1/spaces/{space}/ai/usage
-PUT    /api/v1/spaces/{space}/settings  (ai.*, insights.*, shield.*)
+PATCH  /api/v1/repos/{repo}/shield/findings/{id}
+POST   /api/v1/repos/{repo}/shield/scans
+
+# IA
+GET    /api/v1/system/ai/models                          # catálogo gratuito y rendimiento
+GET    /api/v1/system/ai/quota                           # cuota del día por clase
+GET    /api/v1/repos/{repo}/ai/decisions?task={number}
+PUT    /api/v1/spaces/{space}/settings  (ai.*, tasks.*, insights.*, shield.*)
 ```
 
-## 10. Fases
+## 13. Fases
 
 | Fase | Contenido | Resultado |
 |---|---|---|
-| **0. Base IA** (2–3 semanas) | AI Gateway, perfiles, presupuestos, redacción, `ai_usage`, auth `openrouter-api-key` para `AITask`, principal `harness-agent`, settings de autonomía y kill switch | Claude Code en Gitspaces funcionando vía OpenRouter, con costos visibles |
-| **1. Shield MVP** (3–4 semanas) | SCA con OSV, findings, score sin alcanzabilidad, check `shield/security`, PRs de bump determinísticos (nivel 2) | Detección más parches automáticos de dependencias |
-| **2. Insights MVP** (4–5 semanas) | ingesta compatible con Sentry, fingerprinting, issues, releases ligados a commits, UI básica | Error tracking utilizable sin IA |
-| **3. Triage agents** (3 semanas) | resúmenes, severidad, suspect commits (Insights), alcanzabilidad y falsos positivos (Shield), set de evaluación offline | Menos ruido y priorización real |
-| **4. Fix agents** (3–4 semanas) | `AITask` disparado por políticas, prompts por tipo de tarea, test-first, prevención de loops, auditoría | Errores y vulnerabilidades corregidos de forma autónoma con PR draft |
-| **5. Expansión** | SAST, imágenes del registry, IaC, source maps, nivel 3 (automerge), alertas y webhooks, embeddings para dedupe | Paridad funcional con Sentry y Snyk en lo esencial |
+| **0. Base IA gratuita** (3 semanas) | AI Gateway (decisions y chat), allowlist gratuita con todas sus capas, sync del catálogo, planificador de cuota, redacción, modos de IA por repo, auth `openrouter-api-key`, **spike de Claude Code con modelos gratuitos**, adaptador de Mammoth y Elephant con tests de contrato | Infraestructura que garantiza solo modelos gratuitos y gestiona la cuota |
+| **1. Tareas** (2–3 semanas) | tablas, API, estados, historial, labels, notificaciones, vínculo con PRs (`Fixes TASK-n`), UI de lista, kanban y detalle | Seguimiento de trabajo usable aunque no haya IA |
+| **2. Shield MVP** (3–4 semanas) | OSV, findings, riesgo determinístico, check `shield/security`, bumps sin LLM, creación de tareas | Detección y parches de dependencias con costo de cuota cero |
+| **3. Sistema 1** (2–3 semanas) | preguntas de Mammoth para Shield (`reachable`, `false_positive`, `fix_strategy`), `model_for_task`, escalamiento por confianza, registro de decisiones en el historial, set de evaluación | Decisiones calibradas y elección dinámica de modelos |
+| **4. Insights MVP** (4–5 semanas) | ingesta compatible con Sentry, fingerprinting, releases, suspect commits, preguntas de Mammoth, creación de tareas | Error tracking con triage automático |
+| **5. Fix agents** (3–4 semanas) | `AITask` disparado por políticas, presupuesto de requests por agente, test-first, prevención de loops, verificación automática de tareas | Ciclo autónomo completo: se detecta el problema, se crea la tarea, Mammoth decide, el agente abre el PR y la tarea se verifica |
+| **6. Expansión** | SAST, imágenes del registry, IaC, source maps, nivel 3 (automerge), embeddings gratuitos si existen, panel del agente | Paridad funcional con Sentry y Snyk en lo esencial |
 
-Shield va antes que Insights porque es más acotado, reutiliza más piezas existentes (eventos de push, checks, protection rules) y da un caso de uso autónomo completo antes, gracias al bump determinístico.
+El módulo de Tareas va antes que Shield e Insights porque los dos crean tareas, y el historial es lo que hace auditable lo que decide Mammoth.
 
-## 11. Métricas de éxito
+## 14. Métricas de éxito
 
-- **Shield**: el MTTR de findings críticos y la tasa de falsos positivos descartados por el agente (validada por humanos).
-- **Insights**: el tiempo desde la primera ocurrencia hasta un PR con fix y el porcentaje de regresiones detectadas.
-- **Agentes**: el porcentaje de PRs del agente que se mergean sin cambios, que se mergean con cambios y que se cierran; el costo por PR mergeado; los incidentes causados por agentes, cuyo objetivo es 0.
-- **Gateway**: la tasa de fallback, la latencia p95 por perfil y la desviación respecto al presupuesto.
+- **Costo**: USD gastado igual a **0**, siempre. Cualquier valor distinto es un incidente.
+- **Cuota**: el porcentaje de la cuota diaria usado de forma útil (requests que terminan en una decisión aplicada o en un PR) y los días con `quota_exhausted`.
+- **Mammoth**: la precisión de sus decisiones contra el set de evaluación y contra las correcciones humanas, la calibración (si confianza 0.8 acierta cerca del 80 % de las veces) y la tasa de fallback.
+- **Elección de modelo**: la tasa de éxito por modelo y por tipo de tarea y su evolución.
+- **Tareas**: el MTTR por prioridad, el porcentaje de tareas resueltas por el agente y verificadas, y las reaperturas.
+- **Agentes**: el porcentaje de PRs del agente que se mergean sin cambios, que se mergean con cambios y que se cierran, y los requests consumidos por PR mergeado.
 
-## 12. Riesgos y mitigaciones
+## 15. Riesgos y mitigaciones
 
 | Riesgo | Mitigación |
 |---|---|
-| Un agente introduce bugs | Nivel 2 por defecto, test-first, pipeline obligatorio, prevención de loops, kill switch |
-| Fuga de PII o secretos a proveedores LLM | Redacción previa, proveedores ZDR, allowlist de proveedores, opción de desactivar la IA por repo |
-| Costos descontrolados | Presupuestos con degradación, perfiles baratos para triage, bump sin LLM cuando sea posible |
-| Volumen de ingesta de errores | Sampling, rate limits, retención corta y payloads en blob storage |
-| Ruido de PRs | Agrupación, límites de concurrencia, un PR por issue o finding |
-| Prompt injection desde el contenido del error o del repo | Tratar todo input como datos, salidas estructuradas, permisos mínimos del agente en el Gitspace y sin acceso a secretos del repo |
-| Licencias de los scanners y las reglas | Revisar las licencias de Semgrep y Opengrep y de las reglas antes de empaquetarlos |
+| 1000 requests por día no alcanzan para muchos fix agents | Caminos determinísticos primero, `worth_agent_budget`, presupuesto por agente, cola priorizada. Lo esperable es que solo se arreglen solas las tareas de mayor prioridad cada día. |
+| Los modelos gratuitos rinden peor en código que los pagos | Test-first con pipeline obligatorio, autonomía 2 por defecto, rendimiento observado que alimenta a Mammoth y escalamiento a humanos |
+| Claude Code puede no funcionar bien con modelos gratuitos | Spike en la fase 0 y runner agnóstico con un agente alternativo |
+| Los proveedores gratuitos retienen datos | Redacción obligatoria, `solo-decisiones` por defecto en repos privados, aviso en la UI |
+| Desaparece un modelo gratuito, incluido Mammoth | Sync del catálogo, Elephant 1 como respaldo y reglas determinísticas como último recurso |
+| Cambia la Decisions API (está en alpha) | Adaptador aislado, tests de contrato y versión de modelo registrada en cada decisión |
+| Se cuela un modelo pago | Las cinco capas de la sección 4.1 y una alerta si `cost > 0` |
+| Prompt injection desde errores o código | Todo input se trata como datos; Mammoth solo puede elegir entre opciones cerradas, lo que reduce la superficie de ataque; permisos mínimos del agente |
+| El rate limit de 20 por minuto genera ráfagas de 429 | Token bucket a 18 por minuto y reintentos con backoff, contando que los 429 consumen cuota |
 
-## 13. Preguntas abiertas
+## 16. Preguntas abiertas
 
-1. ¿Las features se distribuyen en el binario de Harness Open Source o como un módulo opcional?
-2. ¿La clave de OpenRouter es BYOK por space solamente, o también hay una clave global del administrador?
-3. ¿Se necesita soporte para entornos air-gapped? Eso implica un mirror de OSV y modelos locales vía un endpoint compatible con OpenAI configurable en el gateway.
-4. ¿El fix agent será solo Claude Code o se suman otros agentes (Codex, Aider, OpenHands) usando el mapa `installationMap` existente?
-5. ¿Hay algún volumen de ingesta objetivo que obligue a usar ClickHouse o similar desde la fase 2?
+1. ¿Se carga la compra única de 10 USD para pasar de 50 a 1000 requests por día? Sin eso, el sistema solo sirve para decisiones y no para fix agents.
+2. ¿Los repos privados arrancan en `solo-decisiones`, o la organización acepta enviar código redactado a proveedores gratuitos?
+3. ¿Es aceptable que, cuando no queda cuota, el trabajo espere al día siguiente, o se quiere una cola de prioridad manual para casos urgentes?
+4. ¿El módulo de Tareas debe ser genérico para cualquier trabajo del equipo, o solo para lo que generan Insights y Shield?
+5. ¿Las features se distribuyen dentro del binario de Harness Open Source o como un módulo opcional?
+
+## 17. Referencias
+
+- Mammoth 1 (free): https://openrouter.ai/baseten/mammoth-1:free
+- Elephant 1 (free): https://openrouter.ai/baseten/elephant-1:free
+- Router de modelos gratuitos: https://openrouter.ai/openrouter/free
+- Decisions API: https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request
+- Límites y precios: https://openrouter.ai/pricing
