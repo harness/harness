@@ -1,0 +1,29 @@
+{
+  "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0",
+  "timestamp": "2026-03-01T10:15:30",
+  "platform": "python",
+  "level": "warning",
+  "logentry": {
+    "message": "user %s not found",
+    "params": [
+      1234
+    ],
+    "formatted": "user 1234 not found"
+  },
+  "logger": "app.auth",
+  "release": "api@9",
+  "tags": [
+    [
+      "k",
+      "v"
+    ]
+  ],
+  "fingerprint": [
+    "{{ default }}",
+    "auth"
+  ],
+  "sdk": {
+    "name": "raven-python",
+    "version": "6.10.0"
+  }
+}
