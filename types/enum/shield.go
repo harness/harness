@@ -45,10 +45,12 @@ type ShieldScanner string
 
 // ShieldScanner enumeration.
 const (
-	ShieldScannerOSV ShieldScanner = "osv"
+	ShieldScannerOSV   ShieldScanner = "osv"
+	ShieldScannerSAST  ShieldScanner = "sast"
+	ShieldScannerTrivy ShieldScanner = "trivy"
 )
 
-var shieldScanners = sortEnum([]ShieldScanner{ShieldScannerOSV})
+var shieldScanners = sortEnum([]ShieldScanner{ShieldScannerOSV, ShieldScannerSAST, ShieldScannerTrivy})
 
 func (ShieldScanner) Enum() []any { return toInterfaceSlice(shieldScanners) }
 func (s ShieldScanner) Sanitize() (ShieldScanner, bool) {

@@ -1,0 +1,59 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Trivy",
+          "version": "0.50.1",
+          "rules": [
+            {
+              "id": "AVD-AWS-0086",
+              "name": "Misconfiguration",
+              "shortDescription": {"text": "S3 Access block should block public ACL"},
+              "properties": {"precision": "very-high", "security-severity": "8.0", "tags": ["misconfiguration", "security", "HIGH"]}
+            },
+            {
+              "id": "AVD-DS-0002",
+              "name": "Misconfiguration",
+              "shortDescription": {"text": "Image user should not be 'root'"},
+              "properties": {"precision": "very-high", "security-severity": "8.0", "tags": ["misconfiguration", "security", "HIGH"]}
+            },
+            {
+              "id": "AVD-DS-0026",
+              "name": "Misconfiguration",
+              "shortDescription": {"text": "No HEALTHCHECK defined"},
+              "properties": {"tags": ["misconfiguration", "security", "LOW"]}
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "AVD-AWS-0086",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {"text": "Artifact: infra/s3.tf\nType: terraform\nVulnerability AVD-AWS-0086\nSeverity: HIGH\nMessage: No public access block so not blocking public acls\nLink: [AVD-AWS-0086](https://avd.aquasec.com/misconfig/avd-aws-0086)"},
+          "locations": [{"physicalLocation": {"artifactLocation": {"uri": "infra/s3.tf", "uriBaseId": "ROOTPATH"}, "region": {"startLine": 12, "startColumn": 1, "endLine": 18, "endColumn": 2}}, "message": {"text": "infra/s3.tf"}}]
+        },
+        {
+          "ruleId": "AVD-DS-0002",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {"text": "Artifact: Dockerfile\nType: dockerfile\nVulnerability AVD-DS-0002\nSeverity: HIGH\nMessage: Specify at least 1 USER command in Dockerfile with non-root user as argument\nLink: [AVD-DS-0002](https://avd.aquasec.com/misconfig/ds002)"},
+          "locations": [{"physicalLocation": {"artifactLocation": {"uri": "Dockerfile", "uriBaseId": "ROOTPATH"}, "region": {"startLine": 1, "endLine": 1}}}]
+        },
+        {
+          "ruleId": "AVD-DS-0026",
+          "ruleIndex": 2,
+          "level": "note",
+          "message": {"text": "Artifact: Dockerfile\nType: dockerfile\nVulnerability AVD-DS-0026\nSeverity: LOW\nMessage: Add HEALTHCHECK instruction in your Dockerfile"},
+          "locations": [{"physicalLocation": {"artifactLocation": {"uri": "./Dockerfile"}, "region": {"startLine": 3}}}]
+        },
+        {
+          "message": {"text": "rule-less result is skipped"}
+        }
+      ]
+    }
+  ]
+}

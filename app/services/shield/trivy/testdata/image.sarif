@@ -1,0 +1,65 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Trivy",
+          "version": "0.50.1",
+          "rules": [
+            {
+              "id": "CVE-2023-5678",
+              "name": "OsPackageVulnerability",
+              "shortDescription": {"text": "openssl: Excessive time spent in DH check"},
+              "fullDescription": {"text": "Issue summary: Generating excessively long X9.42 DH keys."},
+              "properties": {"precision": "very-high", "security-severity": "6.5", "tags": ["vulnerability", "security", "MEDIUM"]}
+            },
+            {
+              "id": "CVE-2022-24999",
+              "name": "LanguageSpecificPackageVulnerability",
+              "shortDescription": {"text": "express: \"qs\" prototype pollution"},
+              "properties": {"precision": "very-high", "security-severity": "7.5", "tags": ["vulnerability", "security", "HIGH"]}
+            },
+            {
+              "id": "CVE-2024-0001",
+              "name": "OsPackageVulnerability",
+              "shortDescription": {"text": "unfixed critical"},
+              "properties": {"tags": ["vulnerability", "security", "CRITICAL"]}
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CVE-2023-5678",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {"text": "Package: libssl3\nInstalled Version: 3.1.3-r0\nVulnerability CVE-2023-5678\nSeverity: MEDIUM\nFixed Version: 3.1.4-r0\nLink: [CVE-2023-5678](https://avd.aquasec.com/nvd/cve-2023-5678)"},
+          "locations": [{"physicalLocation": {"artifactLocation": {"uri": "library/alpine", "uriBaseId": "ROOTPATH"}, "region": {"startLine": 1, "startColumn": 1, "endLine": 1, "endColumn": 1}}, "message": {"text": "library/alpine: libssl3@3.1.3-r0"}}]
+        },
+        {
+          "ruleId": "CVE-2022-24999",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {"text": "Package: qs\nInstalled Version: 6.5.2\nVulnerability CVE-2022-24999\nSeverity: HIGH\nFixed Version: 6.10.3, 6.9.7, 6.8.3\nLink: [CVE-2022-24999](https://avd.aquasec.com/nvd/cve-2022-24999)"},
+          "locations": [{"physicalLocation": {"artifactLocation": {"uri": "app/package-lock.json", "uriBaseId": "ROOTPATH"}, "region": {"startLine": 1, "startColumn": 1, "endLine": 1, "endColumn": 1}}, "message": {"text": "app/package-lock.json: qs@6.5.2"}}]
+        },
+        {
+          "ruleId": "CVE-2024-0001",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {"text": "Package: busybox\nInstalled Version: 1.36.1-r0\nVulnerability CVE-2024-0001\nSeverity: CRITICAL\nFixed Version: \nLink: [CVE-2024-0001](https://avd.aquasec.com/nvd/cve-2024-0001)"},
+          "locations": [{"physicalLocation": {"artifactLocation": {"uri": "library/alpine"}, "region": {"startLine": 1, "endLine": 1}}}]
+        },
+        {
+          "ruleId": "CVE-2024-9999",
+          "message": {"text": "no package info here"}
+        },
+        {
+          "message": {"text": "Package: x\nInstalled Version: 1"}
+        }
+      ]
+    }
+  ]
+}
