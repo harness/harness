@@ -1,0 +1,3 @@
+{"event_id":"0f1e2d3c4b5a69788796a5b4c3d2e1f0","sent_at":"2026-03-01T10:15:31.000Z","dsn":"https://abc123publickey@insights.example.com/42","sdk":{"name":"sentry.javascript.browser","version":"8.55.0"}}
+{"type":"transaction"}
+{"type":"transaction","transaction":"GET /checkout","start_timestamp":1772360128.0,"timestamp":1772360130.0,"event_id":"11111111111111111111111111111111","spans":[]}
