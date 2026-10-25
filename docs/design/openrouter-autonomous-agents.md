@@ -24,14 +24,73 @@ Cambios respecto de v1:
 
 Además, Claude Code acepta la auth `openrouter-api-key`, que solo admite modelos `:free` (`orchestrator/utils/ai_agent.go` y `configure_claude_code.sh`).
 
-Pendiente de la fase 0:
-- Conectar `aigateway.WireSet` en `cmd/gitness/wire.go` y regenerar `wire_gen.go`.
-- Persistir la cuota (`ai_quota`) y compartirla entre réplicas.
-- Tablas `ai_models`, `ai_decisions` y `ai_usage`.
-- Modos de IA por repo.
-- Elegir el modelo del agente en `decryptAIAuth`.
-- Spike de Claude Code con modelos gratuitos.
-- Validar el límite de crédito en la key (capa 5).
+## Orden de ejecución
+
+Primero va todo lo que no tiene bloqueos externos, sin importar la fase, respetando las dependencias internas. Se asume D5 = dentro del binario, apagado por defecto. Una tarea bloqueada pasa al frente apenas se libera su bloqueo.
+
+**Bloqueos externos:**
+- **R1**: `openrouter.ai` está denegado en el entorno de desarrollo y no hay key.
+- **R2**: los feeds de EPSS (`api.first.org`) y KEV (`cisa.gov`) están denegados, igual que las descargas desde `github.com`.
+- **D1 a D5**: las preguntas abiertas de la sección 16.
+
+### A. Sin bloqueos
+
+| # | Tarea | Fase | Depende de |
+|---|---|---|---|
+| 1 | Conectar `aigateway.WireSet` y regenerar `wire_gen.go` | 0 | — |
+| 2 | Migraciones 0192+ y stores de `ai_models`, `ai_decisions`, `ai_usage` y `ai_quota` | 0 | — |
+| 3 | Cuota persistida y compartida entre réplicas | 0 | 2 |
+| 4 | Reintentos con backoff ante un 429, contando cada intento | 0 | — |
+| 5 | Eventos `ai.quota_exhausted` y `ai.paid_model_detected`, más audit | 0 | 1 |
+| 6 | Modos de IA por repo (default `solo-decisiones` en privados; D2 puede cambiarlo después) | 0 | 1 |
+| 7 | API `/system/ai/models` y `/system/ai/quota` | 0 | 1, 3 |
+| 8 | Claude Code recibe un modelo gratuito del catálogo en `decryptAIAuth` | 0 | 1 |
+| 9 | Escalamiento por confianza (umbrales alto y bajo, Sistema 2) | 3 | 1 |
+| 10 | `model_for_task`: filtro, pregunta a Mammoth y desempate por tasa histórica | 3 | 2, 9 |
+| 11 | Guardrails: principal `harness-agent`, kill switch, prevención de loops, audit | 5 | — |
+| 12 | Presupuesto de requests por `AITask` y campos nuevos en `ai_tasks` | 5 | 2, 3 |
+| 13 | Migraciones y stores de `tasks`, `task_activities`, `task_labels` y `task_links` | 1 | — |
+| 14 | Máquina de estados y numeración `TASK-n` | 1 | 13 |
+| 15 | API REST de Tareas | 1 | 14 |
+| 16 | Historial de la tarea | 1 | 13 |
+| 17 | Labels, eventos y webhooks de Tareas | 1 | 15 |
+| 18 | Notificaciones | 1 | 15 |
+| 19 | `Fixes TASK-n`: vincular el PR y cerrar la tarea al mergear | 1 | 14 |
+| 20 | Responsable sugerido por codeowners | 1 | 15 |
+| 21 | Decisiones de Mammoth registradas en el historial | 3 | 2, 16 |
+| 22 | Tablas de Shield (scans y findings) con `task_id` | 2 | 13 |
+| 23 | Escaneo de dependencias con OSV (librería Go y base de OSV, ambas accesibles) | 2 | 22 |
+| 24 | Bumps de versión sin LLM y apertura del PR | 2 | 23, 19 |
+| 25 | Ingesta compatible con Sentry y autenticación por DSN | 4 | 13 |
+| 26 | Fingerprinting, releases y regresiones | 4 | 25 |
+| 27 | Suspect commits con git blame | 4 | 26 |
+| 28 | Source maps en el artifact registry | 6 | 26 |
+
+### B. Se programan ya, pero la validación final está bloqueada o depende de una decisión
+
+| # | Tarea | Fase | Depende de | Bloqueo |
+|---|---|---|---|---|
+| 29 | UI de Tareas: lista, kanban y detalle | 1 | 15, 16 | D4 define el alcance |
+| 30 | Riesgo con CVSS, EPSS y KEV, probado con datos de prueba | 2 | 23 | R2 para los feeds reales |
+| 31 | Check `shield/security` en las protection rules | 2 | 30 | R2 |
+| 32 | Preguntas de Shield (`reachable`, `false_positive`, `fix_strategy`) | 3 | 10, 22 | R1 para probar contra Mammoth real |
+| 33 | Preguntas de Insights y creación de tareas | 4 | 10, 15, 27 | R1 |
+| 34 | Verificación automática de tareas | 5 | 24, 26 | — |
+| 35 | Policy engine (`lanzar_fix_agent`) | 5 | 6, 11, 12, 32, 33 | R1 |
+| 36 | Panel del agente | 6 | 7, 29 | D4 |
+| 37 | SAST, imágenes del registry e IaC, vía módulos Go o PyPI | 6 | 22 | R2 para los binarios de github.com |
+
+### C. Bloqueadas
+
+| # | Tarea | Fase | Bloqueo |
+|---|---|---|---|
+| 38 | Probar la Decisions API real contra el contrato | 0 | R1 |
+| 39 | Validar el límite de crédito en la key (capa 5) | 0 | Acción del dueño de la cuenta de OpenRouter |
+| 40 | Prueba de Claude Code con modelos gratuitos | 0 | R1 y un entorno de Gitspace |
+| 41 | Set de evaluación y calibración de umbrales | 3 | Casos etiquetados por personas y R1 |
+| 42 | Agente real abriendo PRs | 5 | R1, 40 y D1 |
+| 43 | Auto-merge (nivel 3) | 6 | 42 |
+| 44 | Embeddings gratuitos | 6 | R1 y que exista un modelo gratuito de embeddings |
 
 ## 1. Objetivo
 
