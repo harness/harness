@@ -31,6 +31,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAIModelStoreUpdateLatency(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+	ctx := context.Background()
+	s := database.NewAIModelStore(db)
+
+	m := &types.AIModel{ID: "vendor/model-l:free", Kind: enum.AIModelKindChat, Status: enum.AIModelStatusActive}
+	require.NoError(t, s.Upsert(ctx, m))
+
+	require.NoError(t, s.UpdateLatency(ctx, m.ID, 1500))
+	got, err := s.Find(ctx, m.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 1500, got.P95LatencyMS)
+	assert.Equal(t, enum.AIModelStatusActive, got.Status)
+
+	require.ErrorIs(t, s.UpdateLatency(ctx, "missing", 1), gitnessstore.ErrResourceNotFound)
+}
+
 func TestAIModelStore(t *testing.T) {
 	db, teardown := setupDB(t)
 	defer teardown()

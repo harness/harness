@@ -229,6 +229,36 @@ func (s *aiModelStore) UpdateStatus(
 	return nil
 }
 
+func (s *aiModelStore) UpdateLatency(
+	ctx context.Context,
+	id string,
+	p95LatencyMS int,
+) error {
+	stmt := database.Builder.
+		Update(aiModelTable).
+		Set("aimodel_p95_latency_ms", p95LatencyMS).
+		Set("aimodel_updated", time.Now().UnixMilli()).
+		Where("aimodel_id = ?", id)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	res, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update latency of ai model %s", id)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get rows affected")
+	}
+	if n == 0 {
+		return gitnessstore.ErrResourceNotFound
+	}
+	return nil
+}
+
 func mapAIModel(m *aiModel) (*types.AIModel, error) {
 	rates := map[string]float64{}
 	if m.SuccessRateByTask != "" {

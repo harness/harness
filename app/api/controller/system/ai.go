@@ -28,6 +28,8 @@ type AIModel struct {
 	ContextLength int    `json:"context_length"`
 	SupportsTools bool   `json:"supports_tools"`
 	Quarantined   bool   `json:"quarantined"`
+	// P95LatencyMS is the p95 latency of recent successful calls on this replica; omitted when unknown.
+	P95LatencyMS int `json:"p95_latency_ms,omitempty"`
 }
 
 // AIModelsOutput is the response of the AI models endpoint.
@@ -59,7 +61,7 @@ func (c *Controller) AIModels(_ context.Context) AIModelsOutput {
 	if !c.aiGateway.Enabled() {
 		return AIModelsOutput{Models: []AIModel{}}
 	}
-	return mapAIModels(c.aiGateway.Catalog(), c.aiGateway.Guard())
+	return mapAIModels(c.aiGateway.Catalog(), c.aiGateway.Guard(), c.aiGateway.LatencyP95)
 }
 
 // AIQuota returns the quota planner snapshot for today. When the gateway is disabled it returns enabled=false.
@@ -70,19 +72,25 @@ func (c *Controller) AIQuota(_ context.Context) AIQuotaOutput {
 	return mapAIQuota(c.aiGateway.Quota(), c.aiGateway.Planner().Remaining)
 }
 
-func mapAIModels(catalog *aigateway.Catalog, guard *aigateway.Guard) AIModelsOutput {
+func mapAIModels(
+	catalog *aigateway.Catalog,
+	guard *aigateway.Guard,
+	p95 func(model string) (int, bool),
+) AIModelsOutput {
 	models := catalog.Models()
 	out := AIModelsOutput{Enabled: true, Models: make([]AIModel, 0, len(models))}
 	if t := catalog.SyncedAt(); !t.IsZero() {
 		out.SyncedAt = &t
 	}
 	for _, m := range models {
+		latency, _ := p95(m.ID)
 		out.Models = append(out.Models, AIModel{
 			ID:            m.ID,
 			Name:          m.Name,
 			ContextLength: m.ContextLength,
 			SupportsTools: m.SupportsTools(),
 			Quarantined:   guard.IsQuarantined(m.ID),
+			P95LatencyMS:  latency,
 		})
 	}
 	return out

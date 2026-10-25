@@ -95,7 +95,9 @@ func (g *Gateway) Chat(ctx context.Context, class Class, req ChatRequest) (*Chat
 	attempts := 0
 	err := g.withRetry(ctx, class, func() error {
 		attempts++
-		return g.client.doJSON(ctx, http.MethodPost, chatPath, wire, &resp)
+		return g.timedCall(ctx, req.Model, func() error {
+			return g.client.doJSON(ctx, http.MethodPost, chatPath, wire, &resp)
+		})
 	})
 	usedModel := req.Model
 	if resp.Model != "" {

@@ -36,9 +36,14 @@ type fakeGateway struct {
 	decideN    int
 	escalateN  int
 	redactedTo any
+	// attributed is the attribution seen by the last gateway call.
+	attributedSpace, attributedRepo *int64
 }
 
-func (f *fakeGateway) Decide(context.Context, string, any, map[string]decisions.Question) (*aigateway.DecideResult, error) {
+func (f *fakeGateway) Decide(
+	ctx context.Context, _ string, _ any, _ map[string]decisions.Question,
+) (*aigateway.DecideResult, error) {
+	f.attributedSpace, f.attributedRepo = aigateway.AttributionFrom(ctx)
 	f.decideN++
 	return f.decide()
 }
@@ -59,7 +64,7 @@ func (f fakeModes) Resolve(context.Context, *types.RepositoryCore) (enum.AIMode,
 type fakeRepos struct{}
 
 func (fakeRepos) FindByID(_ context.Context, id int64) (*types.RepositoryCore, error) {
-	return &types.RepositoryCore{ID: id}, nil
+	return &types.RepositoryCore{ID: id, ParentID: 90 + id}, nil
 }
 
 type fakeStore struct{ rows []*types.AIDecision }
@@ -105,6 +110,22 @@ func answers(sev, act string, conf float64) map[string]decisions.Decision {
 func setup(g *fakeGateway, mode enum.AIMode) (*Service, *fakeStore, *fakeTasks) {
 	st, tk := &fakeStore{}, &fakeTasks{}
 	return NewService(g, fakeModes{mode}, fakeRepos{}, st, tk), st, tk
+}
+
+func TestDecideAttributesGatewayUsageToRepo(t *testing.T) {
+	g := &fakeGateway{
+		decide: func() (*aigateway.DecideResult, error) {
+			return &aigateway.DecideResult{Model: "m", Decisions: answers("high", "fix", 0.8)}, nil
+		},
+	}
+	svc, _, _ := setup(g, enum.AIModeFull)
+
+	if _, err := svc.Decide(context.Background(), DecideInput{RepoID: 3, State: "s", Questions: questions()}); err != nil {
+		t.Fatal(err)
+	}
+	if g.attributedSpace == nil || *g.attributedSpace != 93 || g.attributedRepo == nil || *g.attributedRepo != 3 {
+		t.Fatalf("expected space 93 and repo 3, got %v/%v", g.attributedSpace, g.attributedRepo)
+	}
 }
 
 func TestDecidePersistsRowsAndActivity(t *testing.T) {

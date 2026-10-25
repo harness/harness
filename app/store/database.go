@@ -1801,6 +1801,8 @@ type (
 		List(ctx context.Context, filter types.AIModelFilter) ([]*types.AIModel, error)
 		// UpdateStatus sets status and quarantine reason of an existing model.
 		UpdateStatus(ctx context.Context, id string, status enum.AIModelStatus, reason string) error
+		// UpdateLatency sets the p95 latency in milliseconds of an existing model.
+		UpdateLatency(ctx context.Context, id string, p95LatencyMS int) error
 	}
 
 	// AIDecisionStore defines the store for AI decision audit records.
