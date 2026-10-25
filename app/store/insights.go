@@ -60,5 +60,9 @@ type (
 		Exists(ctx context.Context, projectID int64, eventID string) (bool, error)
 		// ListByIssue returns the latest events of the issue, newest first.
 		ListByIssue(ctx context.Context, issueID int64, limit int) ([]*types.InsightsEvent, error)
+		// List returns a page of the events of the issue, newest first.
+		List(ctx context.Context, issueID int64, pagination types.Pagination) ([]*types.InsightsEvent, error)
+		// Count returns the number of events of the issue.
+		Count(ctx context.Context, issueID int64) (int64, error)
 	}
 )

@@ -39,3 +39,20 @@ var insightsIssueStatuses = sortEnum([]InsightsIssueStatus{
 	InsightsIssueStatusIgnored,
 	InsightsIssueStatusRegressed,
 })
+
+// InsightsIssueSort defines the sort attribute of Insights issue lists.
+type InsightsIssueSort string
+
+// InsightsIssueSort enumeration.
+const (
+	InsightsIssueSortLastSeen  InsightsIssueSort = "last_seen"
+	InsightsIssueSortTimesSeen InsightsIssueSort = "times_seen"
+)
+
+// ParseInsightsIssueSort returns the sort attribute for the string, defaulting to last_seen.
+func ParseInsightsIssueSort(s string) InsightsIssueSort {
+	if InsightsIssueSort(s) == InsightsIssueSortTimesSeen {
+		return InsightsIssueSortTimesSeen
+	}
+	return InsightsIssueSortLastSeen
+}

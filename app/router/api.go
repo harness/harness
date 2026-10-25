@@ -431,6 +431,17 @@ func setupRepos(r chi.Router,
 			r.Route("/insights", func(r chi.Router) {
 				r.Get("/projects", handlerinsights.HandleListProjects(insightsCtrl))
 				r.Post("/projects", handlerinsights.HandleCreateProject(insightsCtrl))
+				r.Route("/projects/{project_id}", func(r chi.Router) {
+					r.Patch("/", handlerinsights.HandleUpdateProject(insightsCtrl))
+					r.Delete("/", handlerinsights.HandleDeleteProject(insightsCtrl))
+					r.Post("/rotate-key", handlerinsights.HandleRotateProjectKey(insightsCtrl))
+				})
+				r.Get("/issues", handlerinsights.HandleListIssues(insightsCtrl))
+				r.Route("/issues/{issue_id}", func(r chi.Router) {
+					r.Get("/", handlerinsights.HandleFindIssue(insightsCtrl))
+					r.Patch("/", handlerinsights.HandleUpdateIssue(insightsCtrl))
+					r.Get("/events", handlerinsights.HandleListIssueEvents(insightsCtrl))
+				})
 			})
 
 			r.Get("/summary", handlerrepo.HandleSummary(repoCtrl))

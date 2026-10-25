@@ -94,6 +94,7 @@ const (
 	ResourceTypeRegistryWebhook       ResourceType = "registry_webhook"
 	ResourceTypeRegistryArtifact      ResourceType = "registry_artifact"
 	ResourceTypeAgentTask             ResourceType = "agent_task"
+	ResourceTypeInsightsProject       ResourceType = "insights_project"
 )
 
 func (a ResourceType) Validate() error {
@@ -112,7 +113,8 @@ func (a ResourceType) Validate() error {
 		ResourceTypeRegistryUpstreamProxy,
 		ResourceTypeRegistryWebhook,
 		ResourceTypeRegistryArtifact,
-		ResourceTypeAgentTask:
+		ResourceTypeAgentTask,
+		ResourceTypeInsightsProject:
 		return nil
 
 	default:

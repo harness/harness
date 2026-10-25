@@ -73,3 +73,92 @@ func HandleListProjects(ctrl *insights.Controller) http.HandlerFunc {
 		render.JSON(w, http.StatusOK, projects)
 	}
 }
+
+// HandleUpdateProject returns a http.HandlerFunc that updates an Insights project.
+func HandleUpdateProject(ctrl *insights.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		projectID, err := request.GetInsightsProjectIDFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		in := new(types.InsightsProjectUpdateInput)
+		if err = json.NewDecoder(r.Body).Decode(in); err != nil {
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			return
+		}
+
+		project, err := ctrl.UpdateProject(ctx, session, repoRef, projectID, in)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, project)
+	}
+}
+
+// HandleRotateProjectKey returns a http.HandlerFunc that rotates the public key of an Insights project.
+func HandleRotateProjectKey(ctrl *insights.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		projectID, err := request.GetInsightsProjectIDFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		project, err := ctrl.RotateProjectKey(ctx, session, repoRef, projectID)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, project)
+	}
+}
+
+// HandleDeleteProject returns a http.HandlerFunc that deletes an Insights project.
+func HandleDeleteProject(ctrl *insights.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		projectID, err := request.GetInsightsProjectIDFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		if err = ctrl.DeleteProject(ctx, session, repoRef, projectID); err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.DeleteSuccessful(w)
+	}
+}
