@@ -154,7 +154,7 @@ func (g *Gateway) DecideWithEscalation(ctx context.Context, req EscalationReques
 
 	opinion, model, err := g.secondOpinion(ctx, req)
 	if err != nil {
-		if errors.Is(err, ErrQuotaExhausted) || errors.Is(err, ErrDisabled) || ctx.Err() != nil {
+		if errors.Is(err, ErrQuotaExhausted) || IsRateLimited(err) || errors.Is(err, ErrDisabled) || ctx.Err() != nil {
 			return nil, err
 		}
 		log.Ctx(ctx).Warn().Err(err).Msg("ai gateway: second opinion failed, assigning to a human")
