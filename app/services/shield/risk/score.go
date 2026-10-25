@@ -66,6 +66,13 @@ const (
 	// MaxRaw is the highest possible raw risk:
 	// 10 (CVSS) x 1.5 (EPSS) x 1.5 (KEV) x 1.3 (reachable) x 1.0 (exposure).
 	MaxRaw = 10 * 1.5 * 1.5 * 1.3 * 1.0
+
+	// NormRaw is the raw risk mapped to a score of 100: a CVSS 10 finding with every other
+	// factor neutral. Aggravating factors (KEV, high EPSS, reachable) push findings with a
+	// lower CVSS towards 100 and mitigating ones pull them down; the result is clamped.
+	// Normalizing by MaxRaw instead would cap a critical CVE with no extra signal at 34,
+	// far below the default patch threshold of 70.
+	NormRaw = 10.0
 )
 
 // Severity fallbacks used when no CVSS base score is available.
@@ -139,7 +146,7 @@ func EPSSFactor(percentile float64) float64 {
 // Score computes the risk (0..100) of a finding:
 //
 //	raw   = CVSS x EPSS factor x KEV factor x reachability factor x exposure factor
-//	score = round(100 x raw / MaxRaw), clamped to 0..100
+//	score = round(100 x raw / NormRaw), clamped to 0..100
 //
 // EPSS factor: 0.5 + percentile of the alias with the highest EPSS score
 // (1.0 when no alias is scored). KEV factor: 1.5 if any alias is in KEV.
@@ -147,7 +154,7 @@ func EPSSFactor(percentile float64) float64 {
 // Confidence >= HighConfidence (else 1.0). Exposure: public 1.0, internal
 // 0.8, dev_only 0.5.
 func (s *Scorer) Score(in Input) (int, Breakdown) {
-	b := Breakdown{Max: MaxRaw, EPSSFactor: EPSSNeutralFactor, KEVFactor: 1.0}
+	b := Breakdown{Max: NormRaw, EPSSFactor: EPSSNeutralFactor, KEVFactor: 1.0}
 
 	if in.HasCVSS {
 		b.CVSS = clamp(in.CVSSScore, 0, 10)
@@ -215,7 +222,7 @@ func (s *Scorer) Score(in Input) (int, Breakdown) {
 	}
 
 	b.Raw = b.CVSS * b.EPSSFactor * b.KEVFactor * b.ReachabilityFactor * b.ExposureFactor
-	b.Score = int(clamp(math.Round(100*b.Raw/MaxRaw), 0, 100))
+	b.Score = int(clamp(math.Round(100*b.Raw/NormRaw), 0, 100))
 	return b.Score, b
 }
 

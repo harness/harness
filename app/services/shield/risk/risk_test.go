@@ -165,13 +165,13 @@ func TestScore(t *testing.T) {
 		{
 			name: "reachable, no epss/kev data",
 			in:   Input{CVSSScore: 10, HasCVSS: true, Reachability: ReachabilityReachable},
-			want: 44, // 13 / 29.25
+			want: 100, // 13 / 10, clamped
 		},
 		{
 			name: "log4shell worst case",
 			in: Input{CVSSScore: 10, HasCVSS: true, CVEs: []string{"CVE-2021-44228"},
 				Reachability: ReachabilityReachable},
-			want: 100, // 10*1.4999*1.5*1.3 = 29.248
+			want: 100, // 10*1.4999*1.5*1.3 = 29.248, clamped
 			chk: func(t *testing.T, b Breakdown) {
 				if !b.InKEV || b.KEVFactor != 1.5 || b.EPSSCVE != "CVE-2021-44228" {
 					t.Errorf("breakdown = %+v", b)
@@ -181,13 +181,13 @@ func TestScore(t *testing.T) {
 		{
 			name: "unknown reachability, epss low, no KEV",
 			in:   Input{CVSSScore: 7, HasCVSS: true, CVEs: []string{"CVE-2022-0001"}},
-			want: 14, // 7*0.595 = 4.165
+			want: 42, // 7*0.595 = 4.165
 		},
 		{
 			name: "max epss among aliases + kev via alias",
 			in: Input{CVSSScore: 5, HasCVSS: true, CVEs: []string{"CVE-2022-0001", "CVE-2023-1111"},
 				Reachability: ReachabilityUnknown},
-			want: 33, // 5*1.3*1.5 = 9.75
+			want: 98, // 5*1.3*1.5 = 9.75
 			chk: func(t *testing.T, b Breakdown) {
 				if b.EPSSCVE != "CVE-2023-1111" || b.KEVCVE != "CVE-2023-1111" {
 					t.Errorf("breakdown = %+v", b)
@@ -198,28 +198,28 @@ func TestScore(t *testing.T) {
 			name: "not reachable high confidence",
 			in: Input{CVSSScore: 10, HasCVSS: true, Reachability: ReachabilityNotReachable,
 				Confidence: 0.9},
-			want: 7, // 2
+			want: 20, // 2
 		},
 		{
 			name: "not reachable low confidence ignored",
 			in: Input{CVSSScore: 10, HasCVSS: true, Reachability: ReachabilityNotReachable,
 				Confidence: 0.5},
-			want: 34, // 10
+			want: 100, // 10
 		},
 		{
 			name: "not reachable custom threshold",
 			in: Input{CVSSScore: 10, HasCVSS: true, Reachability: ReachabilityNotReachable,
 				Confidence: 0.5, HighConfidence: 0.5},
-			want: 7,
+			want: 20,
 		},
-		{name: "exposure internal", in: Input{CVSSScore: 10, HasCVSS: true, Exposure: ExposureInternal}, want: 27},
-		{name: "exposure dev only", in: Input{CVSSScore: 10, HasCVSS: true, Exposure: ExposureDevOnly}, want: 17},
-		{name: "fallback critical", in: Input{Severity: "CRITICAL"}, want: 31},
-		{name: "fallback high", in: Input{Severity: "high"}, want: 26},
-		{name: "fallback medium", in: Input{Severity: "medium"}, want: 17},
-		{name: "fallback low", in: Input{Severity: "low"}, want: 9},
-		{name: "fallback unknown label", in: Input{Severity: "weird"}, want: 17},
-		{name: "fallback empty", in: Input{}, want: 17},
+		{name: "exposure internal", in: Input{CVSSScore: 10, HasCVSS: true, Exposure: ExposureInternal}, want: 80},
+		{name: "exposure dev only", in: Input{CVSSScore: 10, HasCVSS: true, Exposure: ExposureDevOnly}, want: 50},
+		{name: "fallback critical", in: Input{Severity: "CRITICAL"}, want: 90},
+		{name: "fallback high", in: Input{Severity: "high"}, want: 75},
+		{name: "fallback medium", in: Input{Severity: "medium"}, want: 50},
+		{name: "fallback low", in: Input{Severity: "low"}, want: 25},
+		{name: "fallback unknown label", in: Input{Severity: "weird"}, want: 50},
+		{name: "fallback empty", in: Input{}, want: 50},
 		{name: "cvss zero is honored", in: Input{HasCVSS: true, CVSSScore: 0, Severity: "critical"}, want: 0},
 		{
 			name: "clamp above",
@@ -245,7 +245,7 @@ func TestScore(t *testing.T) {
 func TestScoreNoData(t *testing.T) {
 	var s *Scorer
 	got, b := s.Score(Input{HasCVSS: true, CVSSScore: 10, CVEs: []string{"CVE-2021-44228"}})
-	if got != 34 || b.EPSSFactor != 1 || b.InKEV || b.CVSSSource != "cvss" {
+	if got != 100 || b.EPSSFactor != 1 || b.InKEV || b.CVSSSource != "cvss" {
 		t.Errorf("got %d %+v", got, b)
 	}
 	_, b = (&Scorer{}).Score(Input{Severity: "high"})

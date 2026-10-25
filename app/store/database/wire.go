@@ -562,8 +562,20 @@ func ProvideInsightsEventStore(db *sqlx.DB) store.InsightsEventStore {
 	return NewInsightsEventStore(db)
 }
 
+// ProvideInsightsReleaseStore provides the Insights release reader.
+func ProvideInsightsReleaseStore(db *sqlx.DB) store.InsightsReleaseStore {
+	return NewInsightsEventStore(db)
+}
+
+// ProvideTaskLinkedRefStore provides the task by link kind lister.
+func ProvideTaskLinkedRefStore(db *sqlx.DB) store.TaskLinkedRefStore {
+	return NewTaskLinkStore(db)
+}
+
 // InsightsStoreWireSet provides the Insights stores.
 var InsightsStoreWireSet = wire.NewSet(
+	ProvideInsightsReleaseStore,
+	ProvideTaskLinkedRefStore,
 	ProvideInsightsProjectStore,
 	ProvideInsightsIssueStore,
 	ProvideInsightsEventStore,

@@ -687,6 +687,16 @@ type Config struct {
 		QueueSize     int           `envconfig:"GITNESS_USAGE_METRICS_QUEUE_SIZE" default:"128"`
 	}
 
+	// InsightsVerify configures the verification of resolved tasks linked to Insights issues.
+	InsightsVerify struct {
+		Enabled bool   `envconfig:"GITNESS_INSIGHTS_VERIFY_ENABLED" default:"true"`
+		Cron    string `envconfig:"GITNESS_INSIGHTS_VERIFY_CRON" default:"17 * * * *"`
+		// VerifyWindow is how long the release with the fix must be live without the error.
+		VerifyWindow time.Duration `envconfig:"GITNESS_INSIGHTS_VERIFY_WINDOW" default:"24h"`
+		// QuietPeriod is how long an issue must not be seen at all after the task was resolved.
+		QuietPeriod time.Duration `envconfig:"GITNESS_INSIGHTS_VERIFY_QUIET_PERIOD" default:"72h"`
+	}
+
 	Development struct {
 		UISourceOverride string `envconfig:"GITNESS_DEVELOPMENT_UI_SOURCE_OVERRIDE"`
 	}

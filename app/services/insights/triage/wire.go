@@ -58,6 +58,6 @@ func ProvideObserver(
 		Tasks:    taskSvc,
 	})
 	o.Start(ctx)
-	insightsSvc.SetObserver(o)
+	insightsSvc.AddObserver(o)
 	return o
 }

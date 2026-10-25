@@ -140,3 +140,42 @@ func (s *TaskLinkStore) FindTasksByRef(
 
 	return mapTasks(dst), nil
 }
+
+var _ store.TaskLinkedRefStore = (*TaskLinkStore)(nil)
+
+// ListByStateAndLinkKind implements store.TaskLinkedRefStore.
+func (s *TaskLinkStore) ListByStateAndLinkKind(
+	ctx context.Context,
+	state enum.TaskState,
+	kind enum.TaskLinkKind,
+	afterTaskID int64,
+	limit int,
+) ([]*types.TaskLinkedRef, error) {
+	const sqlQuery = `
+		SELECT task_id, task_link_ref_id, COALESCE(task_resolved, 0) AS task_resolved
+		FROM tasks
+		INNER JOIN task_links ON task_link_task_id = task_id
+		WHERE task_state = $1 AND task_link_kind = $2 AND task_id > $3
+		ORDER BY task_id, task_link_ref_id
+		LIMIT $4`
+
+	type row struct {
+		TaskID   int64  `db:"task_id"`
+		RefID    string `db:"task_link_ref_id"`
+		Resolved int64  `db:"task_resolved"`
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*row{}
+	if err := db.SelectContext(ctx, &dst, sqlQuery, state, kind, afterTaskID, database.Limit(limit)); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list tasks by state and link kind")
+	}
+
+	out := make([]*types.TaskLinkedRef, len(dst))
+	for i, r := range dst {
+		out[i] = &types.TaskLinkedRef{TaskID: r.TaskID, RefID: r.RefID, Resolved: r.Resolved}
+	}
+
+	return out, nil
+}

@@ -99,3 +99,18 @@ type (
 		ListAssignedByTaskIDs(ctx context.Context, taskIDs []int64) (map[int64][]*types.LabelTaskAssignmentInfo, error)
 	}
 )
+
+type (
+	// TaskLinkedRefStore lists tasks by state and link kind (used by background verification jobs).
+	TaskLinkedRefStore interface {
+		// ListByStateAndLinkKind returns (task, link) pairs of tasks in the given state having a link
+		// of the given kind, ordered by task id, with task id greater than afterTaskID.
+		ListByStateAndLinkKind(
+			ctx context.Context,
+			state enum.TaskState,
+			kind enum.TaskLinkKind,
+			afterTaskID int64,
+			limit int,
+		) ([]*types.TaskLinkedRef, error)
+	}
+)
