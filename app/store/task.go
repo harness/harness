@@ -55,6 +55,10 @@ type (
 
 		// CountByRepos counts the tasks of the given repositories matching the filter.
 		CountByRepos(ctx context.Context, repoIDs []int64, filter *types.TaskFilter) (int64, error)
+
+		// ListWaitingQuota lists up to limit tasks in esperando_cuota across all repositories in the order they
+		// should resume: p0 first, then regressions, then p1, then the rest; by creation within each group.
+		ListWaitingQuota(ctx context.Context, limit int) ([]*types.Task, error)
 	}
 
 	// TaskActivityStore defines the task timeline storage.

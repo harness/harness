@@ -131,6 +131,7 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/publickey"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/quotaresume"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/remoteauth"
 	reposervice "github.com/harness/gitness/app/services/repo"
@@ -375,6 +376,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		shield.WireSet,
 		prcheck.WireSet,
 		insightsverify.WireSet,
+		quotaresume.WireSet,
 		usage.WireSet,
 		registrywebhooks.WireSet,
 		gitspacedeleteevents.WireSet,

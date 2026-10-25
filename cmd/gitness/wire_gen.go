@@ -120,6 +120,7 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/quotaresume"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/remoteauth"
 	repo2 "github.com/harness/gitness/app/services/repo"
@@ -965,7 +966,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	modeResolver := aigateway.ProvideModeResolver(settingsService, publicaccessService)
 	aidecideService := aidecide.ProvideService(gateway, modeResolver, repoFinder, aiDecisionStore, taskService)
 	triager := shield.ProvideWiredTriager(config, shieldService, shieldFindingStore, shieldFindingTriageStore, taskService, aidecideService, modeResolver, settingsService)
-	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, prcheckService, triager)
+	quotaresumeService, err := quotaresume.ProvideService(ctx, taskStore, taskLinkStore, taskService, gateway, observer, mutexManager, jobScheduler, executor)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(service3, pullreqService, triggerService, jobScheduler, collectorJob, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices, instrumentService, consumer, repositoryCount, service4, branchService, repoactivityService, asyncprocessingService, jobRpmRegistryIndex, languageAnalyzer, tasklinkService, observer, verifyService, prcheckService, triager, quotaresumeService)
 	listenAndServeServer := server.ProvideNoOpMetricServer()
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices, listenAndServeServer)
 	return serverSystem, nil
