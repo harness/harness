@@ -1786,6 +1786,9 @@ type (
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.AITask, error)
 		List(ctx context.Context, filter *types.AITaskFilter) ([]*types.AITask, error)
 		Count(ctx context.Context, filter *types.AITaskFilter) (int64, error)
+		// ChargeRequest atomically consumes one request of the task budget and returns the remaining requests.
+		// It returns ErrAITaskBudgetExhausted (and charges nothing) if the budget is used up.
+		ChargeRequest(ctx context.Context, id int64) (remaining int, err error)
 	}
 
 	// AIModelStore defines the store for the free model catalog.

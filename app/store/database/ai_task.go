@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 
 	"github.com/harness/gitness/app/store"
@@ -47,7 +48,11 @@ const (
 		aitask_state,
 		aitask_output,
 		aitask_output_metadata,
-		aitask_error_message`
+		aitask_error_message,
+		aitask_task_id,
+		aitask_model_decision_id,
+		aitask_request_budget,
+		aitask_requests_used`
 	aiTaskSelectColumns = "aitask_id," + aiTaskInsertColumns
 )
 
@@ -68,6 +73,10 @@ type aiTask struct {
 	Output             null.String      `db:"aitask_output"`
 	OutputMetadata     []byte           `db:"aitask_output_metadata"`
 	ErrorMessage       null.String      `db:"aitask_error_message"`
+	TaskID             null.Int         `db:"aitask_task_id"`
+	ModelDecisionID    null.Int         `db:"aitask_model_decision_id"`
+	RequestBudget      int              `db:"aitask_request_budget"`
+	RequestsUsed       int              `db:"aitask_requests_used"`
 }
 
 var _ store.AITaskStore = (*aiTaskStore)(nil)
@@ -84,6 +93,10 @@ type aiTaskStore struct {
 }
 
 func (s aiTaskStore) Create(ctx context.Context, aiTask *types.AITask) error {
+	requestBudget := aiTask.RequestBudget
+	if requestBudget == 0 {
+		requestBudget = types.DefaultAITaskRequestBudget
+	}
 	stmt := database.Builder.
 		Insert(aiTaskTable).
 		Columns(aiTaskInsertColumns).
@@ -103,6 +116,10 @@ func (s aiTaskStore) Create(ctx context.Context, aiTask *types.AITask) error {
 			aiTask.Output,
 			aiTask.OutputMetadata,
 			aiTask.ErrorMessage,
+			aiTask.TaskID,
+			aiTask.ModelDecisionID,
+			requestBudget,
+			aiTask.RequestsUsed,
 		).
 		Suffix("RETURNING aitask_id")
 	sql, args, err := stmt.ToSql()
@@ -126,7 +143,13 @@ func (s aiTaskStore) Update(ctx context.Context, aiTask *types.AITask) error {
 		Set("aitask_output", aiTask.Output).
 		Set("aitask_error_message", aiTask.ErrorMessage).
 		Set("aitask_output_metadata", aiTask.OutputMetadata).
+		Set("aitask_task_id", aiTask.TaskID).
+		Set("aitask_model_decision_id", aiTask.ModelDecisionID).
 		Where("aitask_id = ?", aiTask.ID)
+	if aiTask.RequestBudget > 0 {
+		// zero means "not loaded"; never overwrite the stored budget with it.
+		stmt = stmt.Set("aitask_request_budget", aiTask.RequestBudget)
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -138,6 +161,29 @@ func (s aiTaskStore) Update(ctx context.Context, aiTask *types.AITask) error {
 			ctx, err, "Failed to update ai task for %s", aiTask.Identifier)
 	}
 	return nil
+}
+
+// ChargeRequest atomically increments requests_used if it is below request_budget.
+func (s aiTaskStore) ChargeRequest(ctx context.Context, id int64) (int, error) {
+	const sqlQuery = `
+		UPDATE ai_tasks
+		SET aitask_requests_used = aitask_requests_used + 1
+		WHERE aitask_id = $1 AND aitask_requests_used < aitask_request_budget
+		RETURNING aitask_request_budget - aitask_requests_used`
+	db := dbtx.GetAccessor(ctx, s.db)
+	var remaining int
+	err := db.QueryRowContext(ctx, sqlQuery, id).Scan(&remaining)
+	if errors.Is(err, sql.ErrNoRows) {
+		// either the task does not exist or the budget is exhausted; tell them apart.
+		if _, findErr := s.Find(ctx, id); findErr != nil {
+			return 0, findErr
+		}
+		return 0, store.ErrAITaskBudgetExhausted
+	}
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to charge ai task request for %d", id)
+	}
+	return remaining, nil
 }
 func (s aiTaskStore) Find(ctx context.Context, id int64) (*types.AITask, error) {
 	stmt := database.Builder.
@@ -246,6 +292,10 @@ func (s aiTaskStore) mapDBToAITask(in *aiTask) *types.AITask {
 		Output:             in.Output.Ptr(),
 		OutputMetadata:     in.OutputMetadata,
 		ErrorMessage:       in.ErrorMessage.Ptr(),
+		TaskID:             in.TaskID.Ptr(),
+		ModelDecisionID:    in.ModelDecisionID.Ptr(),
+		RequestBudget:      in.RequestBudget,
+		RequestsUsed:       in.RequestsUsed,
 	}
 }
 func (s aiTaskStore) mapToAITasks(aiTasks []*aiTask) []*types.AITask {
