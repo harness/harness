@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/repoactivity"
+	"github.com/harness/gitness/app/services/tasklink"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
@@ -66,6 +67,7 @@ type Services struct {
 	repoActivity                   *repoactivity.Service
 	registryAsyncProcessingService *registryasyncprocessing.Service
 	languageAnalyzer               languageanalyzer.LanguageAnalyzer
+	taskLink                       *tasklink.Service
 }
 
 type GitspaceServices struct {
@@ -119,6 +121,7 @@ func ProvideServices(
 	registryAsyncProcessingService *registryasyncprocessing.Service,
 	registryJobRpmRegistryIndex *handler.JobRpmRegistryIndex,
 	languageAnalyzer languageanalyzer.LanguageAnalyzer,
+	taskLinkSvc *tasklink.Service,
 ) Services {
 	return Services{
 		Webhook:                        webhooksSvc,
@@ -140,5 +143,6 @@ func ProvideServices(
 		repoActivity:                   repoActivitySvc,
 		registryAsyncProcessingService: registryAsyncProcessingService,
 		languageAnalyzer:               languageAnalyzer,
+		taskLink:                       taskLinkSvc,
 	}
 }

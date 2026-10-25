@@ -133,6 +133,8 @@ import (
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	spaceSvc "github.com/harness/gitness/app/services/space"
+	"github.com/harness/gitness/app/services/task"
+	"github.com/harness/gitness/app/services/tasklink"
 	"github.com/harness/gitness/app/services/tokengenerator"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usage"
@@ -211,6 +213,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		merge.WireSet,
 		checkreq.WireSet,
 		automerge.WireSet,
+		task.WireSet,
+		tasklink.WireSet,
 		mergequeue.WireSet,
 		mergequeueevents.WireSet,
 		controllerwebhook.WireSet,
