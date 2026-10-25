@@ -924,10 +924,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	taskStore := database.ProvideTaskStore(db)
 	taskActivityStore := database.ProvideTaskActivityStore(db)
 	taskLinkStore := database.ProvideTaskLinkStore(db)
-	taskService := task.ProvideService(transactor, taskStore, taskActivityStore, taskLinkStore)
+	reporter14, err := events15.ProvideReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	taskService := task.ProvideService(transactor, taskStore, taskActivityStore, taskLinkStore, reporter14)
 	tasklinkService, err := tasklink.ProvideService(ctx, config, readerFactory3, taskService, taskStore, taskLinkStore, pullReqStore, principalStore)
 	if err != nil {
 		return nil, err
