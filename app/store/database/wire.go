@@ -101,6 +101,10 @@ var WireSet = wire.NewSet(
 	ProvideTaskActivityStore,
 	ProvideTaskLinkStore,
 	ProvideTaskLabelStore,
+
+	// Shield.
+	ProvideShieldScanStore,
+	ProvideShieldFindingStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -528,4 +532,14 @@ func ProvideTaskLabelStore(db *sqlx.DB) store.TaskLabelStore {
 // ProvidePullReqLabelSuggestionStore provides a pull request label suggestion store.
 func ProvidePullReqLabelSuggestionStore(db *sqlx.DB) store.PullReqLabelSuggestionStore {
 	return NewPullReqLabelSuggestionStore(db)
+}
+
+// ProvideShieldScanStore provides a Shield scan store.
+func ProvideShieldScanStore(db *sqlx.DB) store.ShieldScanStore {
+	return NewShieldScanStore(db)
+}
+
+// ProvideShieldFindingStore provides a Shield finding store.
+func ProvideShieldFindingStore(db *sqlx.DB) store.ShieldFindingStore {
+	return NewShieldFindingStore(db)
 }
