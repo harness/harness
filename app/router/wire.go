@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/controller/gitspace"
 	"github.com/harness/gitness/app/api/controller/infraprovider"
+	insightsctrl "github.com/harness/gitness/app/api/controller/insights"
 	"github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/lfs"
 	"github.com/harness/gitness/app/api/controller/logs"
@@ -46,6 +47,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
+	"github.com/harness/gitness/app/services/insights"
 	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -112,8 +114,10 @@ func ProvideRouter(
 	registryRouter router.AppRouter,
 	usageSender usage.Sender,
 	lfsCtrl *lfs.Controller,
+	insightsCtrl *insightsctrl.Controller,
+	insightsSvc *insights.Service,
 ) *Router {
-	routers := make([]Interface, 4)
+	routers := make([]Interface, 5)
 
 	gitRoutingHost := GetGitRoutingHost(appCtx, urlProvider)
 	gitHandler := NewGitHandler(
@@ -132,8 +136,10 @@ func ProvideRouter(
 		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
-		infraProviderCtrl, migrateCtrl, gitspaceCtrl, usageSender)
-	routers[2] = NewAPIRouter(apiHandler)
+		infraProviderCtrl, migrateCtrl, gitspaceCtrl, usageSender, insightsCtrl)
+	// the Sentry compatible ingestion endpoints must be matched before the generic api router.
+	routers[2] = NewInsightsIngestRouter(insightsSvc)
+	routers[3] = NewAPIRouter(apiHandler)
 
 	sec := NewSecure(config)
 	webHandler := NewWebHandler(
@@ -141,7 +147,7 @@ func ProvideRouter(
 		config.PublicResourceCreationEnabled,
 		config.Development.UISourceOverride,
 	)
-	routers[3] = NewWebRouter(webHandler)
+	routers[4] = NewWebRouter(webHandler)
 
 	return NewRouter(routers)
 }
