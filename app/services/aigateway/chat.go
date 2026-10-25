@@ -92,9 +92,17 @@ func (g *Gateway) Chat(ctx context.Context, class Class, req ChatRequest) (*Chat
 	}
 
 	var resp ChatResponse
+	attempts := 0
 	err := g.withRetry(ctx, class, func() error {
+		attempts++
 		return g.client.doJSON(ctx, http.MethodPost, chatPath, wire, &resp)
 	})
+	usedModel := req.Model
+	if resp.Model != "" {
+		usedModel = resp.Model
+	}
+	g.recordUsage(ctx, class, usedModel, attempts,
+		int64(resp.Usage.PromptTokens), int64(resp.Usage.CompletionTokens), resp.Usage.Cost)
 	if err != nil {
 		return nil, err
 	}

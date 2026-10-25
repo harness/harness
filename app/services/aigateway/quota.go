@@ -15,10 +15,15 @@
 package aigateway
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/harness/gitness/app/store"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Class groups requests that share a daily reservation.
@@ -41,6 +46,12 @@ var DefaultReservations = map[Class]float64{
 
 // sharedPoolHourUTC is the hour after which unused reservations are released to every class.
 const sharedPoolHourUTC = 12
+
+// totalClass is the pseudo-class whose counter holds the daily total across all classes.
+const totalClass = "total"
+
+// quotaStoreTimeout bounds a single planner call to the shared counters.
+const quotaStoreTimeout = 5 * time.Second
 
 var ErrQuotaExhausted = errors.New("free model quota exhausted")
 
@@ -74,6 +85,17 @@ type QuotaSnapshot struct {
 
 // Planner spends the account-wide free request quota. Failed requests count too,
 // so a request is charged when it is reserved, not when it succeeds.
+//
+// Daily counters are shared between replicas when the planner is backed by the quota store:
+// every counter is moved by one atomic conditional upsert, so no replica can overspend.
+// A reservation touches two counters: the class counter (limited by the class reservation
+// before noon UTC) and the "total" counter (limited by the daily limit). They can't be
+// updated in one statement, so the class counter is charged first and given back with
+// Decrement if the total is already spent. Giving it back is best effort: if that write fails
+// the class loses one unit for the day, which under-spends but never overspends.
+// The per-minute window is kept in memory, so each replica allows RequestsPerMinute
+// requests per minute: with N replicas, configure RequestsPerMinute as the account limit
+// divided by N.
 type Planner struct {
 	mu sync.Mutex
 
@@ -81,14 +103,26 @@ type Planner struct {
 	dailyLimit   int
 	rpm          int
 	reservations map[Class]float64
+	counters     counters
 
-	day    string
-	used   int
-	byCls  map[Class]int
 	window []time.Time
 }
 
+// NewPlanner returns a planner with in-memory counters.
 func NewPlanner(dailyLimit, rpm int, reservations map[Class]float64) *Planner {
+	return newPlanner(dailyLimit, rpm, reservations, newMemCounters())
+}
+
+// NewStorePlanner returns a planner whose daily counters are kept in the quota store.
+func NewStorePlanner(
+	dailyLimit, rpm int,
+	reservations map[Class]float64,
+	quotaStore store.AIQuotaStore,
+) *Planner {
+	return newPlanner(dailyLimit, rpm, reservations, storeCounters{store: quotaStore})
+}
+
+func newPlanner(dailyLimit, rpm int, reservations map[Class]float64, c counters) *Planner {
 	if reservations == nil {
 		reservations = DefaultReservations
 	}
@@ -97,74 +131,149 @@ func NewPlanner(dailyLimit, rpm int, reservations map[Class]float64) *Planner {
 		dailyLimit:   dailyLimit,
 		rpm:          rpm,
 		reservations: reservations,
-		byCls:        map[Class]int{},
+		counters:     c,
 	}
 }
 
 // Reserve charges one request to the class or returns a *QuotaError.
+// If the shared counters can't be reached the request is refused, so a broken
+// database can't turn into unmetered requests.
 func (p *Planner) Reserve(class Class) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
+	ctx, cancel := context.WithTimeout(context.Background(), quotaStoreTimeout)
+	defer cancel()
+
 	now := p.now().UTC()
-	p.rollDay(now)
+	day := now.Format(time.DateOnly)
 
-	if p.used >= p.dailyLimit || !p.classHasRoom(class, now) {
-		return &QuotaError{Class: class, Daily: true, RetryAt: nextUTCDay(now)}
-	}
-
+	// the window check is free, so it goes first and never wastes a daily unit
 	p.trimWindow(now)
 	if len(p.window) >= p.rpm {
 		return &QuotaError{Class: class, RetryAt: p.window[0].Add(time.Minute)}
 	}
 
-	p.used++
-	p.byCls[class]++
+	if err := p.charge(ctx, day, class, now); err != nil {
+		return err
+	}
 	p.window = append(p.window, now)
 	return nil
 }
 
+func (p *Planner) charge(ctx context.Context, day string, class Class, now time.Time) error {
+	exhausted := &QuotaError{Class: class, Daily: true, RetryAt: nextUTCDay(now)}
+
+	if now.Hour() >= sharedPoolHourUTC {
+		// after noon unused reservations are released: only the total holds
+		ok, err := p.counters.Increment(ctx, day, totalClass, p.dailyLimit)
+		if err != nil {
+			return fmt.Errorf("failed to charge ai quota: %w", err)
+		}
+		if !ok {
+			return exhausted
+		}
+		// keep the class counter for the snapshot; it can't fail the request
+		if _, err := p.counters.Increment(ctx, day, string(class), p.dailyLimit); err != nil {
+			log.Ctx(ctx).Warn().Err(err).Str("class", string(class)).Msg("ai gateway: failed to count class quota")
+		}
+		return nil
+	}
+
+	ok, err := p.counters.Increment(ctx, day, string(class), p.classLimit(class))
+	if err != nil {
+		return fmt.Errorf("failed to charge ai quota: %w", err)
+	}
+	if !ok {
+		return exhausted
+	}
+
+	ok, err = p.counters.Increment(ctx, day, totalClass, p.dailyLimit)
+	if err == nil && ok {
+		return nil
+	}
+
+	// the total is spent (or unreachable): give the class unit back
+	if derr := p.counters.Decrement(ctx, day, string(class)); derr != nil {
+		log.Ctx(ctx).Warn().Err(derr).Str("class", string(class)).Msg("ai gateway: failed to give back class quota")
+	}
+	if err != nil {
+		return fmt.Errorf("failed to charge ai quota: %w", err)
+	}
+	return exhausted
+}
+
 // MarkExhausted is called when OpenRouter reports the daily limit before the planner does,
-// for example because another client shares the account.
+// for example because another client shares the account. It is persisted, so every replica stops.
 func (p *Planner) MarkExhausted() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.rollDay(p.now().UTC())
-	p.used = p.dailyLimit
+
+	ctx, cancel := context.WithTimeout(context.Background(), quotaStoreTimeout)
+	defer cancel()
+
+	day := p.now().UTC().Format(time.DateOnly)
+	if err := p.counters.Raise(ctx, day, totalClass, p.dailyLimit); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("ai gateway: failed to persist exhausted quota")
+	}
 }
 
 // Remaining returns how many requests the class can still make today.
+// If the counters can't be read it reports zero.
 func (p *Planner) Remaining(class Class) int {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	now := p.now().UTC()
-	p.rollDay(now)
+	ctx, cancel := context.WithTimeout(context.Background(), quotaStoreTimeout)
+	defer cancel()
 
-	left := p.dailyLimit - p.used
+	now := p.now().UTC()
+	day := now.Format(time.DateOnly)
+
+	total, err := p.counters.Used(ctx, day, totalClass)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("ai gateway: failed to read quota")
+		return 0
+	}
+	left := p.dailyLimit - total
 	if now.Hour() >= sharedPoolHourUTC {
 		return max(left, 0)
 	}
-	return max(min(left, p.classLimit(class)-p.byCls[class]), 0)
+	used, err := p.counters.Used(ctx, day, string(class))
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("ai gateway: failed to read quota")
+		return 0
+	}
+	return max(min(left, p.classLimit(class)-used), 0)
 }
 
 func (p *Planner) Snapshot() QuotaSnapshot {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.rollDay(p.now().UTC())
 
-	byCls := make(map[Class]int, len(p.byCls))
-	for k, v := range p.byCls {
-		byCls[k] = v
-	}
-	return QuotaSnapshot{Day: p.day, Limit: p.dailyLimit, Used: p.used, UsedClass: byCls}
-}
+	ctx, cancel := context.WithTimeout(context.Background(), quotaStoreTimeout)
+	defer cancel()
 
-func (p *Planner) classHasRoom(class Class, now time.Time) bool {
-	if now.Hour() >= sharedPoolHourUTC {
-		return true
+	day := p.now().UTC().Format(time.DateOnly)
+	snap := QuotaSnapshot{Day: day, Limit: p.dailyLimit, UsedClass: make(map[Class]int, len(p.reservations))}
+
+	total, err := p.counters.Used(ctx, day, totalClass)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("ai gateway: failed to read quota")
+		return snap
 	}
-	return p.byCls[class] < p.classLimit(class)
+	snap.Used = total
+	for class := range p.reservations {
+		used, err := p.counters.Used(ctx, day, string(class))
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("ai gateway: failed to read quota")
+			continue
+		}
+		if used > 0 {
+			snap.UsedClass[class] = used
+		}
+	}
+	return snap
 }
 
 func (p *Planner) classLimit(class Class) int {
@@ -174,17 +283,6 @@ func (p *Planner) classLimit(class Class) int {
 		limit = 1
 	}
 	return limit
-}
-
-func (p *Planner) rollDay(now time.Time) {
-	day := now.Format(time.DateOnly)
-	if day == p.day {
-		return
-	}
-	p.day = day
-	p.used = 0
-	p.byCls = map[Class]int{}
-	p.window = nil
 }
 
 func (p *Planner) trimWindow(now time.Time) {

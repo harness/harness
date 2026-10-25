@@ -1817,6 +1817,10 @@ type (
 		// IncrementQuota atomically increments used if it is below limit
 		// and reports whether the increment happened.
 		IncrementQuota(ctx context.Context, day, class string, limit int) (bool, error)
+		// DecrementQuota atomically gives back one unit of used, never going below zero.
+		DecrementQuota(ctx context.Context, day, class string) error
+		// RaiseQuota atomically raises used to at least the given value (creating the row).
+		RaiseQuota(ctx context.Context, day, class string, used int) error
 	}
 
 	// AIUsageStore defines the store for AI usage records.

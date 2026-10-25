@@ -56,6 +56,7 @@ type Gateway struct {
 	guard    *Guard
 	catalog  *Catalog
 	planner  *Planner
+	usage    store.AIUsageStore
 	redactor *Redactor
 	events   EventReporter // optional, see SetEventReporter
 
@@ -212,9 +213,17 @@ func (g *Gateway) decideWith(
 	}
 
 	var resp decisions.Response
+	attempts := 0
 	err := g.withRetry(ctx, ClassDecision, func() error {
+		attempts++
 		return g.client.doJSON(ctx, http.MethodPost, decisions.Path, req, &resp)
 	})
+	usedModel := model
+	if resp.Model != "" {
+		usedModel = resp.Model
+	}
+	g.recordUsage(ctx, ClassDecision, usedModel, attempts,
+		int64(resp.Usage.InputTokens), int64(resp.Usage.OutputTokens), resp.Usage.Cost)
 	if err != nil {
 		return nil, err
 	}

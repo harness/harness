@@ -21,6 +21,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/harness/gitness/app/services/aigateway"
 	"github.com/harness/gitness/app/store/database"
 	gitnessstore "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -186,6 +187,68 @@ func TestAIQuotaStore_IncrementQuotaConcurrent(t *testing.T) {
 	q, err := s.Find(ctx, "2026-02-01", "decision")
 	require.NoError(t, err)
 	assert.Equal(t, limit, q.Used)
+}
+
+func TestAIQuotaStore_DecrementAndRaise(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+	ctx := context.Background()
+	s := database.NewAIQuotaStore(db)
+
+	// missing row: no-op
+	require.NoError(t, s.DecrementQuota(ctx, "2026-03-01", "total"))
+
+	ok, err := s.IncrementQuota(ctx, "2026-03-01", "total", 5)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NoError(t, s.DecrementQuota(ctx, "2026-03-01", "total"))
+	require.NoError(t, s.DecrementQuota(ctx, "2026-03-01", "total")) // never below zero
+	q, err := s.Find(ctx, "2026-03-01", "total")
+	require.NoError(t, err)
+	assert.Zero(t, q.Used)
+
+	// raise creates the row and never lowers it
+	require.NoError(t, s.RaiseQuota(ctx, "2026-03-02", "total", 5))
+	require.NoError(t, s.RaiseQuota(ctx, "2026-03-02", "total", 3))
+	q, err = s.Find(ctx, "2026-03-02", "total")
+	require.NoError(t, err)
+	assert.Equal(t, 5, q.Used)
+	ok, err = s.IncrementQuota(ctx, "2026-03-02", "total", 5)
+	require.NoError(t, err)
+	assert.False(t, ok)
+}
+
+func TestAIPlannerOnSQLiteStore(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+	ctx := context.Background()
+	quota := database.NewAIQuotaStore(db)
+
+	// two planners model two replicas sharing the same table; the clock is the real one,
+	// so only the invariants that hold at any hour are asserted
+	const daily = 10
+	a := aigateway.NewStorePlanner(daily, 1000, map[aigateway.Class]float64{aigateway.ClassAgent: 1}, quota)
+	b := aigateway.NewStorePlanner(daily, 1000, map[aigateway.Class]float64{aigateway.ClassAgent: 1}, quota)
+
+	var granted atomic.Int32
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func(p *aigateway.Planner) {
+			defer wg.Done()
+			if p.Reserve(aigateway.ClassAgent) == nil {
+				granted.Add(1)
+			}
+		}([]*aigateway.Planner{a, b}[i%2])
+	}
+	wg.Wait()
+	assert.EqualValues(t, daily, granted.Load())
+	assert.Equal(t, daily, a.Snapshot().Used)
+	assert.Zero(t, b.Remaining(aigateway.ClassAgent))
+
+	// the usage store accepts what the gateway records
+	usage := database.NewAIUsageStore(db)
+	require.NoError(t, usage.Create(ctx, &types.AIUsage{Feature: "agent", Model: "m", Requests: 1}))
 }
 
 func TestAIUsageStore(t *testing.T) {

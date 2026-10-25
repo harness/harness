@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	aievents "github.com/harness/gitness/app/events/ai"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
@@ -33,6 +34,9 @@ func ProvideGateway(
 	config *types.Config,
 	modelStore store.AIModelStore,
 	decisionStore store.AIDecisionStore,
+	quotaStore store.AIQuotaStore,
+	usageStore store.AIUsageStore,
+	aiReporter *aievents.Reporter,
 ) (*Gateway, error) {
 	cfg := NewConfig(config)
 	if !cfg.Enabled {
@@ -47,8 +51,9 @@ func ProvideGateway(
 		return nil, err
 	}
 
-	g := New(cfg, redactor)
+	g := New(cfg, redactor).WithStores(quotaStore, usageStore)
 	g.SetStores(ctx, modelStore, decisionStore)
+	g.SetEventReporter(aiReporter)
 	g.StartCatalogSync(ctx)
 	return g, nil
 }
