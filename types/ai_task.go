@@ -39,6 +39,14 @@ type AITask struct {
 	OutputMetadata     json.RawMessage  `json:"-"`
 	AIUsageMetric      *AIUsageMetric   `json:"ai_usage_metric,omitempty"`
 	ErrorMessage       *string          `json:"error_message,omitempty"`
+	// TaskID links the AI task to the work item (tasks table) it is fixing, if any.
+	TaskID *int64 `json:"task_id,omitempty"`
+	// ModelDecisionID references the AI decision that selected the model, if any.
+	ModelDecisionID *int64 `json:"model_decision_id,omitempty"`
+	// RequestBudget is the maximum number of model requests the agent may issue.
+	RequestBudget int `json:"request_budget"`
+	// RequestsUsed is the number of model requests charged so far.
+	RequestsUsed int `json:"requests_used"`
 }
 
 type AIUsageMetric struct {
@@ -56,3 +64,6 @@ type AITaskFilter struct {
 	AIAgents       []enum.AIAgent
 	States         []enum.AITaskState
 }
+
+// DefaultAITaskRequestBudget is the default number of model requests a fix agent may issue per AI task.
+const DefaultAITaskRequestBudget = 60
