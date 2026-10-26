@@ -1093,6 +1093,24 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) ([]string, error) {
 	return moved, nil
 }
 
+func (r *SharedRepo) Files() ([]string, error) {
+	files, err := r.objectFiles()
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].priority < files[j].priority // 0 is top priority, 5 is lowest priority
+	})
+
+	relPaths := make([]string, len(files))
+	for i := range files {
+		relPaths[i] = files[i].relPath
+	}
+
+	return relPaths, nil
+}
+
 // objectFiles returns the files of the shared repository (excluding the objects/info directory).
 func (r *SharedRepo) objectFiles() ([]fileEntry, error) {
 	srcDir := path.Join(r.repoPath, "objects")
