@@ -89,7 +89,7 @@ func TestRefUpdaterOptions(t *testing.T) {
 			u, err := CreateRefUpdater(repoPath, opts...)
 			require.NoError(t, err)
 
-			err = u.DoOne(context.Background(), testBranchRef, sha.Nil, commitSHA)
+			err = doOne(context.Background(), u, testBranchRef, sha.Nil, commitSHA)
 			require.NoError(t, err)
 
 			require.Equal(t, test.wantEvents, client.events)
@@ -240,7 +240,7 @@ func TestRefUpdaterDo(t *testing.T) {
 			u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
 			require.NoError(t, err)
 
-			err = u.Do(context.Background(), r.updates(test.changes))
+			err = doAll(context.Background(), u, r.updates(test.changes))
 			require.NoError(t, err)
 
 			require.Equal(t, test.wantRefs, r.refs())
@@ -266,7 +266,7 @@ func TestRefUpdaterDoWithoutRefs(t *testing.T) {
 	u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
 	require.NoError(t, err)
 
-	require.NoError(t, u.Do(context.Background(), nil))
+	require.NoError(t, doAll(context.Background(), u, nil))
 	require.Empty(t, u.Refs())
 	require.Empty(t, client.events)
 	require.Equal(t, map[string]string{}, r.refs())
@@ -315,7 +315,7 @@ func TestRefUpdaterPreReceiveBlocked(t *testing.T) {
 			u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
 			require.NoError(t, err)
 
-			err = u.DoOne(ctx, testBranchRef, r.c1, r.c2)
+			err = doOne(ctx, u, testBranchRef, r.c1, r.c2)
 			require.Error(t, err)
 			require.True(t, errors.IsUnprocessableEntity(err), "unexpected error: %v", err)
 			require.ErrorContains(t, err, blockMsg)
@@ -349,7 +349,7 @@ func TestRefUpdaterPreReceiveCallFailure(t *testing.T) {
 	u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
 	require.NoError(t, err)
 
-	err = u.DoOne(context.Background(), testBranchRef, sha.Nil, r.c1)
+	err = doOne(context.Background(), u, testBranchRef, sha.Nil, r.c1)
 	require.ErrorIs(t, err, callErr)
 
 	require.Equal(t, map[string]string{}, r.refs())
@@ -385,7 +385,7 @@ func TestRefUpdaterPostReceiveFailure(t *testing.T) {
 			u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: test.client}, nil))
 			require.NoError(t, err)
 
-			err = u.DoOne(ctx, testBranchRef, sha.Nil, r.c1)
+			err = doOne(ctx, u, testBranchRef, sha.Nil, r.c1)
 			require.ErrorContains(t, err, test.wantErr)
 
 			// post-receive runs after the update, so the reference has been changed already
@@ -453,7 +453,7 @@ func TestRefUpdaterUpdateRefFailure(t *testing.T) {
 			u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
 			require.NoError(t, err)
 
-			err = u.Do(ctx, r.updates(test.changes))
+			err = doAll(ctx, u, r.updates(test.changes))
 			require.Error(t, err)
 			require.True(t, test.check(err), "unexpected error: %v", err)
 
@@ -741,10 +741,40 @@ func TestRefUpdaterHookOutput(t *testing.T) {
 		u, err := CreateRefUpdater(r.path, WithHooks(&recordingClientFactory{client: client}, nil))
 		require.NoError(t, err)
 
-		require.NoError(t, u.DoOne(context.Background(), testBranchRef, sha.Nil, r.c1))
+		require.NoError(t, doOne(context.Background(), u, testBranchRef, sha.Nil, r.c1))
 		require.Equal(t, map[string]string{testBranchRef: "c1"}, r.refs())
 		require.Equal(t, []string{"pre", "post"}, client.events)
 	})
+}
+
+// doAll runs the full ref update by calling all methods of RefUpdater in the correct order,
+// the same way as initializing it and passing it to sharedrepo.RefRunner does.
+// It discards the returned hook outputs.
+func doAll(ctx context.Context, u *RefUpdater, refs []ReferenceUpdate) error {
+	if err := u.Init(ctx, refs); err != nil {
+		return fmt.Errorf("init failed: %w", err)
+	}
+
+	if err := callPre(ctx, u); err != nil {
+		return fmt.Errorf("pre failed: %w", err)
+	}
+
+	if err := u.UpdateRef(ctx); err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if err := callPost(ctx, u); err != nil {
+		return fmt.Errorf("post failed: %w", err)
+	}
+
+	return nil
+}
+
+// doOne runs the full ref update of only one reference.
+//
+//nolint:unparam
+func doOne(ctx context.Context, u *RefUpdater, ref string, oldValue, newValue sha.SHA) error {
+	return doAll(ctx, u, []ReferenceUpdate{{Ref: ref, Old: oldValue, New: newValue}})
 }
 
 // callPre calls RefUpdater.Pre and discards the returned hook output.

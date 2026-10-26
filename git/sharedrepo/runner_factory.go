@@ -29,6 +29,9 @@ type RunnerFactory interface {
 	// ReadOnlyRunner returns Runner that discards any changes made in sharedrepo.SharedRepo.
 	ReadOnlyRunner(repoUID string, repoPath string, alternates ...string) ReadOnlyRunner
 
+	// RefRunner returns RefRunner that changes only references of the repository.
+	RefRunner(repoUID string, repoPath string) RefRunner
+
 	// Directory return the location where ephemeral shared repositories would be created.
 	Directory() string
 }
@@ -65,6 +68,13 @@ func (f runnerFactory) ReadOnlyRunner(repoUID, repoPath string, alternates ...st
 		repoUID:    repoUID,
 		repoPath:   repoPath,
 		alternates: alternates,
+	}
+}
+
+func (runnerFactory) RefRunner(repoUID, repoPath string) RefRunner {
+	return defaultRefRunner{
+		repoUID:  repoUID,
+		repoPath: repoPath,
 	}
 }
 

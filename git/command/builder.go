@@ -282,6 +282,9 @@ var descriptions = map[string]builder{
 			}, configurePackOptions()...)
 		},
 	},
+	"verify-pack": {
+		flags: NoRefUpdates,
+	},
 	"version": {
 		flags: NoRefUpdates,
 	},
