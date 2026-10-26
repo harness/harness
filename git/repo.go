@@ -461,7 +461,7 @@ func (s *Service) createRepositoryInternal(
 		}
 
 		// NOTE: This creates the default branch in the repo (as it doesn't exist as of now)
-		err = s.createInitialCommit(ctx, base.RepoUID, repoPath, defaultBranch, files,
+		err = s.CreateInitialCommit(ctx, base.RepoUID, repoPath, defaultBranch, files,
 			author, authorDate, committer, committerDate)
 		if err != nil {
 			return err
@@ -483,9 +483,9 @@ func (s *Service) createRepositoryInternal(
 	return nil
 }
 
-// createInitialCommit creates a commit with the provided files and points the default branch to it.
+// CreateInitialCommit creates a commit with the provided files and points the default branch to it.
 // The repository must not have any commits yet.
-func (s *Service) createInitialCommit(
+func (s *Service) CreateInitialCommit(
 	ctx context.Context,
 	repoUID string,
 	repoPath string,
