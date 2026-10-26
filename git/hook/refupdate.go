@@ -83,6 +83,7 @@ func WithNoUpdate(u *RefUpdater) error {
 // RefUpdater is an entity that is responsible for update of a reference.
 // It will call pre-receive hook prior to the update and post-receive hook after the update.
 // It has a state machine to guarantee that methods are called in the correct order (Init, Pre, Update, Post).
+// The methods are not meant to be called directly, but through sharedrepo.Runner or sharedrepo.RefRunner.
 type RefUpdater struct {
 	state      refUpdaterState
 	hookClient Client
@@ -117,39 +118,6 @@ const (
 	statePost
 	stateDone
 )
-
-// Do runs full ref update by executing all methods in the correct order.
-// It discards pre- and post-receive output messages (except Error which is returned as an error).
-func (u *RefUpdater) Do(ctx context.Context, refs []ReferenceUpdate) error {
-	if err := u.Init(ctx, refs); err != nil {
-		return fmt.Errorf("init failed: %w", err)
-	}
-
-	if _, err := u.Pre(ctx); err != nil {
-		return fmt.Errorf("pre failed: %w", err)
-	}
-
-	if err := u.UpdateRef(ctx); err != nil {
-		return fmt.Errorf("update failed: %w", err)
-	}
-
-	if _, err := u.Post(ctx); err != nil {
-		return fmt.Errorf("post failed: %w", err)
-	}
-
-	return nil
-}
-
-// DoOne runs full ref update of only one reference.
-func (u *RefUpdater) DoOne(ctx context.Context, ref string, oldValue, newValue sha.SHA) error {
-	return u.Do(ctx, []ReferenceUpdate{
-		{
-			Ref: ref,
-			Old: oldValue,
-			New: newValue,
-		},
-	})
-}
 
 func (u *RefUpdater) Init(ctx context.Context, refs []ReferenceUpdate) error {
 	if u.state != stateInit {

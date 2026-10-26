@@ -34,6 +34,17 @@ type ReadOnlyRunner interface {
 	Run(ctx context.Context, fn func(s *SharedRepo) error) error
 }
 
+// RefRunner is a runner that changes only references of a repository: no objects are introduced to it,
+// so, unlike with Runner, there's no sharedrepo.SharedRepo.
+type RefRunner interface {
+	// Run updates the references with the provided hook.RefUpdater: it calls the pre-receive hook,
+	// updates the references, and calls the post-receive hook.
+	// The hook.RefUpdater must be already initialized with the reference updates (hook.RefUpdater.Init),
+	// and it must be new, i.e., not used for any other update.
+	// The messages that the hooks return are discarded, except for the error message which is returned as an error.
+	Run(ctx context.Context, refUpdater *hook.RefUpdater) error
+}
+
 type defaultRunner struct {
 	tmpDir     string
 	repoUID    string
@@ -88,6 +99,32 @@ func (r defaultRunner) Run(
 
 	if _, err := refUpdater.Post(ctx, alternate); err != nil {
 		return fmt.Errorf("post-receive hook failed: %w", err)
+	}
+
+	return nil
+}
+
+type defaultRefRunner struct {
+	repoUID  string
+	repoPath string
+}
+
+// Run updates the references by executing the remaining methods of the already initialized
+// hook.RefUpdater in the correct order.
+func (defaultRefRunner) Run(
+	ctx context.Context,
+	refUpdater *hook.RefUpdater,
+) error {
+	if _, err := refUpdater.Pre(ctx); err != nil {
+		return fmt.Errorf("pre failed: %w", err)
+	}
+
+	if err := refUpdater.UpdateRef(ctx); err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	if _, err := refUpdater.Post(ctx); err != nil {
+		return fmt.Errorf("post failed: %w", err)
 	}
 
 	return nil

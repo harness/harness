@@ -15,7 +15,7 @@
 // Package sharedrepotest holds conformance tests for the implementations of the
 // sharedrepo.RunnerFactory interface and for the runners it creates.
 //
-// Call RunnerConformance and ReadOnlyRunnerConformance from a test of the package
+// Call RunnerConformance, ReadOnlyRunnerConformance and RefRunnerConformance from a test of the package
 // that provides the implementation:
 //
 //	func TestMyRunnerFactory(t *testing.T) {
@@ -247,6 +247,209 @@ func ReadOnlyRunnerConformance(t *testing.T, factory sharedrepo.RunnerFactory) {
 	})
 }
 
+// RefRunnerConformance checks that the reference runners created by the provided sharedrepo.RunnerFactory
+// follow the contract of the sharedrepo.RefRunner interface.
+func RefRunnerConformance(t *testing.T, factory sharedrepo.RunnerFactory) {
+	requireGit(t)
+
+	// Every update needs a new reference updater, which must be initialized before the runner is called.
+	run := func(
+		ctx context.Context,
+		repoPath string,
+		hooks *fakeHooks,
+		refs []hook.ReferenceUpdate,
+	) error {
+		updater := newRefUpdater(t, hooks, repoPath)
+		require.NoError(t, updater.Init(ctx, refs))
+
+		return factory.RefRunner(testRepoUID, repoPath).Run(ctx, updater)
+	}
+
+	t.Run("creates, updates and deletes the reference", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob1 := writeBlob(t, repoPath, "first object\n")
+		blob2 := writeBlob(t, repoPath, "second object\n")
+
+		hooks := &fakeHooks{}
+
+		err := run(ctx, repoPath, hooks, []hook.ReferenceUpdate{{Ref: testRef, Old: sha.Nil, New: blob1}})
+		require.NoError(t, err)
+		assert.Equal(t, blob1.String(), refValue(t, repoPath, testRef))
+
+		err = run(ctx, repoPath, hooks, []hook.ReferenceUpdate{{Ref: testRef, Old: blob1, New: blob2}})
+		require.NoError(t, err)
+		assert.Equal(t, blob2.String(), refValue(t, repoPath, testRef))
+
+		err = run(ctx, repoPath, hooks, []hook.ReferenceUpdate{{Ref: testRef, Old: blob2, New: sha.Nil}})
+		require.NoError(t, err)
+		assert.Empty(t, refValue(t, repoPath, testRef))
+
+		assert.Equal(t, []string{"pre", "post", "pre", "post", "pre", "post"}, hooks.events)
+	})
+
+	t.Run("updates the references between the pre-receive and post-receive hooks", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob := writeBlob(t, repoPath, "an object\n")
+
+		var preRefUpdates, postRefUpdates []hook.ReferenceUpdate
+		var preRefValue, postRefValue string
+
+		hooks := &fakeHooks{}
+		hooks.onPre = func(in hook.PreReceiveInput) {
+			preRefUpdates = in.RefUpdates
+			preRefValue = refValue(t, repoPath, testRef)
+		}
+		hooks.onPost = func(in hook.PostReceiveInput) {
+			postRefUpdates = in.RefUpdates
+			postRefValue = refValue(t, repoPath, testRef)
+		}
+
+		err := run(ctx, repoPath, hooks, createRef(blob))
+		require.NoError(t, err)
+
+		assert.Equal(t, []string{"pre", "post"}, hooks.events)
+		assert.Equal(t, createRef(blob), preRefUpdates)
+		assert.Equal(t, createRef(blob), postRefUpdates)
+		assert.Empty(t, preRefValue, "pre-receive hook must be called before the reference update")
+		assert.Equal(t, blob.String(), postRefValue, "post-receive hook must be called after the reference update")
+		assert.Equal(t, blob.String(), refValue(t, repoPath, testRef))
+	})
+
+	t.Run("unknown old value is replaced with the current value of the reference", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob1 := writeBlob(t, repoPath, "first object\n")
+		blob2 := writeBlob(t, repoPath, "second object\n")
+		runGit(t, repoPath, "", "update-ref", testRef, blob1.String())
+
+		var preRefUpdates []hook.ReferenceUpdate
+		hooks := &fakeHooks{onPre: func(in hook.PreReceiveInput) { preRefUpdates = in.RefUpdates }}
+
+		err := run(ctx, repoPath, hooks, []hook.ReferenceUpdate{{Ref: testRef, Old: sha.None, New: blob2}})
+		require.NoError(t, err)
+
+		assert.Equal(t, []hook.ReferenceUpdate{{Ref: testRef, Old: blob1, New: blob2}}, preRefUpdates)
+		assert.Equal(t, blob2.String(), refValue(t, repoPath, testRef))
+	})
+
+	t.Run("hooks are not called if there is nothing to update", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob := writeBlob(t, repoPath, "an object\n")
+		runGit(t, repoPath, "", "update-ref", testRef, blob.String())
+
+		hooks := &fakeHooks{}
+
+		err := run(ctx, repoPath, hooks, nil)
+		require.NoError(t, err)
+
+		// the reference is already at the requested value
+		err = run(ctx, repoPath, hooks, []hook.ReferenceUpdate{{Ref: testRef, Old: sha.None, New: blob}})
+		require.NoError(t, err)
+
+		assert.Empty(t, hooks.events)
+		assert.Equal(t, blob.String(), refValue(t, repoPath, testRef))
+	})
+
+	t.Run("blocked by pre-receive hook leaves the reference untouched", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob := writeBlob(t, repoPath, "an object\n")
+
+		hooks := &fakeHooks{preError: "blocked by the test"}
+
+		err := run(ctx, repoPath, hooks, createRef(blob))
+		require.Error(t, err)
+		assert.True(t, errors.IsUnprocessableEntity(err), "the error of the hook must be preserved: %v", err)
+
+		assert.Equal(t, []string{"pre"}, hooks.events, "post-receive hook must not be called")
+		assert.Empty(t, refValue(t, repoPath, testRef))
+	})
+
+	t.Run("post-receive hook error is returned after the reference is updated", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob := writeBlob(t, repoPath, "an object\n")
+
+		hooks := &fakeHooks{postError: "failed by the test"}
+
+		err := run(ctx, repoPath, hooks, createRef(blob))
+		require.ErrorContains(t, err, hooks.postError)
+
+		assert.Equal(t, []string{"pre", "post"}, hooks.events)
+		assert.Equal(t, blob.String(), refValue(t, repoPath, testRef))
+	})
+
+	t.Run("old value mismatch leaves the reference untouched", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob1 := writeBlob(t, repoPath, "first object\n")
+		blob2 := writeBlob(t, repoPath, "second object\n")
+		runGit(t, repoPath, "", "update-ref", testRef, blob2.String())
+
+		hooks := &fakeHooks{}
+
+		err := run(ctx, repoPath, hooks, []hook.ReferenceUpdate{{Ref: testRef, Old: blob1, New: sha.Nil}})
+		require.Error(t, err)
+		assert.True(t, errors.IsPreconditionFailed(err), "unexpected error: %v", err)
+
+		assert.Equal(t, []string{"pre"}, hooks.events, "post-receive hook must not be called")
+		assert.Equal(t, blob2.String(), refValue(t, repoPath, testRef))
+	})
+
+	t.Run("creating existing reference is a conflict", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob1 := writeBlob(t, repoPath, "first object\n")
+		blob2 := writeBlob(t, repoPath, "second object\n")
+		runGit(t, repoPath, "", "update-ref", testRef, blob1.String())
+
+		hooks := &fakeHooks{}
+
+		err := run(ctx, repoPath, hooks, []hook.ReferenceUpdate{{Ref: testRef, Old: sha.Nil, New: blob2}})
+		require.Error(t, err)
+		assert.True(t, errors.IsConflict(err), "unexpected error: %v", err)
+
+		assert.Equal(t, blob1.String(), refValue(t, repoPath, testRef))
+	})
+
+	t.Run("reference updater that is not initialized is rejected", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+
+		hooks := &fakeHooks{}
+
+		err := factory.RefRunner(testRepoUID, repoPath).Run(ctx, newRefUpdater(t, hooks, repoPath))
+		require.Error(t, err)
+
+		assert.Empty(t, hooks.events, "no hook should have been called")
+		assert.Empty(t, refValue(t, repoPath, testRef))
+	})
+
+	t.Run("reference updater that has been used is rejected", func(t *testing.T) {
+		ctx := t.Context()
+		repoPath := newBareRepo(t)
+		blob := writeBlob(t, repoPath, "an object\n")
+
+		hooks := &fakeHooks{}
+		updater := newRefUpdater(t, hooks, repoPath)
+		require.NoError(t, updater.Init(ctx, createRef(blob)))
+
+		runner := factory.RefRunner(testRepoUID, repoPath)
+		require.NoError(t, runner.Run(ctx, updater))
+
+		// the update has been done; the second run must neither repeat it nor call the hooks again.
+		runGit(t, repoPath, "", "update-ref", "-d", testRef)
+
+		require.Error(t, runner.Run(ctx, updater))
+
+		assert.Equal(t, []string{"pre", "post"}, hooks.events)
+		assert.Empty(t, refValue(t, repoPath, testRef))
+	})
+}
+
 // testSeesObjects checks that the shared repository is created in the directory of the factory
 // and that it can access the objects of the original repository and of the additional alternates.
 func testSeesObjects(t *testing.T, factory sharedrepo.RunnerFactory, run runFunc) {
@@ -276,10 +479,11 @@ func testSeesObjects(t *testing.T, factory sharedrepo.RunnerFactory, run runFunc
 
 // fakeHooks is a hook.ClientFactory and hook.Client that records the calls it receives.
 type fakeHooks struct {
-	events   []string
-	preError string
-	onPre    func(hook.PreReceiveInput)
-	onPost   func(hook.PostReceiveInput)
+	events    []string
+	preError  string
+	postError string
+	onPre     func(hook.PreReceiveInput)
+	onPost    func(hook.PostReceiveInput)
 }
 
 func (f *fakeHooks) NewClient(map[string]string) (hook.Client, error) {
@@ -306,6 +510,9 @@ func (f *fakeHooks) PostReceive(_ context.Context, in hook.PostReceiveInput) (ho
 	f.events = append(f.events, "post")
 	if f.onPost != nil {
 		f.onPost(in)
+	}
+	if f.postError != "" {
+		return hook.Output{Error: &f.postError}, nil
 	}
 	return hook.Output{}, nil
 }
@@ -335,7 +542,7 @@ func newBareRepo(t *testing.T) string {
 	t.Helper()
 
 	repoPath := t.TempDir()
-	runGit(t, repoPath, "", nil, "init", "--bare")
+	runGit(t, repoPath, "", "init", "--bare")
 
 	return repoPath
 }
@@ -344,7 +551,7 @@ func newBareRepo(t *testing.T) string {
 func writeBlob(t *testing.T, repoPath, content string) sha.SHA {
 	t.Helper()
 
-	objectSHA, err := sha.New(runGit(t, repoPath, content, nil, "hash-object", "-w", "--stdin"))
+	objectSHA, err := sha.New(runGit(t, repoPath, content, "hash-object", "-w", "--stdin"))
 	require.NoError(t, err)
 
 	return objectSHA
@@ -381,10 +588,10 @@ func refValue(t *testing.T, repoPath, ref string) string {
 }
 
 // runGit runs a git command and fails the test if the command fails.
-func runGit(t *testing.T, repoPath, stdin string, env []string, args ...string) string {
+func runGit(t *testing.T, repoPath, stdin string, args ...string) string {
 	t.Helper()
 
-	out, err := git(t, repoPath, stdin, env, args...)
+	out, err := git(t, repoPath, stdin, nil, args...)
 	require.NoErrorf(t, err, "git %s failed", strings.Join(args, " "))
 
 	return out

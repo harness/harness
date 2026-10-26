@@ -344,16 +344,9 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 		return err
 	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-
-	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
-	if err != nil {
-		return fmt.Errorf("failed to create ref updater to delete the tag: %w", err)
-	}
-
 	tagRef := api.GetReferenceFromTagName(params.Name)
 
-	err = refUpdater.DoOne(ctx, tagRef, sha.None, sha.Nil) // delete whatever is there
+	err := s.updateRef(ctx, params.RepoUID, params.EnvVars, tagRef, sha.None, sha.Nil)
 	if errors.IsNotFound(err) {
 		return errors.NotFoundf("tag %q does not exist", params.Name)
 	}

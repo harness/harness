@@ -81,27 +81,47 @@ type UpdateRefParams struct {
 	OldValue sha.SHA
 }
 
+func (s *Service) updateRef(
+	ctx context.Context,
+	repoUID string,
+	envVars map[string]string,
+	ref string,
+	oldValue sha.SHA,
+	newValue sha.SHA,
+) error {
+	repoPath := getFullPathForRepo(s.reposRoot, repoUID)
+
+	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, envVars))
+	if err != nil {
+		return fmt.Errorf("failed to create ref updater: %w", err)
+	}
+
+	err = refUpdater.Init(ctx, []hook.ReferenceUpdate{
+		{Ref: ref, Old: oldValue, New: newValue},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init ref updater: %w", err)
+	}
+
+	err = s.sharedRunnerFactory.RefRunner(repoUID, repoPath).Run(ctx, refUpdater)
+	if err != nil {
+		return fmt.Errorf("failed to update ref: %w", err)
+	}
+
+	return nil
+}
+
 func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	reference, err := GetRefPath(params.Name, params.Type)
 	if err != nil {
 		return fmt.Errorf("failed to create reference '%s': %w", params.Name, err)
 	}
 
-	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
-	if err != nil {
-		return fmt.Errorf("failed to create ref updater: %w", err)
-	}
-
-	if err := refUpdater.DoOne(ctx, reference, params.OldValue, params.NewValue); err != nil {
-		return fmt.Errorf("failed to update ref: %w", err)
-	}
-
-	return nil
+	return s.updateRef(ctx, params.RepoUID, params.EnvVars, reference, params.OldValue, params.NewValue)
 }
 
 type UpdateRefsParams struct {
@@ -129,7 +149,13 @@ func (s *Service) UpdateRefs(ctx context.Context, params UpdateRefsParams) error
 		})
 	}
 
-	if err := refUpdater.Do(ctx, refUpdates); err != nil {
+	err = refUpdater.Init(ctx, refUpdates)
+	if err != nil {
+		return fmt.Errorf("failed to init ref updater: %w", err)
+	}
+
+	err = s.sharedRunnerFactory.RefRunner(params.RepoUID, repoPath).Run(ctx, refUpdater)
+	if err != nil {
 		return fmt.Errorf("failed to update refs: %w", err)
 	}
 

@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
-	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
@@ -104,14 +103,9 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 		return nil, fmt.Errorf("failed to get target commit: %w", err)
 	}
 
-	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create ref updater to create the branch: %w", err)
-	}
-
 	branchRef := api.GetReferenceFromBranchName(params.BranchName)
 
-	err = refUpdater.DoOne(ctx, branchRef, sha.Nil, targetCommit.SHA)
+	err = s.updateRef(ctx, params.RepoUID, params.EnvVars, branchRef, sha.Nil, targetCommit.SHA)
 	if errors.IsConflict(err) {
 		return nil, errors.Conflictf("branch %q already exists", params.BranchName)
 	}
@@ -161,17 +155,10 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 		return ErrNoParamsProvided
 	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	commitSha, _ := sha.NewOrEmpty(params.SHA)
-
-	refUpdater, err := hook.CreateRefUpdater(repoPath, hook.WithHooks(s.hookClientFactory, params.EnvVars))
-	if err != nil {
-		return fmt.Errorf("failed to create ref updater to create the branch: %w", err)
-	}
-
 	branchRef := api.GetReferenceFromBranchName(params.BranchName)
 
-	err = refUpdater.DoOne(ctx, branchRef, commitSha, sha.Nil)
+	err := s.updateRef(ctx, params.RepoUID, params.EnvVars, branchRef, commitSha, sha.Nil)
 	if errors.IsNotFound(err) {
 		return errors.NotFoundf("branch %q does not exist", params.BranchName)
 	}

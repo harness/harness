@@ -43,6 +43,10 @@ func TestDefaultReadOnlyRunner(t *testing.T) {
 	sharedrepotest.ReadOnlyRunnerConformance(t, newTestRunnerFactory(t))
 }
 
+func TestDefaultRefRunner(t *testing.T) {
+	sharedrepotest.RefRunnerConformance(t, newTestRunnerFactory(t))
+}
+
 func TestNewRunnerFactory(t *testing.T) {
 	root := t.TempDir()
 
