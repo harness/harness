@@ -189,6 +189,9 @@ func (g *Git) Archive(ctx context.Context, repoPath string, params ArchiveParams
 	cmd.Add(command.WithArg(params.Paths...))
 
 	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(w)); err != nil {
+		if cmdErr := command.AsError(err); cmdErr != nil && cmdErr.IsUnknownRevision() {
+			return errors.NotFoundf("revision %q not found", params.Treeish)
+		}
 		return fmt.Errorf("failed to archive repository: %w", err)
 	}
 

@@ -754,5 +754,10 @@ func parseDiffStderr(stderr *bytes.Buffer) error {
 		return parser.ErrSHADoesNotMatch
 	}
 
+	if lowerErr := strings.ToLower(errRaw); strings.Contains(lowerErr, "invalid revision range") ||
+		strings.Contains(lowerErr, "invalid symmetric difference") {
+		return errors.InvalidArgument(errRaw)
+	}
+
 	return errors.New(errRaw)
 }

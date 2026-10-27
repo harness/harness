@@ -89,15 +89,18 @@ func CommitCount(
 	repoPath string,
 	start, end string,
 ) (int, error) {
-	arg := command.WithArg(end)
+	revision := end
 	if len(start) > 0 {
-		arg = command.WithArg(start + ".." + end)
+		revision = start + ".." + end
 	}
-	cmd := command.New("rev-list", command.WithFlag("--count"), arg)
+	cmd := command.New("rev-list", command.WithFlag("--count"), command.WithArg(revision))
 
 	stdout := bytes.NewBuffer(nil)
 
 	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(stdout)); err != nil {
+		if cmdErr := command.AsError(err); cmdErr != nil && cmdErr.IsUnknownRevision() {
+			return 0, errors.NotFoundf("revision %q not found", revision)
+		}
 		return 0, errors.Internal(err, "failed to rev-list in shared repo")
 	}
 

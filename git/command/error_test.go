@@ -17,6 +17,8 @@ package command
 import (
 	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestError_IsBadRevision(t *testing.T) {
@@ -115,4 +117,42 @@ func TestError_IsSHAMismatchErr(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestError_IsUnknownRevision(t *testing.T) {
+	tests := []struct {
+		name     string
+		errMsg   string
+		expected bool
+	}{
+		{
+			name:     "ambiguous argument",
+			errMsg:   "fatal: ambiguous argument 'refs/heads/main': unknown revision or path not in the working tree.",
+			expected: true,
+		},
+		{name: "bad revision", errMsg: "fatal: bad revision '^refs/heads/gone'", expected: true},
+		{name: "archive wording", errMsg: "fatal: not a valid object name: HEAD", expected: true},
+		{name: "ls-tree wording", errMsg: "fatal: Not a valid object name HEAD", expected: true},
+		{name: "bad object stays out, git also uses it for corruption", errMsg: "fatal: bad object 0001", expected: false},
+		{name: "generic error", errMsg: "some other git error", expected: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := NewError(errors.New(tt.errMsg), []byte(tt.errMsg))
+			assert.Equal(t, tt.expected, err.IsUnknownRevision())
+		})
+	}
+}
+
+func TestError_NotOurRef(t *testing.T) {
+	const sha = "1111111111111111111111111111111111111111"
+
+	msg := "fatal: git upload-pack: not our ref " + sha + "\n"
+	got, ok := NewError(errors.New("exit status 128"), []byte(msg)).NotOurRef()
+	assert.True(t, ok)
+	assert.Equal(t, sha, got)
+
+	_, ok = NewError(errors.New("exit status 128"), []byte("fatal: something else")).NotOurRef()
+	assert.False(t, ok)
 }

@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/merge"
 
@@ -53,6 +54,10 @@ func (s *Service) Summary(
 	g.Go(func() error {
 		var err error
 		commitCount, err = merge.CommitCount(ctx, repoPath, "", defaultBranchRef)
+		if errors.IsNotFound(err) {
+			// An empty repository has no default branch yet, so it has no commits.
+			commitCount, err = 0, nil
+		}
 		return err
 	})
 

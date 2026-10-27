@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -85,6 +86,12 @@ func (s *Service) ServicePack(ctx context.Context, params *ServicePackParams) er
 
 	err := s.git.ServicePack(ctx, repoPath, params.ServicePackOptions)
 	if err != nil {
+		// The client asked for an object we don't have, e.g. after a force-push.
+		if cmdErr := command.AsError(err); cmdErr != nil {
+			if sha, ok := cmdErr.NotOurRef(); ok {
+				return errors.InvalidArgumentf("Unrecognized git object: %s", sha)
+			}
+		}
 		return fmt.Errorf("failed to execute git %s: %w", params.Service, err)
 	}
 

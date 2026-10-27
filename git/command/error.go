@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -70,6 +71,27 @@ func (e *Error) IsBadObject() bool {
 func (e *Error) IsBadRevision() bool {
 	return strings.Contains(e.Error(), "bad revision")
 }
+
+// IsUnknownRevision returns true if git could not resolve a revision or object name given by the caller.
+// "bad object" is not matched because git also uses it for a corrupt repository.
+func (e *Error) IsUnknownRevision() bool {
+	msg := strings.ToLower(e.Error())
+	return strings.Contains(msg, "ambiguous argument") ||
+		strings.Contains(msg, "unknown revision") ||
+		strings.Contains(msg, "bad revision") ||
+		strings.Contains(msg, "not a valid object name")
+}
+
+// NotOurRef returns the object ID from an "upload-pack: not our ref <sha>" error.
+func (e *Error) NotOurRef() (string, bool) {
+	parts := reNotOurRef.FindStringSubmatch(e.Error())
+	if parts == nil {
+		return "", false
+	}
+	return parts[1], true
+}
+
+var reNotOurRef = regexp.MustCompile(`upload-pack: not our ref ([a-fA-F0-9]+)`)
 
 func (e *Error) IsInvalidRefErr() bool {
 	return strings.Contains(e.Error(), "not a valid ref")
