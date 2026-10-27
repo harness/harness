@@ -32,7 +32,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.4
 	github.com/getkin/kin-openapi v0.149.0
 	github.com/gliderlabs/ssh v0.3.7
-	github.com/go-chi/chi/v5 v5.3.0
+	github.com/go-chi/chi/v5 v5.4.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redsync/redsync/v4 v4.13.0
@@ -237,7 +237,7 @@ require (
 	github.com/vearutop/statigz v1.4.0 // indirect
 	github.com/yuin/goldmark v1.7.17
 	golang.org/x/mod v0.41.0
-	golang.org/x/net v0.59.0
+	golang.org/x/net v0.60.0
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
