@@ -34,7 +34,7 @@ type Dependency struct {
 	Name               string             `json:"name"`
 	Features           []string           `json:"features,omitempty"`
 	IsOptional         bool               `json:"optional,omitempty"`
-	DefaultFeatures    bool               `json:"default_features,omitempty"`
+	DefaultFeatures    bool               `json:"default_features"`
 	Target             string             `json:"target,omitempty"`
 	Kind               DependencyKindType `json:"kind,omitempty"`
 	Registry           string             `json:"registry,omitempty"`
