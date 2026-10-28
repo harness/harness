@@ -290,6 +290,8 @@ type Config struct {
 		MinIdleConnections int    `envconfig:"GITNESS_REDIS_MIN_IDLE_CONNECTIONS"  default:"0"`
 		MaxConnections     int    `envconfig:"GITNESS_REDIS_MAX_CONNECTIONS"        default:"50"`
 		Password           string `envconfig:"GITNESS_REDIS_PASSWORD"`
+		SSLEnabled         bool   `envconfig:"GITNESS_REDIS_SSL_ENABLED"           default:"false"`
+		CertPath           string `envconfig:"GITNESS_REDIS_CERT_PATH"`
 		SentinelMode       bool   `envconfig:"GITNESS_REDIS_USE_SENTINEL"          default:"false"`
 		SentinelMaster     string `envconfig:"GITNESS_REDIS_SENTINEL_MASTER"`
 		SentinelEndpoint   string `envconfig:"GITNESS_REDIS_SENTINEL_ENDPOINT"`
