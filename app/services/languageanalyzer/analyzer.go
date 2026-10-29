@@ -162,7 +162,28 @@ func (a Analyzer) importedRepoCreatedHandler(
 	return nil
 }
 
-func (a *Analyzer) handleEventBranchUpdated(
+func (a Analyzer) handleEventBranchCreated(
+	ctx context.Context,
+	e *events.Event[*gitevents.BranchCreatedPayload],
+) error {
+	repo, err := a.repoFinder.FindByID(ctx, e.Payload.RepoID)
+	if err != nil {
+		return fmt.Errorf("failed to find repo by ID: %w", err)
+	}
+
+	if e.Payload.Ref != api.BranchPrefix+repo.DefaultBranch {
+		// Not the default branch, ignore
+		return nil
+	}
+
+	if err := a.AnalyzeLanguages(ctx, e.Payload.RepoID); err != nil {
+		return fmt.Errorf("failed to analyze repo languages: %w", err)
+	}
+
+	return nil
+}
+
+func (a Analyzer) handleEventBranchUpdated(
 	ctx context.Context,
 	e *events.Event[*gitevents.BranchUpdatedPayload],
 ) error {

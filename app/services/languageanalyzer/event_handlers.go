@@ -64,6 +64,7 @@ func RegisterEventListeners(
 					stream.WithMaxRetries(3),
 				))
 
+			_ = r.RegisterBranchCreated(analyzer.handleEventBranchCreated)
 			_ = r.RegisterBranchUpdated(analyzer.handleEventBranchUpdated)
 
 			return nil
