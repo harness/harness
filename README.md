@@ -20,6 +20,19 @@ docker run -d \
   --restart always \
   harness/harness
 ```
+For Windows PowerShell
+
+```
+docker run -d `
+  -p 3000:3000 `
+  -p 3022:3022 `
+  -v /var/run/docker.sock:/var/run/docker.sock `
+  -v /tmp/harness:/data `
+  --name harness `
+  --restart always `
+  harness/harness
+```
+
 > The Harness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the container is stopped.
 
 See [developer.harness.io](https://developer.harness.io/docs/open-source) to learn how to get the most out of Harness.
