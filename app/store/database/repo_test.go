@@ -86,6 +86,77 @@ func TestDatabase_GetSize(t *testing.T) {
 	}
 }
 
+func TestDatabase_UpdateLastGITPush(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+
+	repoID := int64(1)
+	createRepo(ctx, t, repoStore, repoID, 1, repoSize)
+
+	before, err := repoStore.Find(ctx, repoID)
+	if err != nil {
+		t.Fatalf("Find() error = %v", err)
+	}
+
+	if err = repoStore.UpdateLastGITPush(ctx, repoID, 2_000); err != nil {
+		t.Fatalf("UpdateLastGITPush() error = %v", err)
+	}
+	if err = repoStore.UpdateLastGITPush(ctx, repoID, 1_000); err != nil {
+		t.Fatalf("UpdateLastGITPush() older timestamp error = %v", err)
+	}
+
+	after, err := repoStore.Find(ctx, repoID)
+	if err != nil {
+		t.Fatalf("Find() error = %v", err)
+	}
+	if after.LastGITPush != 2_000 {
+		t.Errorf("LastGITPush = %d, want 2000", after.LastGITPush)
+	}
+	if after.Version != before.Version || after.Updated != before.Updated || after.PullReqSeq != before.PullReqSeq {
+		t.Errorf("repo version/updated/seq changed: before=%+v after=%+v", before, after)
+	}
+
+	if err = repoStore.UpdateLastGITPush(ctx, 999, 3_000); err != nil {
+		t.Errorf("UpdateLastGITPush() missing repo error = %v, want nil", err)
+	}
+
+	stale := *after
+	stale.LastGITPush = 0
+	stale.Description = "touched"
+	if err = repoStore.Update(ctx, &stale); err != nil {
+		t.Fatalf("Update() error = %v", err)
+	}
+	kept, err := repoStore.Find(ctx, repoID)
+	if err != nil {
+		t.Fatalf("Find() error = %v", err)
+	}
+	if kept.LastGITPush != 2_000 {
+		t.Errorf("Update() LastGITPush = %d, want 2000", kept.LastGITPush)
+	}
+
+	deletedAt := int64(50)
+	if err = repoStore.SoftDelete(ctx, kept, deletedAt); err != nil {
+		t.Fatalf("SoftDelete() error = %v", err)
+	}
+	if err = repoStore.UpdateLastGITPush(ctx, repoID, 4_000); err != nil {
+		t.Fatalf("UpdateLastGITPush() deleted repo error = %v", err)
+	}
+	deleted, err := repoStore.FindDeleted(ctx, repoID, &deletedAt)
+	if err != nil {
+		t.Fatalf("FindDeleted() error = %v", err)
+	}
+	if deleted.LastGITPush != 2_000 {
+		t.Errorf("deleted LastGITPush = %d, want 2000", deleted.LastGITPush)
+	}
+}
+
 func TestDatabase_Count(t *testing.T) {
 	db, teardown := setupDB(t)
 	defer teardown()

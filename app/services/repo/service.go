@@ -29,7 +29,12 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-const groupRepo = "gitness:repo"
+const (
+	groupRepo              = "gitness:repo"
+	groupRepoLastGITPush   = "gitness:repo:last-git-push"
+	lastGITPushTimeout     = 2 * time.Second
+	lastGITPushConcurrency = 4
+)
 
 type Service struct {
 	repoEvReporter *repoevents.Reporter
@@ -73,6 +78,24 @@ func NewService(
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch reader factory for repo git group: %w", err)
+	}
+
+	_, err = repoReaderFactory.Launch(ctx, groupRepoLastGITPush, config.InstanceID,
+		func(r *repoevents.Reader) error {
+			const idleTimeout = 15 * time.Second
+			r.Configure(
+				stream.WithConcurrency(lastGITPushConcurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(3),
+				))
+
+			_ = r.RegisterPushed(service.handleLastGITPush)
+
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch reader factory for last git push: %w", err)
 	}
 
 	return service, nil

@@ -320,7 +320,6 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			 repo_version = :repo_version
 			,repo_updated = :repo_updated
 			,repo_deleted = :repo_deleted
-			,repo_last_git_push = :repo_last_git_push
 			,repo_parent_id = :repo_parent_id
 			,repo_uid = :repo_uid
 			,repo_git_uid = :repo_git_uid
@@ -405,6 +404,34 @@ func (s *RepoStore) UpdateSize(ctx context.Context, id int64, sizeInKiB, lfsSize
 
 	if count == 0 {
 		return fmt.Errorf("repo %d size not updated: %w", id, gitness_store.ErrResourceNotFound)
+	}
+
+	return nil
+}
+
+// UpdateLastGITPush moves repo_last_git_push forward without bumping repo_version.
+// A missing or deleted repo is not an error: the caller retries on real failures only.
+func (s *RepoStore) UpdateLastGITPush(ctx context.Context, repoID int64, pushedAt int64) error {
+	// sqlite tests have no GREATEST; MAX is the two-arg equivalent.
+	pushExpr := "MAX(repo_last_git_push, ?)"
+	if s.db.DriverName() == PostgresDriverName {
+		pushExpr = "GREATEST(repo_last_git_push, ?)"
+	}
+
+	stmt := database.Builder.
+		Update("repositories").
+		Set("repo_last_git_push", squirrel.Expr(pushExpr, pushedAt)).
+		Where("repo_id = ? AND repo_deleted IS NULL", repoID)
+
+	sqlQuery, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to create sql query")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err = db.ExecContext(ctx, sqlQuery, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update last git push time")
 	}
 
 	return nil

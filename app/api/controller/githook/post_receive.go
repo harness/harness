@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -82,9 +81,6 @@ func (c *Controller) PostReceive(
 	// update default branch based on ref update info on empty repos.
 	// as the branch could be different than the configured default value.
 	c.handleEmptyRepoPush(ctx, repo, in.PostReceiveInput, &out)
-
-	// always update last git push time - best effort
-	c.updateLastGITPushTime(ctx, repo)
 
 	// report ref events if repo is in an active state - best effort
 	forcePushStatus := make(refForcePushMap)
@@ -522,23 +518,6 @@ func (c *Controller) handleEmptyRepoPush(
 			NewName: repo.DefaultBranch,
 		})
 	}
-}
-
-// updateLastGITPushTime updates the repo's last git push time.
-func (c *Controller) updateLastGITPushTime(
-	ctx context.Context,
-	repo *types.Repository,
-) {
-	newRepo, err := c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
-		r.LastGITPush = time.Now().UnixMilli()
-		return nil
-	})
-	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msgf("failed to update last git push time for repo %q", repo.Path)
-		return
-	}
-
-	*repo = *newRepo
 }
 
 // triggerMergeQueueEvents triggers the merge queue branch updated and the merge queue branch deleted events

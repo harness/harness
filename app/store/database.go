@@ -282,6 +282,9 @@ type (
 		// UpdateSize updates the size of a specific repository in the database (size is in KiB).
 		UpdateSize(ctx context.Context, id int64, sizeInKiB, sizeLFSInKiB int64) error
 
+		// UpdateLastGITPush moves the last git push time forward. A missing repo is ignored.
+		UpdateLastGITPush(ctx context.Context, repoID int64, pushedAt int64) error
+
 		// GetSize returns the repo size.
 		GetSize(ctx context.Context, id int64) (int64, error)
 

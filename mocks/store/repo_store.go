@@ -74,6 +74,10 @@ func (m *RepoStore) UpdateSize(_ context.Context, id int64, sizeInKiB, sizeLFSIn
 	return m.Called(id, sizeInKiB, sizeLFSInKiB).Error(0)
 }
 
+func (m *RepoStore) UpdateLastGITPush(_ context.Context, repoID int64, pushedAt int64) error {
+	return m.Called(repoID, pushedAt).Error(0)
+}
+
 func (m *RepoStore) GetSize(_ context.Context, id int64) (int64, error) {
 	args := m.Called(id)
 	if v, ok := args.Get(0).(int64); ok {
