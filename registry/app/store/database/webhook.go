@@ -226,7 +226,7 @@ func (w WebhookDao) ListByRegistry(
 	}
 	validSortByField := validSortFields[sortByField]
 	if validSortByField != "" {
-		query = query.OrderBy(fmt.Sprintf("%s %s", validSortByField, sortByOrder))
+		query = query.OrderBy(fmt.Sprintf("%s %s", validSortByField, util.SanitizeSortOrder(sortByOrder)))
 	}
 	query = query.Limit(util.SafeIntToUInt64(limit)).Offset(util.SafeIntToUInt64(offset))
 

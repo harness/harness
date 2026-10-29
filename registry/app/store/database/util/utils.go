@@ -102,3 +102,12 @@ func MinInt(a, b int) int {
 	}
 	return b
 }
+
+// SanitizeSortOrder ensures the sort order is strictly either "ASC" or "DESC" (case-insensitive).
+// Defaults to "ASC" if invalid, empty, or unexpected input is provided.
+func SanitizeSortOrder(order string) string {
+	if strings.EqualFold(strings.TrimSpace(order), "DESC") {
+		return "DESC"
+	}
+	return "ASC"
+}
