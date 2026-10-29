@@ -547,6 +547,7 @@ export interface StringsMap {
   'labels.updateLabel': string
   'labels.updated': string
   language: string
+  languages: string
   lastCommit: string
   lastCommitDate: string
   lastTriggeredAt: string
@@ -640,6 +641,7 @@ export interface StringsMap {
   open: string
   optional: string
   optionalExtendedDescription: string
+  other: string
   overview: string
   owner: string
   owners: string

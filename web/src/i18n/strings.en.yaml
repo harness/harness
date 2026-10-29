@@ -1192,6 +1192,8 @@ reqChanges: 'Request changes'
 summary: Summary
 linesOfCode: Lines of code
 repositorySize: Repository size
+languages: Languages
+other: Other
 prGenSummary: AIDA generate PR summary, insert at the cursor or replace selected text only.
 aidaGenSummary: 'AIDA is generating a summary...'
 generateSummary: Generate PR Summary
