@@ -16,6 +16,7 @@ package gitspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -23,7 +24,10 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/netpolicy"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type LookupRepoInput struct {
@@ -38,6 +42,10 @@ var (
 	ErrRepoMissing = usererror.BadRequest(
 		"There must be URL or Ref specified fir repo.")
 	ErrBadURLScheme = usererror.BadRequest("The URL is missing scheme, it must start with http or https")
+	// ErrURLNotAllowed is returned for every URL rejected by the network
+	// policy, whatever the reason, so the lookup can't be used to tell
+	// internal hosts and ports apart.
+	ErrURLNotAllowed = usererror.BadRequest("The URL is not allowed.")
 )
 
 func (c *Controller) LookupRepo(
@@ -56,6 +64,9 @@ func (c *Controller) LookupRepo(
 		"", enum.PermissionInfraProviderView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
+	}
+	if err := c.checkLookupURLAllowed(ctx, in.URL); err != nil {
+		return nil, err
 	}
 	repositoryRequest := scm.CodeRepositoryRequest{
 		URL:            in.URL,
@@ -79,11 +90,30 @@ func (c *Controller) sanitizeLookupRepoInput(in *LookupRepoInput) error {
 	if err != nil {
 		return ErrInvalidURL
 	}
-	if parsedURL.Scheme == "" {
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
 		return ErrBadURLScheme
 	}
 	if _, err := url.ParseRequestURI(parsedURL.RequestURI()); err != nil {
 		return err
 	}
 	return nil
+}
+
+// checkLookupURLAllowed verifies that the host of the user provided URL only
+// resolves to addresses the network policy allows. The lookup runs
+// git ls-remote against the URL, so without this check any user with
+// infraprovider view permission could make the server connect to internal
+// hosts (including cloud metadata endpoints) and probe them through the
+// error it returns.
+func (c *Controller) checkLookupURLAllowed(ctx context.Context, rawURL string) error {
+	err := c.networkPolicy.CheckURLHost(ctx, c.resolver, rawURL)
+	if err == nil {
+		return nil
+	}
+	if !errors.Is(err, netpolicy.ErrAddressNotAllowed) {
+		// NOTE: a resolution failure is reported like a rejected address, so an
+		// internal-only name can't be told apart from a non-existing one.
+		log.Ctx(ctx).Debug().Err(err).Str("url", rawURL).Msg("gitspace repo lookup url could not be checked")
+	}
+	return ErrURLNotAllowed
 }
