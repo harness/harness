@@ -336,6 +336,10 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 		return nil, err
 	}
 
+	// Withhold raw secret values from pull requests: the runner expands secret
+	// expressions before the masking- and policy-aware compiler lookup runs.
+	secrets = sanitizeSecretsForExecution(secrets, execution)
+
 	// Fetch contents of YAML from the execution ref at the pipeline config path.
 	file, err := m.FileService.Get(noContext, repo, pipeline.ConfigPath, execution.After) //nolint:contextcheck
 	if err != nil {
@@ -380,6 +384,20 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 		Config:       file,
 		Netrc:        netrc,
 	}, nil
+}
+
+// sanitizeSecretsForExecution strips raw secret values for pull request
+// executions, keeping identifiers so expression lookups resolve to empty.
+func sanitizeSecretsForExecution(secrets []*types.Secret, execution *types.Execution) []*types.Secret {
+	if execution == nil || execution.Event != enum.TriggerEventPullRequest {
+		return secrets
+	}
+
+	sanitized := make([]*types.Secret, len(secrets))
+	for i, secret := range secrets {
+		sanitized[i] = secret.CopyWithoutData()
+	}
+	return sanitized
 }
 
 func (m *Manager) createNetrc(repo *types.Repository) (*Netrc, error) {
