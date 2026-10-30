@@ -24,22 +24,36 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/dustin/go-humanize"
 	"github.com/rs/zerolog/log"
 )
 
-// Listener is notified once a size-calculation run has finished, with the run's end time in epoch
-// millis. It is a trigger only: implementations read whatever they need through their own stores.
+// Listener is notified as the calculator refreshes repository sizes.
 type Listener interface {
+	// AfterSizeUpdate is called for each repository whose size has just been written, inside the
+	// transaction that wrote it: whatever the listener records and the size it records it from
+	// commit together or not at all. The new size is not passed because the listener reads through
+	// its own stores, and reading in this transaction already sees it.
+	//
+	// Returning an error rolls the update back, which leaves the repository due for measurement
+	// again on the next run.
+	AfterSizeUpdate(ctx context.Context, repoID, measuredAt int64) error
+
+	// AfterSizeCalculation is called once a run has finished, with the same measurement time the
+	// run's AfterSizeUpdate calls carried. It is a trigger only: implementations read whatever they
+	// need through their own stores. Unlike AfterSizeUpdate it covers every repository, including
+	// the ones this run did not measure because nothing was pushed to them.
 	AfterSizeCalculation(ctx context.Context, measuredAt int64)
 }
 
 // noopListener is used when nothing is listening.
 type noopListener struct{}
 
-func (noopListener) AfterSizeCalculation(context.Context, int64) {}
+func (noopListener) AfterSizeUpdate(context.Context, int64, int64) error { return nil }
+func (noopListener) AfterSizeCalculation(context.Context, int64)         {}
 
 const jobType = "repo-size-calculator"
 
@@ -51,6 +65,7 @@ type SizeCalculator struct {
 	git        git.Interface
 	scheduler  *job.Scheduler
 	lfsStore   store.LFSObjectStore
+	tx         dbtx.Transactor
 
 	repoStore        store.RepoStore
 	spaceStore       store.SpaceStore
@@ -82,10 +97,15 @@ func (s *SizeCalculator) Handle(ctx context.Context, _ string, _ job.ProgressRep
 		return "", nil
 	}
 
+	// One measurement time for the whole run, so every notification it produces reports the same
+	// instant however long the run takes -- a listener that buckets by day cannot end up with one
+	// repository on either side of midnight.
+	measuredAt := time.Now().UnixMilli()
+
 	// Deferred so a run that fails partway still notifies: the listener reads the sizes that are in
 	// the database, and what it makes of earlier runs does not depend on this one.
 	defer func() {
-		s.listener.AfterSizeCalculation(ctx, time.Now().UnixMilli())
+		s.listener.AfterSizeCalculation(ctx, measuredAt)
 	}()
 
 	sizeInfos, err := s.repoStore.ListSizeInfos(ctx)
@@ -103,7 +123,7 @@ func (s *SizeCalculator) Handle(ctx context.Context, _ string, _ job.ProgressRep
 	taskCh := make(chan *types.RepositorySizeInfo)
 	for i := 0; i < s.numWorkers; i++ {
 		wg.Add(1)
-		go worker(ctx, s, &wg, taskCh)
+		go worker(ctx, s, &wg, taskCh, measuredAt)
 	}
 	for _, sizeInfo := range sizeInfos {
 		select {
@@ -118,7 +138,13 @@ func (s *SizeCalculator) Handle(ctx context.Context, _ string, _ job.ProgressRep
 	return "", nil
 }
 
-func worker(ctx context.Context, s *SizeCalculator, wg *sync.WaitGroup, taskCh <-chan *types.RepositorySizeInfo) {
+func worker(
+	ctx context.Context,
+	s *SizeCalculator,
+	wg *sync.WaitGroup,
+	taskCh <-chan *types.RepositorySizeInfo,
+	measuredAt int64,
+) {
 	defer wg.Done()
 
 	for sizeInfo := range taskCh {
@@ -145,8 +171,18 @@ func worker(ctx context.Context, s *SizeCalculator, wg *sync.WaitGroup, taskCh <
 			continue
 		}
 
-		if err := s.repoStore.UpdateSize(ctx, sizeInfo.ID, gitSizeOut.Size, lfsSize); err != nil {
-			log.Error().Msgf("failed to update repo size: %s", err.Error())
+		// The size and whatever the listener records from it are written together, so nothing can
+		// observe a new size the listener was never told about. A listener failure rolls the size
+		// back and the repository is measured again on the next run.
+		err = s.tx.WithTx(ctx, func(ctx context.Context) error {
+			if err := s.repoStore.UpdateSize(ctx, sizeInfo.ID, gitSizeOut.Size, lfsSize); err != nil {
+				return fmt.Errorf("failed to update repo size: %w", err)
+			}
+
+			return s.listener.AfterSizeUpdate(ctx, sizeInfo.ID, measuredAt)
+		})
+		if err != nil {
+			log.Error().Err(err).Msg("failed to record new repo size")
 			continue
 		}
 

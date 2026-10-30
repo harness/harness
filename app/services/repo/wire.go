@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -51,6 +52,7 @@ func ProvideCalculator(
 	lfsStore store.LFSObjectStore,
 	usageMetricStore store.UsageMetricStore,
 	listener Listener,
+	tx dbtx.Transactor,
 ) (*SizeCalculator, error) {
 	job := &SizeCalculator{
 		enabled:          config.RepoSize.Enabled,
@@ -62,6 +64,7 @@ func ProvideCalculator(
 		spaceStore:       spaceStore,
 		scheduler:        scheduler,
 		lfsStore:         lfsStore,
+		tx:               tx,
 		usageMetricStore: usageMetricStore,
 		listener:         listener,
 	}
