@@ -335,7 +335,18 @@ func (r UpstreamproxyDao) GetAll(
 		uoffset = uint64(offset)
 	}
 
-	q = q.OrderBy(" r.registry_" + sortByField + " " + sortByOrder).
+	validSortFields := map[string]string{
+		"name":          "r.registry_name",
+		"registry_name": "r.registry_name",
+		"created_at":    "r.registry_created_at",
+		"updated_at":    "r.registry_updated_at",
+	}
+	sortField, ok := validSortFields[sortByField]
+	if !ok {
+		sortField = "r.registry_name"
+	}
+
+	q = q.OrderBy(fmt.Sprintf("%s %s", sortField, util.SanitizeSortOrder(sortByOrder))).
 		Limit(ulimit).
 		Offset(uoffset)
 	sql, args, err := q.ToSql()

@@ -247,6 +247,26 @@ func TestGetSortByOrder(t *testing.T) {
 			order:    "INVALID",
 			expected: "ASC",
 		},
+		{
+			name:     "lowercase_desc",
+			order:    "desc",
+			expected: "DESC",
+		},
+		{
+			name:     "mixed_case_desc",
+			order:    "DeSc",
+			expected: "DESC",
+		},
+		{
+			name:     "whitespace_desc",
+			order:    "  DESC  ",
+			expected: "DESC",
+		},
+		{
+			name:     "sqli_payload",
+			order:    "ASC,(SELECT 1)",
+			expected: "ASC",
+		},
 	}
 
 	for _, tt := range tests {
