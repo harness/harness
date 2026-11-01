@@ -25,7 +25,7 @@ import (
 	pullreq2 "github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/controller/reposettings"
-	secret2 "github.com/harness/gitness/app/api/controller/secret"
+	secret3 "github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/api/controller/service"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	space2 "github.com/harness/gitness/app/api/controller/space"
@@ -63,7 +63,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/platformsecret"
 	"github.com/harness/gitness/app/gitspace/scm"
-	"github.com/harness/gitness/app/gitspace/secret"
+	secret2 "github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/converter"
@@ -115,7 +115,7 @@ import (
 	repo2 "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/repoactivity"
 	"github.com/harness/gitness/app/services/rules"
-	secret3 "github.com/harness/gitness/app/services/secret"
+	"github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/space"
 	"github.com/harness/gitness/app/services/tokengenerator"
@@ -506,8 +506,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	windsurfConfig := gitspaceconfig.ProvideIDEWindsurfConfig(config)
 	windsurf := ide.ProvideWindsurfService(windsurfConfig)
 	ideFactory := ide.ProvideIDEFactory(vsCode, vsCodeWeb, v, cursor, windsurf)
-	passwordResolver := secret.ProvidePasswordResolver()
-	resolverFactory := secret.ProvideResolverFactory(passwordResolver)
+	secretService := secret.ProvideSecretService(secretStore, encrypter, spaceFinder)
+	passwordResolver := secret2.ProvidePasswordResolver(secretService)
+	resolverFactory := secret2.ProvideResolverFactory(passwordResolver)
 	gitspaceSettingsStore := database.ProvideGitspaceSettingsStore(db)
 	gitspacesettingsService, err := gitspacesettings.ProvideService(ctx, gitspaceSettingsStore)
 	if err != nil {
@@ -532,7 +533,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	pipelineController := pipeline.ProvideController(triggerStore, authorizer, pipelineStore, reporter10, repoFinder)
-	secretController := secret2.ProvideController(encrypter, secretStore, authorizer, spaceFinder)
+	secretController := secret3.ProvideController(encrypter, secretStore, authorizer, spaceFinder)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoFinder)
 	scmService := connector.ProvideSCMConnectorHandler(secretStore)
 	service2 := connector.ProvideConnectorHandler(secretStore, scmService)
@@ -569,7 +570,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	urlProvider := webhook.ProvideURLProvider(ctx)
-	secretService := secret3.ProvideSecretService(secretStore, encrypter, spaceFinder)
 	service3, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory2, readerFactory3, eventsReaderFactory, readerFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter, labelStore, urlProvider, labelValueStore, auditService, streamer, secretService, spacePathStore, userGroupStore)
 	if err != nil {
 		return nil, err

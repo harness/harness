@@ -16,23 +16,51 @@ package secret
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/harness/gitness/app/gitspace/secret/enum"
+	"github.com/harness/gitness/secret"
+	"github.com/harness/gitness/store"
 )
 
 type PasswordResolver struct {
+	secretService secret.Service
 }
 
-const defaultPassword = "Harness@123"
-
-func NewPasswordResolver() *PasswordResolver {
-	return &PasswordResolver{}
+func NewPasswordResolver(secretService secret.Service) *PasswordResolver {
+	return &PasswordResolver{
+		secretService: secretService,
+	}
 }
 
 // Resolve implements Resolver.
-func (p *PasswordResolver) Resolve(_ context.Context, _ ResolutionContext) (ResolvedSecret, error) {
+func (p *PasswordResolver) Resolve(ctx context.Context, resolutionContext ResolutionContext) (ResolvedSecret, error) {
+	val, err := p.secretService.DecryptSecret(ctx, resolutionContext.SpaceIdentifier, resolutionContext.SecretRef)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		return ResolvedSecret{}, fmt.Errorf(
+			"gitspace %q has no SSH key and secret %q does not exist in space %q, configure one of them: %w",
+			resolutionContext.GitspaceIdentifier,
+			resolutionContext.SecretRef,
+			resolutionContext.SpaceIdentifier,
+			err,
+		)
+	}
+	if err != nil {
+		return ResolvedSecret{}, fmt.Errorf(
+			"failed to resolve secret %q for gitspace %q: %w",
+			resolutionContext.SecretRef,
+			resolutionContext.GitspaceIdentifier,
+			err,
+		)
+	}
+	// An empty password combined with PermitEmptyPasswords in the gitspace sshd config would allow open login.
+	if val == "" {
+		return ResolvedSecret{}, fmt.Errorf("secret %q for gitspace %q is empty",
+			resolutionContext.SecretRef, resolutionContext.GitspaceIdentifier)
+	}
 	return ResolvedSecret{
-		SecretValue: defaultPassword,
+		SecretValue: val,
 	}, nil
 }
 

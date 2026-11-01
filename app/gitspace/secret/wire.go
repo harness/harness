@@ -14,15 +14,19 @@
 
 package secret
 
-import "github.com/google/wire"
+import (
+	"github.com/harness/gitness/secret"
+
+	"github.com/google/wire"
+)
 
 var WireSet = wire.NewSet(
 	ProvidePasswordResolver,
 	ProvideResolverFactory,
 )
 
-func ProvidePasswordResolver() *PasswordResolver {
-	return NewPasswordResolver()
+func ProvidePasswordResolver(secretService secret.Service) *PasswordResolver {
+	return NewPasswordResolver(secretService)
 }
 
 func ProvideResolverFactory(passwordResolver *PasswordResolver) *ResolverFactory {
