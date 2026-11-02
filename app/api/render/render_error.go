@@ -72,5 +72,13 @@ func InternalErrorf(ctx context.Context, w http.ResponseWriter, format string, a
 func UserError(ctx context.Context, w http.ResponseWriter, err *usererror.Error) {
 	log.Ctx(ctx).Debug().Err(err).Msgf("operation resulted in user facing error")
 
+	// tell clients when it makes sense to try again for transient failures.
+	switch err.Status {
+	case http.StatusLocked:
+		w.Header().Set("Retry-After", "1")
+	case http.StatusServiceUnavailable:
+		w.Header().Set("Retry-After", "5")
+	}
+
 	JSON(w, err.Status, err)
 }

@@ -17,6 +17,7 @@ package usererror
 import (
 	"context"
 	"net/http"
+	"net/url"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -61,6 +62,11 @@ func Translate(ctx context.Context, err error) *Error {
 	// unwraps to context.Canceled and would otherwise be translated to a 500.
 	case errors.Is(err, context.Canceled):
 		return ErrClientClosedRequest
+
+	// an outgoing call to a dependency (e.g. access control) timing out is transient.
+	// Keep above the appError case, which would otherwise report it as a 500.
+	case isTimeout(err):
+		return ErrServiceUnavailable
 
 	// api auth errors
 	case errors.Is(err, apiauth.ErrForbidden):
@@ -164,6 +170,13 @@ func Translate(ctx context.Context, err error) *Error {
 		log.Ctx(ctx).Warn().Err(err).Msgf("Unable to translate error - returning Internal Error.")
 		return ErrInternal
 	}
+}
+
+// isTimeout returns true if an outgoing HTTP call to another service timed out.
+// A bare context deadline is intentionally not matched: it is kept as an internal error.
+func isTimeout(err error) bool {
+	var urlErr *url.Error
+	return errors.As(err, &urlErr) && urlErr.Timeout()
 }
 
 // errorFromLockError returns the associated error for a given lock error.

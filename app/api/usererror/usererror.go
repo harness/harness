@@ -98,6 +98,19 @@ var (
 		"The requested resource is temporarily locked, please retry the operation.",
 	)
 
+	// ErrConcurrentModification is returned if an operation kept failing because of concurrent modifications
+	// of the same resource, the request can be retried.
+	ErrConcurrentModification = New(
+		http.StatusConflict,
+		"The resource was modified concurrently, please retry the operation.",
+	)
+
+	// ErrServiceUnavailable is returned if a dependency didn't answer in time, the request can be retried.
+	ErrServiceUnavailable = New(
+		http.StatusServiceUnavailable,
+		"A required service did not respond in time, please retry the operation.",
+	)
+
 	// ErrEmptyRepoNeedsBranch is returned if no branch found on the githook post receieve for empty repositories.
 	ErrEmptyRepoNeedsBranch = New(http.StatusBadRequest,
 		"Pushing to an empty repository requires at least one branch with commits.")

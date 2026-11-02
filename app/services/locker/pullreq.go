@@ -27,13 +27,14 @@ func (l Locker) LockPR(
 	repoID int64,
 	prNum int64,
 	expiry time.Duration,
+	opts ...Option,
 ) (func(), error) {
 	key := fmt.Sprintf("%d/pulls", repoID)
 	if prNum != 0 {
 		key += "/" + strconv.FormatInt(prNum, 10)
 	}
 
-	unlockFn, err := l.lock(ctx, namespaceRepo, key, expiry)
+	unlockFn, err := l.lock(ctx, namespaceRepo, key, expiry, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to lock mutex for pr %d in repo %d: %w", prNum, repoID, err)
 	}

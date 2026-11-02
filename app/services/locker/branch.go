@@ -26,10 +26,11 @@ func (l Locker) LockBranch(
 	repoID int64,
 	branch string,
 	expiry time.Duration,
+	opts ...Option,
 ) (func(), error) {
 	key := fmt.Sprintf("%d/branch/%s", repoID, branch)
 
-	unlockFn, err := l.lock(ctx, namespaceRepo, key, expiry)
+	unlockFn, err := l.lock(ctx, namespaceRepo, key, expiry, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to lock mutex for branch %q in repo %d: %w", branch, repoID, err)
 	}

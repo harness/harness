@@ -37,6 +37,7 @@ import (
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/sha"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -397,6 +398,9 @@ func (c *Controller) Create(
 
 		return nil
 	})
+	if errors.Is(err, store.ErrVersionConflict) {
+		return nil, usererror.ErrConcurrentModification
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pullreq: %w", err)
 	}

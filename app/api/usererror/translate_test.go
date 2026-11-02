@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -80,4 +81,26 @@ func TestTranslate_ErrMaxNumReposReached(t *testing.T) {
 
 	assert.Equal(t, http.StatusForbidden, result.Status)
 	assert.Equal(t, limiter.ErrMaxNumReposReached.Error(), result.Message)
+}
+
+func TestTranslate_Timeouts(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("http client timeout is service unavailable", func(t *testing.T) {
+		err := fmt.Errorf("access check failed: %w", &url.Error{Op: "Post", URL: "http://acl", Err: context.DeadlineExceeded})
+
+		assert.Equal(t, http.StatusServiceUnavailable, Translate(ctx, err).Status)
+	})
+
+	t.Run("bare deadline stays internal", func(t *testing.T) {
+		err := fmt.Errorf("work: %w", context.DeadlineExceeded)
+
+		assert.Equal(t, http.StatusInternalServerError, Translate(ctx, err).Status)
+	})
+
+	t.Run("cancellation is still a closed request", func(t *testing.T) {
+		err := fmt.Errorf("acl: %w", context.Canceled)
+
+		assert.Equal(t, StatusClientClosedRequest, Translate(ctx, err).Status)
+	})
 }

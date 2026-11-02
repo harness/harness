@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/merge"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
@@ -114,6 +115,23 @@ func (c *Controller) backfillApprovalInfo(
 	return nil
 }
 
+// needsMergeCheck returns whether the stored mergeability result of the PR is missing for the given merge method,
+// meaning a dry-run has to compute it.
+func needsMergeCheck(pr *types.PullReq, method enum.MergeMethod) bool {
+	switch method {
+	case enum.MergeMethodMerge, enum.MergeMethodSquash:
+		return pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked
+	case enum.MergeMethodRebase:
+		return pr.RebaseCheckStatus == enum.MergeCheckStatusUnchecked
+	case enum.MergeMethodFastForward:
+		// Always check for ff merge. There can never be conflicts,
+		// but we are interested in if it returns the conflict error and merge-output data.
+		return true
+	default:
+		return true // should not happen
+	}
+}
+
 // Merge merges a pull request.
 //
 // It supports dry running by providing the DryRun=true. Dry running can be used to find any rule violations that
@@ -201,23 +219,30 @@ func (c *Controller) Merge(
 		sourceRepo = targetRepo
 	}
 
-	// Global level locking. No locking for dry running rules. PR scope lock for dry run, branch scope for full merge.
+	// Fetching the rules only depends on the session and the target repo, so do it before taking the lock
+	// to keep the critical section short.
+	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, targetRepo)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
+	}
+
+	// Global level locking. No locking for dry running rules or merge. Branch scope lock for full merge.
 	// Lock duration includes merge timeout and adds 30s to the lock to give enough time for pre + post merge.
 	const lockDuration = merge.Timeout + 30*time.Second
+	// Time a request queues for a held lock before failing with a temporarily locked error.
+	// Merges into a busy branch are short, so queueing is cheaper for everyone than client retries.
+	const branchLockWait = 15 * time.Second
 	switch {
 	case in.DryRunRules:
 		// No locking for dry running rules.
 	case in.DryRun:
-		// Dry running merge uses PR level lock and not branch level lock to reduce lock convoy risk on busy branches.
-		unlock, err := c.locker.LockPR(ctx, targetRepo.ID, pr.Number, lockDuration)
-		if err != nil {
-			return nil, nil,
-				fmt.Errorf("failed to lock PR %d for pull request merge dry-run: %w", pr.Number, err)
-		}
-		defer unlock()
+		// No locking for dry running the merge: it only reads from git, and the mergeability result is stored
+		// with an optimistic lock.
 	default:
 		// Actual merge uses branch level lock on the target branch.
-		unlock, err := c.locker.LockBranch(ctx, targetRepo.ID, pr.TargetBranch, lockDuration)
+		unlock, err := c.locker.LockBranch(
+			ctx, targetRepo.ID, pr.TargetBranch, lockDuration, locker.WithWait(branchLockWait),
+		)
 		if err != nil {
 			return nil, nil,
 				fmt.Errorf("failed to lock branch %q for pull request merge: %w", pr.TargetBranch, err)
@@ -228,11 +253,6 @@ func (c *Controller) Merge(
 	targetSHA, sourceSHA, isAncestor, err := c.mergeService.GetTargetSourceSHAs(ctx, targetRepo, pr)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get pull request commit SHAs: %w", err)
-	}
-
-	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, targetRepo)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 
 	ruleOut, violations, err := c.mergeService.CheckRules(ctx, protectionRules, merge.CheckRulesInput{
@@ -313,20 +333,7 @@ func (c *Controller) Merge(
 			in.Method = enum.MergeMethodMerge
 		}
 
-		checkMergeability := func(method enum.MergeMethod) bool {
-			switch method {
-			case enum.MergeMethodMerge, enum.MergeMethodSquash:
-				return pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked
-			case enum.MergeMethodRebase:
-				return pr.RebaseCheckStatus == enum.MergeCheckStatusUnchecked
-			case enum.MergeMethodFastForward:
-				// Always check for ff merge. There can never be conflicts,
-				// but we are interested in if it returns the conflict error and merge-output data.
-				return true
-			default:
-				return true // should not happen
-			}
-		}(in.Method)
+		checkMergeability := needsMergeCheck(pr, in.Method)
 
 		var conflicts []string
 		if in.Method == enum.MergeMethodRebase {
