@@ -739,13 +739,17 @@ func parseDiffStat(stdout string) (stat DiffShortStat, err error) {
 }
 
 func parseDiffStderr(stderr *bytes.Buffer) error {
-	errRaw := stderr.String() // assume there will never be a lot of output to stdout
-	if len(errRaw) == 0 {
-		return nil
+	// assume there will never be a lot of output to stderr
+	// Git warnings (e.g. skipped rename detection on big diffs) don't fail the command, so they are not errors.
+	var errRaw string
+	for line := range strings.SplitSeq(stderr.String(), "\n") {
+		if line = strings.TrimSpace(line); line != "" && !strings.HasPrefix(line, "warning: ") {
+			errRaw = line // get only the first non-warning line of the output
+			break
+		}
 	}
-
-	if idx := strings.IndexByte(errRaw, '\n'); idx > 0 {
-		errRaw = errRaw[:idx] // get only the first line of the output
+	if errRaw == "" {
+		return nil
 	}
 
 	errRaw = strings.TrimPrefix(errRaw, "fatal: ") // git errors start with the "fatal: " prefix

@@ -42,6 +42,23 @@ func TestParseDiffStderr(t *testing.T) {
 			stderr:          "fatal: Invalid symmetric difference expression abc...def\n",
 			wantInvalidArgs: true,
 		},
+		{
+			name:    "rename detection warning is not a failure",
+			stderr:  "warning: exhaustive rename detection was skipped due to too many files.\n",
+			wantNil: true,
+		},
+		{
+			name: "multi-line warnings are not a failure",
+			stderr: "warning: exhaustive rename detection was skipped due to too many files.\n" +
+				"warning: you may want to set your diff.renameLimit variable to at least 1234 and retry the command.\n",
+			wantNil: true,
+		},
+		{
+			name: "fatal after a warning is still reported",
+			stderr: "warning: exhaustive rename detection was skipped due to too many files.\n" +
+				"fatal: Invalid revision range abc..def\n",
+			wantInvalidArgs: true,
+		},
 		{name: "other failure stays unclassified", stderr: "fatal: something else broke\n"},
 	}
 
