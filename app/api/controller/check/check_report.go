@@ -229,7 +229,11 @@ func (c *Controller) Report(
 		Bypassed:   in.BypassedBy != nil,
 	})
 
-	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeStatusCheckReportUpdated, statusCheckReport)
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeStatusCheckReportUpdated, &types.StatusCheckReportEvent{
+		RepoID:    repo.ID,
+		CommitSHA: commitSHA,
+		Check:     statusCheckReport,
+	})
 
 	return statusCheckReport, nil
 }

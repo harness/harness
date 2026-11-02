@@ -56,6 +56,15 @@ func (c Check) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// StatusCheckReportEvent is the payload of the status_check_report_updated SSE event.
+// RepoID and CommitSHA are included because the stream is space-wide. Check omits both
+// from JSON, so a client cannot match the event to a repository and commit without them.
+type StatusCheckReportEvent struct {
+	RepoID    int64  `json:"repo_id"`
+	CommitSHA string `json:"commit_sha"`
+	Check     *Check `json:"check"`
+}
+
 type CheckResult struct {
 	Identifier string           `json:"identifier" db:"check_uid"`
 	Status     enum.CheckStatus `json:"status" db:"check_status"`
