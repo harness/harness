@@ -50,8 +50,16 @@ var (
 		fmt.Sprintf("DisplayName has to be between %d and %d in length.", minDisplayNameLength, maxDisplayNameLength),
 	}
 
+	ErrDisplayNameInvalidCharacters = &ValidationError{
+		"DisplayName can't contain line breaks, tabs or other control characters.",
+	}
+
 	ErrDescriptionTooLong = &ValidationError{
 		fmt.Sprintf("Description can be at most %d in length.", maxDescriptionLength),
+	}
+
+	ErrDescriptionInvalidCharacters = &ValidationError{
+		"Description can't contain line breaks, tabs or other control characters.",
 	}
 
 	ErrIdentifierLength = &ValidationError{
@@ -68,8 +76,6 @@ var (
 	ErrEmailLen = &ValidationError{
 		fmt.Sprintf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength),
 	}
-
-	ErrInvalidCharacters = &ValidationError{"Input contains invalid characters."}
 
 	ErrIllegalRootSpaceIdentifier = &ValidationError{
 		fmt.Sprintf("The following identifiers are not allowed for a root space: %v", illegalRootSpaceIdentifiers),
@@ -93,7 +99,11 @@ func DisplayName(displayName string) error {
 		return ErrDisplayNameLength
 	}
 
-	return ForControlCharacters(displayName)
+	if containsControlCharacters(displayName) {
+		return ErrDisplayNameInvalidCharacters
+	}
+
+	return nil
 }
 
 // Description checks the provided description and returns an error if it isn't valid.
@@ -103,18 +113,22 @@ func Description(description string) error {
 		return ErrDescriptionTooLong
 	}
 
-	return ForControlCharacters(description)
-}
-
-// ForControlCharacters ensures that there are no control characters in the provided string.
-func ForControlCharacters(s string) error {
-	for _, r := range s {
-		if r < 32 || r == 127 {
-			return ErrInvalidCharacters
-		}
+	if containsControlCharacters(description) {
+		return ErrDescriptionInvalidCharacters
 	}
 
 	return nil
+}
+
+// containsControlCharacters returns true if the provided string contains any control characters.
+func containsControlCharacters(s string) bool {
+	for _, r := range s {
+		if r < 32 || r == 127 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Identifier checks the provided identifier and returns an error if it isn't valid.
