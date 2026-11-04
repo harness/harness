@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/netpolicy"
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
@@ -40,6 +41,8 @@ type Controller struct {
 	gitspaceLimiter    limiter.Gitspace
 	repoFinder         refcache.RepoFinder
 	settingsService    gitspacesettings.Service
+	networkPolicy      netpolicy.Policy
+	allowedSchemes     []string
 }
 
 func NewController(
@@ -55,6 +58,8 @@ func NewController(
 	gitspaceLimiter limiter.Gitspace,
 	repoFinder refcache.RepoFinder,
 	settingsService gitspacesettings.Service,
+	networkPolicy netpolicy.Policy,
+	allowedSchemes []string,
 ) *Controller {
 	return &Controller{
 		tx:                 tx,
@@ -69,5 +74,7 @@ func NewController(
 		gitspaceLimiter:    gitspaceLimiter,
 		repoFinder:         repoFinder,
 		settingsService:    settingsService,
+		networkPolicy:      networkPolicy,
+		allowedSchemes:     allowedSchemes,
 	}
 }
