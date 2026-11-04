@@ -27,6 +27,8 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
+	"github.com/harness/gitness/netpolicy"
+	"github.com/harness/gitness/types"
 )
 
 // WireSet provides a wire set for this package.
@@ -47,6 +49,7 @@ func ProvideController(
 	gitspaceLimiter limiter.Gitspace,
 	repoFinder refcache.RepoFinder,
 	settingsService gitspacesettings.Service,
+	config *types.Config,
 ) *Controller {
 	return NewController(
 		tx,
@@ -61,5 +64,11 @@ func ProvideController(
 		gitspaceLimiter,
 		repoFinder,
 		settingsService,
+		netpolicy.Policy{
+			AllowLoopback:       config.Gitspace.AllowLoopback,
+			AllowPrivateNetwork: config.Gitspace.AllowPrivateNetwork,
+			AllowLinkLocal:      config.Gitspace.AllowLinkLocal,
+		},
+		config.Gitspace.AllowedSchemes,
 	)
 }

@@ -17,6 +17,7 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -77,7 +78,7 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
-	if err = c.sanitizeCreateInput(in); err != nil {
+	if err = c.sanitizeCreateInput(ctx, in); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	if err = apiauth.CheckGitspace(
@@ -280,13 +281,40 @@ func wrapString(str string) *string {
 	return &str
 }
 
-func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+func (c *Controller) sanitizeCreateInput(ctx context.Context, in *CreateInput) error {
 	if err := check.Identifier(in.ResourceIdentifier); err != nil {
 		return err
 	}
 	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
 	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
 		return ErrGitspaceRequiresParent
+	}
+
+	if err != nil {
+		return usererror.BadRequest("code_repo_url is not a valid URL")
+	}
+	parsedURL, err := url.Parse(in.CodeRepoURL)
+	//check if the scheme is in the allowed list
+	schemeAllowed := false
+	for _, scheme := range c.allowedSchemes {
+		if parsedURL.Scheme == scheme {
+			schemeAllowed = true
+			break
+		}
+	}
+
+	if !schemeAllowed {
+		return usererror.BadRequest(
+			fmt.Sprintf("code_repo_url scheme '%s' is not allowed. Allowed schemes: %v",
+				parsedURL.Scheme, c.allowedSchemes),
+		)
+	}
+
+	//enforce network policy
+	if parsedURL.Scheme == "http" || parsedURL.Scheme == "https" {
+		if err := c.networkPolicy.CheckURLHost(ctx, nil, in.CodeRepoURL); err != nil {
+			return usererror.BadRequest("code_repo_url host is not allowed (internal/metadata addresses are blocked)")
+		}
 	}
 
 	return nil
