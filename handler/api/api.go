@@ -53,7 +53,6 @@ import (
 )
 
 var corsOpts = cors.Options{
-	AllowedOrigins:   []string{"*"},
 	AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 	ExposedHeaders:   []string{"Link"},
@@ -167,8 +166,29 @@ func (s Server) Handler() http.Handler {
 	r.Use(logger.Middleware)
 	r.Use(auth.HandleAuthentication(s.Session))
 
-	cors := cors.New(corsOpts)
+	opts := corsOpts
+	// The UI shares the configured server origin. Never grant arbitrary
+	// browser origins access to authenticated API responses.
+	opts.AllowOriginFunc = func(_ *http.Request, origin string) bool {
+		return s.System != nil && origin == s.System.Proto+"://"+s.System.Host
+	}
+	cors := cors.New(opts)
 	r.Use(cors.Handler)
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Simple cross-origin requests can carry same-site cookies
+			// without a preflight. Reject writes as well as denying reads.
+			switch r.Method {
+			case http.MethodGet, http.MethodHead, http.MethodOptions:
+			default:
+				if origin := r.Header.Get("Origin"); origin != "" && !opts.AllowOriginFunc(r, origin) {
+					http.Error(w, "cross-origin request forbidden", http.StatusForbidden)
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	r.Route("/repos", func(r chi.Router) {
 		// temporary workaround to enable private mode

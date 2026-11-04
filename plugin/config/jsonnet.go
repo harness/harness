@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package config
@@ -56,6 +57,7 @@ func (p *jsonnetPlugin) Find(ctx context.Context, req *core.ConfigArgs) (*core.C
 	vm.MaxStack = 500
 	vm.StringOutput = false
 	vm.ErrorFormatter.SetMaxStackTraceSize(20)
+	vm.Importer(&jsonnet.MemoryImporter{})
 
 	// convert the jsonnet file to yaml
 	buf := new(bytes.Buffer)

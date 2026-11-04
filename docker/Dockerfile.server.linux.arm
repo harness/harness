@@ -1,13 +1,13 @@
 # docker build --rm -f docker/Dockerfile -t drone/drone .
 
-FROM alpine:3.20 as alpine
-RUN apk add -U --no-cache ca-certificates tzdata
+FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a as alpine
+RUN apk add -U --no-cache 'ca-certificates>=20261020-r0' tzdata
 
-FROM alpine:3.20
+FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
 EXPOSE 80 443
 VOLUME /data
 
-RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
+RUN if [ ! -e /etc/nsswitch.conf ]; then echo 'hosts: files dns' > /etc/nsswitch.conf; fi
 
 ENV GODEBUG netdns=go
 ENV XDG_CACHE_HOME /data

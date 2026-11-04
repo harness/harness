@@ -48,6 +48,11 @@ func (i *importer) Import(importedFrom, importedPath string) (contents jsonnet.C
 		i.cache = map[string]jsonnet.Contents{}
 	}
 
+	// SCM drivers use the filename in request URLs. Reject absolute
+	// paths and URL metacharacters before resolving repository imports.
+	if path.IsAbs(importedPath) || strings.ContainsAny(importedFrom+importedPath, `\%?#`) {
+		return contents, foundAt, fmt.Errorf("jsonnet: cannot resolve import: %s", importedPath)
+	}
 	// the import is relative to the imported from path. the
 	// imported path must resolve to a filepath relative to
 	// the root of the repository.
@@ -56,7 +61,7 @@ func (i *importer) Import(importedFrom, importedPath string) (contents jsonnet.C
 		importedPath,
 	)
 
-	if strings.HasPrefix(importedFrom, "../") {
+	if path.IsAbs(importedPath) || importedPath == ".." || strings.HasPrefix(importedPath, "../") {
 		err = fmt.Errorf("jsonnet: cannot resolve import: %s", importedPath)
 		return contents, foundAt, err
 	}
@@ -92,6 +97,9 @@ func Parse(req *core.ConvertArgs, fileService core.FileService, limit int, templ
 	vm.MaxStack = 500
 	vm.StringOutput = false
 	vm.ErrorFormatter.SetMaxStackTraceSize(20)
+	// Never let user-supplied Jsonnet fall back to the VM's local
+	// filesystem importer, including templates and disabled imports.
+	vm.Importer(&jsonnet.MemoryImporter{})
 	if fileService != nil && limit > 0 {
 		vm.Importer(
 			&importer{
