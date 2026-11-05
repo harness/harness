@@ -16,6 +16,7 @@ package contents
 
 import (
 	"context"
+	"net/url"
 	"strings"
 	"time"
 
@@ -71,6 +72,13 @@ func (s *service) Find(ctx context.Context, user *core.User, repo, commit, ref, 
 		Token:   user.Token,
 		Refresh: user.Refresh,
 	})
+	// These go-scm drivers interpolate paths directly into URL paths. Escape
+	// once here so literal %, #, and ? remain filename data. GitLab already
+	// escapes its complete file-path parameter and must receive the raw name.
+	switch s.client.Driver {
+	case scm.DriverGithub, scm.DriverGitee, scm.DriverGitea, scm.DriverGogs, scm.DriverBitbucket, scm.DriverStash:
+		path = (&url.URL{Path: path}).EscapedPath()
+	}
 	content, err := s.findRetry(ctx, repo, path, commit)
 	if err != nil {
 		return nil, err

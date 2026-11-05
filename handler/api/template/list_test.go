@@ -1,3 +1,6 @@
+//go:build !oss
+// +build !oss
+
 package template
 
 // Copyright 2019 Drone.IO Inc. All rights reserved.

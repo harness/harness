@@ -1,13 +1,13 @@
 # docker build --rm -f docker/Dockerfile -t drone/drone .
 
-FROM alpine:3.20
+FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
 
 # Expose necessary ports and define volume
 EXPOSE 80 443
 VOLUME /data
 
 # Install necessary certificates and timezone data
-RUN apk add -U --no-cache ca-certificates tzdata && \
+RUN apk add -U --no-cache 'ca-certificates>=20261020-r0' tzdata && \
     cp -r /usr/share/zoneinfo /etc/zoneinfo && \
     rm -rf /var/cache/apk/*
 

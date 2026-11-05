@@ -49,17 +49,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/cors"
 )
-
-var corsOpts = cors.Options{
-	AllowedOrigins:   []string{"*"},
-	AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
-	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-	ExposedHeaders:   []string{"Link"},
-	AllowCredentials: true,
-	MaxAge:           300,
-}
 
 func New(
 	builds core.BuildStore,
@@ -167,8 +157,7 @@ func (s Server) Handler() http.Handler {
 	r.Use(logger.Middleware)
 	r.Use(auth.HandleAuthentication(s.Session))
 
-	cors := cors.New(corsOpts)
-	r.Use(cors.Handler)
+	r.Use(browserSecurity(s.System))
 
 	r.Route("/repos", func(r chi.Router) {
 		// temporary workaround to enable private mode
