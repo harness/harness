@@ -9,3 +9,9 @@
     export DRONE_GITHUB_CLIENT_ID=...
     export DRONE_GITHUB_CLIENT_SECRET=...
     drone-server
+
+CI must use the Go builder pinned in .drone.yml for tests and builds.
+The upstream harnessharness_drone_image Harness pipeline is configured
+outside this repository. Update its Go run-step images separately;
+changing .drone.yml does not update it. Older images fail with
+GOTOOLCHAIN=local and must not build a security release.
