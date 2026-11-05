@@ -26,20 +26,33 @@ func TestParseRejectsServerFileImports(t *testing.T) {
 	}
 	for _, syntax := range []string{"import", "importstr", "importbin"} {
 		for _, useTemplate := range []bool{false, true} {
-			t.Run(fmt.Sprintf("%s/template=%t", syntax, useTemplate), func(t *testing.T) {
-				source := fmt.Sprintf("{ secret: %s %q }", syntax, filepath.ToSlash(file))
-				req := &core.ConvertArgs{
-					Repo:   &core.Repository{Config: ".drone.jsonnet"},
-					Config: &core.Config{Data: source},
-				}
-				var template *core.Template
-				if useTemplate {
-					template = &core.Template{Name: "pipeline.jsonnet", Data: source}
-				}
-				if output, err := Parse(req, nil, 0, template, nil); err == nil {
-					t.Fatalf("server file import succeeded: %s", output)
-				}
-			})
+			for _, mode := range []struct {
+				service bool
+				limit   int
+			}{{false, 0}, {false, 10}, {true, 0}, {true, 10}} {
+				t.Run(fmt.Sprintf("%s/template=%t/service=%t/limit=%d", syntax, useTemplate, mode.service, mode.limit), func(t *testing.T) {
+					source := fmt.Sprintf("{ secret: %s %q }", syntax, filepath.ToSlash(file))
+					req := &core.ConvertArgs{
+						Repo:   &core.Repository{Config: ".drone.jsonnet"},
+						Build:  &core.Build{},
+						Config: &core.Config{Data: source},
+					}
+					var template *core.Template
+					if useTemplate {
+						template = &core.Template{Name: "pipeline.jsonnet", Data: source}
+					}
+					var files core.FileService
+					if mode.service {
+						files = fileServiceFunc(func(context.Context, *core.User, string, string, string, string) (*core.File, error) {
+							t.Fatal("absolute server-file import reached the SCM service")
+							return nil, nil
+						})
+					}
+					if output, err := Parse(req, files, mode.limit, template, nil); err == nil {
+						t.Fatalf("server file import succeeded: %s", output)
+					}
+				})
+			}
 		}
 	}
 }
@@ -48,12 +61,12 @@ func TestImporterRejectsPathsOutsideRepository(t *testing.T) {
 	for _, tt := range []struct{ from, path string }{
 		{".drone.jsonnet", "../secret.jsonnet"},
 		{".ci/pipeline.jsonnet", "../../secret.jsonnet"},
+		{".drone.jsonnet", "a/../../secret.jsonnet"},
+		{".ci/pipeline.jsonnet", "a/../../../secret.jsonnet"},
+		{"../pipeline.jsonnet", "secret.jsonnet"},
 		{".drone.jsonnet", ".."},
 		{".ci/pipeline.jsonnet", "/etc/passwd"},
 		{".drone.jsonnet", `..\secret.jsonnet`},
-		{".drone.jsonnet", "%2e%2e/secret.jsonnet"},
-		{".drone.jsonnet", "file.jsonnet?ref=other"},
-		{".drone.jsonnet", "file.jsonnet#fragment"},
 	} {
 		t.Run(tt.from+"/"+tt.path, func(t *testing.T) {
 			i := &importer{
@@ -65,6 +78,26 @@ func TestImporterRejectsPathsOutsideRepository(t *testing.T) {
 			}
 			if _, _, err := i.Import(tt.from, tt.path); err == nil {
 				t.Fatal("expected an import path error")
+			}
+		})
+	}
+}
+
+func TestParseRepositoryFilenames(t *testing.T) {
+	for _, filename := range []string{"file#name%.libsonnet", "file?ref=other.libsonnet", "%2e%2e/secret.libsonnet"} {
+		t.Run(filename, func(t *testing.T) {
+			files := fileServiceFunc(func(_ context.Context, _ *core.User, repo, commit, ref, path string) (*core.File, error) {
+				if repo != "owner/repo" || commit != "commit" || path != filename {
+					t.Fatalf("import changed repository coordinates: %q %q %q", repo, commit, path)
+				}
+				return &core.File{Data: []byte(`{ image: 'alpine' }`)}, nil
+			})
+			req := &core.ConvertArgs{
+				Repo:  &core.Repository{Slug: "owner/repo", Config: ".drone.jsonnet"},
+				Build: &core.Build{After: "commit"}, Config: &core.Config{Data: fmt.Sprintf("import %q", filename)},
+			}
+			if _, err := Parse(req, files, 1, nil, nil); err != nil {
+				t.Fatal(err)
 			}
 		})
 	}

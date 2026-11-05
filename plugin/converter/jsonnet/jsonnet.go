@@ -48,9 +48,9 @@ func (i *importer) Import(importedFrom, importedPath string) (contents jsonnet.C
 		i.cache = map[string]jsonnet.Contents{}
 	}
 
-	// SCM drivers use the filename in request URLs. Reject absolute
-	// paths and URL metacharacters before resolving repository imports.
-	if path.IsAbs(importedPath) || strings.ContainsAny(importedFrom+importedPath, `\%?#`) {
+	// Imports are repository-relative POSIX paths. URL escaping belongs to
+	// the SCM transport, so reserved URL characters remain valid filenames.
+	if path.IsAbs(importedPath) || strings.Contains(importedFrom+importedPath, `\`) {
 		return contents, foundAt, fmt.Errorf("jsonnet: cannot resolve import: %s", importedPath)
 	}
 	// the import is relative to the imported from path. the
