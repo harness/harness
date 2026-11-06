@@ -504,6 +504,10 @@ func setupRepos(r chi.Router,
 			r.Post("/squash", handlerrepo.HandleSquash(repoCtrl))
 			r.Post("/merge-commit", handlerrepo.HandleMergeCommit(repoCtrl))
 
+			// serves committed repo content, so it is metered like /raw and /archive.
+			r.With(
+				usage.Middleware(usageSender),
+			).Get("/codeowners", handlerrepo.HandleCodeOwnersRaw(repoCtrl))
 			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
 
 			r.With(

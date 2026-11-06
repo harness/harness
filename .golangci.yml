@@ -63,8 +63,12 @@ linters:
         underef:
           skipRecvDeref: false
     goheader:
+      values:
+        regexp:
+          # Existing files keep the year they were created; new files use the current one.
+          YEAR: 202[3-9]
       template: |-
-        Copyright 2023 Harness, Inc.
+        Copyright {{ YEAR }} Harness, Inc.
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.

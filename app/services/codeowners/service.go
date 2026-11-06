@@ -202,17 +202,32 @@ func New(
 	return service
 }
 
-func (s *Service) get(
+// GetRaw returns the CODEOWNERS file of the repository at the given ref exactly as committed,
+// including comments and blank lines. An empty ref resolves to the default branch.
+func (s *Service) GetRaw(
 	ctx context.Context,
 	repo *types.RepositoryCore,
 	ref string,
-) (*CodeOwners, error) {
+) (*File, error) {
 	file, err := s.getCodeOwnerFile(ctx, repo, ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get CODEOWNERS file: %w", err)
 	}
 	if file.TotalSize > maxGetContentFileSize {
 		return nil, &TooLargeError{FileSize: file.TotalSize}
+	}
+
+	return file, nil
+}
+
+func (s *Service) get(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	ref string,
+) (*CodeOwners, error) {
+	file, err := s.GetRaw(ctx, repo, ref)
+	if err != nil {
+		return nil, err
 	}
 
 	entries, err := s.parseCodeOwnerFile(file.Content)

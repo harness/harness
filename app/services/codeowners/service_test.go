@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/store"
+	gitness_errors "github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
@@ -109,6 +110,70 @@ func TestService_getCodeOwnerFile_FileMode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestService_GetRaw(t *testing.T) {
+	const raw = "# security cares about dependency changes\n\n" +
+		"package.json @security # net-new deps\n" +
+		"* user1@harness.io\n"
+
+	newService := func(mode git.TreeNodeMode, treeErr error, content string, size int64) *Service {
+		return &Service{
+			git: &stubGit{
+				treeNode: &git.GetTreeNodeOutput{
+					Node: git.TreeNode{Mode: mode, SHA: "sha", Path: "CODEOWNERS"},
+				},
+				treeErr: treeErr,
+				blob: &git.GetBlobOutput{
+					Size:    size,
+					Content: io.NopCloser(strings.NewReader(content)),
+				},
+			},
+			config: Config{FilePaths: []string{"CODEOWNERS"}},
+		}
+	}
+	repo := &types.RepositoryCore{GitUID: "uid", DefaultBranch: "main"}
+
+	t.Run("returns file content unchanged including comments and blank lines", func(t *testing.T) {
+		s := newService(git.TreeNodeModeFile, nil, raw, int64(len(raw)))
+
+		got, err := s.GetRaw(context.Background(), repo, "main")
+		if err != nil {
+			t.Fatalf("GetRaw() error = %v", err)
+		}
+		if got.Content != raw {
+			t.Fatalf("GetRaw() content = %q, want %q", got.Content, raw)
+		}
+	})
+
+	t.Run("missing file returns ErrNotFound", func(t *testing.T) {
+		s := newService(git.TreeNodeModeFile, gitness_errors.NotFound("missing"), "", 0)
+
+		_, err := s.GetRaw(context.Background(), repo, "main")
+		if !errors.Is(err, ErrNotFound) {
+			t.Fatalf("GetRaw() error = %v, want ErrNotFound", err)
+		}
+	})
+
+	t.Run("file over the size limit returns TooLargeError", func(t *testing.T) {
+		s := newService(git.TreeNodeModeFile, nil, "x", maxGetContentFileSize+1)
+
+		_, err := s.GetRaw(context.Background(), repo, "main")
+		var tooLargeErr *TooLargeError
+		if !errors.As(err, &tooLargeErr) {
+			t.Fatalf("GetRaw() error = %v, want *TooLargeError", err)
+		}
+	})
+
+	t.Run("symlink returns InvalidFileTypeError", func(t *testing.T) {
+		s := newService(git.TreeNodeModeSymlink, nil, raw, int64(len(raw)))
+
+		_, err := s.GetRaw(context.Background(), repo, "main")
+		var invalidFileTypeErr *InvalidFileTypeError
+		if !errors.As(err, &invalidFileTypeErr) {
+			t.Fatalf("GetRaw() error = %v, want *InvalidFileTypeError", err)
+		}
+	})
 }
 
 func TestService_ParseCodeOwner(t *testing.T) {

@@ -1284,6 +1284,20 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/mergequeue/{branch_name}", opMergeQueueClear)
 
+	opCodeOwnerRaw := openapi3.Operation{}
+	opCodeOwnerRaw.WithTags("repository")
+	opCodeOwnerRaw.WithMapOfAnything(map[string]any{"operationId": "codeOwnersRaw"})
+	opCodeOwnerRaw.WithParameters(queryParameterGitRef)
+	_ = reflector.SetRequest(&opCodeOwnerRaw, new(codeOwnersValidate), http.MethodGet)
+	_ = reflector.SetStringResponse(&opCodeOwnerRaw, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&opCodeOwnerRaw, nil, http.StatusNotModified)
+	_ = reflector.SetJSONResponse(&opCodeOwnerRaw, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCodeOwnerRaw, new(usererror.Error), http.StatusUnprocessableEntity)
+	_ = reflector.SetJSONResponse(&opCodeOwnerRaw, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCodeOwnerRaw, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCodeOwnerRaw, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/codeowners", opCodeOwnerRaw)
+
 	opCodeOwnerValidate := openapi3.Operation{}
 	opCodeOwnerValidate.WithTags("repository")
 	opCodeOwnerValidate.WithMapOfAnything(map[string]any{"operationId": "codeOwnersValidate"})
