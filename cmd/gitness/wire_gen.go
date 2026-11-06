@@ -492,7 +492,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	embeddedDockerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, runargProvider, reporter8)
+	embeddedDockerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, runargProvider, reporter8, config)
 	containerFactory := container.ProvideContainerOrchestratorFactory(embeddedDockerOrchestrator)
 	orchestratorConfig := gitspaceconfig.ProvideGitspaceOrchestratorConfig(config)
 	vsCodeConfig := gitspaceconfig.ProvideIDEVSCodeConfig(config)
