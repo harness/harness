@@ -49,6 +49,9 @@ type VersionDependency struct {
 type IndexDependency struct {
 	Dependency
 	VersionRequired string `json:"req,omitempty"`
+	// Package is the real crate name when the dependency is renamed in
+	// Cargo.toml; Name then holds the new name. Omitted otherwise.
+	Package string `json:"package,omitempty"`
 }
 
 type VersionMetadata struct {
