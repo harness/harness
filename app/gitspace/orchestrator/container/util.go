@@ -17,6 +17,7 @@ package container
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -119,8 +120,18 @@ func ExecuteLifecycleCommands(
 	}
 	gitspaceLogger.Info(fmt.Sprintf("Executing %s commands: %v", actionType, commands))
 
+	// Set the working directory once, before fanning out: the goroutines below share this exec
+	// value, so writing the field inside each goroutine is a data race on a single shared field.
+	exec.DefaultWorkingDir = codeRepoDir
+
 	// Create a WaitGroup to wait for all goroutines to finish.
 	var wg sync.WaitGroup
+
+	// Collect per-command errors so a failing command is reported to the caller instead of being
+	// swallowed. PostCreate/PostStart hooks are wired with StopOnFailure, which only takes effect
+	// if this function returns a non-nil error.
+	var mu sync.Mutex
+	var cmdErrors []error
 
 	// Iterate over commands and execute them in parallel using goroutines.
 	for index, command := range commands {
@@ -138,12 +149,14 @@ func ExecuteLifecycleCommands(
 
 			// Log command execution details.
 			gitspaceLogger.Info(fmt.Sprintf("%sExecuting %s command: %s", logPrefix, actionType, command))
-			exec.DefaultWorkingDir = codeRepoDir
 			err := exec.ExecuteCommandInHomeDirAndLog(ctx, command, false, gitspaceLogger, true)
 			if err != nil {
-				// Log the error if there is any issue with executing the command.
-				_ = logStreamWrapError(gitspaceLogger, fmt.Sprintf("%sError while executing %s command: %s",
+				// Log the error and record it so it propagates to the caller.
+				wrappedErr := logStreamWrapError(gitspaceLogger, fmt.Sprintf("%sError while executing %s command: %s",
 					logPrefix, actionType, command), err)
+				mu.Lock()
+				cmdErrors = append(cmdErrors, wrappedErr)
+				mu.Unlock()
 				return
 			}
 
@@ -156,7 +169,7 @@ func ExecuteLifecycleCommands(
 	// Wait for all goroutines to finish.
 	wg.Wait()
 
-	return nil
+	return errors.Join(cmdErrors...)
 }
 
 func ProcessStartResponse(
