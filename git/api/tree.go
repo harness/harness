@@ -136,12 +136,14 @@ func lsTree(
 	treePath string,
 	fetchSizes bool,
 	recursive bool,
+	alternateObjectDirs []string,
 ) ([]TreeNode, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
 	cmd := command.New("ls-tree",
 		command.WithFlag("-z"),
+		command.WithAlternateObjectDirs(alternateObjectDirs...),
 		command.WithArg(rev),
 		command.WithArg(treePath),
 	)
@@ -242,7 +244,7 @@ func lsDirectory(
 		treePath += "/"
 	}
 
-	nodes, err := lsTree(ctx, repoPath, rev, treePath, fetchSizes, recursive)
+	nodes, err := lsTree(ctx, repoPath, rev, treePath, fetchSizes, recursive, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -269,10 +271,11 @@ func lsFile(
 	rev string,
 	treePath string,
 	fetchSize bool,
+	alternateObjectDirs []string,
 ) (TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	list, err := lsTree(ctx, repoPath, rev, treePath, fetchSize, false)
+	list, err := lsTree(ctx, repoPath, rev, treePath, fetchSize, false, alternateObjectDirs)
 	if err != nil {
 		return TreeNode{}, fmt.Errorf("failed to ls file: %w", err)
 	}
@@ -295,7 +298,7 @@ func flattenDirectory(
 
 	// Go in depth for as long as there are subdirectories with just one subdirectory.
 	for len(nodes) == 1 && nodes[0].NodeType == TreeNodeTypeTree {
-		nodesTemp, err := lsTree(ctx, repoPath, rev, nodes[0].Path+"/", fetchSizes, false)
+		nodesTemp, err := lsTree(ctx, repoPath, rev, nodes[0].Path+"/", fetchSizes, false, nil)
 		if err != nil {
 			return fmt.Errorf("failed to peek dir entries for flattening: %w", err)
 		}
@@ -362,19 +365,33 @@ func (g *Git) GetBlobSHAsForPaths(
 }
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
-func (g *Git) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode, error) {
-	return GetTreeNode(ctx, repoPath, rev, treePath, false)
+func (g *Git) GetTreeNode(
+	ctx context.Context,
+	repoPath string,
+	alternateObjectDirs []string,
+	rev, treePath string,
+) (*TreeNode, error) {
+	return getTreeNode(ctx, repoPath, rev, treePath, false, alternateObjectDirs)
 }
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
 func GetTreeNode(ctx context.Context, repoPath, rev, treePath string, fetchSize bool) (*TreeNode, error) {
+	return getTreeNode(ctx, repoPath, rev, treePath, fetchSize, nil)
+}
+
+func getTreeNode(
+	ctx context.Context,
+	repoPath, rev, treePath string,
+	fetchSize bool,
+	alternateObjectDirs []string,
+) (*TreeNode, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
 
 	// anything that's not the root path is a simple call
 	if treePath != "" {
-		treeNode, err := lsFile(ctx, repoPath, rev, treePath, fetchSize)
+		treeNode, err := lsFile(ctx, repoPath, rev, treePath, fetchSize, alternateObjectDirs)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tree node: %w", err)
 		}
@@ -386,7 +403,8 @@ func GetTreeNode(ctx context.Context, repoPath, rev, treePath string, fetchSize 
 	cmd := command.New("show",
 		command.WithFlag("--no-patch"),
 		command.WithFlag("--format="+fmtTreeHash), //nolint:goconst
-		command.WithArg(rev+"^{commit}"),          //nolint:goconst
+		command.WithAlternateObjectDirs(alternateObjectDirs...),
+		command.WithArg(rev+"^{commit}"), //nolint:goconst
 	)
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))

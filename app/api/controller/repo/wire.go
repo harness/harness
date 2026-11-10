@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/dotrange"
+	"github.com/harness/gitness/app/services/filevalidator"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -78,6 +79,7 @@ func ProvideController(
 	referenceSync *importer.JobReferenceSync,
 	importLinked *importer.JobRepositoryLink,
 	codeOwners *codeowners.Service,
+	contentValidators *filevalidator.Registry,
 	repoReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
@@ -109,7 +111,7 @@ func ProvideController(
 		principalStore, ruleStore, checkStore, pullReqStore, settings,
 		principalInfoCache, protectionManager, rpcClient, spaceFinder, repoFinder,
 		importer, referenceSync, importLinked,
-		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
+		codeOwners, contentValidators, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
 		rulesSvc, sseStreamer, lfsCtrl, favoriteStore, signatureVerifyService,
 		autolinkSvc, dotRangeService, connectorService, webhookService,

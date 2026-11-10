@@ -81,7 +81,7 @@ func (s *Service) GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	gitNode, err := s.git.GetTreeNode(ctx, repoPath, params.GitREF, params.Path)
+	gitNode, err := s.git.GetTreeNode(ctx, repoPath, params.AlternateObjectDirs, params.GitREF, params.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find node '%s' in '%s': %w", params.Path, params.GitREF, err)
 	}

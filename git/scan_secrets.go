@@ -143,7 +143,7 @@ func (s *Service) setupGitleaksIgnoreInSharedRepo(
 	}
 
 	// ensure file exists in tree for the provided revision, otherwise ignore and continue
-	node, err := s.git.GetTreeNode(ctx, sharedRepo.Directory(), rev, treePath)
+	node, err := s.git.GetTreeNode(ctx, sharedRepo.Directory(), nil, rev, treePath)
 	if errors.IsNotFound(err) {
 		log.Ctx(ctx).Debug().Msgf("no .gitleaksignore file found at %q, run without", treePath)
 		return "", nil

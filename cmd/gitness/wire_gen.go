@@ -86,6 +86,7 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/app/services/exporter"
+	"github.com/harness/gitness/app/services/filevalidator"
 	"github.com/harness/gitness/app/services/gitspace/gitspacewire"
 	"github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
@@ -348,6 +349,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	codeownersConfig := server.ProvideCodeOwnerConfig(config)
 	usergroupResolver := usergroup.ProvideUserGroupResolver()
 	codeownersService := codeowners.ProvideCodeOwners(gitInterface, repoStore, codeownersConfig, principalStore, usergroupResolver)
+	registry, err := filevalidator.ProvideRegistry(codeownersService)
+	if err != nil {
+		return nil, err
+	}
 	resourceLimiter, err := limiter.ProvideLimiter()
 	if err != nil {
 		return nil, err
@@ -418,7 +423,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, repoActivityStore, linkedRepoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, jobRepository, jobReferenceSync, jobRepositoryLink, codeownersService, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService, autolinkService, dotrangeService, connectorService, webhookService, repoLangStore, mergequeueService)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, repoActivityStore, linkedRepoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, spaceFinder, repoFinder, jobRepository, jobReferenceSync, jobRepositoryLink, codeownersService, registry, eventsReporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, usergroupService, rulesService, streamer, lfsController, favoriteStore, signatureVerifyService, autolinkService, dotrangeService, connectorService, webhookService, repoLangStore, mergequeueService)
 	reposettingsController := reposettings.ProvideController(authorizer, repoFinder, spaceFinder, settingsService, auditService)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
@@ -588,7 +593,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(authorizer, principalStore, repoStore, repoFinder, reporter3, eventsReporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender, streamer, lfsObjectStore, auditService, usergroupService, mergequeueService)
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, repoFinder, reporter3, eventsReporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender, streamer, lfsObjectStore, auditService, usergroupService, mergequeueService, registry)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore, authorizer)
 	usergroupController := usergroup2.ProvideController(userGroupStore, spaceStore, spaceFinder, authorizer, usergroupService)

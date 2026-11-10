@@ -203,6 +203,12 @@ func (c *Controller) PreReceive(
 	}
 	rulesViolations = append(rulesViolations, mergeQueueViolations...)
 
+	// Content validation is advisory: it only adds notices for the pusher and never sets output.Error,
+	// so an invalid file cannot block a push. It must run here, not in checkPushProtection, which exits early
+	// for repositories without push protections.
+	output.Messages = append(output.Messages,
+		contentValidationMessages(c.validateChangedContent(ctx, rgit, repo, in))...)
+
 	processProtectionViolations(&output, rulesViolations, settingsViolations)
 
 	// Push rules have no controller-level audit, so record bypasses here. Gate on

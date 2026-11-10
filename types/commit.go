@@ -23,6 +23,8 @@ type CommitFilesResponse struct {
 	CommitID sha.SHA `json:"commit_id"`
 	DryRunRulesOutput
 	ChangedFiles []FileReference `json:"changed_files"`
+	// ContentValidations holds advisory validation results for files the request writes. It never blocks the commit.
+	ContentValidations []ContentValidation `json:"content_validations,omitempty"`
 }
 
 type FileReference struct {

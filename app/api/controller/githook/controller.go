@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	gitevents "github.com/harness/gitness/app/events/git"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/filevalidator"
 	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/refcache"
@@ -64,6 +65,7 @@ type Controller struct {
 	auditService        audit.Service
 	userGroupService    usergroup.Service
 	mergeQueueService   *mergequeue.Service
+	contentValidators   *filevalidator.Registry
 }
 
 func NewController(
@@ -86,6 +88,7 @@ func NewController(
 	auditService audit.Service,
 	userGroupService usergroup.Service,
 	mergeQueueService *mergequeue.Service,
+	contentValidators *filevalidator.Registry,
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
@@ -107,6 +110,7 @@ func NewController(
 		auditService:        auditService,
 		userGroupService:    userGroupService,
 		mergeQueueService:   mergeQueueService,
+		contentValidators:   contentValidators,
 	}
 }
 

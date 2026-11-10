@@ -27,13 +27,20 @@ const (
 	CodeOwnerViolationCodePatternEmpty CodeOwnerViolationCode = "pattern_empty"
 	// CodeOwnerViolationCodeUserPatternInvalid occurs when a pattern of user is invalid.
 	CodeOwnerViolationCodeUserPatternInvalid CodeOwnerViolationCode = "user_pattern_invalid"
+	// CodeOwnerViolationCodeFileTooLarge occurs when the codeowners file exceeds the size limit.
+	CodeOwnerViolationCodeFileTooLarge CodeOwnerViolationCode = "file_too_large"
+	// CodeOwnerViolationCodeFileParseError occurs when the codeowners file can't be parsed.
+	CodeOwnerViolationCodeFileParseError CodeOwnerViolationCode = "file_parse_error"
 )
 
 func (CodeOwnerViolationCode) Enum() []any { return toInterfaceSlice(codeOwnerViolationCodes) }
 
 var codeOwnerViolationCodes = sortEnum([]CodeOwnerViolationCode{
 	CodeOwnerViolationCodeUserNotFound,
+	CodeOwnerViolationCodeUserGroupNotFound,
 	CodeOwnerViolationCodePatternInvalid,
 	CodeOwnerViolationCodePatternEmpty,
 	CodeOwnerViolationCodeUserPatternInvalid,
+	CodeOwnerViolationCodeFileTooLarge,
+	CodeOwnerViolationCodeFileParseError,
 })

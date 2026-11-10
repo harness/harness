@@ -174,7 +174,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 			parentCommits = append(parentCommits, commit.SHA)
 
 			// get tree sha
-			rootNode, err := s.git.GetTreeNode(ctx, repoPath, commit.SHA.String(), "")
+			rootNode, err := s.git.GetTreeNode(ctx, repoPath, nil, commit.SHA.String(), "")
 			if err != nil {
 				return fmt.Errorf("CommitFiles: failed to get original node: %w", err)
 			}

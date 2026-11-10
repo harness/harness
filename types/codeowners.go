@@ -52,6 +52,8 @@ type CodeOwnersViolation struct {
 	Code    enum.CodeOwnerViolationCode `json:"code"`
 	Message string                      `json:"message"`
 	Params  []any                       `json:"params"`
+	// Line is the 1-based line of the offending entry; omitted when the violation has no meaningful line.
+	Line int64 `json:"line,omitempty"`
 }
 
 func (violations *CodeOwnersValidation) Add(code enum.CodeOwnerViolationCode, message string) {
@@ -67,5 +69,30 @@ func (violations *CodeOwnersValidation) Addf(code enum.CodeOwnerViolationCode, f
 		Code:    code,
 		Message: fmt.Sprintf(format, params...),
 		Params:  params,
+	})
+}
+
+// AddAtLine adds a violation that refers to a specific 1-based line of the CODEOWNERS file.
+func (violations *CodeOwnersValidation) AddAtLine(code enum.CodeOwnerViolationCode, line int64, message string) {
+	violations.Violations = append(violations.Violations, CodeOwnersViolation{
+		Code:    code,
+		Message: message,
+		Params:  nil,
+		Line:    line,
+	})
+}
+
+// AddfAtLine adds a formatted violation that refers to a specific 1-based line of the CODEOWNERS file.
+func (violations *CodeOwnersValidation) AddfAtLine(
+	code enum.CodeOwnerViolationCode,
+	line int64,
+	format string,
+	params ...any,
+) {
+	violations.Violations = append(violations.Violations, CodeOwnersViolation{
+		Code:    code,
+		Message: fmt.Sprintf(format, params...),
+		Params:  params,
+		Line:    line,
 	})
 }

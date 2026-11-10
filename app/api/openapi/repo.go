@@ -1303,7 +1303,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCodeOwnerValidate.WithMapOfAnything(map[string]any{"operationId": "codeOwnersValidate"})
 	opCodeOwnerValidate.WithParameters(queryParameterGitRef)
 	_ = reflector.SetRequest(&opCodeOwnerValidate, new(codeOwnersValidate), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, nil, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, types.CodeOwnersValidation{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusUnprocessableEntity)
 	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusUnauthorized)

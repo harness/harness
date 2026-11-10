@@ -22,10 +22,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 	gitness_errors "github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // stubGit implements only the git.Interface methods used by getCodeOwnerFile; the embedded
@@ -818,5 +821,149 @@ func Test_match(t *testing.T) {
 				testMatch(tt.args.pattern, "/"+target, false)
 			}
 		})
+	}
+}
+
+// stubPrincipalStore resolves only the emails listed in known; everything else is not found.
+type stubPrincipalStore struct {
+	store.PrincipalStore
+	known map[string]bool
+	err   error
+	calls int
+}
+
+func (s *stubPrincipalStore) FindByEmail(_ context.Context, email string) (*types.Principal, error) {
+	s.calls++
+	if s.err != nil {
+		return nil, s.err
+	}
+	if !s.known[email] {
+		return nil, gitness_store.ErrResourceNotFound
+	}
+	return &types.Principal{Email: email}, nil
+}
+
+// stubUserGroupResolver resolves only the scoped ids listed in known.
+type stubUserGroupResolver struct {
+	known map[string]bool
+	err   error
+}
+
+func (s *stubUserGroupResolver) Resolve(_ context.Context, scopedID string) (*types.UserGroup, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	if !s.known[scopedID] {
+		return nil, usergroup.ErrNotFound
+	}
+	return &types.UserGroup{Identifier: scopedID}, nil
+}
+
+type violationAt struct {
+	Code enum.CodeOwnerViolationCode
+	Line int64
+}
+
+func newValidationService(principals *stubPrincipalStore) *Service {
+	return &Service{
+		principalStore:    principals,
+		userGroupResolver: &stubUserGroupResolver{known: map[string]bool{}},
+		config:            Config{FilePaths: []string{"CODEOWNERS"}},
+	}
+}
+
+func TestService_ValidateContent(t *testing.T) {
+	tooLarge := strings.Repeat("* known@harness.io\n", maxGetContentFileSize/len("* known@harness.io\n")+2)
+
+	tests := []struct {
+		name    string
+		content string
+		want    []violationAt
+	}{
+		{name: "valid file", content: "* known@harness.io\n", want: nil},
+		{
+			name:    "unknown user",
+			content: "* ghost@harness.io\n",
+			want:    []violationAt{{enum.CodeOwnerViolationCodeUserNotFound, 1}},
+		},
+		{
+			name:    "line is the file line not the entry index",
+			content: "# comment\n\n*.go ghost@harness.io\n",
+			want:    []violationAt{{enum.CodeOwnerViolationCodeUserNotFound, 3}},
+		},
+		{
+			name:    "unknown user group",
+			content: "* @missing-group\n",
+			want:    []violationAt{{enum.CodeOwnerViolationCodeUserGroupNotFound, 1}},
+		},
+		{
+			name:    "invalid pattern",
+			content: "*.go known@harness.io\n[ known@harness.io\n",
+			want:    []violationAt{{enum.CodeOwnerViolationCodePatternInvalid, 2}},
+		},
+		{
+			name:    "file too large",
+			content: tooLarge,
+			want:    []violationAt{{enum.CodeOwnerViolationCodeFileTooLarge, 0}},
+		},
+		{
+			name:    "parse error",
+			content: "*\\\n",
+			want:    []violationAt{{enum.CodeOwnerViolationCodeFileParseError, 1}},
+		},
+		{
+			name:    "repeated unknown owner is reported once at its first line",
+			content: "a/* ghost@harness.io\nb/* ghost@harness.io\n",
+			want:    []violationAt{{enum.CodeOwnerViolationCodeUserNotFound, 1}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			principals := &stubPrincipalStore{known: map[string]bool{"known@harness.io": true}}
+			got, err := newValidationService(principals).ValidateContent(context.Background(), []byte(tt.content))
+			if err != nil {
+				t.Fatalf("ValidateContent() error = %v", err)
+			}
+			var have []violationAt
+			for _, v := range got.Violations {
+				have = append(have, violationAt{v.Code, v.Line})
+			}
+			if !reflect.DeepEqual(have, tt.want) {
+				t.Fatalf("ValidateContent() = %+v, want %+v", have, tt.want)
+			}
+			if tt.name == "file too large" && principals.calls != 0 {
+				t.Fatalf("expected no owner lookups for an oversized file, got %d", principals.calls)
+			}
+		})
+	}
+}
+
+func TestService_ValidateContent_LookupFailureReturnsError(t *testing.T) {
+	principals := &stubPrincipalStore{err: errors.New("db down")}
+	got, err := newValidationService(principals).ValidateContent(context.Background(), []byte("* someone@harness.io\n"))
+	if err == nil {
+		t.Fatalf("expected an error for a failed lookup, got validation %+v", got)
+	}
+	if got != nil {
+		t.Fatalf("expected nil validation on error, got %+v", got)
+	}
+}
+
+func TestService_Validate_TooLargeFileIsAViolation(t *testing.T) {
+	s := newValidationService(&stubPrincipalStore{})
+	s.git = &stubGit{
+		treeNode: &git.GetTreeNodeOutput{Node: git.TreeNode{Mode: git.TreeNodeModeFile, SHA: "sha", Path: "CODEOWNERS"}},
+		blob: &git.GetBlobOutput{
+			Size:    maxGetContentFileSize + 1,
+			Content: io.NopCloser(strings.NewReader("* a@b.c\n")),
+		},
+	}
+
+	got, err := s.Validate(context.Background(), &types.RepositoryCore{GitUID: "uid", DefaultBranch: "main"}, "main")
+	if err != nil {
+		t.Fatalf("Validate() error = %v, want nil", err)
+	}
+	if len(got.Violations) != 1 || got.Violations[0].Code != enum.CodeOwnerViolationCodeFileTooLarge {
+		t.Fatalf("Validate() = %+v, want a single file_too_large violation", got.Violations)
 	}
 }

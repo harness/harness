@@ -98,6 +98,7 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/dotrange"
 	"github.com/harness/gitness/app/services/exporter"
+	"github.com/harness/gitness/app/services/filevalidator"
 	gitspacedeleteeventservice "github.com/harness/gitness/app/services/gitspacedeleteevent"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	gitspaceinfraeventservice "github.com/harness/gitness/app/services/gitspaceinfraevent"
@@ -295,6 +296,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		reposervice.WireSet,
 		cliserver.ProvideCodeOwnerConfig,
 		codeowners.WireSet,
+		filevalidator.WireSet,
 		gitspaceevent.WireSet,
 		cliserver.ProvideKeywordSearchConfig,
 		keywordsearch.WireSet,

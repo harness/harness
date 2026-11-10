@@ -15,6 +15,7 @@
 package repo
 
 import (
+	"bytes"
 	"cmp"
 	"context"
 	"encoding/base64"
@@ -157,12 +158,16 @@ func (c *Controller) CommitFiles(ctx context.Context,
 
 	violations = append(violations, mqViolations...)
 
+	// Content validation is advisory: it is reported on the response and never affects the outcome.
+	contentValidations := c.validateActionContent(ctx, repo, in.Actions)
+
 	if in.DryRunRules {
 		return types.CommitFilesResponse{
 			DryRunRulesOutput: types.DryRunRulesOutput{
 				DryRunRules:    true,
 				RuleViolations: violations,
 			},
+			ContentValidations: contentValidations,
 		}, nil, nil
 	}
 
@@ -270,6 +275,69 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		DryRunRulesOutput: types.DryRunRulesOutput{
 			RuleViolations: violations,
 		},
-		ChangedFiles: mapChangedFiles(commit.ChangedFiles),
+		ChangedFiles:       mapChangedFiles(commit.ChangedFiles),
+		ContentValidations: contentValidations,
 	}, nil, nil
+}
+
+// validateActionContent runs the content validators over the files a commit writes. It is advisory and returns
+// no error: a validator failure is logged and that file is left unvalidated, so it can never fail a commit.
+func (c *Controller) validateActionContent(
+	ctx context.Context,
+	repo *types.RepositoryCore,
+	actions []CommitFileAction,
+) []types.ContentValidation {
+	var result []types.ContentValidation
+	for _, action := range actions {
+		path, content, ok := validatableContent(action)
+		if !ok || !c.contentValidators.Handles(path) {
+			continue
+		}
+
+		violations, err := c.contentValidators.Validate(ctx, repo, path, content)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Str("path", path).Msg("content validation failed, skipping")
+			continue
+		}
+		if len(violations) == 0 {
+			continue
+		}
+		result = append(result, types.ContentValidation{Path: path, Violations: violations})
+	}
+	return result
+}
+
+// validatableContent returns the destination path and decoded content of an action, if it carries content.
+func validatableContent(action CommitFileAction) (string, []byte, bool) {
+	var payload []byte
+	switch action.Encoding {
+	case enum.ContentEncodingTypeBase64:
+		decoded, err := base64.StdEncoding.DecodeString(action.Payload)
+		if err != nil {
+			return "", nil, false
+		}
+		payload = decoded
+	case enum.ContentEncodingTypeUTF8:
+		fallthrough
+	default:
+		payload = []byte(action.Payload)
+	}
+
+	// Git writes the file at the cleaned path, so claim it by that same path: "docs/../CODEOWNERS" writes
+	// CODEOWNERS and must be validated as CODEOWNERS.
+	switch action.Action {
+	case git.CreateAction, git.UpdateAction:
+		return api.CleanUploadFileName(action.Path), payload, true
+	case git.MoveAction:
+		// A move payload is the new path, optionally followed by a NUL byte and the new content.
+		newPath, content, found := bytes.Cut(payload, []byte{0})
+		if !found {
+			return "", nil, false
+		}
+		return api.CleanUploadFileName(string(newPath)), content, true
+	case git.DeleteAction, git.PatchTextAction:
+		return "", nil, false
+	default:
+		return "", nil, false
+	}
 }

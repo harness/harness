@@ -44,7 +44,7 @@ func (g *Git) GetSubmodule(
 		return nil, processGitErrorf(err, "error getting commit for ref '%s'", ref)
 	}
 
-	node, err := g.GetTreeNode(ctx, repoPath, commitSHA.String(), ".gitmodules")
+	node, err := g.GetTreeNode(ctx, repoPath, nil, commitSHA.String(), ".gitmodules")
 	if err != nil {
 		return nil, processGitErrorf(err, "error reading  tree node for ref '%s' with commit '%s'",
 			ref, commitSHA)

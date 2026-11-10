@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/services/autolink"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/dotrange"
+	"github.com/harness/gitness/app/services/filevalidator"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -109,6 +110,7 @@ type Controller struct {
 	referenceSync          *importer.JobReferenceSync
 	importLinked           *importer.JobRepositoryLink
 	codeOwners             *codeowners.Service
+	contentValidators      *filevalidator.Registry
 	eventReporter          *repoevents.Reporter
 	indexer                keywordsearch.Indexer
 	resourceLimiter        limiter.ResourceLimiter
@@ -158,6 +160,7 @@ func NewController(
 	referenceSync *importer.JobReferenceSync,
 	importLinked *importer.JobRepositoryLink,
 	codeOwners *codeowners.Service,
+	contentValidators *filevalidator.Registry,
 	eventReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
@@ -208,6 +211,7 @@ func NewController(
 		referenceSync:          referenceSync,
 		importLinked:           importLinked,
 		codeOwners:             codeOwners,
+		contentValidators:      contentValidators,
 		eventReporter:          eventReporter,
 		indexer:                indexer,
 		resourceLimiter:        limiter,

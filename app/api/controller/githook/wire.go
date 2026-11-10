@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
 	eventsrepo "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/filevalidator"
 	"github.com/harness/gitness/app/services/mergequeue"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/refcache"
@@ -69,6 +70,7 @@ func ProvideController(
 	auditService audit.Service,
 	userGroupService usergroup.Service,
 	mergeQueueService *mergequeue.Service,
+	contentValidators *filevalidator.Registry,
 ) *Controller {
 	ctrl := NewController(
 		authorizer,
@@ -90,6 +92,7 @@ func ProvideController(
 		auditService,
 		userGroupService,
 		mergeQueueService,
+		contentValidators,
 	)
 
 	// TODO: improve wiring if possible

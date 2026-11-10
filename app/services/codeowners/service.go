@@ -587,20 +587,57 @@ func (s *Service) resolveUserCodeOwnerByEmail(
 	}, nil
 }
 
+// Validate validates the CODEOWNERS file of the repository at the given ref.
+// An empty ref resolves to the default branch. Problems with the file itself (too large,
+// unparsable, unknown owners, bad patterns) are returned as violations, not as errors.
 func (s *Service) Validate(
 	ctx context.Context,
 	repo *types.RepositoryCore,
-	branch string,
+	ref string,
 ) (*types.CodeOwnersValidation, error) {
-	var codeOwnerValidation types.CodeOwnersValidation
-	// check file parsing, existence and size
-	codeowners, err := s.get(ctx, repo, branch)
+	file, err := s.getCodeOwnerFile(ctx, repo, ref)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get CODEOWNERS file: %w", err)
 	}
 
+	if file.TotalSize > maxGetContentFileSize {
+		return fileTooLargeValidation(file.TotalSize), nil
+	}
+
+	return s.ValidateContent(ctx, []byte(file.Content))
+}
+
+func fileTooLargeValidation(size int64) *types.CodeOwnersValidation {
+	var validation types.CodeOwnersValidation
+	validation.Add(enum.CodeOwnerViolationCodeFileTooLarge, (&TooLargeError{FileSize: size}).Error())
+	return &validation
+}
+
+// ValidateContent validates raw CODEOWNERS content. Size and parse problems are reported as
+// violations; only failures to look up owners (principal store, user group resolver) return an error,
+// so that an outage can't be mistaken for an unknown owner.
+func (s *Service) ValidateContent(
+	ctx context.Context,
+	content []byte,
+) (*types.CodeOwnersValidation, error) {
+	if len(content) > maxGetContentFileSize {
+		return fileTooLargeValidation(int64(len(content))), nil
+	}
+
+	entries, err := s.parseCodeOwnerFile(string(content))
+	if err != nil {
+		var parseErr *FileParseError
+		if errors.As(err, &parseErr) {
+			var validation types.CodeOwnersValidation
+			validation.AddAtLine(enum.CodeOwnerViolationCodeFileParseError, parseErr.LineNumber, parseErr.Err.Error())
+			return &validation, nil
+		}
+		return nil, fmt.Errorf("failed to parse codeowner file: %w", err)
+	}
+
+	var codeOwnerValidation types.CodeOwnersValidation
 	validatedOwners := make(map[string]struct{}) // tracks resolved owners
-	for _, entry := range codeowners.Entries {
+	for _, entry := range entries {
 		// check for users and user groups in file
 		for _, owner := range entry.Owners {
 			if _, validated := validatedOwners[owner]; validated {
@@ -608,43 +645,54 @@ func (s *Service) Validate(
 			}
 			validatedOwners[owner] = struct{}{}
 
-			if usrGrpOwner, ok := ParseUserGroupOwner(owner); ok { // user group owner
-				_, err = s.userGroupResolver.Resolve(ctx, usrGrpOwner)
-				if errors.Is(err, usergroup.ErrNotFound) {
-					codeOwnerValidation.Addf(
-						enum.CodeOwnerViolationCodeUserGroupNotFound,
-						"usergroup %q not found", usrGrpOwner,
-					)
-				}
-			} else { // user owner
-				_, err = s.principalStore.FindByEmail(ctx, owner)
-				if errors.Is(err, gitness_store.ErrResourceNotFound) {
-					codeOwnerValidation.Addf(
-						enum.CodeOwnerViolationCodeUserNotFound,
-						"user %q not found", owner,
-					)
-				}
-			}
-			if err != nil {
-				return nil, fmt.Errorf("error encountered fetching user %q by email: %w", owner, err)
+			if err := s.validateOwner(ctx, &codeOwnerValidation, entry.LineNumber, owner); err != nil {
+				return nil, err
 			}
 		}
 
 		// check for pattern
 		if entry.Pattern == "" {
-			codeOwnerValidation.Add(enum.CodeOwnerViolationCodePatternEmpty,
-				"empty pattern")
+			codeOwnerValidation.AddAtLine(enum.CodeOwnerViolationCodePatternEmpty, entry.LineNumber, "empty pattern")
 			continue
 		}
 
-		ok := doublestar.ValidatePathPattern(entry.Pattern)
-		if !ok {
-			codeOwnerValidation.Addf(enum.CodeOwnerViolationCodePatternInvalid, "pattern %q is invalid",
-				entry.Pattern)
+		if !doublestar.ValidatePathPattern(entry.Pattern) {
+			codeOwnerValidation.AddfAtLine(enum.CodeOwnerViolationCodePatternInvalid, entry.LineNumber,
+				"pattern %q is invalid", entry.Pattern)
 		}
 	}
 
 	return &codeOwnerValidation, nil
+}
+
+// validateOwner records a violation if the owner doesn't exist and returns an error only if the lookup failed.
+func (s *Service) validateOwner(
+	ctx context.Context,
+	validation *types.CodeOwnersValidation,
+	line int64,
+	owner string,
+) error {
+	if usrGrpOwner, ok := ParseUserGroupOwner(owner); ok { // user group owner
+		_, err := s.userGroupResolver.Resolve(ctx, usrGrpOwner)
+		switch {
+		case errors.Is(err, usergroup.ErrNotFound):
+			validation.AddfAtLine(enum.CodeOwnerViolationCodeUserGroupNotFound, line,
+				"usergroup %q not found", usrGrpOwner)
+		case err != nil:
+			return fmt.Errorf("error encountered resolving user group %q: %w", usrGrpOwner, err)
+		}
+		return nil
+	}
+
+	// user owner
+	_, err := s.principalStore.FindByEmail(ctx, owner)
+	switch {
+	case errors.Is(err, gitness_store.ErrResourceNotFound):
+		validation.AddfAtLine(enum.CodeOwnerViolationCodeUserNotFound, line, "user %q not found", owner)
+	case err != nil:
+		return fmt.Errorf("error encountered fetching user %q by email: %w", owner, err)
+	}
+	return nil
 }
 
 func findReviewerInList(email string, uid string, reviewers []*types.PullReqReviewer) *types.PullReqReviewer {

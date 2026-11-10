@@ -87,3 +87,41 @@ func TestGetBlobSHAsForPaths_Quarantine(t *testing.T) {
 		t.Errorf("blob sha for b.txt = %q, want %q", got, blobSHA)
 	}
 }
+
+// TestGetTreeNode_Quarantine asserts that a tree node resolves against a commit that lives only in the push
+// quarantine directory, for both a file path and the repository root.
+//
+// Regression guard for CODE-6885: the pre-receive content validation resolved CODEOWNERS with GetTreeNode, which
+// ignored the alternate object dirs, so the pushed commit was invisible and no push was ever validated.
+func TestGetTreeNode_Quarantine(t *testing.T) {
+	requireGit(t)
+
+	repoPath := initRepoWithCommit(t)
+	commitSHA, blobSHA, quarantineDir := commitRenameToQuarantine(t, repoPath)
+
+	g := &Git{}
+
+	// Guards that the setup genuinely quarantines the new objects.
+	if _, err := g.GetTreeNode(t.Context(), repoPath, nil, commitSHA, "b.txt"); err == nil {
+		t.Fatal("expected the node lookup to fail without the quarantine dir")
+	}
+
+	node, err := g.GetTreeNode(t.Context(), repoPath, []string{quarantineDir}, commitSHA, "b.txt")
+	if err != nil {
+		t.Fatalf("GetTreeNode with alternates: %v", err)
+	}
+	if got := node.SHA.String(); got != blobSHA {
+		t.Errorf("blob sha for b.txt = %q, want %q", got, blobSHA)
+	}
+
+	if _, err := g.GetTreeNode(t.Context(), repoPath, nil, commitSHA, ""); err == nil {
+		t.Fatal("expected the root lookup to fail without the quarantine dir")
+	}
+	root, err := g.GetTreeNode(t.Context(), repoPath, []string{quarantineDir}, commitSHA, "")
+	if err != nil {
+		t.Fatalf("GetTreeNode root with alternates: %v", err)
+	}
+	if root.NodeType != TreeNodeTypeTree {
+		t.Errorf("root node type = %v, want tree", root.NodeType)
+	}
+}
