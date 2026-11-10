@@ -41,10 +41,15 @@ jobs:
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
-          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          version: v1.64.5
+          # golangci-lint must be built with a Go version >= the go.mod target (go 1.26.x);
+          # v2.11.4 is built with Go 1.26.1+. The older v1.64.5 (Go 1.24) could not load the
+          # config and exited with code 3 before linting. The repo's .golangci.yml is already v2.
+          version: v2.11.4
+          # Report only issues introduced by a change, not the pre-existing backlog that the
+          # newer gosec/staticcheck rules surface across the tree.
+          only-new-issues: true
 
           # Optional: working directory, useful for monorepos
           # working-directory: somedir
