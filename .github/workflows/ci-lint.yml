@@ -41,7 +41,7 @@ jobs:
           mkdir -p ./web/dist
           touch ./web/dist/empty.txt
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           # golangci-lint must be built with a Go version >= the go.mod target (go 1.26.x);
           # v2.11.4 is built with Go 1.26.1+. The older v1.64.5 (Go 1.24) could not load the
