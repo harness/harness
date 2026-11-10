@@ -56,6 +56,14 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("failed to backfill pull request metadata: %w", err)
 	}
 
+	if !auth.IsAnonymousSession(session) {
+		watching, err := c.watcherStore.Exists(ctx, pr.ID, session.Principal.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check if caller watches the pull request: %w", err)
+		}
+		pr.Watching = &watching
+	}
+
 	return pr, nil
 }
 

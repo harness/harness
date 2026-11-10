@@ -57,6 +57,7 @@ var WireSet = wire.NewSet(
 	ProvideCodeCommentView,
 	ProvidePullReqReviewStore,
 	ProvidePullReqReviewerStore,
+	ProvidePullReqWatcherStore,
 	ProvidePullReqReviewerSuggestionStore,
 	ProvidePullReqFileViewStore,
 	ProvidePullReqFileGroupStore,
@@ -341,6 +342,14 @@ func ProvidePullReqReviewerStore(
 	principalInfoCache store.PrincipalInfoCache,
 ) store.PullReqReviewerStore {
 	return NewPullReqReviewerStore(db, principalInfoCache)
+}
+
+// ProvidePullReqWatcherStore provides a pull request watcher store.
+func ProvidePullReqWatcherStore(
+	db *sqlx.DB,
+	principalInfoCache store.PrincipalInfoCache,
+) store.PullReqWatcherStore {
+	return NewPullReqWatcherStore(db, principalInfoCache)
 }
 
 // ProvidePullReqReviewerSuggestionStore provides a pull request reviewer suggestion store.

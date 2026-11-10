@@ -91,10 +91,17 @@ func (s *Service) processReviewSubmittedEvent(
 		)
 	}
 
+	watchers, err := s.listWatchers(ctx, event.Payload.PullReqID, authorPrincipal.ID, reviewerPrincipal.ID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	recipients := append([]*types.PrincipalInfo{authorPrincipal}, watchers...)
+
 	return &ReviewSubmittedPayload{
 		Base:     base,
 		Author:   authorPrincipal,
 		Decision: event.Payload.Decision,
 		Reviewer: reviewerPrincipal,
-	}, []*types.PrincipalInfo{authorPrincipal}, nil
+	}, recipients, nil
 }

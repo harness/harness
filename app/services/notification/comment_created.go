@@ -152,6 +152,20 @@ func (s *Service) processCommentCreatedEvent(
 		author = base.Author
 	}
 
+	// process watchers (users only) - they share the email sent to the participants.
+	// The author is skipped as they are already notified separately.
+	watchers, err := s.listWatchers(ctx, event.Payload.PullReqID, base.Author.ID)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+	for _, watcher := range watchers {
+		if seen[watcher.ID] {
+			continue
+		}
+		seen[watcher.ID] = true
+		participants = append(participants, watcher)
+	}
+
 	return payload, maps.Values(mentionsMap), participants, author, nil
 }
 

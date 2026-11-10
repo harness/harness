@@ -125,6 +125,14 @@ type reviewerListPullReqRequest struct {
 	pullReqRequest
 }
 
+type watchPullReqRequest struct {
+	pullReqRequest
+}
+
+type watcherListPullReqRequest struct {
+	pullReqRequest
+}
+
 type reviewerDeletePullReqRequest struct {
 	pullReqRequest
 	PullReqReviewerID int64 `path:"pullreq_reviewer_id"`
@@ -754,6 +762,45 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/{pullreq_reviewer_id}", reviewerDelete)
+
+	watch := openapi3.Operation{}
+	watch.WithTags("pullreq")
+	watch.WithMapOfAnything(map[string]any{"operationId": "watchPullReq"})
+	_ = reflector.SetRequest(&watch, new(watchPullReqRequest), http.MethodPut)
+	_ = reflector.SetJSONResponse(&watch, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&watch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&watch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&watch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&watch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&watch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/watch", watch)
+
+	unwatch := openapi3.Operation{}
+	unwatch.WithTags("pullreq")
+	unwatch.WithMapOfAnything(map[string]any{"operationId": "unwatchPullReq"})
+	_ = reflector.SetRequest(&unwatch, new(watchPullReqRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&unwatch, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&unwatch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&unwatch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&unwatch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&unwatch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&unwatch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/watch", unwatch)
+
+	watcherList := openapi3.Operation{}
+	watcherList.WithTags("pullreq")
+	watcherList.WithMapOfAnything(map[string]any{"operationId": "watcherListPullReq"})
+	_ = reflector.SetRequest(&watcherList, new(watcherListPullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&watcherList, new([]*types.PullReqWatcher), http.StatusOK)
+	_ = reflector.SetJSONResponse(&watcherList, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&watcherList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&watcherList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&watcherList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&watcherList, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/watchers", watcherList)
 
 	reviewSubmit := openapi3.Operation{}
 	reviewSubmit.WithTags("pullreq")

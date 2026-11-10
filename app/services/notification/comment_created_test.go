@@ -131,6 +131,7 @@ func buildService(
 		principalInfoView:    piView,
 		principalInfoCache:   piCache,
 		pullReqActivityStore: activityStore,
+		pullReqWatcherStore:  &pullReqWatcherStoreStub{},
 		urlProvider:          &urlProviderStub{prURL: "https://example/pr/42"},
 		notificationClient:   notifClient,
 	}

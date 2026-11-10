@@ -216,6 +216,14 @@ func (s *Service) processPullReqStateChangedEvent(
 
 	addRecipient(author)
 
+	watchers, err := s.listWatchers(ctx, baseEvent.PullReqID, stateModifierPrincipal.ID)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, watcher := range watchers {
+		addRecipient(watcher)
+	}
+
 	return &PullReqStateChangedPayload{
 		Base:      basePayload,
 		ChangedBy: stateModifierPrincipal,

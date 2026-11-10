@@ -17,6 +17,7 @@ package notification
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
@@ -88,9 +89,20 @@ func (s *Service) processPullReqBranchUpdatedEvent(
 		}
 	}
 
+	skipIDs := make([]int64, 0, len(reviewerPrincipals)+1)
+	skipIDs = append(skipIDs, committer.ID)
+	for _, reviewer := range reviewerPrincipals {
+		skipIDs = append(skipIDs, reviewer.ID)
+	}
+
+	watchers, err := s.listWatchers(ctx, event.Payload.PullReqID, skipIDs...)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return &PullReqBranchUpdatedPayload{
 		Base:      base,
 		NewSHA:    event.Payload.NewSHA,
 		Committer: committer,
-	}, reviewerPrincipals, nil
+	}, slices.Concat(reviewerPrincipals, watchers), nil
 }

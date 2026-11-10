@@ -647,6 +647,23 @@ type (
 		Count(ctx context.Context, prID int64) (int64, error)
 	}
 
+	PullReqWatcherStore interface {
+		// Create adds the principal to the watchers of the pull request. It's a no-op if already watching.
+		Create(ctx context.Context, prID, principalID int64) error
+
+		// Delete removes the principal from the watchers of the pull request. It's a no-op if not watching.
+		Delete(ctx context.Context, prID, principalID int64) error
+
+		// Exists returns true if the principal is watching the pull request.
+		Exists(ctx context.Context, prID, principalID int64) (bool, error)
+
+		// List returns the watchers of the pull request.
+		List(ctx context.Context, prID int64) ([]*types.PullReqWatcher, error)
+
+		// Count returns the number of watchers of the pull request.
+		Count(ctx context.Context, prID int64) (int64, error)
+	}
+
 	PullReqReviewerSuggestionStore interface {
 		// Find returns reviewer suggestion by pull request id and principal id.
 		Find(ctx context.Context, prID, principalID int64) (*types.PullReqReviewerSuggestion, error)

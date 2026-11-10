@@ -547,6 +547,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	codeCommentView := database.ProvideCodeCommentView(db)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerSuggestionStore := database.ProvidePullReqReviewerSuggestionStore(db)
+	pullReqWatcherStore := database.ProvidePullReqWatcherStore(db, principalInfoCache)
 	userGroupReviewerStore := database.ProvideUserGroupReviewerStore(db, principalInfoCache, userGroupStore)
 	pullReqFileViewStore := database.ProvidePullReqFileViewStore(db)
 	pullReqFileGroupStore := database.ProvidePullReqFileGroupStore(db)
@@ -569,7 +570,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	pullReq := migrate.ProvidePullReqImporter(provider, gitInterface, principalStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, labelStore, labelValueStore, pullReqLabelAssignmentStore, pullReqReviewerStore, pullReqReviewStore, repoFinder, transactor, mutexManager)
 	branchStore := database.ProvideBranchStore(db)
-	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, auditService, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, pullReqReviewerSuggestionStore, repoStore, principalStore, userGroupStore, userGroupReviewerStore, principalInfoCache, pullReqFileViewStore, pullReqFileGroupStore, membershipStore, checkStore, autoMergeStore, mergeQueueStore, mergeQueueEntryStore, mergequeueService, gitInterface, repoFinder, reporter5, migrator, pullreqService, listService, mergeService, automergeService, protectionManager, streamer, dotrangeService, codeownersService, lockerLocker, settingsService, pullReq, labelService, labelStore, labelValueStore, pullReqLabelSuggestionStore, instrumentService, usergroupService, branchStore, usergroupResolver, signatureVerifyService)
+	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, auditService, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, pullReqReviewerSuggestionStore, pullReqWatcherStore, repoStore, principalStore, userGroupStore, userGroupReviewerStore, principalInfoCache, pullReqFileViewStore, pullReqFileGroupStore, membershipStore, checkStore, autoMergeStore, mergeQueueStore, mergeQueueEntryStore, mergequeueService, gitInterface, repoFinder, reporter5, migrator, pullreqService, listService, mergeService, automergeService, protectionManager, streamer, dotrangeService, codeownersService, lockerLocker, settingsService, pullReq, labelService, labelStore, labelValueStore, pullReqLabelSuggestionStore, instrumentService, usergroupService, branchStore, usergroupResolver, signatureVerifyService)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
@@ -808,7 +809,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	mailerMailer := mailer.ProvideMailClient(config)
 	notificationClient := notification.ProvideMailClient(mailerMailer)
 	notificationConfig := server.ProvideNotificationConfig(config)
-	notificationService, err := notification.ProvideNotificationService(ctx, notificationClient, notificationConfig, readerFactory3, pullReqStore, repoStore, principalInfoView, principalInfoCache, pullReqReviewerStore, userGroupReviewerStore, usergroupService, pullReqActivityStore, spacePathStore, provider)
+	notificationService, err := notification.ProvideNotificationService(ctx, notificationClient, notificationConfig, readerFactory3, pullReqStore, repoStore, principalInfoView, principalInfoCache, pullReqReviewerStore, pullReqWatcherStore, userGroupReviewerStore, usergroupService, pullReqActivityStore, spacePathStore, provider)
 	if err != nil {
 		return nil, err
 	}

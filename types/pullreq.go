@@ -74,6 +74,7 @@ type PullReq struct {
 	Labels       []*LabelPullReqAssignmentInfo `json:"labels,omitempty"`
 	CheckSummary *CheckCountSummary            `json:"check_summary,omitempty"`
 	Rules        []RuleInfo                    `json:"rules,omitempty"`
+	Watching     *bool                         `json:"watching,omitempty"` // only set for a single PR fetch
 
 	Type *enum.PullReqType `json:"pullreq_type,omitempty"`
 
@@ -217,6 +218,9 @@ type PullReqReview struct {
 // MaxPullReqReviewers is the maximum number of reviewers a pull request can have.
 // The limit is for the combined count of principal reviewers and user group reviewers.
 const MaxPullReqReviewers = 200
+
+// MaxPullReqWatchers is the maximum number of watchers returned for a pull request.
+const MaxPullReqWatchers = 1000
 
 // PullReqReviewer holds pull request reviewer.
 type PullReqReviewer struct {

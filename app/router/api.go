@@ -737,6 +737,13 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 					r.Get("/", handlerpullreq.HandleReviewerCombinedList(pullreqCtrl))
 				})
 			})
+			r.Route("/watch", func(r chi.Router) {
+				r.Put("/", handlerpullreq.HandleWatch(pullreqCtrl))
+				r.Delete("/", handlerpullreq.HandleUnwatch(pullreqCtrl))
+			})
+			r.Route("/watchers", func(r chi.Router) {
+				r.Get("/", handlerpullreq.HandleWatcherList(pullreqCtrl))
+			})
 			r.Route("/reviews", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleReviewSubmit(pullreqCtrl))
 			})

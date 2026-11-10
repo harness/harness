@@ -94,6 +94,7 @@ type Service struct {
 	principalInfoView      store.PrincipalInfoView
 	principalInfoCache     store.PrincipalInfoCache
 	pullReqReviewersStore  store.PullReqReviewerStore
+	pullReqWatcherStore    store.PullReqWatcherStore
 	userGroupReviewerStore store.UserGroupReviewerStore
 	userGroupService       usergroup.Service
 	pullReqActivityStore   store.PullReqActivityStore
@@ -111,6 +112,7 @@ func NewService(
 	principalInfoView store.PrincipalInfoView,
 	principalInfoCache store.PrincipalInfoCache,
 	pullReqReviewersStore store.PullReqReviewerStore,
+	pullReqWatcherStore store.PullReqWatcherStore,
 	userGroupReviewerStore store.UserGroupReviewerStore,
 	userGroupService usergroup.Service,
 	pullReqActivityStore store.PullReqActivityStore,
@@ -126,6 +128,7 @@ func NewService(
 		principalInfoView:      principalInfoView,
 		principalInfoCache:     principalInfoCache,
 		pullReqReviewersStore:  pullReqReviewersStore,
+		pullReqWatcherStore:    pullReqWatcherStore,
 		userGroupReviewerStore: userGroupReviewerStore,
 		userGroupService:       userGroupService,
 		pullReqActivityStore:   pullReqActivityStore,

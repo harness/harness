@@ -105,6 +105,7 @@ func baseStateChangeService(
 			errByID: errByID,
 		},
 		pullReqReviewersStore:  reviewerStore,
+		pullReqWatcherStore:    &pullReqWatcherStoreStub{},
 		userGroupReviewerStore: userGroupReviewerStore,
 		userGroupService:       userGroupSvc,
 		urlProvider:            &urlProviderStub{prURL: "https://example/pr/99"},
