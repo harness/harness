@@ -87,6 +87,8 @@ type ListBranchesParams struct {
 
 type ListBranchesOutput struct {
 	Branches []Branch
+	// IsLastPage reports that no branch exists after this page.
+	IsLastPage bool
 }
 
 func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error) {
@@ -188,6 +190,13 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 		return nil, err
 	}
 
+	// The walk reads one past the page. Drop it before loading commits.
+	isLastPage := true
+	if params.PageSize > 0 && int32(len(gitBranches)) > params.PageSize { //nolint:gosec
+		isLastPage = false
+		gitBranches = gitBranches[:params.PageSize]
+	}
+
 	// get commits if needed (single call for perf savings: 1s-4s vs 5s-20s)
 	if params.IncludeCommit {
 		commitSHAs := make([]sha.SHA, len(gitBranches))
@@ -216,7 +225,8 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 	}
 
 	return &ListBranchesOutput{
-		Branches: branches,
+		Branches:   branches,
+		IsLastPage: isLastPage,
 	}, nil
 }
 
@@ -228,10 +238,12 @@ func (s *Service) listBranchesLoadReferenceData(
 	// TODO: can we be smarter with slice allocation
 	branches := make([]*api.Branch, 0, 16)
 	handler := listBranchesWalkReferencesHandler(&branches)
-	instructor, endsAfter, err := wrapInstructorWithOptionalPagination(
+	// one past the page, so ListBranches can set IsLastPage without a second walk
+	instructor, endsAfter, err := wrapInstructorPage(
 		api.DefaultInstructor, // branches only have one target type, default instructor is enough
 		filter.Page,
 		filter.PageSize,
+		1,
 	)
 	if err != nil {
 		return nil, errors.InvalidArgumentf("invalid pagination details: %v", err)

@@ -34,10 +34,10 @@ func (c *Controller) ListBranches(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	filter *types.BranchFilter,
-) ([]types.BranchExtended, error) {
+) ([]types.BranchExtended, bool, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	rpcOut, err := c.git.ListBranches(ctx, &git.ListBranchesParams{
@@ -50,21 +50,21 @@ func (c *Controller) ListBranches(ctx context.Context,
 		PageSize:      int32(filter.Size), //nolint:gosec
 	})
 	if err != nil {
-		return nil, fmt.Errorf("fail to get the list of branches from git: %w", err)
+		return nil, false, fmt.Errorf("fail to get the list of branches from git: %w", err)
 	}
 
 	branches := rpcOut.Branches
 
 	metadata, err := c.collectBranchMetadata(ctx, repo, branches, filter.BranchMetadataOptions)
 	if err != nil {
-		return nil, fmt.Errorf("fail to collect branch metadata: %w", err)
+		return nil, false, fmt.Errorf("fail to collect branch metadata: %w", err)
 	}
 
 	response := make([]types.BranchExtended, len(branches))
 	for i := range branches {
 		response[i].Branch, err = controller.MapBranch(branches[i])
 		if err != nil {
-			return nil, fmt.Errorf("failed to map branch: %w", err)
+			return nil, false, fmt.Errorf("failed to map branch: %w", err)
 		}
 
 		response[i].IsDefault = repo.DefaultBranch == branches[i].Name
@@ -72,7 +72,7 @@ func (c *Controller) ListBranches(ctx context.Context,
 		metadata.apply(i, &response[i])
 	}
 
-	return response, nil
+	return response, rpcOut.IsLastPage, nil
 }
 
 // collectBranchMetadata collects the metadata for the provided list of branches.

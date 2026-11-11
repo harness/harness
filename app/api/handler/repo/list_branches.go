@@ -39,14 +39,12 @@ func HandleListBranches(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		branches, err := repoCtrl.ListBranches(ctx, session, repoRef, filter)
+		branches, isLastPage, err := repoCtrl.ListBranches(ctx, session, repoRef, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		// TODO: get last page indicator explicitly - current check is wrong in case len % pageSize == 0
-		isLastPage := len(branches) < filter.Size
 		render.PaginationNoTotal(r, w, filter.Page, filter.Size, isLastPage)
 		render.JSON(w, http.StatusOK, branches)
 	}

@@ -203,6 +203,16 @@ func wrapInstructorWithOptionalPagination(
 	page int32,
 	pageSize int32,
 ) (api.WalkReferencesInstructor, int32, error) {
+	return wrapInstructorPage(inner, page, pageSize, 0)
+}
+
+// wrapInstructorPage paginates and, when extra > 0, visits that many elements past the page.
+func wrapInstructorPage(
+	inner api.WalkReferencesInstructor,
+	page int32,
+	pageSize int32,
+	extra int32,
+) (api.WalkReferencesInstructor, int32, error) {
 	// ensure pagination is requested
 	if pageSize < 1 {
 		return inner, 0, nil
@@ -214,12 +224,13 @@ func wrapInstructorWithOptionalPagination(
 	}
 
 	// ensure we don't overflow
-	if int64(page)*int64(pageSize) > int64(math.MaxInt) {
+	end := int64(page)*int64(pageSize) + int64(extra)
+	if end > int64(math.MaxInt32) {
 		return nil, 0, fmt.Errorf("page %d with pageSize %d is out of range", page, pageSize)
 	}
 
 	startAfter := (page - 1) * pageSize
-	endAfter := page * pageSize
+	endAfter := int32(end)
 
 	// we have to count ourselves for proper pagination
 	c := int32(0)
