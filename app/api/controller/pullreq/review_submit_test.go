@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/git/sha"
 	mockgit "github.com/harness/gitness/mocks/git"
 	mockpullreq "github.com/harness/gitness/mocks/pullreq"
+	mocksse "github.com/harness/gitness/mocks/sse"
 	mockstore "github.com/harness/gitness/mocks/store"
 	basestore "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -64,6 +65,7 @@ type reviewSubmitFixture struct {
 	reviewerSuggestionStore *mockstore.PullReqReviewerSuggestionStore
 	activityStore           *mockstore.PullReqActivityStore
 	gitClient               *mockgit.Interface
+	sse                     *mocksse.Streamer
 }
 
 func (f *reviewSubmitFixture) assertExpectations(t *testing.T) {
@@ -106,6 +108,8 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 	reviewerSuggestionStore := &mockstore.PullReqReviewerSuggestionStore{}
 	activityStore := &mockstore.PullReqActivityStore{}
 	gitClient := &mockgit.Interface{}
+	sseStreamer := &mocksse.Streamer{}
+	sseStreamer.On("Publish", reviewSubmitParentID, enum.SSETypePullReqUpdated, mock.Anything).Maybe()
 
 	pullreqStore.On("FindByNumber", reviewSubmitRepoID, reviewSubmitPRNum).
 		Return(pr, nil).Once()
@@ -129,6 +133,7 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 		eventReporter:           mockpullreq.NewStubReporter(t),
 		instrumentation:         noopInstrumentation{},
 		pullreqService:          pullreqsvc.NewWithReviewerStores(pullreqStore, reviewerStore, userGroupReviewerStore),
+		sseStreamer:             sseStreamer,
 	}
 
 	return &reviewSubmitFixture{
@@ -141,6 +146,7 @@ func newReviewSubmitFixture(t *testing.T, pr *types.PullReq) *reviewSubmitFixtur
 		reviewerSuggestionStore: reviewerSuggestionStore,
 		activityStore:           activityStore,
 		gitClient:               gitClient,
+		sse:                     sseStreamer,
 	}
 }
 
@@ -206,6 +212,7 @@ func TestReviewSubmit_NewReviewer_CreatesReviewAndReviewer(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.True(t, f.tx.called, "transaction must be executed")
+	f.sse.AssertNumberOfCalls(t, "Publish", 1)
 	f.assertExpectations(t)
 }
 
@@ -235,6 +242,7 @@ func TestReviewSubmit_IdempotentReplay_ShortCircuits(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.False(t, f.tx.called, "idempotent replay must not open a transaction")
+	f.sse.AssertNumberOfCalls(t, "Publish", 0)
 	// No Create/Update/UpdateActivitySeq/CreateWithPayload expectations were
 	// set; assertExpectations catches any accidental call via strict mocks.
 	f.assertExpectations(t)
@@ -376,6 +384,7 @@ func TestReviewSubmit_ActivityWriteFailure_IsSwallowed(t *testing.T) {
 		reviewSubmitInput(enum.PullReqReviewDecisionApproved),
 	)
 	require.NoError(t, err, "activity write failure must not fail the request")
+	f.sse.AssertNumberOfCalls(t, "Publish", 1)
 	f.assertExpectations(t)
 }
 

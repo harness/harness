@@ -215,5 +215,9 @@ func (c *Controller) ReviewSubmit(
 			Msg("failed to insert instrumentation record for review pull request operation")
 	}
 
+	// The review is already stored. pullreq_updated is the signal the pull request page
+	// uses to rerun its dry-run merge. Same decision on the same commit returns above.
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqUpdated, pr)
+
 	return nil
 }
