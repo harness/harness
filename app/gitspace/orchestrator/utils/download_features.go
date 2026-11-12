@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -29,6 +30,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/harness/gitness/netpolicy"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -36,7 +38,25 @@ import (
 	"oras.land/oras-go/v2"
 	"oras.land/oras-go/v2/content/file"
 	"oras.land/oras-go/v2/registry/remote"
+	"oras.land/oras-go/v2/registry/remote/auth"
+	"oras.land/oras-go/v2/registry/remote/retry"
 )
+
+// NewFeatureDownloadTransport creates the RoundTripper used to download devcontainer features.
+//
+// Feature sources come from the user's devcontainer.json, so the policy is enforced from
+// net.Dialer.Control: every address the dialer attempts, including after redirects, is checked
+// before the connect syscall, and a blocked destination is never contacted.
+func NewFeatureDownloadTransport(policy netpolicy.Policy) http.RoundTripper {
+	tr := http.DefaultTransport.(*http.Transport).Clone() //nolint:errcheck
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		Control:   policy.ControlFunc(nil),
+	}
+	tr.DialContext = dialer.DialContext
+	return tr
+}
 
 type featureSource struct {
 	sourceURL  string
@@ -48,6 +68,7 @@ type featureSource struct {
 // and adding that feature to the download queue, if it is not already marked for download.
 func DownloadFeatures(
 	ctx context.Context,
+	transport http.RoundTripper,
 	gitspaceInstanceIdentifier string,
 	features types.Features,
 ) (*map[string]*types.DownloadedFeature, error) {
@@ -79,7 +100,7 @@ func DownloadFeatures(
 				startCh <- 1
 				go func(source featureSource) {
 					defer func(endCh chan int) { endCh <- 1 }(endCh)
-					err := downloadFeature(ctx, gitspaceInstanceIdentifier, &source, &featuresToBeDownloaded,
+					err := downloadFeature(ctx, transport, gitspaceInstanceIdentifier, &source, &featuresToBeDownloaded,
 						downloadQueue, &downloadedFeatures)
 					errorCh <- err
 				}(source)
@@ -143,6 +164,7 @@ waitLoop:
 // to be downloaded for this feature.
 func downloadFeature(
 	ctx context.Context,
+	transport http.RoundTripper,
 	gitspaceInstanceIdentifier string,
 	source *featureSource,
 	featuresToBeDownloaded *sync.Map,
@@ -164,7 +186,7 @@ func downloadFeature(
 		featureFolderName = strings.TrimSuffix(tarballName, ".tgz")
 		featureTag = parts[1]
 		downloadDirectory = getFeatureDownloadDirectory(gitspaceInstanceIdentifier, featureFolderName, featureTag)
-		contentDigest, err := downloadTarballFromOCIRepo(ctx, source.sourceURL, downloadDirectory)
+		contentDigest, err := downloadTarballFromOCIRepo(ctx, transport, source.sourceURL, downloadDirectory)
 		if err != nil {
 			return fmt.Errorf("error downloading oci artifact for feature %s: %w", source.sourceURL, err)
 		}
@@ -181,7 +203,8 @@ func downloadFeature(
 		tarballName = filepath.Base(tarballURL.Path)
 		featureFolderName = strings.TrimSuffix(tarballName, ".tgz")
 		downloadDirectory = getFeatureDownloadDirectory(gitspaceInstanceIdentifier, featureFolderName, featureTag)
-		err = downloadTarball(source.sourceURL, downloadDirectory, filepath.Join(downloadDirectory, tarballName))
+		err = downloadTarball(ctx, transport, source.sourceURL, downloadDirectory,
+			filepath.Join(downloadDirectory, tarballName))
 		if err != nil {
 			return fmt.Errorf("error downloading tarball for feature %s: %w", source.sourceURL, err)
 		}
@@ -271,7 +294,12 @@ func getFeatureFolderNameWithTag(featureFolderName string, featureTag string) st
 	return featureFolderName + "-" + featureTag
 }
 
-func downloadTarballFromOCIRepo(ctx context.Context, ociRepo string, filePath string) (string, error) {
+func downloadTarballFromOCIRepo(
+	ctx context.Context,
+	transport http.RoundTripper,
+	ociRepo string,
+	filePath string,
+) (string, error) {
 	parts := strings.SplitN(ociRepo, ":", 2)
 	if len(parts) != 2 {
 		return "", fmt.Errorf("invalid oci repo: %s", ociRepo)
@@ -285,6 +313,12 @@ func downloadTarballFromOCIRepo(ctx context.Context, ociRepo string, filePath st
 	if err != nil {
 		return "", err
 	}
+	// same as auth.DefaultClient, but on top of the policy-restricted transport.
+	repo.Client = &auth.Client{
+		Client: &http.Client{Transport: retry.NewTransport(transport)},
+		Header: auth.DefaultClient.Header,
+		Cache:  auth.DefaultCache,
+	}
 	tag := parts[1]
 	md, err := oras.Copy(ctx, repo, tag, fs, tag, oras.DefaultCopyOptions)
 	if err != nil {
@@ -293,7 +327,7 @@ func downloadTarballFromOCIRepo(ctx context.Context, ociRepo string, filePath st
 	return md.Digest.String(), nil
 }
 
-func downloadTarball(url, dirPath, fileName string) error {
+func downloadTarball(ctx context.Context, transport http.RoundTripper, url, dirPath, fileName string) error {
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		err := os.MkdirAll(dirPath, fs.ModePerm)
 		if err != nil {
@@ -306,7 +340,11 @@ func downloadTarball(url, dirPath, fileName string) error {
 	}
 	defer out.Close()
 
-	resp, err := http.Get(url) // nolint:gosec,noctx
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create tarball request: %w", err)
+	}
+	resp, err := (&http.Client{Transport: transport}).Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to download tarball: %w", err)
 	}
