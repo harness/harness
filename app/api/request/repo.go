@@ -27,6 +27,7 @@ import (
 const (
 	PathParamRepoRef        = "repo_ref"
 	QueryParamOnlyFavorites = "only_favorites"
+	QueryParamRepoType      = "repo_type"
 	QueryParamTag           = "tag"
 	QueryParamRepoPath      = "repo_path"
 )
@@ -50,6 +51,34 @@ func ParseSortRepo(r *http.Request) enum.RepoAttr {
 // ParseOnlyFavoritesFromQuery extracts the only_favorites option from the URL.
 func ParseOnlyFavoritesFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamOnlyFavorites, false)
+}
+
+// parseRepoTypes extracts the repository types from the url.
+// An empty value selects native repositories. Unknown values are ignored.
+// The parameter is omitted from the filter when it is absent, so every type is returned.
+func parseRepoTypes(r *http.Request) []enum.RepoType {
+	strTypes, ok := QueryParamList(r, QueryParamRepoType)
+	if !ok {
+		return nil
+	}
+
+	m := make(map[enum.RepoType]struct{})
+	for _, s := range strTypes {
+		if repoType, valid := enum.RepoType(s).Sanitize(); valid {
+			m[repoType] = struct{}{}
+		}
+	}
+
+	if len(m) == 0 {
+		return nil
+	}
+
+	repoTypes := make([]enum.RepoType, 0, len(m))
+	for repoType := range m {
+		repoTypes = append(repoTypes, repoType)
+	}
+
+	return repoTypes
 }
 
 func ParseTagsFromQuery(r *http.Request) map[string][]string {
@@ -137,6 +166,7 @@ func ParseRepoFilter(r *http.Request, session *auth.Session) (*types.RepoFilter,
 		DeletedAt:         deletedAt,
 		DeletedBeforeOrAt: deletedBeforeOrAt,
 		OnlyFavoritesFor:  onlyFavoritesFor,
+		Types:             parseRepoTypes(r),
 		Tags:              ParseTagsFromQuery(r),
 	}, nil
 }

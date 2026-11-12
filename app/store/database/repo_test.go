@@ -204,6 +204,65 @@ func TestDatabase_CountAll(t *testing.T) {
 	}
 }
 
+func TestDatabase_List_RepoType(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+	createRepo(ctx, t, repoStore, 1, 1, 0)
+
+	linked := types.Repository{
+		Identifier: "linked_repo", ID: 2, GitUID: "linked_repo",
+		ParentID: 1,
+		Type:     enum.RepoTypeLinked,
+		Tags:     json.RawMessage{},
+	}
+	if err := repoStore.Create(ctx, &linked); err != nil {
+		t.Fatalf("failed to create linked repo: %v", err)
+	}
+
+	native := &types.RepoFilter{Types: []enum.RepoType{enum.RepoTypeNormal}}
+	repos, err := repoStore.List(ctx, 1, native)
+	if err != nil {
+		t.Fatalf("failed to list repos: %v", err)
+	}
+	if len(repos) != 1 {
+		t.Fatalf("len(repos) = %d, want 1", len(repos))
+	}
+	if repos[0].Identifier != "repo_1" {
+		t.Errorf("identifier = %q, want repo_1", repos[0].Identifier)
+	}
+
+	count, err := repoStore.Count(ctx, 1, native)
+	if err != nil {
+		t.Fatalf("failed to count repos: %v", err)
+	}
+	if count != 1 {
+		t.Errorf("count = %d, want 1", count)
+	}
+
+	linkedOnly, err := repoStore.List(ctx, 1, &types.RepoFilter{Types: []enum.RepoType{enum.RepoTypeLinked}})
+	if err != nil {
+		t.Fatalf("failed to list linked repos: %v", err)
+	}
+	if len(linkedOnly) != 1 || linkedOnly[0].Identifier != "linked_repo" {
+		t.Fatalf("linked filter len = %d, want linked_repo", len(linkedOnly))
+	}
+
+	all, err := repoStore.List(ctx, 1, &types.RepoFilter{})
+	if err != nil {
+		t.Fatalf("failed to list repos without the filter: %v", err)
+	}
+	if len(all) != 2 {
+		t.Errorf("len(all) = %d, want 2", len(all))
+	}
+}
+
 func TestDatabase_List(t *testing.T) {
 	db, teardown := setupDB(t)
 	defer teardown()

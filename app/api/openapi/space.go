@@ -230,6 +230,33 @@ var queryParameterOnlyFavorites = openapi3.ParameterOrRef{
 	},
 }
 
+// QueryParameterRepoType filters repositories by type, repeated like pull request state.
+// An empty value selects native repositories. Omitting the parameter returns every type.
+var QueryParameterRepoType = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamRepoType,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("The repository type to include in the result. " +
+			"Repeat the parameter to include more than one type. " +
+			"An empty value selects native repositories, which are stored with no type. " +
+			"Omit the parameter to return every type."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+						Enum: enum.RepoType("").Enum(),
+					},
+				},
+			},
+		},
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
+	},
+}
+
 var QueryParameterTagRepo = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamTag,
@@ -456,7 +483,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos.WithMapOfAnything(map[string]any{"operationId": "listRepos"})
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
 		QueryParameterPage, QueryParameterLimit, QueryParameterRecursive, queryParameterOnlyFavorites,
-		QueryParameterTagRepo)
+		QueryParameterRepoType, QueryParameterTagRepo)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []repo.RepositoryOutput{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)

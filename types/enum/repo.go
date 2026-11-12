@@ -114,11 +114,21 @@ func (state RepoState) String() string {
 // RepoType defines repo type.
 type RepoType string
 
+func (RepoType) Enum() []any                  { return toInterfaceSlice(repoTypes) }
+func (t RepoType) Sanitize() (RepoType, bool) { return Sanitize(t, GetAllRepoTypes) }
+func GetAllRepoTypes() ([]RepoType, RepoType) { return repoTypes, "" }
+
 // RepoType enumeration.
 const (
+	// RepoTypeNormal is a native repository. It is stored with a null type.
 	RepoTypeNormal RepoType = ""
 	RepoTypeLinked RepoType = "linked"
 )
+
+var repoTypes = sortEnum([]RepoType{
+	RepoTypeNormal,
+	RepoTypeLinked,
+})
 
 // String returns the string representation of the RepoType.
 func (t RepoType) String() string {

@@ -1337,7 +1337,28 @@ func applyQueryFilter(
 			Where("favorite_repos.favorite_principal_id = ?", *filter.OnlyFavoritesFor)
 	}
 
+	stmt = applyRepoTypeFilter(stmt, filter.Types)
+
 	return applyTagsFilter(stmt, filter, driverName)
+}
+
+// applyRepoTypeFilter limits the query to the requested types.
+// An empty list leaves every type in place. Native repositories are stored with a null type.
+func applyRepoTypeFilter(stmt squirrel.SelectBuilder, repoTypes []enum.RepoType) squirrel.SelectBuilder {
+	if len(repoTypes) == 0 {
+		return stmt
+	}
+
+	ors := make(squirrel.Or, 0, len(repoTypes))
+	for _, repoType := range repoTypes {
+		if repoType == enum.RepoTypeNormal {
+			ors = append(ors, squirrel.Expr("COALESCE(repo_type, '') = ''"))
+			continue
+		}
+		ors = append(ors, squirrel.Eq{"repo_type": repoType})
+	}
+
+	return stmt.Where(ors)
 }
 
 func applyTagsFilter(

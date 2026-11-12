@@ -144,6 +144,9 @@ type RepoFilter struct {
 	Tags             map[string][]string
 	Recursive        bool
 	OnlyFavoritesFor *int64
+	// Types limits the result to these repository types. Empty means every type.
+	// RepoTypeNormal matches native repositories, which are stored with a null type.
+	Types []enum.RepoType `json:"repo_type,omitempty"`
 
 	Identifiers []string `json:"-"`
 }
