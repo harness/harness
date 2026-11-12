@@ -574,6 +574,11 @@ type Config struct {
 			MaxRetries    int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`
 			TimeoutInMins int `envconfig:"GITNESS_GITSPACE_EVENTS_TIMEOUT_IN_MINS" default:"45"`
 		}
+		AllowLoopback       bool `json:"allowLoopback" default:"false"`
+		AllowPrivateNetwork bool `json:"allowPrivateNetwork" default:"false"`
+		AllowLinkLocal      bool `json:"allowLinkLocal" default:"false"`
+
+		AllowedSchemes []string `json:"allowedSchemes" default:"[\"https\",\"http\",\"ssh\",\"git\"]"`
 	}
 
 	UI struct {
