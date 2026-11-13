@@ -347,8 +347,12 @@ func unpackTarball(tarball, outputDir string) error {
 			return fmt.Errorf("failed to read tar header: %w", err)
 		}
 
+		if !filepath.IsLocal(header.Name) {
+			return fmt.Errorf("invalid file path in tarball: %q", header.Name)
+		}
+
 		// Determine the file's full path
-		targetPath := filepath.Join(outputDir, header.Name) // nolint:gosec
+		targetPath := filepath.Join(outputDir, header.Name) // nolint:gosec // checked by filepath.IsLocal above
 
 		switch header.Typeflag {
 		case tar.TypeDir:
