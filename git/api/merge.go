@@ -89,7 +89,7 @@ func (g *Git) GetMergeBase(
 
 		msg := strings.TrimSpace(stderr.String())
 
-		if strings.HasPrefix(msg, "fatal: Not a valid object name") {
+		if isInvalidObjectNameError(msg) {
 			return sha.None, "", errors.NotFound(strings.TrimPrefix(msg, "fatal: "))
 		}
 
