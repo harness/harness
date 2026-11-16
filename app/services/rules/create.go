@@ -22,7 +22,6 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	ruleevents "github.com/harness/gitness/app/events/rule"
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
@@ -135,11 +134,9 @@ func (s *Service) Create(ctx context.Context,
 		CreatedByInfo: types.PrincipalInfo{},
 	}
 
-	spacePath := path
 	nameKey := audit.RepoName
 	switch parentType {
 	case enum.RuleParentRepo:
-		spacePath = paths.Parent(path)
 		rule.RepoID = &parentID
 	case enum.RuleParentSpace:
 		nameKey = audit.SpaceName
@@ -164,7 +161,7 @@ func (s *Service) Create(ctx context.Context,
 		*principal,
 		audit.NewResource(ruleTypeToResourceType(rule.Type), rule.Identifier, nameKey, scopeIdentifier),
 		audit.ActionCreated,
-		spacePath,
+		auditSpacePath(parentType, path),
 		audit.WithNewObject(rule),
 	)
 	if err != nil {

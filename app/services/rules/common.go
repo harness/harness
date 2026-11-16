@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/store"
@@ -28,6 +29,22 @@ import (
 
 	"github.com/rs/zerolog/log"
 )
+
+// auditSpacePath returns the harness scope path that an audit event for a rule must be
+// filed under.
+//
+// A repo path contains the repository itself (acct/org/proj/repo), so the scope owning the
+// rule is its parent. A space path (acct, acct/org or acct/org/proj) is already the scope
+// and must not be truncated - doing so files the event one level too high, and for an
+// account-level rule yields an empty path, which maps to a blank account identifier and an
+// audit event that never surfaces in the Audit Trail (CODE-6972).
+func auditSpacePath(parentType enum.RuleParent, path string) string {
+	if parentType == enum.RuleParentRepo {
+		return paths.Parent(path)
+	}
+
+	return path
+}
 
 // ruleTypeToResourceType maps a protection rule type to the correct audit.ResourceType.
 func ruleTypeToResourceType(ruleType enum.RuleType) audit.ResourceType {

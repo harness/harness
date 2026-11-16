@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types/enum"
@@ -47,7 +46,7 @@ func (c *Controller) GeneralUpdateSpace(
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeSpaceSettings, space.Identifier),
 		audit.ActionUpdated,
-		paths.Parent(space.Path),
+		space.Path,
 		audit.WithOldObject(old),
 		audit.WithNewObject(out),
 	)

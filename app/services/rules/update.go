@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
@@ -84,7 +83,8 @@ func (in *UpdateInput) sanitize() error {
 }
 
 func (in *UpdateInput) isEmpty() bool {
-	return in.Identifier == nil && in.State == nil && in.Description == nil && in.Pattern == nil && in.Definition == nil
+	return in.Identifier == nil && in.State == nil && in.Description == nil &&
+		in.Pattern == nil && in.RepoTarget == nil && in.Definition == nil
 }
 
 // Update updates an existing protection rule for a repository.
@@ -182,7 +182,7 @@ func (s *Service) Update(ctx context.Context,
 		*principal,
 		audit.NewResource(ruleTypeToResourceType(rule.Type), rule.Identifier, nameKey, scopeIdentifier),
 		audit.ActionUpdated,
-		paths.Parent(path),
+		auditSpacePath(parentType, path),
 		audit.WithOldObject(oldRule),
 		audit.WithNewObject(rule),
 	)

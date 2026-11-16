@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -58,7 +57,7 @@ func (s *Service) Delete(ctx context.Context,
 			scopeIdentifier,
 		),
 		audit.ActionDeleted,
-		paths.Parent(path),
+		auditSpacePath(parentType, path),
 		audit.WithOldObject(rule),
 	)
 	if err != nil {
