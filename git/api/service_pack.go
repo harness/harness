@@ -22,13 +22,18 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+// cancelDeadlineSlack is how close to the deadline a cancellation must land to count as the deadline firing.
+const cancelDeadlineSlack = time.Second
 
 var safeGitProtocolHeader = regexp.MustCompile(`^[0-9a-zA-Z]+=[0-9a-zA-Z]+(:[0-9a-zA-Z]+=[0-9a-zA-Z]+)*$`)
 
@@ -112,9 +117,30 @@ func (g *Git) ServicePack(
 		command.WithEnvs(options.Env...),
 	)
 	if err != nil && err.Error() != "signal: killed" {
-		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v", options.Service, repoPath, err)
+		logServicePackError(ctx, err, options.Service, repoPath)
 	}
 	return err
+}
+
+// logServicePackError logs a failed run, as a warning if the caller cancelled it, for example an aborted clone.
+func logServicePackError(ctx context.Context, err error, service enum.GitServiceType, repoPath string) {
+	level := zerolog.ErrorLevel
+	if isCallerCancel(ctx, err) {
+		level = zerolog.WarnLevel
+	}
+
+	log.Ctx(ctx).WithLevel(level).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v", service, repoPath, err)
+}
+
+// isCallerCancel reports whether the caller cancelled the run with deadline time left. The operation deadline
+// reaches us as a cancellation too, so without the deadline check it would pass for a caller hanging up.
+func isCallerCancel(ctx context.Context, err error) bool {
+	if !errors.Is(err, context.Canceled) && !errors.Is(ctx.Err(), context.Canceled) {
+		return false
+	}
+
+	deadline, ok := ctx.Deadline()
+	return !ok || time.Until(deadline) > cancelDeadlineSlack
 }
 
 func packetWrite(str string) []byte {
