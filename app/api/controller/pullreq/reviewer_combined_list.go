@@ -23,6 +23,8 @@ import (
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type CombinedListResponse struct {
@@ -54,18 +56,30 @@ func (c *Controller) ReviewersListCombined(
 
 	sortReviewersByDecision(reviewers)
 
+	userGroupReviewers, err := c.listUserGroupReviewers(ctx, pr, reviewers)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CombinedListResponse{
+		Reviewers:          reviewers,
+		UserGroupReviewers: userGroupReviewers,
+	}, nil
+}
+
+// listUserGroupReviewers returns the PR's user group reviewers with their compound decision.
+// Group resolution can fail (stale group, transient error); we degrade and still return them.
+func (c *Controller) listUserGroupReviewers(
+	ctx context.Context,
+	pr *types.PullReq,
+	reviewers []*types.PullReqReviewer,
+) ([]*types.UserGroupReviewer, error) {
 	userGroupReviewers, err := c.userGroupReviewerStore.List(ctx, pr.ID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return nil, fmt.Errorf("failed to list user group reviewers: %w", err)
 	}
 	if errors.Is(err, store.ErrResourceNotFound) || len(userGroupReviewers) == 0 {
-		return &CombinedListResponse{
-			Reviewers: reviewers,
-		}, nil
-	}
-	userGroupReviewersMap := make(map[int64]*types.UserGroupReviewer, len(userGroupReviewers))
-	for _, userGroupReviewer := range userGroupReviewers {
-		userGroupReviewersMap[userGroupReviewer.UserGroupID] = userGroupReviewer
+		return nil, nil
 	}
 
 	addedByIDs := make([]int64, len(userGroupReviewers))
@@ -74,10 +88,12 @@ func (c *Controller) ReviewersListCombined(
 		addedByIDs[i] = v.CreatedBy
 		userGroupIDs[i] = v.UserGroupID
 	}
+
 	userGroupsMap, err := c.userGroupStore.Map(ctx, userGroupIDs)
-	if err != nil {
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return nil, fmt.Errorf("failed to map usergroups: %w", err)
 	}
+
 	principalInfoCacheMap, err := c.principalInfoCache.Map(ctx, addedByIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load PR principal infos: %w", err)
@@ -85,30 +101,34 @@ func (c *Controller) ReviewersListCombined(
 
 	groupPrincipalsMap, err := c.userGroupService.MapGroupIDsToPrincipals(ctx, userGroupIDs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map group IDs to principals: %w", err)
+		log.Ctx(ctx).Warn().Err(err).Msgf(
+			"failed to resolve user group principals for pullreq %d; returning reviewers without decisions",
+			pr.ID,
+		)
+		groupPrincipalsMap = nil
 	}
 
 	reviewersMap := reviewersMap(reviewers)
 
-	for groupID, principals := range groupPrincipalsMap {
-		// userGroupReviewersMap, userGroupsMap and groupPrincipalsMap depend on userGroupReviewers
-		// if a group doesn't exist in userGroupReviewers it won't exist in any of these
-		// and if it exists in userGroupReviewers it will exist in all of these
-		userGroupReviewer := userGroupReviewersMap[groupID]
-		userGroupReviewer.UserGroup = *userGroupsMap[groupID].ToUserGroupInfo()
+	for _, userGroupReviewer := range userGroupReviewers {
+		if userGroup, ok := userGroupsMap[userGroupReviewer.UserGroupID]; ok {
+			userGroupReviewer.UserGroup = *userGroup.ToUserGroupInfo()
+		} else {
+			// no metadata: keep the id so the UI can still key and remove the group
+			userGroupReviewer.UserGroup.ID = userGroupReviewer.UserGroupID
+		}
 
-		// principal could be deleted/removed without group being, so we check for its existence
+		// principal may be gone while the group remains
 		if addedBy, ok := principalInfoCacheMap[userGroupReviewer.CreatedBy]; ok {
 			userGroupReviewer.AddedBy = *addedBy
 		}
 
-		// compound user group decision
+		// compound decision from the members' decisions
 		userGroupReviewer.Decision = enum.PullReqReviewDecisionPending
 		userGroupReviewer.SHA = ""
 
-		// individual decisions of the principals in the group
 		var principalIDs []int64
-		for _, principal := range principals {
+		for _, principal := range groupPrincipalsMap[userGroupReviewer.UserGroupID] {
 			principalIDs = append(principalIDs, principal.ID)
 		}
 		userGroupReviewerDecisions := userGroupReviewerDecisions(principalIDs, reviewersMap)
@@ -122,10 +142,7 @@ func (c *Controller) ReviewersListCombined(
 
 	sortUserGroupReviewersByDecision(userGroupReviewers)
 
-	return &CombinedListResponse{
-		Reviewers:          reviewers,
-		UserGroupReviewers: userGroupReviewers,
-	}, nil
+	return userGroupReviewers, nil
 }
 
 // userGroupReviewerDecisions builds a slice of ReviewerEvaluation from user IDs and reviewers map.
