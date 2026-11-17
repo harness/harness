@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -34,6 +35,7 @@ func getSCMProvider(
 	ctx context.Context,
 	connector *types.Connector,
 	secretStore store.SecretStore,
+	traceHTTP bool,
 ) (*scm.Client, error) {
 	var client *scm.Client
 	var err error
@@ -71,6 +73,9 @@ func getSCMProvider(
 
 	// override default transport if available
 	if transport != nil {
+		if traceHTTP {
+			transport = tracing.ExternalHTTPTransport(transport)
+		}
 		client.Client = &http.Client{Transport: transport}
 	}
 

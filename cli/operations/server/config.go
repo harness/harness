@@ -40,6 +40,7 @@ import (
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/stream"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
@@ -342,6 +343,7 @@ func ProvideWebhookConfig(config *types.Config) webhook.Config {
 		AllowLoopback:       config.Webhook.AllowLoopback,
 		AllowLinkLocal:      config.Webhook.AllowLinkLocal,
 		InternalSecret:      config.Webhook.InternalSecret,
+		TraceHTTP:           tracing.Enabled(config.Tracing.Exporter) && config.Tracing.HTTPGRPCEnabled,
 	}
 }
 

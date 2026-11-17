@@ -90,7 +90,7 @@ func TestGetRepository_AuthHeaderSent(t *testing.T) {
 	srv := startGHRepoServer(t, 200, canonicalRepoJSON, func(h string) { got = h })
 	defer srv.Close()
 
-	c, err := ghclient.NewClientFromConnector(srv.URL, "test-token")
+	c, err := ghclient.NewClientFromConnector(srv.URL, "test-token", false)
 	if err != nil {
 		t.Fatalf("NewClientFromConnector: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestGetRepository_AuthHeaderSent(t *testing.T) {
 }
 
 func TestNewClientFromConnector_DefaultURL(t *testing.T) {
-	c, err := ghclient.NewClientFromConnector("", "")
+	c, err := ghclient.NewClientFromConnector("", "", false)
 	if err != nil {
 		t.Fatalf("NewClientFromConnector: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestNewClientFromConnector_DefaultURL(t *testing.T) {
 }
 
 func TestNewClientFromConnector_GHEURL(t *testing.T) {
-	c, err := ghclient.NewClientFromConnector("https://github.acme.com/api/v3", "")
+	c, err := ghclient.NewClientFromConnector("https://github.acme.com/api/v3", "", false)
 	if err != nil {
 		t.Fatalf("NewClientFromConnector: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestNewClientFromConnector_GHEURL(t *testing.T) {
 }
 
 func TestNewClientFromConnector_InvalidURL(t *testing.T) {
-	if _, err := ghclient.NewClientFromConnector("://not a url", ""); err == nil {
+	if _, err := ghclient.NewClientFromConnector("://not a url", "", false); err == nil {
 		t.Errorf("expected error for invalid URL")
 	}
 }

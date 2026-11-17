@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 
 	"github.com/drone/go-scm/scm"
@@ -274,6 +275,9 @@ func (r *Importer) getScmClientWithTransport(
 		return nil, fmt.Errorf("unsupported scm provider: %s", provider)
 	}
 
+	if r.traceHTTP {
+		transport = tracing.ExternalHTTPTransport(transport)
+	}
 	c.Client = &http.Client{
 		Transport: transport,
 		CheckRedirect: func(*http.Request, []*http.Request) error {

@@ -30,6 +30,8 @@ type Payload struct {
 	Disabled      bool
 	Internal      bool // Deprecated: Use OperationType instead
 	OperationType enum.GitOpType
+	// TraceContext is the trace context of the operation, sent along with the githook calls.
+	TraceContext map[string]string
 }
 
 func (p Payload) Validate() error {

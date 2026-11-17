@@ -24,6 +24,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/harness/gitness/tracing"
+
 	"github.com/drone/go-scm/scm"
 	gh "github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/transport/oauth2"
@@ -37,8 +39,8 @@ type Client struct {
 
 func NewClient(c *scm.Client) *Client { return &Client{scm: c} }
 
-// NewClientFromConnector builds a Client; apiURL is "" for github.com.
-func NewClientFromConnector(apiURL, token string) (*Client, error) {
+// NewClientFromConnector builds a Client; apiURL is "" for github.com. With traceHTTP, every API call gets a span.
+func NewClientFromConnector(apiURL, token string, traceHTTP bool) (*Client, error) {
 	var c *scm.Client
 	var err error
 	if apiURL == "" {
@@ -50,12 +52,14 @@ func NewClientFromConnector(apiURL, token string) (*Client, error) {
 		}
 	}
 	if token != "" {
-		c.Client = &http.Client{
-			Transport: &oauth2.Transport{
-				Source: oauth2.StaticTokenSource(&scm.Token{Token: token}),
-				Scheme: oauth2.SchemeBearer,
-			},
+		var transport http.RoundTripper = &oauth2.Transport{
+			Source: oauth2.StaticTokenSource(&scm.Token{Token: token}),
+			Scheme: oauth2.SchemeBearer,
 		}
+		if traceHTTP {
+			transport = tracing.ExternalHTTPTransport(transport)
+		}
+		c.Client = &http.Client{Transport: transport}
 	}
 	return NewClient(c), nil
 }

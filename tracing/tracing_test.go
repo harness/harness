@@ -16,6 +16,8 @@ package tracing
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -23,6 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
@@ -65,4 +68,22 @@ func TestInitEnabled(t *testing.T) {
 	defer cancel()
 	// exporting fails without a collector, only make sure shutdown returns.
 	_ = shutdown(ctx)
+}
+
+func TestHTTPHandlerPropagatesTraceContext(t *testing.T) {
+	resetGlobals(t)
+
+	_, err := Init(context.Background(), "test-service", Config{})
+	require.NoError(t, err)
+
+	var got trace.SpanContext
+	handler := HTTPHandler(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		got = trace.SpanContextFromContext(r.Context())
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+	req.Header.Set("traceparent", "00-4866938937d2e3b07aa300592bd06f06-0102030405060708-01")
+	handler.ServeHTTP(httptest.NewRecorder(), req)
+
+	assert.Equal(t, "4866938937d2e3b07aa300592bd06f06", got.TraceID().String())
 }

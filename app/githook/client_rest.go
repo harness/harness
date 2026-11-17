@@ -26,6 +26,7 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 )
@@ -64,20 +65,22 @@ func (f *RestClientFactory) NewClient(envVars map[string]string) (hook.Client, e
 
 // RestClient is the hook.Client used to call the githooks api of Harness api server.
 type RestClient struct {
-	httpClient *http.Client
-	baseURL    string
-	requestID  string
-	baseInput  types.GithookInputBase
+	httpClient   *http.Client
+	baseURL      string
+	requestID    string
+	traceContext map[string]string
+	baseInput    types.GithookInputBase
 }
 
 func NewRestClient(
 	payload Payload,
 ) hook.Client {
 	return &RestClient{
-		httpClient: http.DefaultClient,
-		baseURL:    strings.TrimRight(payload.BaseURL, "/"),
-		requestID:  payload.RequestID,
-		baseInput:  GetInputBaseFromPayload(payload),
+		httpClient:   http.DefaultClient,
+		baseURL:      strings.TrimRight(payload.BaseURL, "/"),
+		requestID:    payload.RequestID,
+		traceContext: payload.TraceContext,
+		baseInput:    GetInputBaseFromPayload(payload),
 	}
 }
 
@@ -129,6 +132,7 @@ func (c *RestClient) githook(ctx context.Context, githookType string, payload an
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add(request.HeaderUserAgent, fmt.Sprintf("Gitness/%s", version.Version))
 	req.Header.Add(request.HeaderRequestID, c.requestID)
+	tracing.SetHTTPHeader(req.Header, c.traceContext)
 
 	// Execute the request
 	resp, err := c.httpClient.Do(req)

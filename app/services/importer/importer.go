@@ -74,6 +74,7 @@ type Importer struct {
 	// baseTransport is the RoundTripper underneath every provider API call. It
 	// enforces networkPolicy on the resolved address of each connection.
 	baseTransport http.RoundTripper
+	traceHTTP     bool
 }
 
 func NewImporter(
@@ -92,6 +93,7 @@ func NewImporter(
 	auditService audit.Service,
 	settings *settings.Service,
 	networkPolicy netpolicy.Policy,
+	traceHTTP bool,
 ) *Importer {
 	return &Importer{
 		defaultBranch: defaultBranch,
@@ -110,6 +112,7 @@ func NewImporter(
 		settings:      settings,
 		networkPolicy: networkPolicy,
 		baseTransport: newBaseTransport(networkPolicy),
+		traceHTTP:     traceHTTP,
 	}
 }
 

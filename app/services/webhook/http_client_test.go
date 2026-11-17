@@ -66,7 +66,7 @@ func TestHTTPClient_LinkLocalBlocked(t *testing.T) {
 	t.Run("loopback_blocked_by_secure_client", func(t *testing.T) {
 		port := startLocalServer(t, "127.0.0.1:0")
 
-		client := newHTTPClient(false, false, false, true)
+		client := newHTTPClient(false, false, false, true, false)
 		resp, err := doGET(t, client, fmt.Sprintf("http://127.0.0.1:%d/", port))
 		if resp != nil && resp.Body != nil {
 			resp.Body.Close()
@@ -82,7 +82,7 @@ func TestHTTPClient_LinkLocalBlocked(t *testing.T) {
 	t.Run("loopback_allowed_when_flag_set", func(t *testing.T) {
 		port := startLocalServer(t, "127.0.0.1:0")
 
-		client := newHTTPClient(true, false, false, true)
+		client := newHTTPClient(true, false, false, true, false)
 		resp, err := doGET(t, client, fmt.Sprintf("http://127.0.0.1:%d/", port))
 		if err != nil {
 			t.Fatalf("expected success with allowLoopback=true, got: %v", err)
@@ -111,7 +111,7 @@ func TestHTTPClient_LinkLocalBlocked(t *testing.T) {
 		}))
 		t.Cleanup(redirectSrv.Close)
 
-		client := newHTTPClient(true, false, false, true)
+		client := newHTTPClient(true, false, false, true, false)
 		resp, err := doGET(t, client, redirectSrv.URL+"/")
 		if err != nil {
 			t.Fatalf("unexpected error reaching redirect server: %v", err)
@@ -140,7 +140,7 @@ func TestHTTPClient_LinkLocalBlocked(t *testing.T) {
 
 		port := startLocalServer(t, "127.0.0.1:0")
 
-		client := newHTTPClient(false, false, false, true)
+		client := newHTTPClient(false, false, false, true, false)
 		resp, err := doGET(t, client, fmt.Sprintf("http://localhost.nip.io:%d/", port))
 		if resp != nil && resp.Body != nil {
 			_ = resp.Body.Close()

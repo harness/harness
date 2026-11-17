@@ -56,6 +56,8 @@ type Config struct {
 	AllowLoopback       bool
 	AllowLinkLocal      bool
 	InternalSecret      string
+	// TraceHTTP creates a client span for every webhook call.
+	TraceHTTP bool
 }
 
 func (c *Config) Prepare() error {
@@ -142,24 +144,28 @@ func NewWebhookExecutor(
 			config.AllowPrivateNetwork,
 			config.AllowLinkLocal,
 			false,
+			config.TraceHTTP,
 		),
 		insecureHTTPClient: newHTTPClient(
 			config.AllowLoopback,
 			config.AllowPrivateNetwork,
 			config.AllowLinkLocal,
 			true,
+			config.TraceHTTP,
 		),
 		secureHTTPClientInternal: newHTTPClient(
 			config.AllowLoopback,
 			true,
 			config.AllowLinkLocal,
 			false,
+			config.TraceHTTP,
 		),
 		insecureHTTPClientInternal: newHTTPClient(
 			config.AllowLoopback,
 			true,
 			config.AllowLinkLocal,
 			true,
+			config.TraceHTTP,
 		),
 		config:             config,
 		webhookURLProvider: webhookURLProvider,

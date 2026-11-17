@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/netpolicy"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -90,6 +91,7 @@ func ProvideImporter(
 			AllowPrivateNetwork: config.Importer.AllowPrivateNetwork,
 			AllowLinkLocal:      config.Importer.AllowLinkLocal,
 		},
+		tracing.Enabled(config.Tracing.Exporter) && config.Tracing.HTTPGRPCEnabled,
 	)
 }
 

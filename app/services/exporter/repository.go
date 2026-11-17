@@ -56,6 +56,7 @@ type Repository struct {
 	encrypter    encrypt.Encrypter
 	sseStreamer  sse.Streamer
 	publicAccess publicaccess.Service
+	traceHTTP    bool
 }
 
 type Input struct {
@@ -182,6 +183,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		harnessCodeInfo.OrgIdentifier,
 		harnessCodeInfo.ProjectIdentifier,
 		harnessCodeInfo.Token,
+		r.traceHTTP,
 	)
 	if err != nil {
 		return "", err

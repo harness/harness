@@ -25,6 +25,8 @@ import (
 	"github.com/rs/xid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -33,6 +35,7 @@ const (
 
 // HLogRequestIDHandler provides a middleware that injects request_id into the logging and execution context.
 // It prefers the X-Request-Id header, if that doesn't exist it creates a new request id similar to zerolog.
+// If the request is traced, trace_id and span_id are added to the logging context as well.
 func HLogRequestIDHandler() func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -51,8 +54,14 @@ func HLogRequestIDHandler() func(http.Handler) http.Handler {
 			ctx = request.WithRequestID(ctx, reqID)
 			ctx = git.WithRequestID(ctx, reqID)
 
-			// update logging context with request ID
-			logging.UpdateContext(ctx, logging.WithRequestID(reqID))
+			span := trace.SpanFromContext(ctx)
+			span.SetAttributes(attribute.String("request_id", reqID))
+
+			// update logging context with request ID and trace context
+			logging.UpdateContext(ctx,
+				logging.WithRequestID(reqID),
+				logging.WithTraceContext(span.SpanContext()),
+			)
 
 			// write request ID to response headers
 			w.Header().Set(requestIDHeader, reqID)

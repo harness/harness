@@ -17,6 +17,8 @@ package connector
 import (
 	"github.com/harness/gitness/app/connector/scm"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/tracing"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -37,6 +39,6 @@ func ProvideConnectorHandler(
 
 // ProvideSCMConnectorHandler provides a SCM connector handler for specifically handling
 // SCM connector related ops.
-func ProvideSCMConnectorHandler(secretStore store.SecretStore) *scm.Service {
-	return scm.NewService(secretStore)
+func ProvideSCMConnectorHandler(config *types.Config, secretStore store.SecretStore) *scm.Service {
+	return scm.NewService(secretStore, tracing.Enabled(config.Tracing.Exporter) && config.Tracing.HTTPGRPCEnabled)
 }

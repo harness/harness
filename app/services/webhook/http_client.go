@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/netpolicy"
+	"github.com/harness/gitness/tracing"
 )
 
 var (
@@ -52,6 +53,7 @@ func newHTTPClient(
 	allowPrivateNetwork bool,
 	allowLinkLocal bool,
 	disableSSLVerification bool,
+	traceHTTP bool,
 ) *http.Client {
 	// Clone http.DefaultTransport (used by http.DefaultClient)
 	tr := http.DefaultTransport.(*http.Transport).Clone() //nolint:errcheck
@@ -76,9 +78,14 @@ func newHTTPClient(
 
 	tr.DialContext = dialer.DialContext
 
+	var transport http.RoundTripper = tr
+	if traceHTTP {
+		transport = tracing.ExternalHTTPTransport(tr)
+	}
+
 	// httpClient is similar to http.DefaultClient, just with custom http.Transport
 	return &http.Client{
-		Transport: tr,
+		Transport: transport,
 		CheckRedirect: func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		},

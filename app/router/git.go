@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -59,6 +60,9 @@ func NewGitHandler(
 	r := chi.NewRouter()
 
 	// Apply common api middleware.
+	if tracing.Enabled(config.Tracing.Exporter) && config.Tracing.HTTPGRPCEnabled {
+		r.Use(tracing.HTTPRoute())
+	}
 	r.Use(middleware.NoCache)
 	r.Use(middleware.Recoverer)
 

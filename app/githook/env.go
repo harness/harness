@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -59,6 +60,7 @@ func GenerateEnvironmentVariablesForOperation(
 		Disabled:      disabled,
 		Internal:      operationType != enum.GitOpTypeGitPush, // For backward compatibility
 		OperationType: operationType,
+		TraceContext:  tracing.TraceContext(ctx),
 	}
 
 	if err := payload.Validate(); err != nil {

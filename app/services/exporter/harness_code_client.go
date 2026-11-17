@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 )
 
@@ -59,7 +60,14 @@ type client struct {
 }
 
 // newClient creates a new harness Client for interacting with the platforms APIs.
-func newClient(baseURL string, accountID string, orgID string, projectID string, token string) (*client, error) {
+func newClient(
+	baseURL string,
+	accountID string,
+	orgID string,
+	projectID string,
+	token string,
+	traceHTTP bool,
+) (*client, error) {
 	if baseURL == "" {
 		return nil, fmt.Errorf("baseUrl required")
 	}
@@ -76,20 +84,23 @@ func newClient(baseURL string, accountID string, orgID string, projectID string,
 		return nil, fmt.Errorf("token required")
 	}
 
-	return &client{
-		baseURL:   baseURL,
-		accountID: accountID,
-		orgID:     orgID,
-		projectID: projectID,
-		token:     token,
-		httpClient: http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: false,
-					MinVersion:         tls.VersionTLS12,
-				},
-			},
+	var transport http.RoundTripper = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: false,
+			MinVersion:         tls.VersionTLS12,
 		},
+	}
+	if traceHTTP {
+		transport = tracing.ExternalHTTPTransport(transport)
+	}
+
+	return &client{
+		baseURL:    baseURL,
+		accountID:  accountID,
+		orgID:      orgID,
+		projectID:  projectID,
+		token:      token,
+		httpClient: http.Client{Transport: transport},
 	}, nil
 }
 
@@ -99,8 +110,9 @@ func newHarnessCodeClient(
 	orgID string,
 	projectID string,
 	token string,
+	traceHTTP bool,
 ) (*harnessCodeClient, error) {
-	client, err := newClient(baseURL, accountID, orgID, projectID, token)
+	client, err := newClient(baseURL, accountID, orgID, projectID, token, traceHTTP)
 	if err != nil {
 		return nil, err
 	}

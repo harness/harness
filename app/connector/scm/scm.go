@@ -25,11 +25,13 @@ import (
 
 type Service struct {
 	secretStore store.SecretStore
+	traceHTTP   bool
 }
 
-func NewService(secretStore store.SecretStore) *Service {
+func NewService(secretStore store.SecretStore, traceHTTP bool) *Service {
 	return &Service{
 		secretStore: secretStore,
+		traceHTTP:   traceHTTP,
 	}
 }
 
@@ -37,7 +39,7 @@ func (s *Service) Test(ctx context.Context, c *types.Connector) (types.Connector
 	if !c.Type.IsSCM() {
 		return types.ConnectorTestResponse{}, fmt.Errorf("connector type: %s is not an SCM connector", c.Type.String())
 	}
-	client, err := getSCMProvider(ctx, c, s.secretStore)
+	client, err := getSCMProvider(ctx, c, s.secretStore, s.traceHTTP)
 	if err != nil {
 		return types.ConnectorTestResponse{}, err
 	}

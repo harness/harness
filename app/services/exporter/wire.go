@@ -21,6 +21,8 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
+	"github.com/harness/gitness/tracing"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -30,6 +32,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideSpaceExporter(
+	config *types.Config,
 	urlProvider url.Provider,
 	git git.Interface,
 	repoStore store.RepoStore,
@@ -45,6 +48,7 @@ func ProvideSpaceExporter(
 		scheduler:   scheduler,
 		encrypter:   encrypter,
 		sseStreamer: sseStreamer,
+		traceHTTP:   tracing.Enabled(config.Tracing.Exporter) && config.Tracing.HTTPGRPCEnabled,
 	}
 
 	err := executor.Register(jobType, exporter)

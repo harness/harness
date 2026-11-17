@@ -15,8 +15,11 @@
 package server
 
 import (
+	nethttp "net/http"
+
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/http"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -27,6 +30,11 @@ var WireSet = wire.NewSet(ProvideServer)
 
 // ProvideServer provides a server instance.
 func ProvideServer(config *types.Config, router *router.Router) *Server {
+	var handler nethttp.Handler = router
+	if tracing.Enabled(config.Tracing.Exporter) && config.Tracing.HTTPGRPCEnabled {
+		handler = tracing.HTTPHandler(router)
+	}
+
 	return &Server{
 		http.NewServer(
 			http.Config{
@@ -35,7 +43,7 @@ func ProvideServer(config *types.Config, router *router.Router) *Server {
 				Acme:     config.Acme.Enabled,
 				AcmeHost: config.Acme.Host,
 			},
-			router,
+			handler,
 		),
 	}
 }

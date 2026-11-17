@@ -446,7 +446,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db, secretStore)
 	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, pullReqStore, checkStore, repoFinder, labelService, protectionManager)
-	repository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
+	repository, err := exporter.ProvideSpaceExporter(config, provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +539,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	pipelineController := pipeline.ProvideController(triggerStore, authorizer, pipelineStore, reporter10, repoFinder)
 	secretController := secret2.ProvideController(encrypter, secretStore, authorizer, spaceFinder)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoFinder)
-	scmService := connector.ProvideSCMConnectorHandler(secretStore)
+	scmService := connector.ProvideSCMConnectorHandler(config, secretStore)
 	service2 := connector.ProvideConnectorHandler(secretStore, scmService)
 	connectorController := connector2.ProvideController(connectorStore, service2, authorizer, spaceFinder)
 	templateController := template.ProvideController(templateStore, authorizer, spaceFinder)
