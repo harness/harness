@@ -76,6 +76,8 @@ func NewController(
 
 var hashPassword = bcrypt.GenerateFromPassword
 
+var comparePassword = bcrypt.CompareHashAndPassword
+
 func findUserFromUID(ctx context.Context,
 	principalStore store.PrincipalStore, userUID string,
 ) (*types.User, error) {
