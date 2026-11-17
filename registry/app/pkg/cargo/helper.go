@@ -233,6 +233,12 @@ func parseDependency(
 		if registry, ok := val["registry"].(string); ok {
 			dep.Registry = registry
 		}
+		// Renamed dependency: `alias = { package = "real", ... }`.
+		// Keep the alias in ExplicitNameInToml and use the real crate as Name,
+		// the same shape the publish API sends.
+		if pkg, ok := val["package"].(string); ok && pkg != "" {
+			dep.Name = pkg
+		}
 	}
 
 	return dep
