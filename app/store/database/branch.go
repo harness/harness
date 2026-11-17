@@ -95,34 +95,38 @@ func mapInternalBranch(b *types.BranchTable, repoID int64) branch {
 	}
 }
 
-// FindBranchesWithoutOpenPRs finds branches without open pull requests for a repository,
-// or with closed pull requests whose SHA doesn't match the provided SHA.
+// FindBranchesWithoutOpenPRs finds recently updated non-default branches
+// that do not have an open pull request and have not already had a pull
+// request created for their current SHA.
 func (s *branchStore) FindBranchesWithoutOpenPRs(
 	ctx context.Context,
 	repoID int64,
 	principalID int64,
 	cutOffTime int64,
 	limit uint64,
-	sha string,
+	defaultBranch string,
 ) ([]types.BranchTable, error) {
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	// todo: handle complicated scenario whenever pull request is merged and someone pushes to same branch
-	// it gets complicated as with squash and merge the sha will change in main and pullreq branch causing
-	// isAncestor sha match
 	sqlQuery := branchSelectBase + `
-			LEFT JOIN pullreqs ON 
-				((branch_repo_id = pullreq_source_repo_id 
-				AND branch_name = pullreq_source_branch 
-				AND branch_last_created_pullreq_id!=NULL) OR (branch_last_created_pullreq_id = pullreq_id))
-			WHERE branch_repo_id = $1
-				AND branch_updated_by = $2
-				AND branch_updated > $3
-				AND (pullreq_id IS NULL OR (pullreq_state != 'open' AND pullreq_source_sha != branch_sha))
-				AND branch_sha != $4
-			ORDER BY branch_updated DESC
-			LIMIT $5
-		`
+		WHERE branches.branch_repo_id = $1
+			AND branches.branch_updated_by = $2
+			AND branches.branch_updated > $3
+			AND branches.branch_name != $4
+			AND NOT EXISTS (
+				SELECT 1
+				FROM pullreqs
+				WHERE pullreqs.pullreq_source_repo_id = branches.branch_repo_id
+					AND pullreqs.pullreq_source_branch = branches.branch_name
+					AND (
+						pullreqs.pullreq_state = 'open'
+						OR pullreqs.pullreq_source_sha = branches.branch_sha
+					)
+			)
+		ORDER BY branches.branch_updated DESC
+		LIMIT $5
+	`
+
 	dst := make([]*branch, 0, limit)
 	err := db.SelectContext(
 		ctx,
@@ -131,11 +135,15 @@ func (s *branchStore) FindBranchesWithoutOpenPRs(
 		repoID,
 		principalID,
 		cutOffTime,
-		sha,
+		defaultBranch,
 		limit,
 	)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find branches without PRs")
+		return nil, database.ProcessSQLErrorf(
+			ctx,
+			err,
+			"Failed to find branches without PRs",
+		)
 	}
 
 	result := make([]types.BranchTable, len(dst))
