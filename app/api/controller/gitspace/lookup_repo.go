@@ -45,7 +45,7 @@ func (c *Controller) LookupRepo(
 	session *auth.Session,
 	in *LookupRepoInput,
 ) (*scm.CodeRepositoryResponse, error) {
-	if err := c.sanitizeLookupRepoInput(in); err != nil {
+	if err := c.sanitizeLookupRepoInput(ctx, in); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	space, err := c.spaceFinder.FindByRef(ctx, in.SpaceRef)
@@ -71,7 +71,7 @@ func (c *Controller) LookupRepo(
 	return codeRepositoryResponse, nil
 }
 
-func (c *Controller) sanitizeLookupRepoInput(in *LookupRepoInput) error {
+func (c *Controller) sanitizeLookupRepoInput(ctx context.Context, in *LookupRepoInput) error {
 	if in.RepoType == "" && in.URL == "" {
 		return ErrRepoMissing
 	}
@@ -84,6 +84,16 @@ func (c *Controller) sanitizeLookupRepoInput(in *LookupRepoInput) error {
 	}
 	if _, err := url.ParseRequestURI(parsedURL.RequestURI()); err != nil {
 		return err
+	}
+
+	//allowing only https and ssh schemes for code repo url
+	if parsedURL.Scheme != "https" && parsedURL.Scheme != "http" && parsedURL.Scheme != "ssh" {
+		return usererror.BadRequest("code_repo_url must use https or ssh scheme")
+	}
+	if parsedURL.Scheme == "http" || parsedURL.Scheme == "https" {
+		if err := c.networkPolicy.CheckURLHost(ctx, nil, in.URL); err != nil {
+			return usererror.BadRequest("code_repo_url host is not allowed (internal/metadata addresses are blocked)")
+		}
 	}
 	return nil
 }
