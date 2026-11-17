@@ -166,6 +166,34 @@ func (s gitspaceConfigStore) Find(ctx context.Context, id int64, includeDeleted 
 	return s.mapDBToGitspaceConfig(ctx, dst)
 }
 
+// FindForUpdate finds the gitspace config and locks its row for the duration of the enclosing
+// transaction, so concurrent operations on the same config serialize (must be called in a tx).
+func (s gitspaceConfigStore) FindForUpdate(ctx context.Context, id int64) (*types.GitspaceConfig, error) {
+	// sqlite allows at most one writer at a time, so no row lock is needed (and FOR UPDATE is
+	// unsupported there).
+	if strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		return s.Find(ctx, id, false)
+	}
+
+	stmt := database.Builder.
+		Select(gitspaceConfigSelectColumns).
+		From(gitspaceConfigsTable).
+		Where("gconf_id = ?", id).
+		Where("gconf_is_deleted = ?", false).
+		Suffix(database.SQLForUpdate)
+
+	dst := new(gitspaceConfig)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to lock gitspace config for %d", id)
+	}
+	return s.mapDBToGitspaceConfig(ctx, dst)
+}
+
 func (s gitspaceConfigStore) FindByIdentifier(
 	ctx context.Context,
 	spaceID int64,

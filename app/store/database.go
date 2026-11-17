@@ -930,6 +930,11 @@ type (
 		// Find returns a gitspace config given a ID from the datastore.
 		Find(ctx context.Context, id int64, includeDeleted bool) (*types.GitspaceConfig, error)
 
+		// FindForUpdate returns a gitspace config given an ID and locks its row for the duration of
+		// the enclosing transaction, so concurrent operations on the same config serialize. It must
+		// be called within a transaction.
+		FindForUpdate(ctx context.Context, id int64) (*types.GitspaceConfig, error)
+
 		// FindAll returns list of gitspace configs given a IDs from the datastore.
 		FindAll(ctx context.Context, id []int64) ([]*types.GitspaceConfig, error)
 
