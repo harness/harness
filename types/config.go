@@ -50,6 +50,13 @@ type Config struct {
 		ServiceName string `envconfig:"GITNESS_PROFILER_SERVICE_NAME" default:"gitness"`
 	}
 
+	// Tracing defines the OpenTelemetry tracing configuration. The exporter, sampler and resource are
+	// configured through the standard OTEL_* environment variables.
+	Tracing struct {
+		// Exporter turns tracing on with "otlp"; the default "none" keeps it off.
+		Exporter string `envconfig:"OTEL_TRACES_EXPORTER" default:"none"`
+	}
+
 	// URL defines the URLs via which the different parts of the service are reachable by.
 	URL struct {
 		// Base is used to generate external facing URLs in case they aren't provided explicitly.

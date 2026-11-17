@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/app/pipeline/logger"
 	"github.com/harness/gitness/profiler"
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 
@@ -66,6 +67,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// add logger to context
 	log := log.Logger.With().Logger()
 	ctx = log.WithContext(ctx)
+
+	shutdownTracing, err := tracing.Init(ctx, "gitness", tracing.Config{Exporter: config.Tracing.Exporter})
+	if err != nil {
+		return fmt.Errorf("encountered an error while initializing tracing: %w", err)
+	}
 
 	// initialize system
 	system, err := c.initializer(ctx, config)
@@ -184,6 +190,14 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	log.Info().Msg("wait for subroutines to complete")
 	err = g.Wait()
+
+	// flush spans last to include the ones created during shutdown, on a fresh context
+	// as the graceful shutdown above can use up all of shutdownCtx
+	tracingCtx, cancelTracing := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancelTracing()
+	if sErr := shutdownTracing(tracingCtx); sErr != nil {
+		log.Err(sErr).Msg("failed to shutdown tracing gracefully")
+	}
 
 	return err
 }

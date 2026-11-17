@@ -19,6 +19,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Option allows to annotate logs with metadata.
@@ -57,5 +58,18 @@ func NewContext(ctx context.Context, opts ...Option) context.Context {
 func WithRequestID(reqID string) Option {
 	return func(c zerolog.Context) zerolog.Context {
 		return c.Str("request_id", reqID)
+	}
+}
+
+// WithTraceContext can be used to annotate logs with the trace and span id of the provided span context.
+// Invalid span contexts (e.g. when the request isn't traced) leave the logs untouched.
+func WithTraceContext(sc trace.SpanContext) Option {
+	return func(c zerolog.Context) zerolog.Context {
+		if !sc.IsValid() {
+			return c
+		}
+		return c.
+			Str("trace_id", sc.TraceID().String()).
+			Str("span_id", sc.SpanID().String())
 	}
 }

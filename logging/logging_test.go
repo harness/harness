@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestWithRequestID(t *testing.T) {
@@ -84,6 +85,63 @@ func TestWithRequestID(t *testing.T) {
 				}
 			} else {
 				t.Error("request_id field not found in log output")
+			}
+		})
+	}
+}
+
+func TestWithTraceContext(t *testing.T) {
+	traceID := trace.TraceID{0x48, 0x66, 0x93, 0x89, 0x37, 0xd2, 0xe3, 0xb0,
+		0x7a, 0xa3, 0x00, 0x59, 0x2b, 0xd0, 0x6f, 0x06}
+	spanID := trace.SpanID{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
+
+	tests := []struct {
+		name        string
+		spanContext trace.SpanContext
+		wantTraceID string
+		wantSpanID  string
+	}{
+		{
+			name: "valid span context",
+			spanContext: trace.NewSpanContext(trace.SpanContextConfig{
+				TraceID: traceID,
+				SpanID:  spanID,
+			}),
+			wantTraceID: "4866938937d2e3b07aa300592bd06f06",
+			wantSpanID:  "0102030405060708",
+		},
+		{
+			name:        "invalid span context",
+			spanContext: trace.SpanContext{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			logger := WithTraceContext(tt.spanContext)(zerolog.New(&buf).With()).Logger()
+			logger.Info().Msg("test message")
+
+			var logEntry map[string]any
+			if err := json.Unmarshal(buf.Bytes(), &logEntry); err != nil {
+				t.Fatalf("Failed to parse log output: %v", err)
+			}
+
+			if tt.wantTraceID == "" {
+				if _, ok := logEntry["trace_id"]; ok {
+					t.Error("trace_id should not be set for an invalid span context")
+				}
+				if _, ok := logEntry["span_id"]; ok {
+					t.Error("span_id should not be set for an invalid span context")
+				}
+				return
+			}
+
+			if got := logEntry["trace_id"]; got != tt.wantTraceID {
+				t.Errorf("Expected trace_id %q, got %q", tt.wantTraceID, got)
+			}
+			if got := logEntry["span_id"]; got != tt.wantSpanID {
+				t.Errorf("Expected span_id %q, got %q", tt.wantSpanID, got)
 			}
 		})
 	}
