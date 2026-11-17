@@ -30,7 +30,7 @@ var (
 
 type InMemory struct {
 	config   Config
-	mutex    sync.Mutex
+	mutex    sync.RWMutex
 	registry []*inMemorySubscriber
 }
 
@@ -94,7 +94,8 @@ func (r *InMemory) Subscribe(
 
 // Publish event to message broker with payload.
 func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, opts ...PublishOption) error {
-	if len(r.registry) == 0 {
+	subscribers := r.subscribers()
+	if len(subscribers) == 0 {
 		log.Ctx(ctx).Warn().Msg("in pubsub Publish: no subscribers registered")
 		return nil
 	}
@@ -108,8 +109,8 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 
 	topic = formatTopic(pubConfig.app, pubConfig.namespace, topic)
 	wg := sync.WaitGroup{}
-	for _, sub := range r.registry {
-		if slices.Contains(sub.topics, topic) && !sub.isClosed() {
+	for _, sub := range subscribers {
+		if sub.matches(topic) {
 			wg.Add(1)
 			go func(subscriber *inMemorySubscriber) {
 				defer wg.Done()
@@ -136,12 +137,19 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 }
 
 func (r *InMemory) Close(_ context.Context) error {
-	for _, subscriber := range r.registry {
+	for _, subscriber := range r.subscribers() {
 		if err := subscriber.Close(); err != nil && !errors.Is(err, ErrClosed) {
 			return err
 		}
 	}
 	return nil
+}
+
+func (r *InMemory) subscribers() []*inMemorySubscriber {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	return append([]*inMemorySubscriber(nil), r.registry...)
 }
 
 type inMemorySubscriber struct {
@@ -173,8 +181,8 @@ func (s *inMemorySubscriber) start(ctx context.Context) {
 }
 
 func (s *inMemorySubscriber) Subscribe(_ context.Context, topics ...string) error {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	topics = s.formatTopics(topics...)
 	for _, ch := range topics {
 		if slices.Contains(s.topics, ch) {
@@ -186,13 +194,14 @@ func (s *inMemorySubscriber) Subscribe(_ context.Context, topics ...string) erro
 }
 
 func (s *inMemorySubscriber) Unsubscribe(_ context.Context, topics ...string) error {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	topics = s.formatTopics(topics...)
-	for i, ch := range topics {
-		if slices.Contains(s.topics, ch) {
-			s.topics[i] = s.topics[len(s.topics)-1]
-			s.topics = s.topics[:len(s.topics)-1]
+	for _, ch := range topics {
+		if i := slices.Index(s.topics, ch); i >= 0 {
+			last := len(s.topics) - 1
+			s.topics[i] = s.topics[last]
+			s.topics = s.topics[:last]
 		}
 	}
 	return nil
@@ -210,10 +219,11 @@ func (s *inMemorySubscriber) Close() error {
 	return nil
 }
 
-func (s *inMemorySubscriber) isClosed() bool {
+func (s *inMemorySubscriber) matches(topic string) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	return s.closed
+
+	return !s.closed && slices.Contains(s.topics, topic)
 }
 
 func (s *inMemorySubscriber) formatTopics(topics ...string) []string {
