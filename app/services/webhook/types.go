@@ -198,6 +198,7 @@ type PullReqInfo struct {
 	TargetRepoID  int64             `json:"target_repo_id"`
 	TargetBranch  string            `json:"target_branch"`
 	MergeBaseSHA  string            `json:"merge_base_sha"`
+	MergeSHA      string            `json:"merge_sha,omitempty"`
 	MergeStrategy *enum.MergeMethod `json:"merge_strategy,omitempty"`
 	Author        PrincipalInfo     `json:"author"`
 	PrURL         string            `json:"pr_url"`
@@ -210,7 +211,7 @@ func pullReqInfoFrom(
 	repo *types.Repository,
 	urlProvider url.Provider,
 ) PullReqInfo {
-	return PullReqInfo{
+	info := PullReqInfo{
 		Number:        pr.Number,
 		State:         pr.State,
 		IsDraft:       pr.IsDraft,
@@ -225,6 +226,29 @@ func pullReqInfoFrom(
 		Author:        principalInfoFrom(&pr.Author),
 		PrURL:         urlProvider.GenerateUIPRURL(ctx, repo.Path, pr.Number),
 	}
+	if pr.MergeSHA != nil {
+		info.MergeSHA = *pr.MergeSHA
+	}
+
+	return info
+}
+
+// pullReqInfoForMerged gets the PullReqInfo of a merged pull request. The merge commit is not reachable from the
+// source branch, so consumers (e.g. CI) need it to check out the merged result of squash and rebase merges.
+// The merge event carries it as a fallback in case the pull request was reloaded without it.
+func pullReqInfoForMerged(
+	ctx context.Context,
+	pr *types.PullReq,
+	repo *types.Repository,
+	urlProvider url.Provider,
+	eventMergeSHA string,
+) PullReqInfo {
+	info := pullReqInfoFrom(ctx, pr, repo, urlProvider)
+	if info.MergeSHA == "" {
+		info.MergeSHA = eventMergeSHA
+	}
+
+	return info
 }
 
 // PrincipalInfo describes the principal related info for a webhook payload.

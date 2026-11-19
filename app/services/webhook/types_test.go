@@ -203,3 +203,96 @@ func TestRepositoryInfoFrom_NilRepository(t *testing.T) {
 		t.Errorf("Expected Tags to be nil for nil repository, got %v", repoInfo.Tags)
 	}
 }
+
+// pullReqInfoJSON marshals the webhook PullReqInfo of the given pull request into a generic map,
+// so the tests assert on the wire format that webhook consumers see.
+func pullReqInfoJSON(t *testing.T, pr *types.PullReq) map[string]any {
+	t.Helper()
+
+	repo := &types.Repository{Path: "space/repo"}
+	info := pullReqInfoFrom(context.Background(), pr, repo, &mockURLProvider{})
+
+	raw, err := json.Marshal(info)
+	if err != nil {
+		t.Fatalf("failed to marshal PullReqInfo: %v", err)
+	}
+
+	var decoded map[string]any
+	if err = json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("failed to unmarshal PullReqInfo: %v", err)
+	}
+
+	return decoded
+}
+
+func TestPullReqInfoFrom_MergeSHA(t *testing.T) {
+	const mergeSHA = "a27342b1c0ffee00000000000000000000000000"
+	mergeSHAValue := mergeSHA
+	squash := enum.MergeMethodSquash
+
+	pr := &types.PullReq{
+		Number:       1,
+		State:        enum.PullReqStateMerged,
+		MergeBaseSHA: "856e21b1c0ffee00000000000000000000000000",
+		MergeSHA:     &mergeSHAValue,
+		MergeMethod:  &squash,
+	}
+
+	got, ok := pullReqInfoJSON(t, pr)["merge_sha"]
+	if !ok {
+		t.Fatal("expected merge_sha to be present in the payload of a merged pull request")
+	}
+	if got != mergeSHA {
+		t.Errorf("expected merge_sha %q, got %v", mergeSHA, got)
+	}
+}
+
+func TestPullReqInfoFrom_NoMergeSHA(t *testing.T) {
+	// Open pull requests never have a merge commit; the key must be omitted, not sent as an empty string.
+	pr := &types.PullReq{
+		Number:       2,
+		State:        enum.PullReqStateOpen,
+		MergeBaseSHA: "856e21b1c0ffee00000000000000000000000000",
+		MergeSHA:     nil,
+	}
+
+	if got, ok := pullReqInfoJSON(t, pr)["merge_sha"]; ok {
+		t.Errorf("expected merge_sha to be omitted for a pull request without merge commit, got %v", got)
+	}
+}
+
+func TestPullReqInfoForMerged_MergeSHA(t *testing.T) {
+	const (
+		fromPR    = "a27342b1c0ffee00000000000000000000000000"
+		fromEvent = "b38453c2d1ffee00000000000000000000000000"
+	)
+	prSHA, emptySHA := fromPR, ""
+
+	tests := []struct {
+		name    string
+		prSHA   *string
+		eventID string
+		want    string
+	}{
+		{name: "merge sha of the pull request wins over the event", prSHA: &prSHA, eventID: fromEvent, want: fromPR},
+		{name: "event merge sha fills in when the pull request has none", prSHA: nil, eventID: fromEvent, want: fromEvent},
+		{name: "empty pull request merge sha falls back to the event", prSHA: &emptySHA, eventID: fromEvent, want: fromEvent},
+		{name: "stays empty when neither side has one", prSHA: nil, eventID: "", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pr := &types.PullReq{Number: 1, State: enum.PullReqStateMerged, MergeSHA: tt.prSHA}
+			repo := &types.Repository{Path: "space/repo"}
+
+			got := pullReqInfoForMerged(context.Background(), pr, repo, &mockURLProvider{}, tt.eventID)
+
+			if got.MergeSHA != tt.want {
+				t.Errorf("expected MergeSHA %q, got %q", tt.want, got.MergeSHA)
+			}
+			if got.Number != pr.Number || got.State != enum.PullReqStateMerged {
+				t.Errorf("expected the rest of the pull request info to be preserved, got %+v", got)
+			}
+		})
+	}
+}

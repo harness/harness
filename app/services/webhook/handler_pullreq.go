@@ -305,14 +305,14 @@ func (s *Service) handleEventPullReqMerged(
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
-			return &PullReqClosedPayload{
+			return &PullReqMergedPayload{
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqMerged,
 					Repo:      targetRepoInfo,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoForMerged(ctx, pr, targetRepo, s.urlProvider, event.Payload.MergeSHA),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
