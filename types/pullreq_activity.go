@@ -66,7 +66,7 @@ type PullReqActivity struct {
 
 func (a *PullReqActivity) IsValidCodeComment() bool {
 	return a.Type == enum.PullReqActivityTypeCodeComment &&
-		a.Kind == enum.PullReqActivityKindChangeComment &&
+		a.Kind.CanBeCodeComment() &&
 		a.CodeComment != nil
 }
 
@@ -93,6 +93,7 @@ func (a *PullReqActivity) AsCodeComment() *CodeComment {
 
 func (a *PullReqActivity) IsReplyable() bool {
 	return (a.Type == enum.PullReqActivityTypeComment || a.Type == enum.PullReqActivityTypeCodeComment) &&
+		a.Kind != enum.PullReqActivityKindReviewComment &&
 		a.SubOrder == 0
 }
 
@@ -102,7 +103,8 @@ func (a *PullReqActivity) IsReply() bool {
 
 // IsBlocking returns true if the pull request activity (comment/code-comment) is blocking the pull request merge.
 func (a *PullReqActivity) IsBlocking() bool {
-	return a.SubOrder == 0 && a.Resolved == nil && a.Deleted == nil && a.Kind != enum.PullReqActivityKindSystem
+	return a.SubOrder == 0 && a.Resolved == nil && a.Deleted == nil &&
+		(a.Kind == enum.PullReqActivityKindComment || a.Kind == enum.PullReqActivityKindChangeComment)
 }
 
 // SetPayload sets the payload and verifies it's of correct type for the activity.

@@ -44,7 +44,7 @@ func (in *CommentUpdateInput) hasChanges(act *types.PullReqActivity) bool {
 	return in.Text != act.Text
 }
 
-// CommentUpdate updates a pull request comment.
+// CommentUpdate updates a pull request comment. If set, mutateFn is applied to the comment before it's written.
 func (c *Controller) CommentUpdate(
 	ctx context.Context,
 	session *auth.Session,
@@ -52,6 +52,7 @@ func (c *Controller) CommentUpdate(
 	prNum int64,
 	commentID int64,
 	in *CommentUpdateInput,
+	mutateFn func(act *types.PullReqActivity) error,
 ) (*types.PullReqActivity, error) {
 	if err := in.Sanitize(); err != nil {
 		return nil, err
@@ -72,7 +73,7 @@ func (c *Controller) CommentUpdate(
 		return nil, fmt.Errorf("failed to get comment: %w", err)
 	}
 
-	if !in.hasChanges(act) {
+	if !in.hasChanges(act) && mutateFn == nil {
 		return act, nil
 	}
 
@@ -105,6 +106,11 @@ func (c *Controller) CommentUpdate(
 		act.Edited = now
 		act.Text = in.Text
 		act.UpdateMetadata(metadataUpdates...)
+		if mutateFn != nil {
+			if err := mutateFn(act); err != nil {
+				return fmt.Errorf("failed to mutate pull request comment: %w", err)
+			}
+		}
 		return nil
 	})
 	if err != nil {

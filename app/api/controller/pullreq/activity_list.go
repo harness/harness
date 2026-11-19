@@ -163,7 +163,8 @@ func removeDeletedComments(list []*types.PullReqActivity) []*types.PullReqActivi
 			act.Reactions = nil // and strip reactions
 		}
 
-		if act.Kind == enum.PullReqActivityKindComment || act.Kind == enum.PullReqActivityKindChangeComment {
+		if act.Kind == enum.PullReqActivityKindComment || act.Kind == enum.PullReqActivityKindChangeComment ||
+			act.Kind == enum.PullReqActivityKindReviewComment {
 			if threadLen == 0 || list[threadIdx].Order != act.Order {
 				inspectThread()
 				threadIdx = i

@@ -47,7 +47,7 @@ func HandleCommentCreate(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		comment, err := pullreqCtrl.CommentCreate(ctx, session, repoRef, pullreqNumber, in)
+		comment, err := pullreqCtrl.CommentCreate(ctx, session, repoRef, pullreqNumber, in, nil)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

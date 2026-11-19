@@ -167,13 +167,20 @@ const (
 	PullReqActivityKindSystem        PullReqActivityKind = "system"
 	PullReqActivityKindComment       PullReqActivityKind = "comment"
 	PullReqActivityKindChangeComment PullReqActivityKind = "change-comment"
+	PullReqActivityKindReviewComment PullReqActivityKind = "review-comment"
 )
 
 var pullReqActivityKinds = sortEnum([]PullReqActivityKind{
 	PullReqActivityKindSystem,
 	PullReqActivityKindComment,
 	PullReqActivityKindChangeComment,
+	PullReqActivityKindReviewComment,
 })
+
+// CanBeCodeComment returns true if comments of the kind can be placed on lines of code.
+func (k PullReqActivityKind) CanBeCodeComment() bool {
+	return k == PullReqActivityKindChangeComment || k == PullReqActivityKindReviewComment
+}
 
 // PullReqCommentStatus defines status of a pull request comment.
 type PullReqCommentStatus string

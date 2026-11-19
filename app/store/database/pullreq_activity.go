@@ -469,7 +469,10 @@ func (s *PullReqActivityStore) CountUnresolved(ctx context.Context, prID int64) 
 		Where("pullreq_activity_sub_order = 0").
 		Where("pullreq_activity_resolved IS NULL").
 		Where("pullreq_activity_deleted IS NULL").
-		Where("pullreq_activity_kind <> ?", enum.PullReqActivityKindSystem)
+		Where(squirrel.Eq{"pullreq_activity_kind": []enum.PullReqActivityKind{
+			enum.PullReqActivityKindComment,
+			enum.PullReqActivityKindChangeComment,
+		}})
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -518,7 +521,7 @@ func mapPullReqActivity(act *pullReqActivity) (*types.PullReqActivity, error) {
 		Author:     types.PrincipalInfo{},
 		Resolver:   nil,
 	}
-	if m.Type == enum.PullReqActivityTypeCodeComment && m.Kind == enum.PullReqActivityKindChangeComment {
+	if m.Type == enum.PullReqActivityTypeCodeComment && m.Kind.CanBeCodeComment() {
 		m.CodeComment = &types.CodeCommentFields{
 			Outdated:     act.Outdated.Bool,
 			MergeBaseSHA: act.CodeCommentMergeBaseSHA.String,

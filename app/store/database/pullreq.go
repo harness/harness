@@ -945,7 +945,8 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 		*stmt = stmt.Where("act_com.pullreq_activity_deleted IS NULL")
 		*stmt = stmt.Where("(" +
 			"act_com.pullreq_activity_kind = '" + string(enum.PullReqActivityKindComment) + "' OR " +
-			"act_com.pullreq_activity_kind = '" + string(enum.PullReqActivityKindChangeComment) + "')")
+			"act_com.pullreq_activity_kind = '" + string(enum.PullReqActivityKindChangeComment) + "' OR " +
+			"act_com.pullreq_activity_kind = '" + string(enum.PullReqActivityKindReviewComment) + "')")
 		*stmt = stmt.Where("act_com.pullreq_activity_created_by = ?", opts.CommenterID)
 	}
 
@@ -963,7 +964,8 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 		*stmt = stmt.Where("act_ment.pullreq_activity_deleted IS NULL")
 		*stmt = stmt.Where("(" +
 			"act_ment.pullreq_activity_kind = '" + string(enum.PullReqActivityKindComment) + "' OR " +
-			"act_ment.pullreq_activity_kind = '" + string(enum.PullReqActivityKindChangeComment) + "')")
+			"act_ment.pullreq_activity_kind = '" + string(enum.PullReqActivityKindChangeComment) + "' OR " +
+			"act_ment.pullreq_activity_kind = '" + string(enum.PullReqActivityKindReviewComment) + "')")
 
 		switch s.db.DriverName() {
 		case SqliteDriverName:

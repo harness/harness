@@ -320,16 +320,18 @@ func (c *Controller) CommentApplySuggestions(
 	// update activities (use UpdateOptLock as it can have racing condition with comment migration)
 	resolved := ptr.Of(now.UnixMilli())
 	resolvedBy := &session.Principal.ID
-	resolvedActivities := map[int64]struct{}{}
+	resolvedBlockingActivities := map[int64]struct{}{}
 	for _, update := range activityUpdates {
 		_, err = c.activityStore.UpdateOptLock(ctx, update.act, func(act *types.PullReqActivity) error {
+			delete(resolvedBlockingActivities, act.ID)
+
 			// only resolve where required (can happen in case of parallel resolution of activity)
 			if update.resolve && act.Resolved == nil {
+				if act.IsBlocking() {
+					resolvedBlockingActivities[act.ID] = struct{}{}
+				}
 				act.Resolved = resolved
 				act.ResolvedBy = resolvedBy
-				resolvedActivities[act.ID] = struct{}{}
-			} else {
-				delete(resolvedActivities, act.ID)
 			}
 
 			if update.checksum != "" {
@@ -353,7 +355,7 @@ func (c *Controller) CommentApplySuggestions(
 	// WARNING: This could cause the count to diverge (similar to create / delete).
 	// TODO: Use transaction once sqlite issue has been addressed.
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-		pr.UnresolvedCount -= len(resolvedActivities)
+		pr.UnresolvedCount -= len(resolvedBlockingActivities)
 		return nil
 	})
 	if err != nil {

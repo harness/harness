@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -82,7 +83,10 @@ func (s *CodeCommentView) list(ctx context.Context,
 		Where("pullreq_activity_pullreq_id = ?", prID).
 		Where("not pullreq_activity_outdated").
 		Where("pullreq_activity_type = ?", enum.PullReqActivityTypeCodeComment).
-		Where("pullreq_activity_kind = ?", enum.PullReqActivityKindChangeComment).
+		Where(squirrel.Eq{"pullreq_activity_kind": []enum.PullReqActivityKind{
+			enum.PullReqActivityKindChangeComment,
+			enum.PullReqActivityKindReviewComment,
+		}}).
 		Where("pullreq_activity_deleted is null and pullreq_activity_parent_id is null")
 
 	if mergeBaseSHA != "" {

@@ -92,6 +92,7 @@ func (in *CommentCreateInput) Sanitize() error {
 }
 
 // CommentCreate creates a new pull request comment (pull request activity, type=comment/code-comment).
+// If set, mutateFn is applied to the comment before it's written.
 //
 //nolint:gocognit // refactor if needed
 func (c *Controller) CommentCreate(
@@ -100,6 +101,7 @@ func (c *Controller) CommentCreate(
 	repoRef string,
 	prNum int64,
 	in *CommentCreateInput,
+	mutateFn func(act *types.PullReqActivity) error,
 ) (*types.PullReqActivity, error) {
 	if err := in.Sanitize(); err != nil {
 		return nil, err
@@ -162,8 +164,7 @@ func (c *Controller) CommentCreate(
 
 		act = getCommentActivity(session, pr, in, metadataUpdates)
 
-		// In the switch the pull request activity (the code comment)
-		// is written to the DB (as code comment, a reply, or ordinary comment).
+		// In the switch the pull request activity is set up as a code comment, a reply, or an ordinary comment.
 		switch {
 		case in.IsCodeComment():
 			setAsCodeComment(act, cut, in.Path, in.SourceCommitSHA)
@@ -174,16 +175,24 @@ func (c *Controller) CommentCreate(
 				LineEndNew:   in.LineEndNew,
 			})
 
-			err = c.writeActivity(ctx, pr, act)
-
 		case in.IsReply():
 			act.ParentID = &parentAct.ID
 			act.Kind = parentAct.Kind
 			_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
 
-			err = c.writeReplyActivity(ctx, parentAct, act)
 		default: // top level comment
 			_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
+		}
+
+		if mutateFn != nil {
+			if err = mutateFn(act); err != nil {
+				return fmt.Errorf("failed to mutate pull request comment: %w", err)
+			}
+		}
+
+		if in.IsReply() {
+			err = c.writeReplyActivity(ctx, parentAct, act)
+		} else {
 			err = c.writeActivity(ctx, pr, act)
 		}
 		if err != nil {
