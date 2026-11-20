@@ -373,9 +373,6 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 					continue
 				}
 
-				// It's safe to change start of the requested range for the next iteration to oldest message.
-				start = resPending[0].ID
-
 				for _, resMessage := range resPending {
 					if resMessage.RetryCount > int64(handler.config.maxRetries) {
 						// Retry count gets increased after every XCLAIM.
