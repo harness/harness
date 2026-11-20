@@ -32,7 +32,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/rs/zerolog/log"
 )
 
 var _ store.RuleStore = (*RuleStore)(nil)
@@ -605,7 +604,7 @@ func (s *RuleStore) mapToRule(
 
 	createdBy, err := s.pCache.Get(ctx, in.CreatedBy)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to load rule creator")
+		logPrincipalLoadError(ctx, err, "failed to load rule creator")
 	}
 
 	if createdBy != nil {

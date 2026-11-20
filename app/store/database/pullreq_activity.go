@@ -31,7 +31,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 var _ store.PullReqActivityStore = (*PullReqActivityStore)(nil)
@@ -593,7 +592,7 @@ func (s *PullReqActivityStore) mapPullReqActivity(
 
 	author, err = s.pCache.Get(ctx, act.CreatedBy)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to load PR activity author")
+		logPrincipalLoadError(ctx, err, "failed to load PR activity author")
 	}
 	if author != nil {
 		m.Author = *author
@@ -602,7 +601,7 @@ func (s *PullReqActivityStore) mapPullReqActivity(
 	if act.ResolvedBy.Valid {
 		resolver, err = s.pCache.Get(ctx, act.ResolvedBy.Int64)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("failed to load PR activity resolver")
+			logPrincipalLoadError(ctx, err, "failed to load PR activity resolver")
 		}
 		m.Resolver = resolver
 	}

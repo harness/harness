@@ -28,7 +28,6 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 var _ store.PullReqReviewerStore = (*PullReqReviewerStore)(nil)
@@ -288,7 +287,7 @@ func (s *PullReqReviewerStore) mapPullReqReviewer(ctx context.Context, v *pullRe
 
 	addedBy, err := s.pCache.Get(ctx, v.CreatedBy)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to load PR reviewer addedBy")
+		logPrincipalLoadError(ctx, err, "failed to load PR reviewer addedBy")
 	}
 	if addedBy != nil {
 		m.AddedBy = *addedBy
@@ -296,7 +295,7 @@ func (s *PullReqReviewerStore) mapPullReqReviewer(ctx context.Context, v *pullRe
 
 	reviewer, err := s.pCache.Get(ctx, v.PrincipalID)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to load PR reviewer principal")
+		logPrincipalLoadError(ctx, err, "failed to load PR reviewer principal")
 	}
 	if reviewer != nil {
 		m.Reviewer = *reviewer

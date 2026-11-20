@@ -19,9 +19,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
+	"syscall"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/protection"
@@ -62,6 +65,11 @@ func Reader(ctx context.Context, w http.ResponseWriter, code int, reader io.Read
 	w.WriteHeader(code)
 	_, err := io.Copy(w, reader)
 	if err != nil {
+		if isClientGone(err) {
+			// the client disconnected mid-download (e.g. navigated away) - not a server fault.
+			log.Ctx(ctx).Debug().Err(err).Msg("client disconnected while rendering data from reader")
+			return
+		}
 		log.Ctx(ctx).Err(err).Msg("failed to render data from reader")
 	}
 }
@@ -157,6 +165,30 @@ func writeJSON(w http.ResponseWriter, v any) {
 		enc.SetIndent("", "  ")
 	}
 	if err := enc.Encode(v); err != nil {
+		if isClientGone(err) {
+			// the client disconnected before the response was written - not a server fault.
+			log.Debug().Err(err).Msg("Client disconnected while writing json encoding to response body.")
+			return
+		}
 		log.Err(err).Msgf("Failed to write json encoding to response body.")
 	}
+}
+
+// isClientGone reports whether err means the client went away rather than the server failing: a closed
+// connection (broken pipe, connection reset), a cancelled request, or an HTTP/2 client disconnect.
+func isClientGone(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, syscall.EPIPE) ||
+		errors.Is(err, syscall.ECONNRESET) ||
+		errors.Is(err, net.ErrClosed) ||
+		errors.Is(err, context.Canceled) {
+		return true
+	}
+
+	// net/http reports an HTTP/2 disconnect with an unexported sentinel from an internal package, so the
+	// message is the only thing available to match on.
+	return strings.Contains(err.Error(), "client disconnected")
 }

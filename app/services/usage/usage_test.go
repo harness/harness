@@ -283,3 +283,73 @@ func BenchmarkMediator_MillionRequests_MultiSpace(b *testing.B) {
 	}
 	b.StopTimer()
 }
+
+// The flush on shutdown runs after the service context is cancelled. It has to reach the store with a live
+// context, otherwise the buffered metrics are dropped and the failure logged as an error on every restart.
+func TestMediator_shutdownFlushDetachesContext(t *testing.T) {
+	t.Parallel()
+
+	space := &types.SpaceCore{ID: 7, Identifier: "space"}
+	var (
+		upserted  []*types.UsageMetric
+		upsertErr error
+		finderErr error
+	)
+
+	m := &Mediator{
+		config: Config{FlushInterval: time.Hour},
+		cache: map[string]*Metric{
+			"space": {SpaceRef: "space", Bandwidth: Bandwidth{Out: 5}, Pushes: 2},
+		},
+		spaceFinder: &SpaceFinderMock{
+			FindByRefFn: func(ctx context.Context, _ string) (*types.SpaceCore, error) {
+				finderErr = ctx.Err()
+				return space, nil
+			},
+		},
+		metricsStore: &MetricsMock{
+			UpsertFn: func(ctx context.Context, in []*types.UsageMetric) error {
+				upserted, upsertErr = in, ctx.Err()
+				return nil
+			},
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	m.Start(ctx) // returns immediately via the ctx.Done branch
+
+	assert.NoError(t, finderErr, "space lookup must not see the cancelled service context")
+	assert.NoError(t, upsertErr, "upsert must not see the cancelled service context")
+	assert.Len(t, upserted, 1)
+	assert.Equal(t, int64(7), upserted[0].RootSpaceID)
+	assert.Equal(t, int64(5), upserted[0].BandwidthOut)
+	assert.Equal(t, int64(2), upserted[0].Pushes)
+}
+
+func TestMediator_process_noops(t *testing.T) {
+	t.Parallel()
+
+	var upserted []*types.UsageMetric
+	m := &Mediator{
+		spaceFinder: &SpaceFinderMock{
+			FindByRefFn: func(context.Context, string) (*types.SpaceCore, error) {
+				return nil, fmt.Errorf("not found")
+			},
+		},
+		metricsStore: &MetricsMock{
+			UpsertFn: func(_ context.Context, in []*types.UsageMetric) error {
+				upserted = in
+				return nil
+			},
+		},
+	}
+
+	m.process(context.Background(), nil)
+	assert.Nil(t, upserted)
+
+	// a failed space lookup aborts the batch rather than writing a partial one.
+	m.process(context.Background(), []*Metric{{SpaceRef: "x"}})
+	assert.Nil(t, upserted)
+}

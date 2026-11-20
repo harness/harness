@@ -26,6 +26,9 @@ import (
 
 const QueueSize = 128
 
+// shutdownFlushTimeout bounds the final flush, which runs detached from the cancelled service context.
+const shutdownFlushTimeout = 30 * time.Second
+
 var (
 	days30 = time.Duration(30*24) * time.Hour
 )
@@ -100,7 +103,7 @@ func NewMediator(
 }
 
 func (m *Mediator) Start(ctx context.Context) {
-	flushFn := func() {
+	flushFn := func(ctx context.Context) {
 		usageMetrics := make([]*Metric, 0, len(m.cache))
 		for _, metric := range m.cache {
 			usageMetrics = append(usageMetrics, metric)
@@ -119,10 +122,14 @@ func (m *Mediator) Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Ctx(ctx).Warn().Msg("context canceled")
-			flushFn()
+			// The service context is already cancelled, so the final flush has to run detached from it,
+			// otherwise every lookup and write below fails with context.Canceled.
+			flushCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), shutdownFlushTimeout)
+			flushFn(flushCtx)
+			cancel()
 			return
 		case <-ticker.C:
-			flushFn()
+			flushFn(ctx)
 		case payload := <-m.queue:
 			cache, ok := m.cache[payload.SpaceRef]
 			if !ok {
