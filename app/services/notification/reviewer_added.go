@@ -42,6 +42,10 @@ func (s *Service) notifyReviewerAdded(
 		)
 	}
 
+	if len(recipients) == 0 {
+		return nil
+	}
+
 	err = s.notificationClient.SendReviewerAdded(ctx, recipients, payload)
 	if err != nil {
 		return fmt.Errorf(
@@ -69,13 +73,34 @@ func (s *Service) processReviewerAddedEvent(
 		return nil, nil, fmt.Errorf("failed to get reviewer from principalInfoCache: %w", err)
 	}
 
-	recipients := []*types.PrincipalInfo{
-		base.Author,
-		reviewerPrincipal,
-	}
+	recipients := reviewerAddedRecipients(base.Author, reviewerPrincipal, event.Payload.PrincipalID)
 
 	return &ReviewerAddedPayload{
 		Base:     base,
 		Reviewer: reviewerPrincipal,
 	}, recipients, nil
+}
+
+// reviewerAddedRecipients returns who to mail: the author, plus the reviewer
+// unless they added themselves. The actor is never mailed about their own action.
+func reviewerAddedRecipients(
+	author *types.PrincipalInfo,
+	reviewer *types.PrincipalInfo,
+	actorID int64,
+) []*types.PrincipalInfo {
+	selfAdded := reviewer.ID == actorID
+
+	var recipients []*types.PrincipalInfo
+
+	// Mail the author, unless they added themselves (nothing to tell them).
+	if !selfAdded || author.ID != reviewer.ID {
+		recipients = append(recipients, author)
+	}
+
+	// Mail the reviewer, unless they added themselves or are the author (already mailed above).
+	if !selfAdded && reviewer.ID != author.ID {
+		recipients = append(recipients, reviewer)
+	}
+
+	return recipients
 }
