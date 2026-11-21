@@ -18,7 +18,10 @@ import (
 	events "github.com/harness/gitness/app/events/gitspaceoperations"
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	"github.com/harness/gitness/infraprovider"
+	"github.com/harness/gitness/netpolicy"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -33,12 +36,20 @@ func ProvideEmbeddedDockerOrchestrator(
 	statefulLogger *logutil.StatefulLogger,
 	runArgProvider runarg.Provider,
 	eventReporter *events.Reporter,
+	config *types.Config,
 ) EmbeddedDockerOrchestrator {
 	return NewEmbeddedDockerOrchestrator(
 		dockerClientFactory,
 		statefulLogger,
 		runArgProvider,
 		eventReporter,
+		// devcontainer feature sources are user provided, so restrict which
+		// addresses a feature download is allowed to reach.
+		utils.NewFeatureDownloadTransport(netpolicy.Policy{
+			AllowLoopback:       config.Gitspace.FeaturesAllowLoopback,
+			AllowPrivateNetwork: config.Gitspace.FeaturesAllowPrivateNetwork,
+			AllowLinkLocal:      config.Gitspace.FeaturesAllowLinkLocal,
+		}),
 	)
 }
 
