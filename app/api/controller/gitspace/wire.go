@@ -24,7 +24,9 @@ import (
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/netpolicy"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -47,6 +49,7 @@ func ProvideController(
 	gitspaceLimiter limiter.Gitspace,
 	repoFinder refcache.RepoFinder,
 	settingsService gitspacesettings.Service,
+	config *types.Config,
 ) *Controller {
 	return NewController(
 		tx,
@@ -61,5 +64,12 @@ func ProvideController(
 		gitspaceLimiter,
 		repoFinder,
 		settingsService,
+		// the URL of a repository lookup is user provided and is handed to
+		// git ls-remote, so restrict which addresses it is allowed to reach.
+		netpolicy.Policy{
+			AllowLoopback:       config.Gitspace.LookupAllowLoopback,
+			AllowPrivateNetwork: config.Gitspace.LookupAllowPrivateNetwork,
+			AllowLinkLocal:      config.Gitspace.LookupAllowLinkLocal,
+		},
 	)
 }
