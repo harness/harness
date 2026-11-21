@@ -76,7 +76,7 @@ func BuildWithFeatures(
 	}()
 
 	dockerFileContent, err := generateDockerFileWithFeatures(imageName, features, buildContextPath, containerUser,
-		containerUserHomeDir, remoteUser, remoteUserHomeDir)
+		remoteUser, containerUserHomeDir, remoteUserHomeDir)
 	if err != nil {
 		return "", "", err
 	}
