@@ -168,10 +168,47 @@ func TestInMemory_ConsumerSubscribeAddsTopic(t *testing.T) {
 	}
 }
 
+func TestInMemory_ConsumerUnsubscribeRemovesRequestedTopic(t *testing.T) {
+	ps := newTestInMemory()
+	t.Cleanup(func() { _ = ps.Close(context.Background()) })
+
+	ctx := context.Background()
+	var first, second atomic.Int32
+	sub := ps.Subscribe(ctx, "first", func(payload []byte) error {
+		switch string(payload) {
+		case "first":
+			first.Add(1)
+		case "second":
+			second.Add(1)
+		}
+		return nil
+	})
+	t.Cleanup(func() { _ = sub.Close() })
+
+	if err := sub.Subscribe(ctx, "second"); err != nil {
+		t.Fatalf("Consumer.Subscribe: %v", err)
+	}
+	if err := sub.Unsubscribe(ctx, "second"); err != nil {
+		t.Fatalf("Consumer.Unsubscribe: %v", err)
+	}
+
+	if err := ps.Publish(ctx, "first", []byte("first")); err != nil {
+		t.Fatalf("Publish first: %v", err)
+	}
+	if err := ps.Publish(ctx, "second", []byte("second")); err != nil {
+		t.Fatalf("Publish second: %v", err)
+	}
+
+	waitFor(t, time.Second, func() bool { return first.Load() == 1 })
+	if n := second.Load(); n != 0 {
+		t.Fatalf("second topic handler fired %d times, want 0", n)
+	}
+}
+
 func TestInMemory_SubscribeOnClosedSubscriberStillSucceeds(t *testing.T) {
 	// The minimal implementation does not reject Subscribe/Unsubscribe after
-	// Close — closed subscribers simply stop receiving (isClosed() filters them
-	// in Publish). This pins that contract so it isn't regressed silently.
+	// Close — closed subscribers simply stop receiving (matches filters them in
+	// Publish). This pins that contract so it isn't regressed silently.
 	ps := newTestInMemory()
 	t.Cleanup(func() { _ = ps.Close(context.Background()) })
 
@@ -239,6 +276,54 @@ func TestInMemory_PublishCloseRace(t *testing.T) {
 		}()
 		wg.Wait()
 	}
+}
+
+func TestInMemory_ConcurrentPublishAndSubscribe(t *testing.T) {
+	ps := newTestInMemory()
+	t.Cleanup(func() { _ = ps.Close(context.Background()) })
+
+	ctx := context.Background()
+	var wg sync.WaitGroup
+	for range 100 {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			_ = ps.Publish(ctx, "topic", []byte("x"))
+		}()
+		go func() {
+			defer wg.Done()
+			sub := ps.Subscribe(ctx, "topic", func(_ []byte) error { return nil })
+			_ = sub.Close()
+		}()
+	}
+	wg.Wait()
+}
+
+func TestInMemory_ConcurrentPublishAndTopicMutation(t *testing.T) {
+	ps := newTestInMemory()
+	t.Cleanup(func() { _ = ps.Close(context.Background()) })
+
+	ctx := context.Background()
+	sub := ps.Subscribe(ctx, "topic", func(_ []byte) error { return nil })
+	t.Cleanup(func() { _ = sub.Close() })
+
+	var wg sync.WaitGroup
+	for range 100 {
+		wg.Add(3)
+		go func() {
+			defer wg.Done()
+			_ = ps.Publish(ctx, "topic", []byte("x"))
+		}()
+		go func() {
+			defer wg.Done()
+			_ = sub.Subscribe(ctx, "dynamic")
+		}()
+		go func() {
+			defer wg.Done()
+			_ = sub.Unsubscribe(ctx, "dynamic")
+		}()
+	}
+	wg.Wait()
 }
 
 func TestInMemory_PublishRespectsContextCancellation(t *testing.T) {
