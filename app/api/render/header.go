@@ -98,6 +98,7 @@ func getPaginationBaseURL(r *http.Request, page int, size int) url.URL {
 	params.Del("token")
 	params.Set("page", strconv.Itoa(page))
 	params.Set("limit", strconv.Itoa(size))
+	uri.RawQuery = params.Encode()
 
 	return uri
 }
