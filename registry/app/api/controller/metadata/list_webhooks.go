@@ -81,6 +81,7 @@ func (c *APIController) ListWebhooks(
 	if r.Params.SortOrder != nil {
 		sortByOrder = string(*r.Params.SortOrder)
 	}
+	sortByOrder = GetSortByOrder(sortByOrder)
 	if r.Params.SortField != nil {
 		sortByField = string(*r.Params.SortField)
 	}
