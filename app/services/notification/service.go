@@ -23,6 +23,7 @@ import (
 	"path"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -148,18 +149,18 @@ func NewService(
 					stream.WithMaxRetries(config.MaxRetries),
 				))
 
-			_ = r.RegisterCreated(service.notifyPullReqCreated)
+			_ = r.RegisterCreated(withEventKey(service.notifyPullReqCreated))
 
-			_ = r.RegisterReviewerAdded(service.notifyReviewerAdded)
-			_ = r.RegisterUserGroupReviewerAdded(service.notifyUserGroupReviewerAdded)
-			_ = r.RegisterCommentCreated(service.notifyCommentCreated)
-			_ = r.RegisterBranchUpdated(service.notifyPullReqBranchUpdated)
-			_ = r.RegisterReviewSubmitted(service.notifyReviewSubmitted)
+			_ = r.RegisterReviewerAdded(withEventKey(service.notifyReviewerAdded))
+			_ = r.RegisterUserGroupReviewerAdded(withEventKey(service.notifyUserGroupReviewerAdded))
+			_ = r.RegisterCommentCreated(withEventKey(service.notifyCommentCreated))
+			_ = r.RegisterBranchUpdated(withEventKey(service.notifyPullReqBranchUpdated))
+			_ = r.RegisterReviewSubmitted(withEventKey(service.notifyReviewSubmitted))
 
 			// state changes
-			_ = r.RegisterMerged(service.notifyPullReqStateMerged)
-			_ = r.RegisterClosed(service.notifyPullReqStateClosed)
-			_ = r.RegisterReopened(service.notifyPullReqStateReOpened)
+			_ = r.RegisterMerged(withEventKey(service.notifyPullReqStateMerged))
+			_ = r.RegisterClosed(withEventKey(service.notifyPullReqStateClosed))
+			_ = r.RegisterReopened(withEventKey(service.notifyPullReqStateReOpened))
 			return nil
 		})
 	if err != nil {
@@ -167,6 +168,15 @@ func NewService(
 	}
 
 	return service, nil
+}
+
+// withEventKey passes the event ID to the mailer for deduplication.
+func withEventKey[T any](
+	fn func(context.Context, *events.Event[T]) error,
+) func(context.Context, *events.Event[T]) error {
+	return func(ctx context.Context, event *events.Event[T]) error {
+		return fn(mailer.WithEventKey(ctx, event.ID), event)
+	}
 }
 
 func (s *Service) getBasePayload(

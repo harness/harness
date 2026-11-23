@@ -23,7 +23,10 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/idempotency"
+	"github.com/harness/gitness/types"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
@@ -68,6 +71,12 @@ func ProvideNotificationService(
 	)
 }
 
-func ProvideMailClient(mailer mailer.Mailer) Client {
-	return NewMailClient(mailer)
+// ProvideMailClient wraps the mailer to deduplicate mails of redelivered events.
+func ProvideMailClient(config *types.Config, m mailer.Mailer, redisClient redis.UniversalClient) Client {
+	var store idempotency.Store = idempotency.NewInMemory()
+	if config.Events.Mode == events.ModeRedis {
+		store = idempotency.NewRedis(redisClient)
+	}
+
+	return NewMailClient(mailer.NewDedupMailer(m, store, mailer.DefaultDedupTTL))
 }
