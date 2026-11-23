@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/stretchr/testify/require"
 )
@@ -420,4 +421,62 @@ func TestNotifyUserGroupReviewerAdded_ReturnsErrorWhenReviewerEmailFails(t *test
 	// Author email succeeded, but first reviewer email failed
 	require.Len(t, notifClient.reviewersAddedCalls, 1)
 	require.Len(t, notifClient.reviewerAddedCalls, 1) // Only first attempt
+}
+
+func TestNotifyUserGroupReviewerAdded_SetsGroupMemberReason(t *testing.T) {
+	t.Parallel()
+
+	author := &types.PrincipalInfo{ID: 1, DisplayName: "Author", Email: "author@example.com"}
+	memberA := &types.PrincipalInfo{ID: 2, DisplayName: "Alice", Email: "alice@example.com"}
+	memberB := &types.PrincipalInfo{ID: 3, DisplayName: "Bob", Email: "bob@example.com"}
+
+	// One event per source: all members share its Type -> usergroup_* reason.
+	cases := []struct {
+		name       string
+		eventType  enum.PullReqReviewerType
+		wantReason ReviewerAddedReason
+	}{
+		{"code owners group", enum.PullReqReviewerTypeCodeOwners, ReviewerAddedReasonUserGroupCodeOwners},
+		{"default reviewer group", enum.PullReqReviewerTypeDefault, ReviewerAddedReasonUserGroupDefault},
+		{"requested group", enum.PullReqReviewerTypeRequested, ReviewerAddedReasonUserGroupRequested},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			notifClient := &testNotificationClient{}
+			svc := &Service{
+				repoStore: &repoStoreStub{repo: &types.Repository{ID: 10, Path: "space/repo"}},
+				pullReqStore: &pullReqStoreStub{pr: &types.PullReq{
+					ID: 20, Number: 99, CreatedBy: author.ID, Title: "PR title",
+				}},
+				principalInfoCache: &principalInfoCacheStub{
+					byID: map[int64]*types.PrincipalInfo{
+						author.ID:  author,
+						memberA.ID: memberA,
+						memberB.ID: memberB,
+					},
+				},
+				urlProvider:        &urlProviderStub{prURL: "https://example/pr/99"},
+				notificationClient: notifClient,
+			}
+
+			event := &events.Event[*pullreqevents.UserGroupReviewerAddedPayload]{
+				Payload: &pullreqevents.UserGroupReviewerAddedPayload{
+					Base:        pullreqevents.Base{PullReqID: 20, TargetRepoID: 10},
+					ReviewerIDs: []int64{memberA.ID, memberB.ID},
+					Type:        tc.eventType,
+				},
+			}
+
+			err := svc.notifyUserGroupReviewerAdded(context.Background(), event)
+			require.NoError(t, err)
+
+			require.Len(t, notifClient.reviewerAddedCalls, 2)
+			for _, call := range notifClient.reviewerAddedCalls {
+				require.Equal(t, tc.wantReason, call.payload.Reason)
+			}
+		})
+	}
 }

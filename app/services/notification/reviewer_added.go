@@ -21,11 +21,62 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
+
+// ReviewerAddedReason encodes how a reviewer was added and whether via a user
+// group, in one value the template switches on. Empty is the generic fallback.
+type ReviewerAddedReason string
+
+const (
+	// Direct reviewers.
+	ReviewerAddedReasonRequested  ReviewerAddedReason = "requested"
+	ReviewerAddedReasonCodeOwners ReviewerAddedReason = "code_owners"
+	ReviewerAddedReasonDefault    ReviewerAddedReason = "default"
+
+	// Reviewers added as a member of a reviewer group.
+	ReviewerAddedReasonUserGroupRequested  ReviewerAddedReason = "usergroup_requested"
+	ReviewerAddedReasonUserGroupCodeOwners ReviewerAddedReason = "usergroup_code_owners"
+	ReviewerAddedReasonUserGroupDefault    ReviewerAddedReason = "usergroup_default"
+)
+
+// reviewerAddedReason maps a reviewer type + group flag to the rendered reason;
+// unknown types fall back to generic ("") direct, or the generic group reason.
+func reviewerAddedReason(t enum.PullReqReviewerType, viaUserGroup bool) ReviewerAddedReason {
+	if viaUserGroup {
+		switch t {
+		case enum.PullReqReviewerTypeCodeOwners:
+			return ReviewerAddedReasonUserGroupCodeOwners
+		case enum.PullReqReviewerTypeDefault:
+			return ReviewerAddedReasonUserGroupDefault
+		case enum.PullReqReviewerTypeRequested,
+			enum.PullReqReviewerTypeAssigned,
+			enum.PullReqReviewerTypeSelfAssigned:
+			return ReviewerAddedReasonUserGroupRequested
+		default:
+			return ReviewerAddedReasonUserGroupRequested
+		}
+	}
+	switch t {
+	case enum.PullReqReviewerTypeCodeOwners:
+		return ReviewerAddedReasonCodeOwners
+	case enum.PullReqReviewerTypeDefault:
+		return ReviewerAddedReasonDefault
+	case enum.PullReqReviewerTypeRequested:
+		return ReviewerAddedReasonRequested
+	case enum.PullReqReviewerTypeAssigned,
+		enum.PullReqReviewerTypeSelfAssigned:
+		return ReviewerAddedReason("")
+	default:
+		return ReviewerAddedReason("")
+	}
+}
 
 type ReviewerAddedPayload struct {
 	Base     *BasePullReqPayload
 	Reviewer *types.PrincipalInfo
+	// Reason is how the reviewer was added, incl. via-group; empty = generic.
+	Reason ReviewerAddedReason
 }
 
 func (s *Service) notifyReviewerAdded(

@@ -77,6 +77,7 @@ func (s *Service) notifyUserGroupReviewerAdded(
 		reviewerPayload := &ReviewerAddedPayload{
 			Base:     base,
 			Reviewer: member,
+			Reason:   reviewerAddedReason(event.Payload.Type, true),
 		}
 
 		err = s.notificationClient.SendReviewerAdded(ctx, []*types.PrincipalInfo{member}, reviewerPayload)

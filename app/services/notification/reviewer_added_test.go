@@ -21,6 +21,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/stretchr/testify/require"
 )
@@ -117,4 +118,42 @@ func TestNotifyReviewerAdded_MailsAuthorOnceWhenSomeoneElseAddsAuthorAsReviewer(
 	recipients := notifClient.reviewerAddedCalls[0].recipients
 	require.Len(t, recipients, 1)
 	require.Equal(t, author.ID, recipients[0].ID)
+}
+
+func TestReviewerAddedReason(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		reviewerType enum.PullReqReviewerType
+		viaUserGroup bool
+		want         ReviewerAddedReason
+	}{
+		// Direct reviewers.
+		{"direct requested", enum.PullReqReviewerTypeRequested, false, ReviewerAddedReasonRequested},
+		{"direct code owners", enum.PullReqReviewerTypeCodeOwners, false, ReviewerAddedReasonCodeOwners},
+		{"direct default", enum.PullReqReviewerTypeDefault, false, ReviewerAddedReasonDefault},
+		{"direct assigned -> generic", enum.PullReqReviewerTypeAssigned, false, ReviewerAddedReason("")},
+		{"direct self assigned -> generic", enum.PullReqReviewerTypeSelfAssigned, false, ReviewerAddedReason("")},
+		{"direct unknown -> generic", enum.PullReqReviewerType("bogus"), false, ReviewerAddedReason("")},
+		{"direct empty -> generic", enum.PullReqReviewerType(""), false, ReviewerAddedReason("")},
+
+		// Reviewers added as a member of a reviewer group.
+		{"group requested", enum.PullReqReviewerTypeRequested, true, ReviewerAddedReasonUserGroupRequested},
+		{"group code owners", enum.PullReqReviewerTypeCodeOwners, true, ReviewerAddedReasonUserGroupCodeOwners},
+		{"group default", enum.PullReqReviewerTypeDefault, true, ReviewerAddedReasonUserGroupDefault},
+		{"group assigned", enum.PullReqReviewerTypeAssigned, true, ReviewerAddedReasonUserGroupRequested},
+		{"group self_assigned", enum.PullReqReviewerTypeSelfAssigned, true, ReviewerAddedReasonUserGroupRequested},
+		{"group unknown", enum.PullReqReviewerType("bogus"), true, ReviewerAddedReasonUserGroupRequested},
+		{"group empty", enum.PullReqReviewerType(""), true, ReviewerAddedReasonUserGroupRequested},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := reviewerAddedReason(tc.reviewerType, tc.viaUserGroup)
+			require.Equal(t, tc.want, got)
+		})
+	}
 }

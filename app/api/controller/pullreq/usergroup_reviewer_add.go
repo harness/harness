@@ -124,7 +124,11 @@ func (c *Controller) UserGroupReviewerAdd(
 		return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
 	}
 
-	c.reportUserGroupReviewerAdded(ctx, &session.Principal, pr, []int64{userGroupReviewer.UserGroupID}, userIDs)
+	// A standalone post-creation group add is always "requested".
+	c.reportUserGroupReviewerAdded(
+		ctx, &session.Principal, pr, []int64{userGroupReviewer.UserGroupID}, userIDs,
+		enum.PullReqReviewerTypeRequested,
+	)
 
 	err = func() error {
 		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
@@ -165,6 +169,7 @@ func (c *Controller) reportUserGroupReviewerAdded(
 	pr *types.PullReq,
 	userGroupReviewerIDs []int64,
 	reviewerIDs []int64,
+	reviewerType enum.PullReqReviewerType,
 ) {
 	c.eventReporter.UserGroupReviewerAdded(
 		ctx,
@@ -172,6 +177,7 @@ func (c *Controller) reportUserGroupReviewerAdded(
 			Base:                 eventBase(pr, principal),
 			UserGroupReviewerIDs: userGroupReviewerIDs,
 			ReviewerIDs:          reviewerIDs,
+			Type:                 reviewerType,
 		},
 	)
 }

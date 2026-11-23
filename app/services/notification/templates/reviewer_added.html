@@ -5,7 +5,19 @@
 </head>
 <body>
 <p>
-  <b>@{{.Reviewer.DisplayName}}</b> was added as a reviewer for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{if eq .Reason "usergroup_code_owners"}}
+    <b>@{{.Reviewer.DisplayName}}</b> was added as a reviewer as a member of a code owner group for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{else if eq .Reason "usergroup_default"}}
+    <b>@{{.Reviewer.DisplayName}}</b> was added as a reviewer as a member of a default reviewer group for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{else if eq .Reason "usergroup_requested"}}
+    <b>@{{.Reviewer.DisplayName}}</b> was added as a reviewer as a member of a reviewer group for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{else if eq .Reason "code_owners"}}
+    <b>@{{.Reviewer.DisplayName}}</b> was added as a code owner reviewer (CODEOWNERS) for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{else if eq .Reason "default"}}
+    <b>@{{.Reviewer.DisplayName}}</b> was added as a default reviewer by a repository rule for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{else}}
+    <b>@{{.Reviewer.DisplayName}}</b> was added as a reviewer for the Pull request: <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+  {{end}}
 </p>
 <p>
   <a href="{{.Base.PullReqURL}}">View pull request #{{.Base.PullReq.Number}}</a>

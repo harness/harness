@@ -32,6 +32,9 @@ type CreatedPayload struct {
 	SourceSHA            string  `json:"source_sha"`
 	ReviewerIDs          []int64 `json:"reviewer_ids"`
 	UserGroupReviewerIDs []int64 `json:"usergroup_reviewer_ids,omitempty"`
+	// ReviewerTypeByID maps each user reviewer ID to how the reviewer was added
+	// (requested / code_owners / default). Absent entries fall back to generic wording.
+	ReviewerTypeByID map[int64]enum.PullReqReviewerType `json:"reviewer_type_by_id,omitempty"`
 }
 
 func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {

@@ -429,16 +429,11 @@ func (c *Controller) Create(
 	backfillWithLabelAssignInfo(pr, labelAssignOuts)
 	c.storeLabelAssignActivity(ctx, pr, session.Principal.ID, labelAssignOuts)
 
-	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
-		Base:                 eventBase(pr, &session.Principal),
-		SourceBranch:         in.SourceBranch,
-		TargetBranch:         in.TargetBranch,
-		SourceSHA:            sourceSHA.String(),
-		ReviewerIDs:          maps.Keys(userReviewerMap),
-		UserGroupReviewerIDs: maps.Keys(userGroupReviewerMap),
-	})
-
-	c.notifyUserGroupReviewersAdded(ctx, session, pr, userGroupReviewerMap)
+	c.reportPullReqCreated(ctx, session, pr, in.SourceBranch, in.TargetBranch, sourceSHA,
+		userReviewerMap, userGroupReviewerMap,
+		requestedUserReviewerIDs, ownerUserReviewerMap, defaultUserReviewerMap,
+		requestedUserGroupReviewerIDs, ownerUserGroupReviewerMap, defaultUserGroupReviewerMap,
+	)
 
 	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
@@ -457,6 +452,78 @@ func (c *Controller) Create(
 	}
 
 	return pr, nil
+}
+
+// buildReviewerTypeByID tags each direct user reviewer with the source it came
+// from. Sources are applied in reverse precedence (default, then code_owners,
+// then requested) so when an ID appears in several maps the higher-precedence
+// source (requested > code_owners > default) overwrites and wins.
+// reportPullReqCreated emits the PR-created event (carrying the per-reviewer
+// origin map) and the per-source user-group reviewer-added notifications.
+// It is extracted from Create so the reviewer-notification wiring can be
+// unit-tested without driving the whole creation transaction.
+func (c *Controller) reportPullReqCreated(
+	ctx context.Context,
+	session *auth.Session,
+	pr *types.PullReq,
+	sourceBranch string,
+	targetBranch string,
+	sourceSHA sha.SHA,
+	userReviewerMap map[int64]*types.PrincipalInfo,
+	userGroupReviewerMap map[int64]*types.UserGroup,
+	requestedUserReviewerIDs []int64,
+	ownerUserReviewerMap map[int64]*types.PrincipalInfo,
+	defaultUserReviewerMap map[int64]*types.PrincipalInfo,
+	requestedUserGroupReviewerIDs []int64,
+	ownerUserGroupReviewerMap map[int64]*types.UserGroup,
+	defaultUserGroupReviewerMap map[int64]*types.UserGroup,
+) {
+	reviewerTypeByID := buildReviewerTypeByID(
+		requestedUserReviewerIDs, ownerUserReviewerMap, defaultUserReviewerMap,
+	)
+
+	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
+		Base:                 eventBase(pr, &session.Principal),
+		SourceBranch:         sourceBranch,
+		TargetBranch:         targetBranch,
+		SourceSHA:            sourceSHA.String(),
+		ReviewerIDs:          maps.Keys(userReviewerMap),
+		UserGroupReviewerIDs: maps.Keys(userGroupReviewerMap),
+		ReviewerTypeByID:     reviewerTypeByID,
+	})
+
+	// Notify each group source separately (one event per source) so members
+	// learn their specific reason, mirroring the per-source activities above.
+	requestedUserGroupReviewerMap := make(map[int64]*types.UserGroup, len(requestedUserGroupReviewerIDs))
+	for _, id := range requestedUserGroupReviewerIDs {
+		if userGroup, ok := userGroupReviewerMap[id]; ok {
+			requestedUserGroupReviewerMap[id] = userGroup
+		}
+	}
+	c.notifyUserGroupReviewersAdded(ctx, session, pr, requestedUserGroupReviewerMap, enum.PullReqReviewerTypeRequested)
+	c.notifyUserGroupReviewersAdded(ctx, session, pr, ownerUserGroupReviewerMap, enum.PullReqReviewerTypeCodeOwners)
+	c.notifyUserGroupReviewersAdded(ctx, session, pr, defaultUserGroupReviewerMap, enum.PullReqReviewerTypeDefault)
+}
+
+func buildReviewerTypeByID(
+	requestedUserReviewerIDs []int64,
+	ownerUserReviewerMap map[int64]*types.PrincipalInfo,
+	defaultUserReviewerMap map[int64]*types.PrincipalInfo,
+) map[int64]enum.PullReqReviewerType {
+	reviewerTypeByID := make(
+		map[int64]enum.PullReqReviewerType,
+		len(requestedUserReviewerIDs)+len(ownerUserReviewerMap)+len(defaultUserReviewerMap),
+	)
+	for id := range defaultUserReviewerMap {
+		reviewerTypeByID[id] = enum.PullReqReviewerTypeDefault
+	}
+	for id := range ownerUserReviewerMap {
+		reviewerTypeByID[id] = enum.PullReqReviewerTypeCodeOwners
+	}
+	for _, id := range requestedUserReviewerIDs {
+		reviewerTypeByID[id] = enum.PullReqReviewerTypeRequested
+	}
+	return reviewerTypeByID
 }
 
 // prepareRequestedReviewers fetches principal data and checks principal repo access and permissions.
@@ -630,11 +697,15 @@ func (c *Controller) getCodeOwnerReviewers(
 	return userMap, userGroupMap, nil
 }
 
+// notifyUserGroupReviewersAdded emits one usergroup-reviewer-added event for a
+// single source of group reviewers, tagged with reviewerType. Called once per
+// source so each member learns why they were added.
 func (c *Controller) notifyUserGroupReviewersAdded(
 	ctx context.Context,
 	session *auth.Session,
 	pr *types.PullReq,
 	userGroupReviewerMap map[int64]*types.UserGroup,
+	reviewerType enum.PullReqReviewerType,
 ) {
 	if len(userGroupReviewerMap) == 0 {
 		return
@@ -658,7 +729,6 @@ func (c *Controller) notifyUserGroupReviewersAdded(
 		if member.ID == session.Principal.ID {
 			continue
 		}
-
 		principalIDs = append(principalIDs, member.ID)
 	}
 
@@ -667,7 +737,7 @@ func (c *Controller) notifyUserGroupReviewersAdded(
 	}
 
 	c.reportUserGroupReviewerAdded(
-		ctx, &session.Principal, pr, maps.Keys(userGroupReviewerMap), principalIDs,
+		ctx, &session.Principal, pr, maps.Keys(userGroupReviewerMap), principalIDs, reviewerType,
 	)
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/stretchr/testify/require"
 )
@@ -508,4 +509,61 @@ func TestNotifyPullReqCreated_ReviewerNamesAreCommaSeparated(t *testing.T) {
 	require.Contains(t, authorCall.payload.ReviewerNames, "Charlie")
 	require.Contains(t, authorCall.payload.ReviewerNames, "Diana")
 	require.Contains(t, authorCall.payload.ReviewerNames, ", ")
+}
+
+func TestNotifyPullReqCreated_SetsReviewerReasonFromTypeMap(t *testing.T) {
+	t.Parallel()
+
+	author := &types.PrincipalInfo{ID: 1, DisplayName: "Author", Email: "author@example.com"}
+	requested := &types.PrincipalInfo{ID: 2, DisplayName: "Alice", Email: "alice@example.com"}
+	codeOwner := &types.PrincipalInfo{ID: 3, DisplayName: "Bob", Email: "bob@example.com"}
+	defaultRev := &types.PrincipalInfo{ID: 4, DisplayName: "Charlie", Email: "charlie@example.com"}
+	untyped := &types.PrincipalInfo{ID: 5, DisplayName: "Diana", Email: "diana@example.com"}
+
+	notifClient := &testNotificationClient{}
+
+	svc := &Service{
+		repoStore: &repoStoreStub{repo: &types.Repository{ID: 10, Path: "space/repo"}},
+		pullReqStore: &pullReqStoreStub{pr: &types.PullReq{
+			ID: 20, Number: 42, CreatedBy: author.ID, Title: "PR title",
+		}},
+		principalInfoCache: &prCreatedCacheStub{
+			byIDMap: map[int64]*types.PrincipalInfo{
+				author.ID:     author,
+				requested.ID:  requested,
+				codeOwner.ID:  codeOwner,
+				defaultRev.ID: defaultRev,
+				untyped.ID:    untyped,
+			},
+		},
+		urlProvider:        &urlProviderStub{prURL: "https://example/pr/42"},
+		notificationClient: notifClient,
+	}
+
+	event := &events.Event[*pullreqevents.CreatedPayload]{
+		Payload: &pullreqevents.CreatedPayload{
+			Base:        pullreqevents.Base{PullReqID: 20, TargetRepoID: 10},
+			ReviewerIDs: []int64{requested.ID, codeOwner.ID, defaultRev.ID, untyped.ID},
+			ReviewerTypeByID: map[int64]enum.PullReqReviewerType{
+				requested.ID:  enum.PullReqReviewerTypeRequested,
+				codeOwner.ID:  enum.PullReqReviewerTypeCodeOwners,
+				defaultRev.ID: enum.PullReqReviewerTypeDefault,
+				// untyped.ID intentionally omitted -> generic fallback.
+			},
+		},
+	}
+
+	err := svc.notifyPullReqCreated(context.Background(), event)
+	require.NoError(t, err)
+
+	require.Len(t, notifClient.reviewerAddedCalls, 4)
+	gotReason := make(map[int64]ReviewerAddedReason, 4)
+	for _, call := range notifClient.reviewerAddedCalls {
+		gotReason[call.payload.Reviewer.ID] = call.payload.Reason
+	}
+	require.Equal(t, ReviewerAddedReasonRequested, gotReason[requested.ID])
+	require.Equal(t, ReviewerAddedReasonCodeOwners, gotReason[codeOwner.ID])
+	require.Equal(t, ReviewerAddedReasonDefault, gotReason[defaultRev.ID])
+	// untyped -> generic fallback (empty).
+	require.Equal(t, ReviewerAddedReason(""), gotReason[untyped.ID])
 }

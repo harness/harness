@@ -75,6 +75,7 @@ func (s *Service) notifyPullReqCreated(
 		payload := &ReviewerAddedPayload{
 			Base:     base,
 			Reviewer: reviewer,
+			Reason:   reviewerAddedReason(event.Payload.ReviewerTypeByID[reviewer.ID], false),
 		}
 		if err := s.notificationClient.SendReviewerAdded(
 			ctx,

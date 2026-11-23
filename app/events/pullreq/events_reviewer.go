@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -43,6 +44,9 @@ type UserGroupReviewerAddedPayload struct {
 	Base
 	UserGroupReviewerIDs []int64 `json:"usergroup_reviewer_ids,omitempty"`
 	ReviewerIDs          []int64 `json:"reviewer_ids,omitempty"`
+	// Type is why all members here were added. One event per source, so every
+	// member shares this type. Empty falls back to generic wording.
+	Type enum.PullReqReviewerType `json:"type,omitempty"`
 }
 
 type UserGroupReviewerRemovedPayload struct {
