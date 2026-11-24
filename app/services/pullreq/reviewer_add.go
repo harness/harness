@@ -15,10 +15,13 @@
 package pullreq
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"math"
 	"slices"
 	"time"
+	"unicode/utf8"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
@@ -31,14 +34,65 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const maxReviewerSuggestions = 100
+const (
+	maxReviewerSuggestions = 100
+	// MaxSuggestionsPerPullReq is the maximum number of suggestion rows a pull request can hold,
+	// and therefore also the maximum number of rows accepted in a single request.
+	MaxSuggestionsPerPullReq = 50
+	maxSuggestionReasonLen   = 500
+	// maxSuggestionCommitSHALen fits a hex sha-1 or sha-256 commit id.
+	maxSuggestionCommitSHALen = 64
+	maxSuggestionRank         = math.MaxInt32
+)
 
 // ReviewerSuggestBatchInput is the request input for suggesting reviewers in batch.
+// Exactly one of ReviewerIDs (legacy) or Suggestions must be provided.
 type ReviewerSuggestBatchInput struct {
-	ReviewerIDs []int64 `json:"reviewer_ids"`
+	ReviewerIDs []int64                   `json:"reviewer_ids"`
+	Suggestions []ReviewerSuggestionInput `json:"suggestions"`
 }
 
+// ReviewerSuggestionInput is a single per-row reviewer suggestion.
+type ReviewerSuggestionInput struct {
+	PrincipalID int64                       `json:"principal_id"`
+	Kind        enum.ReviewerSuggestionKind `json:"kind"`
+	Reason      string                      `json:"reason"`
+	Rank        *int64                      `json:"rank"`
+	UserGroupID *int64                      `json:"user_group_id"`
+	CommitSHA   string                      `json:"commit_sha"`
+}
+
+// ReviewerSuggestBatchOutput is the response of a batch reviewer suggestion.
+type ReviewerSuggestBatchOutput struct {
+	Results []ReviewerSuggestResult `json:"results"`
+}
+
+// ReviewerSuggestResult is the per-principal outcome of a batch reviewer suggestion.
+type ReviewerSuggestResult struct {
+	PrincipalID int64                 `json:"principal_id"`
+	Status      ReviewerSuggestStatus `json:"status"`
+	Error       string                `json:"error,omitempty"`
+}
+
+// ReviewerSuggestStatus is the outcome of a single reviewer suggestion in a batch.
+type ReviewerSuggestStatus string
+
+const (
+	ReviewerSuggestStatusCreated  ReviewerSuggestStatus = "created"
+	ReviewerSuggestStatusUpdated  ReviewerSuggestStatus = "updated"
+	ReviewerSuggestStatusSkipped  ReviewerSuggestStatus = "skipped"
+	ReviewerSuggestStatusRejected ReviewerSuggestStatus = "rejected"
+)
+
 func (in *ReviewerSuggestBatchInput) Sanitize() error {
+	if len(in.ReviewerIDs) > 0 && len(in.Suggestions) > 0 {
+		return errors.InvalidArgument("reviewer_ids and suggestions are mutually exclusive")
+	}
+
+	if len(in.Suggestions) > 0 {
+		return in.sanitizeSuggestions()
+	}
+
 	if len(in.ReviewerIDs) == 0 {
 		return errors.InvalidArgument("reviewer_ids must not be empty")
 	}
@@ -55,6 +109,57 @@ func (in *ReviewerSuggestBatchInput) Sanitize() error {
 
 	slices.Sort(in.ReviewerIDs)
 	in.ReviewerIDs = slices.Compact(in.ReviewerIDs)
+
+	return nil
+}
+
+func (in *ReviewerSuggestBatchInput) sanitizeSuggestions() error {
+	if len(in.Suggestions) > MaxSuggestionsPerPullReq {
+		return errors.InvalidArgumentf("suggestions must not exceed %d entries", MaxSuggestionsPerPullReq)
+	}
+
+	for i := range in.Suggestions {
+		row := &in.Suggestions[i]
+
+		if row.PrincipalID <= 0 {
+			return errors.InvalidArgument("suggestions must contain only principal_id values greater than 0")
+		}
+
+		if utf8.RuneCountInString(row.Reason) > maxSuggestionReasonLen {
+			return errors.InvalidArgumentf("suggestion reason must not exceed %d characters", maxSuggestionReasonLen)
+		}
+
+		if row.Rank != nil && (*row.Rank < 0 || *row.Rank > maxSuggestionRank) {
+			return errors.InvalidArgumentf("suggestion rank must be between 0 and %d", maxSuggestionRank)
+		}
+
+		if len(row.CommitSHA) > maxSuggestionCommitSHALen {
+			return errors.InvalidArgumentf(
+				"suggestion commit_sha must not exceed %d characters",
+				maxSuggestionCommitSHALen,
+			)
+		}
+
+		kind, ok := row.Kind.Sanitize()
+		if !ok {
+			return errors.InvalidArgumentf("suggestion kind %q is not valid", string(row.Kind))
+		}
+		row.Kind = kind
+	}
+
+	// Deduplicate by principal_id keeping the last occurrence, then order deterministically.
+	last := make(map[int64]ReviewerSuggestionInput, len(in.Suggestions))
+	for _, row := range in.Suggestions {
+		last[row.PrincipalID] = row
+	}
+	rows := make([]ReviewerSuggestionInput, 0, len(last))
+	for _, row := range last {
+		rows = append(rows, row)
+	}
+	slices.SortFunc(rows, func(a, b ReviewerSuggestionInput) int {
+		return cmp.Compare(a.PrincipalID, b.PrincipalID)
+	})
+	in.Suggestions = rows
 
 	return nil
 }

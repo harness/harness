@@ -20,6 +20,8 @@ import (
 	"slices"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -87,6 +89,24 @@ func (c *Controller) ListSuggestedReviewers(
 		return nil, 0, fmt.Errorf("failed to fetch principal infos: %w", err)
 	}
 
+	groupIDs := make([]int64, 0, len(suggestions))
+	for _, s := range suggestions {
+		if s.UserGroupID != nil {
+			groupIDs = append(groupIDs, *s.UserGroupID)
+		}
+	}
+	slices.Sort(groupIDs)
+	groupIDs = slices.Compact(groupIDs)
+
+	var userGroups map[int64]*types.UserGroup
+	if len(groupIDs) > 0 {
+		// None of the groups resolving is not an error, those items are returned without a group.
+		userGroups, err = c.userGroupStore.Map(ctx, groupIDs)
+		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+			return nil, 0, fmt.Errorf("failed to fetch user groups: %w", err)
+		}
+	}
+
 	items := make([]*types.PullReqReviewerSuggestionInfo, 0, len(suggestions))
 	for _, s := range suggestions {
 		reviewer, ok := principalInfos[s.PrincipalID]
@@ -97,11 +117,22 @@ func (c *Controller) ListSuggestedReviewers(
 		if !ok {
 			continue
 		}
-		items = append(items, &types.PullReqReviewerSuggestionInfo{
+		item := &types.PullReqReviewerSuggestionInfo{
 			Reviewer:    *reviewer,
 			SuggestedBy: *suggestedBy,
 			SuggestedAt: s.Created,
-		})
+			Kind:        s.Kind,
+			Reason:      s.Reason,
+			Rank:        s.Rank,
+			CommitSHA:   s.CommitSHA,
+		}
+		// A group that no longer resolves must not drop the suggestion.
+		if s.UserGroupID != nil {
+			if group, found := userGroups[*s.UserGroupID]; found {
+				item.UserGroup = group.ToUserGroupInfo()
+			}
+		}
+		items = append(items, item)
 	}
 
 	return &types.ListReviewerSuggestionsOutput{Suggestions: items}, count, nil

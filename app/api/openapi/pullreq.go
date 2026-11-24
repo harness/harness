@@ -1221,7 +1221,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opSuggestReviewersBatch.WithTags("pullreq")
 	opSuggestReviewersBatch.WithMapOfAnything(map[string]any{"operationId": "suggestReviewersBatch"})
 	_ = reflector.SetRequest(&opSuggestReviewersBatch, new(pullReqSuggestReviewersBatchRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, nil, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(pullreqservice.ReviewerSuggestBatchOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSuggestReviewersBatch, new(usererror.Error), http.StatusUnauthorized)

@@ -23,8 +23,10 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -43,13 +45,24 @@ type pullReqReviewerSuggestion struct {
 	CreatedBy   int64 `db:"pullreq_reviewer_suggestion_created_by"`
 	PrincipalID int64 `db:"pullreq_reviewer_suggestion_principal_id"`
 	Created     int64 `db:"pullreq_reviewer_suggestion_created"`
+
+	Reason      null.String `db:"pullreq_reviewer_suggestion_reason"`
+	Kind        string      `db:"pullreq_reviewer_suggestion_kind"`
+	Rank        null.Int    `db:"pullreq_reviewer_suggestion_rank"`
+	UserGroupID null.Int    `db:"pullreq_reviewer_suggestion_user_group_id"`
+	CommitSHA   null.String `db:"pullreq_reviewer_suggestion_commit_sha"`
 }
 
 const pullReqReviewerSuggestionColumns = `
 	pullreq_reviewer_suggestion_pullreq_id
 	,pullreq_reviewer_suggestion_created_by
 	,pullreq_reviewer_suggestion_principal_id
-	,pullreq_reviewer_suggestion_created`
+	,pullreq_reviewer_suggestion_created
+	,pullreq_reviewer_suggestion_reason
+	,pullreq_reviewer_suggestion_kind
+	,pullreq_reviewer_suggestion_rank
+	,pullreq_reviewer_suggestion_user_group_id
+	,pullreq_reviewer_suggestion_commit_sha`
 
 // Find returns reviewer suggestion by pull request id and principal id.
 func (s *pullReqReviewerSuggestionStore) Find(
@@ -89,7 +102,14 @@ func (s *pullReqReviewerSuggestionStore) List(
 		Select(pullReqReviewerSuggestionColumns).
 		From("pullreq_reviewer_suggestions").
 		Where("pullreq_reviewer_suggestion_pullreq_id = ?", prID).
-		OrderBy("pullreq_reviewer_suggestion_created ASC").
+		OrderBy(
+			"pullreq_reviewer_suggestion_rank IS NULL",
+			"pullreq_reviewer_suggestion_rank ASC",
+			"pullreq_reviewer_suggestion_created ASC",
+			// A batch stamps the same created on every row, so the principal id keeps the
+			// order total and paginated reads stable.
+			"pullreq_reviewer_suggestion_principal_id ASC",
+		).
 		Limit(database.Limit(pagination.Size)).
 		Offset(database.Offset(pagination.Page, pagination.Size))
 
@@ -136,6 +156,37 @@ func (s *pullReqReviewerSuggestionStore) CreateMany(
 	ctx context.Context,
 	suggestions []*types.PullReqReviewerSuggestion,
 ) error {
+	return s.insertMany(ctx, "create", suggestions, `
+	ON CONFLICT
+		(pullreq_reviewer_suggestion_pullreq_id, pullreq_reviewer_suggestion_principal_id)
+	DO NOTHING
+	`)
+}
+
+// UpsertMany inserts reviewer suggestions in batch and updates the detail fields of existing ones.
+func (s *pullReqReviewerSuggestionStore) UpsertMany(
+	ctx context.Context,
+	suggestions []*types.PullReqReviewerSuggestion,
+) error {
+	return s.insertMany(ctx, "upsert", suggestions, `
+	ON CONFLICT
+		(pullreq_reviewer_suggestion_pullreq_id, pullreq_reviewer_suggestion_principal_id)
+	DO UPDATE SET
+		pullreq_reviewer_suggestion_reason = EXCLUDED.pullreq_reviewer_suggestion_reason
+		,pullreq_reviewer_suggestion_kind = EXCLUDED.pullreq_reviewer_suggestion_kind
+		,pullreq_reviewer_suggestion_rank = EXCLUDED.pullreq_reviewer_suggestion_rank
+		,pullreq_reviewer_suggestion_user_group_id = EXCLUDED.pullreq_reviewer_suggestion_user_group_id
+		,pullreq_reviewer_suggestion_commit_sha = EXCLUDED.pullreq_reviewer_suggestion_commit_sha
+	`)
+}
+
+// insertMany runs the batch insert, operation names the caller ("create" or "upsert") in error messages.
+func (s *pullReqReviewerSuggestionStore) insertMany(
+	ctx context.Context,
+	operation string,
+	suggestions []*types.PullReqReviewerSuggestion,
+	conflictSuffix string,
+) error {
 	if len(suggestions) == 0 {
 		return nil
 	}
@@ -148,27 +199,30 @@ func (s *pullReqReviewerSuggestionStore) CreateMany(
 		Columns(pullReqReviewerSuggestionColumns)
 
 	for _, suggestion := range suggestions {
+		kind := suggestion.Kind
+		if kind == "" {
+			kind = enum.ReviewerSuggestionKindOptional
+		}
 		stmt = stmt.Values(
 			suggestion.PullReqID,
 			suggestion.CreatedBy,
 			suggestion.PrincipalID,
 			now,
+			null.NewString(suggestion.Reason, suggestion.Reason != ""),
+			string(kind),
+			suggestion.Rank,
+			suggestion.UserGroupID,
+			null.NewString(suggestion.CommitSHA, suggestion.CommitSHA != ""),
 		)
 	}
 
-	stmt = stmt.Suffix(`
-	ON CONFLICT 
-		(pullreq_reviewer_suggestion_pullreq_id, pullreq_reviewer_suggestion_principal_id)
-	DO NOTHING
-	`)
-
-	query, args, err := stmt.ToSql()
+	query, args, err := stmt.Suffix(conflictSuffix).ToSql()
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "failed to convert query to sql")
 	}
 
 	if _, err = db.ExecContext(ctx, query, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "failed to create reviewer suggestions")
+		return database.ProcessSQLErrorf(ctx, err, "failed to %s reviewer suggestions", operation)
 	}
 
 	return nil
@@ -221,5 +275,17 @@ func mapPullReqReviewerSuggestion(v *pullReqReviewerSuggestion) *types.PullReqRe
 		CreatedBy:   v.CreatedBy,
 		PrincipalID: v.PrincipalID,
 		Created:     v.Created,
+		Kind:        enum.ReviewerSuggestionKind(v.Kind),
+		Reason:      v.Reason.String,
+		Rank:        nullIntToPtr(v.Rank),
+		UserGroupID: nullIntToPtr(v.UserGroupID),
+		CommitSHA:   v.CommitSHA.String,
 	}
+}
+
+func nullIntToPtr(v null.Int) *int64 {
+	if !v.Valid {
+		return nil
+	}
+	return &v.Int64
 }

@@ -28,6 +28,7 @@ package pullreq
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/harness/gitness/app/auth"
@@ -58,10 +59,28 @@ type fakeUserGroupStore struct {
 	appstore.UserGroupStore
 	groups map[int64]*types.UserGroup
 	err    error
+	calls  [][]int64
 }
 
-func (f *fakeUserGroupStore) Map(context.Context, []int64) (map[int64]*types.UserGroup, error) {
-	return f.groups, f.err
+// Map mirrors the real store: it returns only the requested groups it knows and reports
+// store.ErrResourceNotFound when none of them matched.
+func (f *fakeUserGroupStore) Map(_ context.Context, ids []int64) (map[int64]*types.UserGroup, error) {
+	f.calls = append(f.calls, slices.Clone(ids))
+	if f.err != nil {
+		return nil, f.err
+	}
+
+	found := make(map[int64]*types.UserGroup, len(ids))
+	for _, id := range ids {
+		if group, ok := f.groups[id]; ok {
+			found[id] = group
+		}
+	}
+	if len(found) == 0 {
+		return nil, gitnessstore.ErrResourceNotFound
+	}
+
+	return found, nil
 }
 
 type fakePrincipalInfoCache struct {

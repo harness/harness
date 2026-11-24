@@ -14,12 +14,20 @@
 
 package types
 
+import "github.com/harness/gitness/types/enum"
+
 // PullReqReviewerSuggestion represents a suggested reviewer for a pull request.
 type PullReqReviewerSuggestion struct {
 	PullReqID   int64 `json:"pullreq_id"`
 	CreatedBy   int64 `json:"created_by"`
 	PrincipalID int64 `json:"principal_id"`
 	Created     int64 `json:"created"`
+
+	Kind        enum.ReviewerSuggestionKind `json:"kind"`
+	Reason      string                      `json:"reason,omitempty"`
+	Rank        *int64                      `json:"rank,omitempty"`
+	UserGroupID *int64                      `json:"user_group_id,omitempty"`
+	CommitSHA   string                      `json:"commit_sha,omitempty"`
 }
 
 // PullReqReviewerSuggestionInfo is the API response item for a reviewer suggestion.
@@ -27,6 +35,12 @@ type PullReqReviewerSuggestionInfo struct {
 	Reviewer    PrincipalInfo `json:"reviewer"`
 	SuggestedBy PrincipalInfo `json:"suggested_by"`
 	SuggestedAt int64         `json:"suggested_at"`
+
+	Kind      enum.ReviewerSuggestionKind `json:"kind"`
+	Reason    string                      `json:"reason,omitempty"`
+	Rank      *int64                      `json:"rank,omitempty"`
+	UserGroup *UserGroupInfo              `json:"user_group,omitempty"`
+	CommitSHA string                      `json:"commit_sha,omitempty"`
 }
 
 // ListReviewerSuggestionsOutput is the API response for listing reviewer suggestions.

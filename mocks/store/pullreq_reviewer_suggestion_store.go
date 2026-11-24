@@ -65,3 +65,10 @@ func (m *PullReqReviewerSuggestionStore) CreateMany(
 func (m *PullReqReviewerSuggestionStore) Delete(_ context.Context, prID, principalID int64) error {
 	return m.Called(prID, principalID).Error(0)
 }
+
+func (m *PullReqReviewerSuggestionStore) UpsertMany(
+	_ context.Context,
+	suggestions []*types.PullReqReviewerSuggestion,
+) error {
+	return m.Called(suggestions).Error(0)
+}

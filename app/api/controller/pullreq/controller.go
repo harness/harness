@@ -67,6 +67,7 @@ type Controller struct {
 	watcherStore            store.PullReqWatcherStore
 	userGroupReviewerStore  store.UserGroupReviewerStore
 	repoStore               store.RepoStore
+	spaceStore              store.SpaceStore
 	principalStore          store.PrincipalStore
 	userGroupStore          store.UserGroupStore
 	principalInfoCache      store.PrincipalInfoCache
@@ -117,6 +118,7 @@ func NewController(
 	pullreqReviewerSuggestionStore store.PullReqReviewerSuggestionStore,
 	pullreqWatcherStore store.PullReqWatcherStore,
 	repoStore store.RepoStore,
+	spaceStore store.SpaceStore,
 	principalStore store.PrincipalStore,
 	userGroupStore store.UserGroupStore,
 	userGroupReviewerStore store.UserGroupReviewerStore,
@@ -168,6 +170,7 @@ func NewController(
 		watcherStore:            pullreqWatcherStore,
 		userGroupReviewerStore:  userGroupReviewerStore,
 		repoStore:               repoStore,
+		spaceStore:              spaceStore,
 		principalStore:          principalStore,
 		userGroupStore:          userGroupStore,
 		principalInfoCache:      principalInfoCache,

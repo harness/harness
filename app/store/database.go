@@ -677,6 +677,10 @@ type (
 		// CreateMany inserts reviewer suggestions in batch and ignores conflicts.
 		CreateMany(ctx context.Context, suggestions []*types.PullReqReviewerSuggestion) error
 
+		// UpsertMany inserts reviewer suggestions in batch and updates reason, kind, rank, user group
+		// and commit sha of the existing ones.
+		UpsertMany(ctx context.Context, suggestions []*types.PullReqReviewerSuggestion) error
+
 		// Delete removes reviewer suggestion by pull request id and principal id.
 		Delete(ctx context.Context, prID, principalID int64) error
 	}

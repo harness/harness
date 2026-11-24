@@ -48,12 +48,18 @@ func HandleReviewerSuggestBatch(pullreqCtrl *pullreq.Controller) http.HandlerFun
 			return
 		}
 
-		err = pullreqCtrl.ReviewerSuggestBatch(ctx, session, repoRef, pullreqNumber, in)
+		out, err := pullreqCtrl.ReviewerSuggestBatch(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		// A legacy reviewer_ids request has no output and keeps its empty 200.
+		if out == nil {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, out)
 	}
 }
