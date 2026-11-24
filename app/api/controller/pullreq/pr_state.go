@@ -376,7 +376,10 @@ func (c *Controller) State(ctx context.Context,
 			SourceBranch: pr.SourceBranch,
 		})
 	case changeDraft:
-		// Draft change isn't really the state change, so we don't publish events.
+		c.eventReporter.DraftChanged(ctxNoCancel, &pullreqevents.DraftChangedPayload{
+			Base:    eventBase(pr, &session.Principal),
+			IsDraft: pr.IsDraft,
+		})
 	}
 
 	c.sseStreamer.Publish(ctxNoCancel, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)

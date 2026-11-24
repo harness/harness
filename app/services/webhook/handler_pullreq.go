@@ -996,3 +996,52 @@ func (s *Service) handleEventPullReqTargetBranchChanged(
 			}, nil
 		})
 }
+
+// PullReqDraftChangedPayload describes the body of the pullreq draft changed trigger.
+type PullReqDraftChangedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqDraftChangedSegment
+}
+
+// handleEventPullReqDraftChanged handles draft changed events for pull requests
+// and triggers pullreq draft changed webhooks for the target repo.
+func (s *Service) handleEventPullReqDraftChanged(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.DraftChangedPayload],
+) error {
+	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqDraftChanged,
+		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
+
+			return &PullReqDraftChangedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqDraftChanged,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				PullReqDraftChangedSegment: PullReqDraftChangedSegment{
+					IsDraft: event.Payload.IsDraft,
+				},
+			}, nil
+		})
+}

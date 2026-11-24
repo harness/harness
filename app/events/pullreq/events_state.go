@@ -207,3 +207,31 @@ func (r *Reader) RegisterMergeCheckSucceeded(
 ) error {
 	return events.ReaderRegisterEvent(r.innerReader, MergeCheckSucceededEvent, fn, opts...)
 }
+
+const DraftChangedEvent events.EventType = "draft-changed"
+
+type DraftChangedPayload struct {
+	Base
+	IsDraft bool `json:"is_draft"`
+}
+
+func (r *Reporter) DraftChanged(ctx context.Context, payload *DraftChangedPayload) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, DraftChangedEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send pull request draft changed event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported pull request draft changed event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterDraftChanged(
+	fn events.HandlerFunc[*DraftChangedPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, DraftChangedEvent, fn, opts...)
+}

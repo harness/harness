@@ -139,6 +139,11 @@ type PullReqTargetBrancheChangedSegment struct {
 	OldMergeBaseSHA string `json:"old_merge_base_sha"`
 }
 
+// PullReqDraftChangedSegment contains the draft status after the change.
+type PullReqDraftChangedSegment struct {
+	IsDraft bool `json:"is_draft"`
+}
+
 // RepositoryInfo describes the repo related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type RepositoryInfo struct {

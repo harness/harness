@@ -202,6 +202,8 @@ const (
 	WebhookTriggerPullReqCheckCompleted WebhookTrigger = "pullreq_check_completed"
 	// WebhookTriggerPullReqTargetBranchChanged gets triggered when a pull request target branch is changed.
 	WebhookTriggerPullReqTargetBranchChanged = "pullreq_target_branch_changed"
+	// WebhookTriggerPullReqDraftChanged gets triggered when a pull request is marked as draft or ready for review.
+	WebhookTriggerPullReqDraftChanged WebhookTrigger = "pullreq_draft_changed"
 
 	// WebhookTriggerMergeQueueChecksRequested gets triggered when merge queue checks are requested.
 	WebhookTriggerMergeQueueChecksRequested WebhookTrigger = "merge_queue_checks_requested"
@@ -236,6 +238,7 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqReviewerUnassigned,
 	WebhookTriggerPullReqCheckCompleted,
 	WebhookTriggerPullReqTargetBranchChanged,
+	WebhookTriggerPullReqDraftChanged,
 	WebhookTriggerMergeQueueChecksRequested,
 	WebhookTriggerMergeQueueChecksCanceled,
 	WebhookTriggerArtifactCreated,

@@ -305,6 +305,7 @@ func NewService(
 			_ = r.RegisterReviewSubmitted(service.handleEventPullReqReviewSubmitted)
 			_ = r.RegisterCommentStatusUpdated(service.handleEventPullReqCommentStatusUpdated)
 			_ = r.RegisterTargetBranchChanged(service.handleEventPullReqTargetBranchChanged)
+			_ = r.RegisterDraftChanged(service.handleEventPullReqDraftChanged)
 			_ = r.RegisterReviewerAdded(service.handleEventPullReqReviewerAssigned)
 			_ = r.RegisterReviewerRemoved(service.handleEventPullReqReviewerUnassigned)
 			_ = r.RegisterUserGroupReviewerAdded(service.handleEventPullReqUserGroupReviewerAssigned)
