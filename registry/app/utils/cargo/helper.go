@@ -171,17 +171,24 @@ func (h *registryHelper) mapVersionDependenciesToIndexDependencies(
 	}
 	deps := make([]cargometadata.IndexDependency, len(dependencies))
 	for i, dep := range dependencies {
+		// The publish API sends a renamed dependency as name = real crate and
+		// explicit_name_in_toml = new name. The index format wants
+		// name = new name and package = real crate instead.
+		name, pkg := dep.Name, ""
+		if dep.ExplicitNameInToml != "" && dep.ExplicitNameInToml != dep.Name {
+			name, pkg = dep.ExplicitNameInToml, dep.Name
+		}
 		deps[i] = cargometadata.IndexDependency{
 			VersionRequired: dep.VersionRequired,
+			Package:         pkg,
 			Dependency: cargometadata.Dependency{
-				Name:               dep.Name,
-				Features:           dep.Features,
-				IsOptional:         dep.IsOptional,
-				DefaultFeatures:    dep.DefaultFeatures,
-				Target:             dep.Target,
-				Kind:               dep.Kind,
-				Registry:           dep.Registry,
-				ExplicitNameInToml: dep.ExplicitNameInToml,
+				Name:            name,
+				Features:        dep.Features,
+				IsOptional:      dep.IsOptional,
+				DefaultFeatures: dep.DefaultFeatures,
+				Target:          dep.Target,
+				Kind:            dep.Kind,
+				Registry:        dep.Registry,
 			},
 		}
 	}
