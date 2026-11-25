@@ -94,9 +94,9 @@ func (s *Service) Create(
 		return nil, err
 	}
 
-	encryptedSecret, err := s.encrypter.Encrypt(in.Secret)
+	encryptedSecret, err := s.encryptSecret(in.Secret)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encrypt webhook secret: %w", err)
+		return nil, err
 	}
 
 	scope := webhookScopeRepo
@@ -125,7 +125,7 @@ func (s *Service) Create(
 		DisplayName:           in.DisplayName,
 		Description:           in.Description,
 		URL:                   in.URL,
-		Secret:                string(encryptedSecret),
+		Secret:                encryptedSecret,
 		Enabled:               in.Enabled,
 		Insecure:              in.Insecure,
 		Triggers:              DeduplicateTriggers(in.Triggers),

@@ -54,6 +54,7 @@ type Webhook struct {
 // the webhook contains a secret or not.
 // NOTE: This is used as an alternative to adding an `HasSecret` field to Webhook itself, which would
 // require us to keep `HasSecret` in sync with the `Secret` field, while `HasSecret` is not used internally at all.
+// NOTE: Values of masked extra headers are never serialized - see RedactExtraHeaders.
 func (w *Webhook) MarshalJSON() ([]byte, error) {
 	// WebhookAlias allows us to embed the original Webhook object (avoiding redefining all fields)
 	// while avoiding an infinite loop of marsheling.
@@ -63,12 +64,33 @@ func (w *Webhook) MarshalJSON() ([]byte, error) {
 		HasSecret bool `json:"has_secret"`
 		// TODO [CODE-1363]: remove after identifier migration.
 		UID string `json:"uid"`
+		// ExtraHeaders shadows the embedded field so masked values are redacted.
+		ExtraHeaders []ExtraHeader `json:"extra_headers,omitempty"`
 	}{
 		WebhookAlias: (*WebhookAlias)(w),
 		HasSecret:    w != nil && w.Secret != "",
 		// TODO [CODE-1363]: remove after identifier migration.
-		UID: w.Identifier,
+		UID:          w.Identifier,
+		ExtraHeaders: RedactExtraHeaders(w.ExtraHeaders),
 	})
+}
+
+// RedactExtraHeaders returns a copy of the headers with the values of masked headers removed.
+// Masked header values must never leave the server (API responses, audit logs, SSE events).
+func RedactExtraHeaders(headers []ExtraHeader) []ExtraHeader {
+	if headers == nil {
+		return nil
+	}
+
+	out := make([]ExtraHeader, len(headers))
+	for i, h := range headers {
+		out[i] = h
+		if h.Masked {
+			out[i].Value = ""
+		}
+	}
+
+	return out
 }
 
 // Clone makes a deep copy of the webhook object.

@@ -16,6 +16,7 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/url"
 	"strings"
@@ -118,6 +119,21 @@ func CheckSecret(secret string) error {
 	return nil
 }
 
+// encryptSecret encrypts the webhook secret. An empty secret stays empty, because encrypting an empty string
+// produces a non-empty ciphertext, which would make the webhook look like it has a secret (has_secret).
+func (s *Service) encryptSecret(secret string) (string, error) {
+	if secret == "" {
+		return "", nil
+	}
+
+	encryptedSecret, err := s.encrypter.Encrypt(secret)
+	if err != nil {
+		return "", fmt.Errorf("failed to encrypt webhook secret: %w", err)
+	}
+
+	return string(encryptedSecret), nil
+}
+
 // CheckTriggers validates the triggers of a webhook.
 func CheckTriggers(triggers []enum.WebhookTrigger) error {
 	// ignore duplicates here, should be deduplicated later
@@ -142,14 +158,39 @@ func CheckExtraHeaders(headers []types.ExtraHeader) error {
 			return check.NewValidationError("Header key cannot be empty.")
 		}
 		// check for duplicate header keys (case insensitive)
-		for existingKey := range headerKeys {
-			if strings.EqualFold(existingKey, header.Key) {
-				return check.NewValidationErrorf("Duplicate header key '%s' detected.", header.Key)
-			}
+		lowerKey := strings.ToLower(header.Key)
+		if _, ok := headerKeys[lowerKey]; ok {
+			return check.NewValidationErrorf("Duplicate header key '%s' detected.", header.Key)
+		}
+		headerKeys[lowerKey] = struct{}{}
+
+		if header.Masked && header.Value == "" {
+			return check.NewValidationErrorf("Masked header '%s' requires a value.", header.Key)
 		}
 	}
 
 	return nil
+}
+
+// MergeExtraHeaders computes the new set of extra headers of a webhook on update.
+// The provided headers replace the existing ones, with one exception: masked header values are never returned
+// to clients, so a masked header that is provided without a value keeps the stored value of the existing header
+// with the same key (case insensitive). Existing headers that aren't provided are removed.
+func MergeExtraHeaders(existing, in []types.ExtraHeader) []types.ExtraHeader {
+	existingValues := make(map[string]string, len(existing))
+	for _, h := range existing {
+		existingValues[strings.ToLower(h.Key)] = h.Value
+	}
+
+	out := make([]types.ExtraHeader, len(in))
+	for i, h := range in {
+		out[i] = h
+		if h.Masked && h.Value == "" {
+			out[i].Value = existingValues[strings.ToLower(h.Key)]
+		}
+	}
+
+	return out
 }
 
 // DeduplicateTriggers de-duplicates the triggers provided by the user.

@@ -70,11 +70,7 @@ func (s *Service) sanitizeUpdateInput(in *types.WebhookUpdateInput) error {
 			return err
 		}
 	}
-	if in.ExtraHeaders != nil {
-		if err := CheckExtraHeaders(in.ExtraHeaders); err != nil {
-			return err
-		}
-	}
+	// NOTE: extra headers are validated after being merged with the existing headers (see Update).
 
 	return nil
 }
@@ -112,11 +108,11 @@ func (s *Service) Update(
 		hook.Description = *in.Description
 	}
 	if in.Secret != nil {
-		encryptedSecret, err := s.encrypter.Encrypt(*in.Secret)
+		encryptedSecret, err := s.encryptSecret(*in.Secret)
 		if err != nil {
-			return nil, fmt.Errorf("failed to encrypt webhook secret: %w", err)
+			return nil, err
 		}
-		hook.Secret = string(encryptedSecret)
+		hook.Secret = encryptedSecret
 	}
 	if in.Enabled != nil {
 		hook.Enabled = *in.Enabled
@@ -131,7 +127,11 @@ func (s *Service) Update(
 		hook.Triggers = DeduplicateTriggers(in.Triggers)
 	}
 	if in.ExtraHeaders != nil {
-		hook.ExtraHeaders = in.ExtraHeaders
+		extraHeaders := MergeExtraHeaders(hook.ExtraHeaders, in.ExtraHeaders)
+		if err := CheckExtraHeaders(extraHeaders); err != nil {
+			return nil, err
+		}
+		hook.ExtraHeaders = extraHeaders
 	}
 
 	if err := s.webhookStore.Update(ctx, hook); err != nil {
