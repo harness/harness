@@ -33,6 +33,20 @@ type LoginInput struct {
 	Password        string `json:"password"`
 }
 
+// dummyPasswordHash is a valid bcrypt hash, generated at the same cost as real
+// user passwords, that the login flow compares against when the identifier
+// doesn't resolve to a user. Without it that path skips bcrypt and returns much
+// faster than a real password check, letting an attacker enumerate valid
+// accounts by timing the response.
+var dummyPasswordHash []byte
+
+func init() {
+	// GenerateFromPassword only errors on an invalid cost, so this cannot fail
+	// with bcrypt.DefaultCost.
+	dummyPasswordHash, _ = bcrypt.GenerateFromPassword(
+		[]byte("gitness-login-timing-equalizer"), bcrypt.DefaultCost)
+}
+
 // Login attempts to login as a specific user - returns the session token if successful.
 func (c *Controller) Login(
 	ctx context.Context,
@@ -47,12 +61,17 @@ func (c *Controller) Login(
 
 	// always return not found for security reasons.
 	if err != nil {
+		// Compare against a dummy hash so this path spends the same time in bcrypt
+		// as an existing user would. Skipping it here would let an attacker tell
+		// valid identifiers apart by response time. The result is discarded.
+		_ = comparePassword(dummyPasswordHash, []byte(in.Password))
+
 		log.Ctx(ctx).Debug().Err(err).
 			Msgf("failed to retrieve user %q during login (returning ErrNotFound).", in.LoginIdentifier)
 		return nil, usererror.ErrNotFound
 	}
 
-	err = bcrypt.CompareHashAndPassword(
+	err = comparePassword(
 		[]byte(user.Password),
 		[]byte(in.Password),
 	)
