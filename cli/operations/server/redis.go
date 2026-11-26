@@ -23,13 +23,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/tracing"
 	"github.com/harness/gitness/types"
 
+	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 )
 
-// ProvideRedis provides a redis client based on the configuration.
+// ProvideRedis provides a redis client based on the configuration, which traces its commands if configured.
 func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
+	return newRedisClient(config, tracing.Enabled(config.Tracing.Exporter) && config.Tracing.RedisEnabled)
+}
+
+// newRedisClient creates a redis client, which traces its commands if traced is set.
+func newRedisClient(config *types.Config, traced bool) (redis.UniversalClient, error) {
 	var tlsConfig *tls.Config
 	if config.Redis.SSLEnabled {
 		var err error
@@ -39,6 +46,7 @@ func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
 		}
 	}
 
+	var client redis.UniversalClient
 	if config.Redis.SentinelMode {
 		addrs := strings.Split(config.Redis.SentinelEndpoint, ",")
 
@@ -55,24 +63,28 @@ func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
 		if config.Redis.Password != "" {
 			failoverOptions.Password = config.Redis.Password
 		}
-		return redis.NewFailoverClient(failoverOptions), nil
+		client = redis.NewFailoverClient(failoverOptions)
+	} else {
+		options := &redis.Options{
+			Addr:            config.Redis.Endpoint,
+			MaxRetries:      config.Redis.MaxRetries,
+			MinRetryBackoff: 100 * time.Millisecond,
+			MaxRetryBackoff: 2 * time.Second,
+			MinIdleConns:    config.Redis.MinIdleConnections,
+			PoolSize:        config.Redis.MaxConnections,
+			TLSConfig:       tlsConfig,
+		}
+		if config.Redis.Password != "" {
+			options.Password = config.Redis.Password
+		}
+		client = redis.NewClient(options)
 	}
 
-	options := &redis.Options{
-		Addr:            config.Redis.Endpoint,
-		MaxRetries:      config.Redis.MaxRetries,
-		MinRetryBackoff: 100 * time.Millisecond,
-		MaxRetryBackoff: 2 * time.Second,
-		MinIdleConns:    config.Redis.MinIdleConnections,
-		PoolSize:        config.Redis.MaxConnections,
-		TLSConfig:       tlsConfig,
+	if traced {
+		client.AddHook(redisotel.NewTracingHook())
 	}
 
-	if config.Redis.Password != "" {
-		options.Password = config.Redis.Password
-	}
-
-	return redis.NewClient(options), nil
+	return client, nil
 }
 
 // redisTLSConfig builds a TLS config. Caller invokes it only when SSL is enabled.

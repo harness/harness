@@ -22,9 +22,18 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/container/response"
+	"github.com/harness/gitness/tracing"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
+
+var tracer = otel.Tracer("github.com/harness/gitness/events")
 
 // GenericReporter represents an event reporter that supports sending typesafe messages
 // for an arbitrary set of custom events within an event category using the ReporterSendEvent method.
@@ -32,6 +41,7 @@ import (
 type GenericReporter struct {
 	producer StreamProducer
 	category string
+	traced   bool
 }
 
 // ReporterSendEvent reports an event using the provided GenericReporter.
@@ -40,12 +50,31 @@ type GenericReporter struct {
 //
 //nolint:revive // emphasize that this is meant to be an operation on *GenericReporter
 func ReporterSendEvent[T any](reporter *GenericReporter, ctx context.Context,
-	eventType EventType, payload T) (string, error) {
+	eventType EventType, payload T) (_ string, err error) {
 	streamID := getStreamID(reporter.category, eventType)
+
+	span := trace.Span(noop.Span{})
+	if reporter.traced {
+		ctx, span = tracer.Start(ctx, "send "+streamID,
+			trace.WithSpanKind(trace.SpanKindProducer),
+			trace.WithAttributes(
+				semconv.MessagingOperationTypeSend,
+				semconv.MessagingDestinationName(streamID),
+			))
+	}
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to send event")
+		}
+		span.End()
+	}()
+
 	eventID, err := uuid.NewV7()
 	if err != nil {
 		return "", fmt.Errorf("failed to generate event ID: %w", err)
 	}
+	span.SetAttributes(attribute.String("events.id", eventID.String()))
 
 	event := Event[T]{
 		ID:        eventID.String(),
@@ -66,10 +95,16 @@ func ReporterSendEvent[T any](reporter *GenericReporter, ctx context.Context,
 	streamPayload := map[string]any{
 		streamPayloadKey: buff.Bytes(),
 	}
+	// The trace context is stored next to the event so the reader can continue the trace of the sender.
+	if reporter.traced {
+		tracing.InjectMap(ctx, streamPayload)
+	}
 
-	if _, err = reporter.producer.Send(ctx, streamID, streamPayload); err != nil {
+	messageID, err := reporter.producer.Send(ctx, streamID, streamPayload)
+	if err != nil {
 		return "", fmt.Errorf("failed to send event: %w", err)
 	}
+	span.SetAttributes(semconv.MessagingMessageID(messageID))
 
 	return event.ID, nil
 }

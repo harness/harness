@@ -328,6 +328,7 @@ func ProvideEventsConfig(config *types.Config) events.Config {
 			BackoffFactor:  config.Events.ProducerBackoffFactor,
 			MaxBackoff:     config.Events.ProducerMaxBackoff,
 		},
+		Tracing: tracing.Enabled(config.Tracing.Exporter) && config.Tracing.RedisEnabled,
 	}
 }
 

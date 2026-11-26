@@ -57,7 +57,7 @@ func ProvideSystem(config Config, redisClient redis.UniversalClient, collector C
 		return nil, fmt.Errorf("failed to setup event system for mode '%s': %w", config.Mode, err)
 	}
 
-	return NewSystem(consumerFn, producer, collector)
+	return NewSystem(consumerFn, producer, collector, config.Tracing)
 }
 
 func provideSystemInMemory(config Config) (StreamConsumerFactoryFunc, StreamProducer, error) {

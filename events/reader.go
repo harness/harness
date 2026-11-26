@@ -21,9 +21,16 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/logging"
 	"github.com/harness/gitness/stream"
+	"github.com/harness/gitness/tracing"
 
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 // ReaderFactoryFunc is an abstraction of a factory method that creates customized Reader implementations (type [R]).
@@ -38,6 +45,7 @@ type ReaderFactory[R Reader] struct {
 	streamConsumerFactoryFn StreamConsumerFactoryFunc
 	readerFactoryFn         ReaderFactoryFunc[R]
 	collector               Collector
+	traced                  bool
 }
 
 // Launch launches a new reader for the provided group and client name.
@@ -71,6 +79,8 @@ func (f *ReaderFactory[R]) Launch(ctx context.Context,
 	innerReader := &GenericReader{
 		streamConsumer: streamConsumer,
 		category:       f.category,
+		groupName:      groupName,
+		traced:         f.traced,
 	}
 
 	// create new reader (could return the innerReader itself, but also allows to launch customized readers)
@@ -162,6 +172,8 @@ type HandlerFunc[T any] func(context.Context, *Event[T]) error
 type GenericReader struct {
 	streamConsumer StreamConsumer
 	category       string
+	groupName      string
+	traced         bool
 }
 
 // ReaderRegisterEvent registers a type safe handler function on the reader for a specific event.
@@ -173,7 +185,26 @@ func ReaderRegisterEvent[T any](reader *GenericReader,
 
 	// register handler for event specific stream.
 	return reader.streamConsumer.Register(streamID,
-		func(ctx context.Context, messageID string, streamPayload map[string]any) error {
+		func(ctx context.Context, messageID string, streamPayload map[string]any) (err error) {
+			span := trace.Span(noop.Span{})
+			if reader.traced {
+				ctx, span = tracer.Start(tracing.ContextFromMap(ctx, streamPayload), "process "+streamID,
+					trace.WithSpanKind(trace.SpanKindConsumer),
+					trace.WithAttributes(
+						semconv.MessagingOperationTypeProcess,
+						semconv.MessagingDestinationName(streamID),
+						semconv.MessagingConsumerGroupName(reader.groupName),
+						semconv.MessagingMessageID(messageID),
+					))
+			}
+			defer func() {
+				if err != nil {
+					span.RecordError(err)
+					span.SetStatus(codes.Error, "failed to process event")
+				}
+				span.End()
+			}()
+
 			if streamPayload == nil {
 				return fmt.Errorf("stream payload is nil for message '%s'", messageID)
 			}
@@ -200,14 +231,16 @@ func ReaderRegisterEvent[T any](reader *GenericReader,
 			// decode event to correct type
 			var event Event[T]
 			decoder := gob.NewDecoder(bytes.NewReader(eventBytes))
-			err := decoder.Decode(&event)
+			err = decoder.Decode(&event)
 			if err != nil {
 				//nolint:gocritic // only way to achieve this AFAIK - lint proposal is not building
 				return fmt.Errorf("stream payload can't be decoded into type %T (message '%s')", *new(T), messageID)
 			}
 
+			span.SetAttributes(attribute.String("events.id", event.ID))
+
 			// update ctx with event type for proper logging
-			log := log.Ctx(ctx).With().
+			log := logging.WithTraceContext(span.SpanContext())(log.Ctx(ctx).With()).
 				Str("events.type", string(eventType)).
 				Str("events.id", event.ID).
 				Logger()

@@ -57,6 +57,8 @@ type Config struct {
 	ApproxMaxStreamLength bool
 	// ProducerRetry controls Redis stream produce retries (ignored for in-memory mode).
 	ProducerRetry stream.ProducerRetryConfig
+	// Tracing creates spans for sending and processing events, and carries the trace context in the events.
+	Tracing bool
 }
 
 func (c *Config) Validate() error {

@@ -57,6 +57,8 @@ type Config struct {
 		Exporter string `envconfig:"OTEL_TRACES_EXPORTER" default:"none"`
 		// HTTPGRPCEnabled traces incoming and outgoing HTTP and gRPC requests, if tracing is on.
 		HTTPGRPCEnabled bool `envconfig:"GITNESS_HTTP_GRPC_TRACING_ENABLED"`
+		// RedisEnabled traces Redis commands and the event streams, if tracing is on.
+		RedisEnabled bool `envconfig:"GITNESS_REDIS_TRACING_ENABLED"`
 	}
 
 	// URL defines the URLs via which the different parts of the service are reachable by.

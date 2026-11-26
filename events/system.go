@@ -22,12 +22,14 @@ type System struct {
 	streamConsumerFactoryFn StreamConsumerFactoryFunc
 	streamProducer          StreamProducer
 	collector               Collector
+	traced                  bool
 }
 
 func NewSystem(
 	streamConsumerFactoryFunc StreamConsumerFactoryFunc,
 	streamProducer StreamProducer,
 	collector Collector,
+	traced bool,
 ) (*System, error) {
 	if streamConsumerFactoryFunc == nil {
 		return nil, errors.New("streamConsumerFactoryFunc can't be empty")
@@ -43,6 +45,7 @@ func NewSystem(
 		streamConsumerFactoryFn: streamConsumerFactoryFunc,
 		streamProducer:          streamProducer,
 		collector:               collector,
+		traced:                  traced,
 	}, nil
 }
 
@@ -61,6 +64,7 @@ func NewReaderFactory[R Reader](system *System, category string, fn ReaderFactor
 		// values coming from system
 		streamConsumerFactoryFn: system.streamConsumerFactoryFn,
 		collector:               system.collector,
+		traced:                  system.traced,
 
 		// values coming from input parameters
 		category:        category,
@@ -79,6 +83,7 @@ func NewReporter(system *System, category string) (*GenericReporter, error) {
 	return &GenericReporter{
 		// values coming from system
 		producer: system.streamProducer,
+		traced:   system.traced,
 
 		// values coming from input parameters
 		category: category,
