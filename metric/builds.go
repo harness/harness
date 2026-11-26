@@ -19,7 +19,7 @@ func BuildCount(builds core.BuildStore) {
 			Name: "drone_build_count",
 			Help: "Total number of builds.",
 		}, func() float64 {
-			i, _ := builds.Count(noContext)
+			i, _ := builds.CountEstimate(noContext)
 			return float64(i)
 		}),
 	)

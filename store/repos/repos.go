@@ -493,23 +493,15 @@ WHERE repo_id = :repo_id
   AND repo_version = :repo_version_old
 `
 
-// TODO(bradrydzewski) this query needs performance tuning.
-// one approach that is promising is the ability to use the
-// repo_counter (latest build number) to join on the build
-// table.
-//
-//   FROM repos LEFT OUTER JOIN builds ON (
-//     repos.repo_id = builds.build_repo_id AND
-//     builds.build_number = repos.repo_counter
-//   )
-//   INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
-//
-
+// queryRepoWithBuild resolves each repo's latest build as the one
+// with the highest build_number (backed by the unique builds(
+// build_repo_id, build_number) index), matching the Postgres variant
+// below so all drivers agree on which build is the latest.
 const queryRepoWithBuild = queryColsBuilds + `
 FROM repos LEFT OUTER JOIN builds ON build_id = (
 	SELECT build_id FROM builds
 	WHERE builds.build_repo_id = repos.repo_id
-	ORDER BY build_id DESC
+	ORDER BY build_number DESC
 	LIMIT 1
 )
 INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
@@ -517,12 +509,20 @@ WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC
 `
 
+// queryRepoWithBuildPostgres resolves each repo's latest build with
+// a LATERAL join that walks the unique builds(build_repo_id,
+// build_number) index backwards and stops at the first row, instead
+// of sorting every build for the repo. It deliberately does not rely
+// on repos.repo_counter: the counter is incremented before the build
+// row is created (and can be set through the repo update API), so it
+// can name a build that does not exist.
 const queryRepoWithBuildPostgres = queryColsBuilds + `
-FROM repos LEFT OUTER JOIN builds ON build_id = (
-	SELECT DISTINCT ON (build_repo_id) build_id FROM builds
+FROM repos LEFT OUTER JOIN LATERAL (
+	SELECT * FROM builds
 	WHERE builds.build_repo_id = repos.repo_id
-	ORDER BY build_repo_id, build_id DESC
-)
+	ORDER BY builds.build_number DESC
+	LIMIT 1
+) builds ON true
 INNER JOIN perms ON perms.perm_repo_uid = repos.repo_uid
 WHERE perms.perm_user_id = :user_id
 ORDER BY repo_slug ASC

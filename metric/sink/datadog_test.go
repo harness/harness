@@ -45,7 +45,7 @@ func TestDo(t *testing.T) {
 	repos.EXPECT().Count(gomock.Any()).Return(int64(20), nil)
 
 	builds := mock.NewMockBuildStore(controller)
-	builds.EXPECT().Count(gomock.Any()).Return(int64(30), nil)
+	builds.EXPECT().CountEstimate(gomock.Any()).Return(int64(30), nil)
 
 	gock.New("https://api.datadoghq.com").
 		Post("/api/v1/series").

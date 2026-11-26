@@ -86,7 +86,7 @@ func (d *Datadog) do(ctx context.Context, unix int64) error {
 	if err != nil {
 		return err
 	}
-	builds, err := d.builds.Count(ctx)
+	builds, err := d.builds.CountEstimate(ctx)
 	if err != nil {
 		return err
 	}

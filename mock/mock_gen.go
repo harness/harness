@@ -711,6 +711,21 @@ func (mr *MockBuildStoreMockRecorder) Count(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockBuildStore)(nil).Count), arg0)
 }
 
+// CountEstimate mocks base method.
+func (m *MockBuildStore) CountEstimate(arg0 context.Context) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountEstimate", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountEstimate indicates an expected call of CountEstimate.
+func (mr *MockBuildStoreMockRecorder) CountEstimate(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountEstimate", reflect.TypeOf((*MockBuildStore)(nil).CountEstimate), arg0)
+}
+
 // Create mocks base method.
 func (m *MockBuildStore) Create(arg0 context.Context, arg1 *core.Build, arg2 []*core.Stage) error {
 	m.ctrl.T.Helper()

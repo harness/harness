@@ -102,7 +102,7 @@ func HandleStats(
 		// Build Stats
 		//
 
-		stats.Builds.Total, err = builds.Count(ctx)
+		stats.Builds.Total, err = builds.CountEstimate(ctx)
 		if err != nil {
 			render.InternalError(w, err)
 			logger.FromRequest(r).WithError(err).
