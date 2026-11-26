@@ -142,6 +142,7 @@ func lsTree(
 		return nil, ErrRepositoryPathEmpty
 	}
 	cmd := command.New("ls-tree",
+		command.WithLiteralPathspecs(),
 		command.WithFlag("-z"),
 		command.WithAlternateObjectDirs(alternateObjectDirs...),
 		command.WithArg(rev),
@@ -335,6 +336,7 @@ func (g *Git) GetBlobSHAsForPaths(
 	}
 
 	cmd := command.New("ls-tree",
+		command.WithLiteralPathspecs(),
 		command.WithFlag("-z"),
 		command.WithAlternateObjectDirs(alternateObjectDirs...),
 		command.WithArg(rev),

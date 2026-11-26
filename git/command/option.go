@@ -30,6 +30,16 @@ func WithGlobal(flags ...string) CmdOptionFunc {
 	}
 }
 
+// WithLiteralPathspecs makes git take the path arguments of the command literally.
+//
+// Without it git applies pathspec magic and globbing to those arguments, which silently changes
+// their meaning: a path inside a directory named ":" is read as the magic prefix for "relative to
+// the repository root" (":/f.txt" becomes "f.txt"), and paths containing "*", "?" or "[...]" are
+// read as glob patterns. Use it for every command that gets a path from a git tree or from the user.
+func WithLiteralPathspecs() CmdOptionFunc {
+	return WithGlobal("--literal-pathspecs")
+}
+
 // WithAction set the action of the Git command, e.g. "set-url" in `git remote set-url`.
 func WithAction(action string) CmdOptionFunc {
 	return func(c *Command) {

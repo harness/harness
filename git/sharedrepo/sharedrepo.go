@@ -171,6 +171,7 @@ func (r *SharedRepo) LsFiles(
 	filenames ...string,
 ) ([]string, error) {
 	cmd := command.New("ls-files",
+		command.WithLiteralPathspecs(),
 		command.WithFlag("-z"),
 		command.WithPostSepArg(filenames...),
 	)

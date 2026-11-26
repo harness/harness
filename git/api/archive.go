@@ -137,6 +137,7 @@ func (g *Git) Archive(ctx context.Context, repoPath string, params ArchiveParams
 		return err
 	}
 	cmd := command.New("archive",
+		command.WithLiteralPathspecs(),
 		command.WithArg(params.Treeish),
 	)
 

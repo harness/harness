@@ -100,7 +100,7 @@ func (g *Git) listCommitSHAs(
 	limit int,
 	filter CommitFilter,
 ) ([]sha.SHA, error) {
-	cmd := command.New("rev-list")
+	cmd := command.New("rev-list", command.WithLiteralPathspecs())
 
 	// return commits only up to a certain reference if requested
 	if filter.AfterRef != "" {
@@ -575,6 +575,7 @@ func GetLatestCommit(
 	path string,
 ) (*Commit, error) {
 	cmd := command.New("log",
+		command.WithLiteralPathspecs(),
 		command.WithFlag("--max-count", "1"),
 		command.WithFlag("--format="+fmtCommitHash),
 		command.WithArg(rev),

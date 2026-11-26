@@ -113,6 +113,66 @@ func TestArchiveValidatePositionalArgs(t *testing.T) {
 	}
 }
 
+// TestMakeArgs_LiteralPathspecs asserts that --literal-pathspecs is passed only when requested,
+// and that it comes before the sub command, otherwise git rejects it.
+//
+// Regression guard for CODE-6237: without the flag git reads a path inside a directory
+// named ":" as the magic "relative to the repository root" prefix, which made committing
+// such a file fail.
+func TestMakeArgs_LiteralPathspecs(t *testing.T) {
+	t.Run("requested", func(t *testing.T) {
+		cmd := New("ls-tree",
+			WithLiteralPathspecs(),
+			WithFlag("-z"),
+			WithArg("main"),
+			WithPostSepArg(":/f.txt"),
+		)
+
+		args, err := cmd.makeArgs()
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(args) < 2 || args[0] != "--literal-pathspecs" || args[1] != "ls-tree" {
+			t.Fatalf("expected --literal-pathspecs right before the sub command, got: %v", args)
+		}
+	})
+
+	t.Run("not requested", func(t *testing.T) {
+		args, err := New("ls-tree", WithArg("main")).makeArgs()
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if args[0] != "ls-tree" {
+			t.Fatalf("expected no global flags by default, got: %v", args)
+		}
+	})
+}
+
+// TestClone_KeepsPostSepArgs asserts that a cloned command keeps its post-separator arguments,
+// and does not fill them with its flags.
+func TestClone_KeepsPostSepArgs(t *testing.T) {
+	cmd := New("ls-tree", WithFlag("-z"), WithArg("main"), WithPostSepArg(":/f.txt"))
+
+	clone := cmd.Clone()
+	if len(clone.PostSepArgs) != 1 || clone.PostSepArgs[0] != ":/f.txt" {
+		t.Fatalf("expected the post separator args to be kept, got: %v", clone.PostSepArgs)
+	}
+}
+
+// TestClone_KeepsGlobals asserts that a cloned command keeps its global flags, so that
+// --literal-pathspecs survives for the callers that clone a command before running it.
+func TestClone_KeepsGlobals(t *testing.T) {
+	cmd := New("diff", WithLiteralPathspecs(), WithFlag("-M"))
+
+	args, err := cmd.Clone().makeArgs()
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if len(args) < 2 || args[0] != "--literal-pathspecs" || args[1] != "diff" {
+		t.Fatalf("expected --literal-pathspecs to survive the clone, got: %v", args)
+	}
+}
+
 func TestCommandContextTimeout(t *testing.T) {
 	cmd := New("init", WithFlag("--bare"), WithArg("samplerepo"))
 

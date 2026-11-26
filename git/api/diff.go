@@ -192,6 +192,7 @@ func (g *Git) RawDiff(
 	}
 
 	cmd := command.New("diff",
+		command.WithLiteralPathspecs(),
 		command.WithFlag("-M"),
 		command.WithFlag("--full-index"),
 		command.WithAlternateObjectDirs(alternates...),

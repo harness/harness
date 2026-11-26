@@ -99,12 +99,13 @@ func (c *Command) Clone() *Command {
 	copy(args, c.Args)
 
 	postSepArgs := make([]string, len(c.PostSepArgs))
-	copy(postSepArgs, c.Flags)
+	copy(postSepArgs, c.PostSepArgs)
 
 	envs := make(Envs, len(c.Envs))
 	maps.Copy(envs, c.Envs)
 
 	return &Command{
+		Globals:          globals,
 		Name:             c.Name,
 		Action:           c.Action,
 		Flags:            flags,

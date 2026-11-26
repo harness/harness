@@ -362,7 +362,7 @@ func (g *Git) AddFiles(
 		return ErrRepositoryPathEmpty
 	}
 
-	cmd := command.New("add")
+	cmd := command.New("add", command.WithLiteralPathspecs())
 	if all {
 		cmd.Add(command.WithFlag("--all"))
 	}

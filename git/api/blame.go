@@ -64,6 +64,7 @@ func (g *Git) Blame(
 	// prepare the git command line arguments
 	cmd := command.New(
 		"blame",
+		command.WithLiteralPathspecs(),
 		command.WithFlag("--porcelain"),
 		command.WithFlag("--encoding", "UTF-8"),
 	)
