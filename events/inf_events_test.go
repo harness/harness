@@ -117,7 +117,7 @@ func (c *infCollector) get() (int, int) {
 
 func infNewSystem(t *testing.T, consumer *infConsumer, producer *infProducer, coll Collector) *System {
 	t.Helper()
-	sys, err := NewSystem(func(string, string) (StreamConsumer, error) { return consumer, nil }, producer, coll)
+	sys, err := NewSystem(func(string, string) (StreamConsumer, error) { return consumer, nil }, producer, coll, false)
 	require.NoError(t, err)
 	return sys
 }
@@ -170,13 +170,13 @@ func TestInfNewSystemValidation(t *testing.T) {
 	producer := &infProducer{}
 	coll := NewNoopCollector()
 
-	_, err := NewSystem(nil, producer, coll)
+	_, err := NewSystem(nil, producer, coll, false)
 	require.Error(t, err)
-	_, err = NewSystem(consumerFn, nil, coll)
+	_, err = NewSystem(consumerFn, nil, coll, false)
 	require.Error(t, err)
-	_, err = NewSystem(consumerFn, producer, nil)
+	_, err = NewSystem(consumerFn, producer, nil, false)
 	require.Error(t, err)
-	sys, err := NewSystem(consumerFn, producer, coll)
+	sys, err := NewSystem(consumerFn, producer, coll, false)
 	require.NoError(t, err)
 
 	_, err = NewReaderFactory(nil, "c", func(r *GenericReader) (*GenericReader, error) { return r, nil })
@@ -307,7 +307,7 @@ func TestInfReaderFactory_LaunchErrors(t *testing.T) {
 	})
 	t.Run("consumer factory error", func(t *testing.T) {
 		sys, err := NewSystem(func(string, string) (StreamConsumer, error) { return nil, errors.New("nope") },
-			&infProducer{}, NewNoopCollector())
+			&infProducer{}, NewNoopCollector(), false)
 		require.NoError(t, err)
 		_, err = infNewFactory(t, sys).Launch(ctx, "g", "r", noop)
 		require.ErrorContains(t, err, "failed to create new stream consumer")

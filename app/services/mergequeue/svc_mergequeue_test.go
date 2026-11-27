@@ -324,6 +324,7 @@ func svcNewEnv(t *testing.T) *svcEnv {
 		func(string, string) (events.StreamConsumer, error) { return nil, errors.New("unsupported") },
 		producer,
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	reporter, err := mergequeueevents.NewReporter(system)

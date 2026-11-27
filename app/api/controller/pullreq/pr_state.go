@@ -265,6 +265,11 @@ func (c *Controller) State(ctx context.Context,
 			pr.SubState = enum.PullReqSubStateNone
 			pr.IsDraft = in.IsDraft
 
+			// If the branch moved while the PR was closed, the new SHA wasn't brought in by a push event to this PR,
+			// so whoever reopens the PR at it is accountable for it as its pusher.
+			if pr.SourceSHA != sourceSHA.String() || pr.SourceSHAPushedBy == nil {
+				pr.SourceSHAPushedBy = ptr.Int64(session.Principal.ID)
+			}
 			pr.SourceSHA = sourceSHA.String()
 			pr.MergeTargetSHA = ptr.String(targetSHA.String())
 			pr.MergeBaseSHA = mergeBaseSHA.String()

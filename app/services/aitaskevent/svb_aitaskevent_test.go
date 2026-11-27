@@ -144,6 +144,7 @@ func svbFactory(t *testing.T, consumer *svbConsumer, factoryErr error) *events.R
 		},
 		svbProducer{},
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	factory, err := aitaskevents.NewReaderFactory(system)

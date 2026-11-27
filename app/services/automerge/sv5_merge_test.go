@@ -336,6 +336,7 @@ func sv5NewEnv(t *testing.T) *sv5Env {
 		func(string, string) (events.StreamConsumer, error) { return nil, errSv5Boom },
 		sv5Producer{},
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	reporter, err := pullreqevents.NewReporter(system)

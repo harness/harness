@@ -183,6 +183,7 @@ func TestSv5NewService(t *testing.T) {
 			},
 			sv5Producer{},
 			events.NewNoopCollector(),
+			false,
 		)
 		require.NoError(t, err)
 		factory, err := repoevents.NewReaderFactory(system)

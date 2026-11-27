@@ -48,6 +48,12 @@ type PullReq struct {
 	SourceRepoID *int64 `json:"source_repo_id"`
 	SourceBranch string `json:"source_branch"`
 	SourceSHA    string `json:"source_sha"`
+
+	// SourceSHAPushedBy is the ID of the principal whose push moved the source branch to SourceSHA.
+	// It is updated together with SourceSHA, so the two are always consistent.
+	// It is nil when the pusher is unknown, e.g. when SourceSHA was read from git on PR creation or reopen.
+	SourceSHAPushedBy *int64 `json:"-"`
+
 	TargetRepoID int64  `json:"target_repo_id"`
 	TargetBranch string `json:"target_branch"`
 
@@ -351,13 +357,14 @@ type MergeVerifyOutput struct {
 
 	DefaultReviewerApprovals []*DefaultReviewerApprovalsResponse `json:"default_reviewer_approvals,omitempty"`
 
-	RequiresCodeOwnersApproval       bool `json:"requires_code_owners_approval,omitempty"`
-	RequiresCodeOwnersApprovalLatest bool `json:"requires_code_owners_approval_latest,omitempty"`
-	RequiresCommentResolution        bool `json:"requires_comment_resolution,omitempty"`
-	RequiresTargetIsAncestor         bool `json:"requires_target_is_ancestor,omitempty"`
-	RequiresNoChangeRequests         bool `json:"requires_no_change_requests,omitempty"`
-	RequiresBypassMessage            bool `json:"requires_bypass_message,omitempty"`
-	RequiresMergeQueue               bool `json:"requires_merge_queue,omitempty"`
+	RequiresCodeOwnersApproval            bool `json:"requires_code_owners_approval,omitempty"`
+	RequiresCodeOwnersApprovalLatest      bool `json:"requires_code_owners_approval_latest,omitempty"`
+	RequiresCommentResolution             bool `json:"requires_comment_resolution,omitempty"`
+	RequiresTargetIsAncestor              bool `json:"requires_target_is_ancestor,omitempty"`
+	RequiresNoChangeRequests              bool `json:"requires_no_change_requests,omitempty"`
+	RequiresDifferentReviewerThanLastPush bool `json:"requires_different_reviewer_than_last_push,omitempty"`
+	RequiresBypassMessage                 bool `json:"requires_bypass_message,omitempty"`
+	RequiresMergeQueue                    bool `json:"requires_merge_queue,omitempty"`
 }
 
 type MergeViolations struct {

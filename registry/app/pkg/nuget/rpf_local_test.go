@@ -215,7 +215,7 @@ func rpfReporter(t *testing.T) (*registryevents.Reporter, *rpfProducer) {
 	producer := &rpfProducer{}
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return nil, errors.New("unused") },
-		producer, rpfCollector{})
+		producer, rpfCollector{}, false)
 	require.NoError(t, err)
 	reporter, err := registryevents.NewReporter(system)
 	require.NoError(t, err)

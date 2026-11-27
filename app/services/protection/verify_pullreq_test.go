@@ -803,6 +803,86 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				AllowedMethods: enum.MergeMethods,
 			},
 		},
+		{
+			name: codePullReqApprovalReqDifferentReviewerThanLastPush + "-success",
+			def: DefPullReq{Approvals: DefApprovals{
+				RequireMinimumCount: 1, RequireLatestCommit: true, RequireDifferentReviewerThanLastPush: true,
+			}},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc", SourceSHAPushedBy: &reviewer1.ID},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer1},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                        enum.MergeMethods,
+				MinimumRequiredApprovalsCountLatest:   1,
+				RequiresDifferentReviewerThanLastPush: true,
+			},
+		},
+		{
+			name: codePullReqApprovalReqDifferentReviewerThanLastPush + "-fail-only-pusher-approved",
+			def: DefPullReq{Approvals: DefApprovals{
+				RequireMinimumCount: 1, RequireLatestCommit: true, RequireDifferentReviewerThanLastPush: true,
+			}},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc", SourceSHAPushedBy: &reviewer1.ID},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer1},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDifferentReviewerThanLastPush},
+			expParams: [][]any{nil},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                        enum.MergeMethods,
+				MinimumRequiredApprovalsCountLatest:   1,
+				RequiresDifferentReviewerThanLastPush: true,
+			},
+		},
+		{
+			name: codePullReqApprovalReqDifferentReviewerThanLastPush + "-fail-other-approved-old-sha",
+			def: DefPullReq{Approvals: DefApprovals{
+				RequireMinimumCount: 1, RequireLatestCommit: true, RequireDifferentReviewerThanLastPush: true,
+			}},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc", SourceSHAPushedBy: &reviewer1.ID},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer1},
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abd", Reviewer: reviewer2},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDifferentReviewerThanLastPush},
+			expParams: [][]any{nil},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                        enum.MergeMethods,
+				MinimumRequiredApprovalsCountLatest:   1,
+				RequiresDifferentReviewerThanLastPush: true,
+			},
+		},
+		{
+			name: codePullReqApprovalReqDifferentReviewerThanLastPush + "-fail-unknown-pusher",
+			def: DefPullReq{Approvals: DefApprovals{
+				RequireMinimumCount: 1, RequireLatestCommit: true, RequireDifferentReviewerThanLastPush: true,
+			}},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc", Reviewer: reviewer2},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqDifferentReviewerThanLastPush},
+			expParams: [][]any{nil},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                        enum.MergeMethods,
+				MinimumRequiredApprovalsCountLatest:   1,
+				RequiresDifferentReviewerThanLastPush: true,
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -1059,6 +1139,32 @@ func TestDefMergeQueue_Sanitize(t *testing.T) {
 			err := tt.def.Sanitize()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("wantErr=%t, got err=%v", tt.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestDefApprovals_SanitizeDifferentReviewerThanLastPush(t *testing.T) {
+	tests := []struct {
+		name    string
+		def     DefApprovals
+		wantErr bool
+	}{
+		{
+			name: "with-latest-commit",
+			def:  DefApprovals{RequireMinimumCount: 1, RequireLatestCommit: true, RequireDifferentReviewerThanLastPush: true},
+		},
+		{
+			name:    "without-latest-commit",
+			def:     DefApprovals{RequireMinimumCount: 1, RequireDifferentReviewerThanLastPush: true},
+			wantErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if err := test.def.Sanitize(); (err != nil) != test.wantErr {
+				t.Errorf("unexpected sanitize result: wantErr=%t err=%v", test.wantErr, err)
 			}
 		})
 	}

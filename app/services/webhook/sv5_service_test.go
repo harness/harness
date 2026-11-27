@@ -70,6 +70,7 @@ func sv5System(t *testing.T, consumer *sv5Consumer, okLaunches int) *events.Syst
 		},
 		sv5Producer{},
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	return system

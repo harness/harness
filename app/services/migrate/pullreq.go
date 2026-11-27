@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -329,6 +330,7 @@ func (r *repoImportState) convertPullReq(
 		SourceRepoID:        &repo.ID,
 		SourceBranch:        extPullReq.Head.Name,
 		SourceSHA:           extPullReq.Head.SHA,
+		SourceSHAPushedBy:   ptr.Int64(author.ID), // the author opened the PR at this SHA
 		TargetRepoID:        repo.ID,
 		TargetBranch:        extPullReq.Base.Name,
 		RootSpaceID:         r.rootSpaceID,

@@ -23,10 +23,12 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/api/controller/principal"
+	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/services/usage"
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
 
@@ -48,6 +50,13 @@ func (a ct5Authenticator) Authenticate(*http.Request) (*auth.Session, error) {
 type ct5Usage struct{}
 
 func (ct5Usage) Send(context.Context, usage.Metric) error { return nil }
+
+// ct5PrincipalStore implements only the store method the system controller uses.
+type ct5PrincipalStore struct {
+	store.PrincipalStore
+}
+
+func (ct5PrincipalStore) CountUsers(context.Context, *types.UserFilter) (int64, error) { return 1, nil }
 
 type ct5URLs struct {
 	url.Provider
@@ -77,7 +86,7 @@ func ct5NewAPIHandler(authenticator authn.Authenticator) http.Handler {
 		context.Background(), config, authenticator,
 		nil, nil, nil, nil, nil, nil, nil, nil, nil,
 		nil, nil, nil, nil, nil, nil, nil, nil, principal.Controller{},
-		nil, nil, nil, nil, nil, nil, nil, nil, nil,
+		nil, nil, system.NewController(ct5PrincipalStore{}, config), nil, nil, nil, nil, nil, nil,
 	)
 }
 
@@ -202,10 +211,11 @@ func TestCt5APIHandlerCORS(t *testing.T) {
 }
 
 func TestCt5APIHandlerAnonymousReachesHandler(t *testing.T) {
-	// nil controllers make the handler panic, which the recoverer middleware converts into a 500.
-	// This proves the request passed the routing and authentication layers.
+	// a 200 from the config handler proves the anonymous request passed routing and authentication.
 	handler := ct5NewAPIHandler(ct5Authenticator{err: authn.ErrNoAuthData})
-	require.Equal(t, http.StatusInternalServerError, ct5Do(handler, http.MethodGet, "/v1/system/config").Code)
+	rec := ct5Do(handler, http.MethodGet, "/v1/system/config")
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Contains(t, rec.Body.String(), `"user_signup_allowed":false`)
 }
 
 func TestCt5GitHandler(t *testing.T) {

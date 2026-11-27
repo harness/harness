@@ -222,6 +222,7 @@ func svbNewEnv(t *testing.T) *svbEnv {
 		func(string, string) (events.StreamConsumer, error) { return nil, errSvbBoom },
 		prod,
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	reporter, err := ruleevents.NewReporter(system)

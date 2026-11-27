@@ -140,7 +140,7 @@ func w2rNewEnv(t *testing.T) *w2rEnv {
 	consumer := &w2rConsumer{handlers: map[string]stream.HandlerFunc{}}
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return consumer, nil },
-		producer, events.NewNoopCollector())
+		producer, events.NewNoopCollector(), false)
 	require.NoError(t, err)
 
 	tasks, sources, logs := &w2rTasks{status: types.TaskStatusPending}, &w2rSources{}, &w2rTaskEvents{}
@@ -208,7 +208,7 @@ func TestW2rReaderRegistersAsyncTaskHandler(t *testing.T) {
 	consumer := &w2rConsumer{handlers: map[string]stream.HandlerFunc{}}
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return consumer, nil },
-		producer, events.NewNoopCollector())
+		producer, events.NewNoopCollector(), false)
 	require.NoError(t, err)
 
 	factory, err := NewReaderFactory(system)

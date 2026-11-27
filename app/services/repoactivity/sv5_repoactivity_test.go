@@ -147,6 +147,7 @@ func TestSv5New(t *testing.T) {
 			},
 			sv5Producer{},
 			events.NewNoopCollector(),
+			false,
 		)
 		require.NoError(t, err)
 		factory, err := gitevents.NewReaderFactory(system)

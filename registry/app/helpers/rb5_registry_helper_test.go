@@ -170,7 +170,7 @@ func rb5EventSystem(t *testing.T) (*events.System, *rb5Producer) {
 	rb5GobOnce.Do(func() { gob.Register(&registryevents.CommonArtifact{}) })
 	producer := &rb5Producer{}
 	system, err := events.NewSystem(
-		func(string, string) (events.StreamConsumer, error) { return nil, errRb5Boom }, producer, rb5Collector{})
+		func(string, string) (events.StreamConsumer, error) { return nil, errRb5Boom }, producer, rb5Collector{}, false)
 	require.NoError(t, err)
 	return system, producer
 }

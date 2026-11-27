@@ -170,7 +170,7 @@ func rpfEventSystem(t *testing.T) (*events.System, *rpfProducer) {
 	producer := &rpfProducer{}
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return nil, errors.New("unused") },
-		producer, rpfCollector{})
+		producer, rpfCollector{}, false)
 	require.NoError(t, err)
 	return system, producer
 }

@@ -18,9 +18,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"io/fs"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/harness/gitness/app/services/protection"
@@ -32,7 +34,6 @@ import (
 )
 
 const (
-	st5LastVersion  = "0193"
 	st5FirstVersion = "0001_create_table_a_principals"
 	st5SqliteDriver = "sqlite3"
 	st5ErrBoom      = "st5boom"
@@ -40,6 +41,24 @@ const (
 	st5RPMType      = "RPM"
 	st5DigestDigits = "1234"
 )
+
+// st5LastVersion returns the version of the newest embedded sqlite migration.
+func st5LastVersion(t *testing.T) string {
+	t.Helper()
+
+	files, err := fs.Glob(sqlite, "sqlite/*.up.sql")
+	require.NoError(t, err)
+	require.NotEmpty(t, files)
+
+	last := ""
+	for _, f := range files {
+		if v := strings.TrimSuffix(filepath.Base(f), ".up.sql"); v > last {
+			last = v
+		}
+	}
+
+	return last
+}
 
 // st5RawDB opens an empty file based SQLite database with foreign keys disabled.
 func st5RawDB(t *testing.T) *sqlx.DB {
@@ -678,7 +697,7 @@ func TestSt5MigrateCurrentAndTo(t *testing.T) {
 	require.NoError(t, Migrate(ctx, db))
 	version, err = Current(ctx, db)
 	require.NoError(t, err)
-	require.Equal(t, st5LastVersion, version)
+	require.Equal(t, st5LastVersion(t), version)
 
 	// foreign keys must be re-enabled after a migration.
 	var fk int

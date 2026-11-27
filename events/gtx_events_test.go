@@ -188,16 +188,16 @@ func TestGtxNewSystem_Validation(t *testing.T) {
 	producer := stream.NewMemoryProducer(nil, "ns")
 	collector := NewNoopCollector()
 
-	_, err := NewSystem(nil, producer, collector)
+	_, err := NewSystem(nil, producer, collector, false)
 	require.ErrorContains(t, err, "streamConsumerFactoryFunc")
 
-	_, err = NewSystem(consumerFn, nil, collector)
+	_, err = NewSystem(consumerFn, nil, collector, false)
 	require.ErrorContains(t, err, "streamProducer")
 
-	_, err = NewSystem(consumerFn, producer, nil)
+	_, err = NewSystem(consumerFn, producer, nil, false)
 	require.ErrorContains(t, err, "collector")
 
-	system, err := NewSystem(consumerFn, producer, collector)
+	system, err := NewSystem(consumerFn, producer, collector, false)
 	require.NoError(t, err)
 	assert.NotNil(t, system)
 }
@@ -399,6 +399,7 @@ func TestGtxReaderFactory_Launch(t *testing.T) {
 			},
 			stream.NewMemoryProducer(nil, "ns"),
 			collector,
+			false,
 		)
 		require.NoError(t, err)
 

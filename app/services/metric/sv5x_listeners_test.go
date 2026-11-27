@@ -76,6 +76,7 @@ func TestSv5xRegisterEventListeners(t *testing.T) {
 			},
 			sv5xProducer{},
 			events.NewNoopCollector(),
+			false,
 		)
 		require.NoError(t, err)
 

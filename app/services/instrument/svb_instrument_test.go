@@ -170,6 +170,7 @@ func TestSvbNewConsumer(t *testing.T) {
 			},
 			svbProducer{},
 			events.NewNoopCollector(),
+			false,
 		)
 		require.NoError(t, err)
 		factory, err := gitevents.NewReaderFactory(system)

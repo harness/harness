@@ -432,6 +432,7 @@ func svbEventSystem(t *testing.T, consumer *svbConsumer, factoryErr error) *even
 		},
 		svbProducer{},
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	return system

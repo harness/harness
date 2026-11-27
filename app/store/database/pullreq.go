@@ -82,11 +82,12 @@ type pullReq struct {
 	Title       string `db:"pullreq_title"`
 	Description string `db:"pullreq_description"`
 
-	SourceRepoID null.Int `db:"pullreq_source_repo_id"`
-	SourceBranch string   `db:"pullreq_source_branch"`
-	SourceSHA    string   `db:"pullreq_source_sha"`
-	TargetRepoID int64    `db:"pullreq_target_repo_id"`
-	TargetBranch string   `db:"pullreq_target_branch"`
+	SourceRepoID      null.Int `db:"pullreq_source_repo_id"`
+	SourceBranch      string   `db:"pullreq_source_branch"`
+	SourceSHA         string   `db:"pullreq_source_sha"`
+	SourceSHAPushedBy null.Int `db:"pullreq_source_sha_pushed_by"`
+	TargetRepoID      int64    `db:"pullreq_target_repo_id"`
+	TargetBranch      string   `db:"pullreq_target_branch"`
 
 	ActivitySeq int64 `db:"pullreq_activity_seq"`
 
@@ -133,6 +134,7 @@ const (
 		,pullreq_source_repo_id
 		,pullreq_source_branch
 		,pullreq_source_sha
+		,pullreq_source_sha_pushed_by
 		,pullreq_target_repo_id
 		,pullreq_target_branch
 		,pullreq_activity_seq
@@ -248,6 +250,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_source_repo_id
 		,pullreq_source_branch
 		,pullreq_source_sha
+		,pullreq_source_sha_pushed_by
 		,pullreq_target_repo_id
 		,pullreq_target_branch
 		,pullreq_activity_seq
@@ -287,6 +290,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_source_repo_id
 		,:pullreq_source_branch
 		,:pullreq_source_sha
+		,:pullreq_source_sha_pushed_by
 		,:pullreq_target_repo_id
 		,:pullreq_target_branch
 		,:pullreq_activity_seq
@@ -342,6 +346,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_description = :pullreq_description
 		,pullreq_activity_seq = :pullreq_activity_seq
 		,pullreq_source_sha = :pullreq_source_sha
+		,pullreq_source_sha_pushed_by = :pullreq_source_sha_pushed_by
 		,pullreq_target_branch = :pullreq_target_branch
 		,pullreq_merged_by = :pullreq_merged_by
 		,pullreq_merged = :pullreq_merged
@@ -1038,6 +1043,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		SourceRepoID:            pr.SourceRepoID.Ptr(),
 		SourceBranch:            pr.SourceBranch,
 		SourceSHA:               pr.SourceSHA,
+		SourceSHAPushedBy:       pr.SourceSHAPushedBy.Ptr(),
 		TargetRepoID:            pr.TargetRepoID,
 		TargetBranch:            pr.TargetBranch,
 		ActivitySeq:             pr.ActivitySeq,
@@ -1092,6 +1098,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		SourceRepoID:            null.IntFromPtr(pr.SourceRepoID),
 		SourceBranch:            pr.SourceBranch,
 		SourceSHA:               pr.SourceSHA,
+		SourceSHAPushedBy:       null.IntFromPtr(pr.SourceSHAPushedBy),
 		TargetRepoID:            pr.TargetRepoID,
 		TargetBranch:            pr.TargetBranch,
 		ActivitySeq:             pr.ActivitySeq,

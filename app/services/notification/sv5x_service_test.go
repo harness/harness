@@ -60,6 +60,7 @@ func sv5xFactory(
 		},
 		sv5xProducer{},
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	factory, err := pullreqevents.NewReaderFactory(system)

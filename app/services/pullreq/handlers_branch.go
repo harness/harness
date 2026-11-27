@@ -230,6 +230,7 @@ func (s *Service) updatePullReqOnBranchUpdate(ctx context.Context,
 			}
 
 			pr.SourceSHA = event.Payload.NewSHA
+			pr.SourceSHAPushedBy = ptr.Int64(event.Payload.PrincipalID)
 			pr.MergeTargetSHA = ptr.String(targetSHA.String())
 			pr.MergeBaseSHA = newMergeBase.String()
 

@@ -335,6 +335,7 @@ func (c *Controller) Create(
 			SourceRepoID:        &sourceRepo.ID,
 			SourceBranch:        in.SourceBranch,
 			SourceSHA:           sourceSHA.String(),
+			SourceSHAPushedBy:   ptr.Int64(session.Principal.ID), // the creator opened the PR at this SHA
 			TargetRepoID:        targetRepo.ID,
 			TargetBranch:        in.TargetBranch,
 			RootSpaceID:         targetRepoFull.RootSpaceID,

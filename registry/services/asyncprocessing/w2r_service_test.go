@@ -221,7 +221,7 @@ func w2rNewEnv(t *testing.T) *w2rEnv {
 	producer := &w2rProducer{}
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return w2rConsumer{}, nil },
-		producer, events.NewNoopCollector())
+		producer, events.NewNoopCollector(), false)
 	require.NoError(t, err)
 
 	env := &w2rEnv{
@@ -284,7 +284,7 @@ func TestW2rConfigPrepare(t *testing.T) {
 func TestW2rNewService(t *testing.T) {
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return w2rConsumer{}, nil },
-		&w2rProducer{}, events.NewNoopCollector())
+		&w2rProducer{}, events.NewNoopCollector(), false)
 	require.NoError(t, err)
 	factory, err := eventsasync.NewReaderFactory(system)
 	require.NoError(t, err)

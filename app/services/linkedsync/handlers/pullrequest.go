@@ -216,6 +216,7 @@ func (h *PullRequestHandler) create(
 		SourceRepoID:        &srcRepoID,
 		SourceBranch:        prPayload.HeadRef,
 		SourceSHA:           prPayload.HeadSHA,
+		SourceSHAPushedBy:   ptr.Int64(authorPrincipalID), // the author opened the PR at this SHA
 		TargetRepoID:        linkedRepo.RepoID,
 		TargetBranch:        prPayload.BaseRef,
 		RootSpaceID:         repo.RootSpaceID,
@@ -334,6 +335,9 @@ func (h *PullRequestHandler) update(
 	parent.Title = prPayload.Title
 	parent.Description = prPayload.Description
 	parent.SourceBranch = prPayload.HeadRef
+	if parent.SourceSHA != prPayload.HeadSHA {
+		parent.SourceSHAPushedBy = nil // pushes to linked repositories are not attributed to a principal
+	}
 	parent.SourceSHA = prPayload.HeadSHA
 	parent.TargetBranch = prPayload.BaseRef
 	parent.MergeTargetSHA = ptr.String(prPayload.BaseSHA)

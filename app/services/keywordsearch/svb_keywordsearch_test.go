@@ -183,6 +183,7 @@ func svbSystem(t *testing.T, consumer *svbConsumer, failAfter int) *events.Syste
 		},
 		svbProducer{},
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	return system

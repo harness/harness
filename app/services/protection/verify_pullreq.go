@@ -62,13 +62,14 @@ type (
 
 		DefaultReviewerApprovals []*types.DefaultReviewerApprovalsResponse
 
-		RequiresCodeOwnersApproval       bool
-		RequiresCodeOwnersApprovalLatest bool
-		RequiresCommentResolution        bool
-		RequiresTargetIsAncestor         bool
-		RequiresNoChangeRequests         bool
-		RequiresBypassMessage            bool
-		RequiresMergeQueue               bool
+		RequiresCodeOwnersApproval            bool
+		RequiresCodeOwnersApprovalLatest      bool
+		RequiresCommentResolution             bool
+		RequiresTargetIsAncestor              bool
+		RequiresNoChangeRequests              bool
+		RequiresDifferentReviewerThanLastPush bool
+		RequiresBypassMessage                 bool
+		RequiresMergeQueue                    bool
 	}
 
 	RequiredChecksInput struct {
@@ -155,9 +156,10 @@ const (
 	codePullReqApprovalReqDefaultReviewerMinCount       = "pullreq.approvals.require_default_reviewer_minimum_count"
 	codePullReqApprovalReqDefaultReviewerMinCountLatest = "pullreq.approvals.require_default_reviewer_minimum_count:latest_commit" //nolint:lll
 
-	codePullReqApprovalReqLatestCommit          = "pullreq.approvals.require_latest_commit"
-	codePullReqApprovalReqChangeRequested       = "pullreq.approvals.require_change_requested"
-	codePullReqApprovalReqChangeRequestedOldSHA = "pullreq.approvals.require_change_requested_old_SHA"
+	codePullReqApprovalReqLatestCommit                  = "pullreq.approvals.require_latest_commit"
+	codePullReqApprovalReqChangeRequested               = "pullreq.approvals.require_change_requested"
+	codePullReqApprovalReqChangeRequestedOldSHA         = "pullreq.approvals.require_change_requested_old_SHA"
+	codePullReqApprovalReqDifferentReviewerThanLastPush = "pullreq.approvals.require_different_reviewer_than_last_push"
 
 	codePullReqApprovalReqCodeOwnersNoApproval       = "pullreq.approvals.require_code_owners:no_approval"
 	codePullReqApprovalReqCodeOwnersChangeRequested  = "pullreq.approvals.require_code_owners:change_requested"
@@ -187,6 +189,7 @@ func (v *DefPullReq) MergeVerify(
 	out.DeleteSourceBranch = v.Merge.DeleteBranch
 	out.RequiresCommentResolution = v.Comments.RequireResolveAll
 	out.RequiresNoChangeRequests = v.Approvals.RequireNoChangeRequest
+	out.RequiresDifferentReviewerThanLastPush = v.Approvals.RequireDifferentReviewerThanLastPush
 
 	// output that depends on approval of latest commit
 	if v.Approvals.RequireLatestCommit {
@@ -239,6 +242,12 @@ func (v *DefPullReq) MergeVerify(
 			violations.Addf(codePullReqApprovalReqMinCount,
 				"Insufficient number of approvals. Have %d but need at least %d.",
 				len(approvedBy), v.Approvals.RequireMinimumCount)
+		}
+	}
+
+	if v.Approvals.RequireDifferentReviewerThanLastPush {
+		if violation := verifyDifferentReviewerThanLastPush(in); violation != "" {
+			violations.Add(codePullReqApprovalReqDifferentReviewerThanLastPush, violation)
 		}
 	}
 
@@ -437,6 +446,28 @@ func (v *DefPullReq) MergeVerify(
 	return out, nil, nil
 }
 
+// verifyDifferentReviewerThanLastPush checks that the latest push to the source branch has been approved
+// by someone other than the principal who made that push. It returns a violation message or an empty string.
+// The pusher is recorded on the pull request together with its source SHA (see types.PullReq.SourceSHAPushedBy).
+func verifyDifferentReviewerThanLastPush(in MergeVerifyInput) string {
+	if in.PullReq.SourceSHAPushedBy == nil {
+		return "The most recent push must be approved by someone other than the person who pushed it, " +
+			"but the author of the most recent push is unknown. Push a new commit to the source branch."
+	}
+
+	pusherID := *in.PullReq.SourceSHAPushedBy
+
+	for _, reviewer := range in.Reviewers {
+		if reviewer.ReviewDecision == enum.PullReqReviewDecisionApproved &&
+			reviewer.SHA == in.PullReq.SourceSHA &&
+			reviewer.Reviewer.ID != pusherID {
+			return ""
+		}
+	}
+
+	return "The most recent push must be approved by someone other than the person who pushed it."
+}
+
 func (v *DefPullReq) RequiredChecks(
 	_ context.Context,
 	_ RequiredChecksInput,
@@ -469,6 +500,11 @@ type DefApprovals struct {
 	RequireLatestCommit                bool `json:"require_latest_commit,omitempty"`
 	RequireNoChangeRequest             bool `json:"require_no_change_request,omitempty"`
 	RequireMinimumDefaultReviewerCount int  `json:"require_minimum_default_reviewer_count,omitempty"`
+
+	// RequireDifferentReviewerThanLastPush requires that the most recent push is approved
+	// by someone other than the pusher.
+	// It's a sub-rule of RequireLatestCommit.
+	RequireDifferentReviewerThanLastPush bool `json:"require_different_reviewer_than_last_push,omitempty"`
 }
 
 func (v *DefApprovals) Sanitize() error {
@@ -480,6 +516,10 @@ func (v *DefApprovals) Sanitize() error {
 		v.RequireMinimumCount == 0 && v.RequireMinimumDefaultReviewerCount == 0 {
 		return errors.InvalidArgument("Require latest commit can only be used with require code owners, " +
 			"require minimum count or require default reviewer minimum count.")
+	}
+
+	if v.RequireDifferentReviewerThanLastPush && !v.RequireLatestCommit {
+		return errors.InvalidArgument("Require last push approval can only be used with require latest commit.")
 	}
 
 	return nil

@@ -442,6 +442,7 @@ func rpgArtifactReporter(t *testing.T) (registryevents.Reporter, *rpgProducer) {
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return nil, errRpgBoom },
 		producer, rpgCollector{},
+		false,
 	)
 	require.NoError(t, err)
 	reporter, err := registryevents.NewReporter(system)

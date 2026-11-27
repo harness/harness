@@ -22,12 +22,15 @@ import (
 	"github.com/harness/gitness/app/auth/authz/authztest"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/sha"
 	mockgit "github.com/harness/gitness/mocks/git"
 	mocksse "github.com/harness/gitness/mocks/sse"
 	mockstore "github.com/harness/gitness/mocks/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -167,6 +170,17 @@ func (rec *stateEventRecorder) expectClosed(t *testing.T) *pullreqevents.ClosedP
 		return p
 	case <-time.After(5 * time.Second):
 		t.Fatal("timed out waiting for closed event")
+		return nil
+	}
+}
+
+func (rec *stateEventRecorder) expectReopened(t *testing.T) *pullreqevents.ReopenedPayload {
+	t.Helper()
+	select {
+	case p := <-rec.reopened:
+		return p
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for reopened event")
 		return nil
 	}
 }
@@ -380,4 +394,70 @@ func TestState_NoChange_EmitsNothing(t *testing.T) {
 	f.activityStore.AssertNotCalled(t, "CreateWithPayload", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 	f.pullreqStore.AssertExpectations(t)
 	f.repoStore.AssertExpectations(t)
+}
+
+func TestState_Reopen_SourceSHAPushedBy(t *testing.T) {
+	const (
+		oldSHA    = "1111111111111111111111111111111111111111"
+		newSHA    = "2222222222222222222222222222222222222222"
+		targetSHA = "3333333333333333333333333333333333333333"
+		baseSHA   = "4444444444444444444444444444444444444444"
+
+		originalPusher int64 = 42
+	)
+	reopener := testSession().Principal.ID
+
+	tests := []struct {
+		name       string
+		branchSHA  string
+		pushedBy   *int64
+		wantPusher int64
+	}{
+		{name: "sha changed while closed", branchSHA: newSHA, pushedBy: ptr.Int64(originalPusher), wantPusher: reopener},
+		{name: "pusher unknown", branchSHA: oldSHA, pushedBy: nil, wantPusher: reopener},
+		{name: "sha unchanged keeps pusher", branchSHA: oldSHA, pushedBy: ptr.Int64(originalPusher),
+			wantPusher: originalPusher},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pr := stateTestPR(enum.PullReqStateClosed, false)
+			pr.SourceSHA = oldSHA
+			pr.SourceSHAPushedBy = tt.pushedBy
+			f := newStateFixture(t, pr)
+
+			branchRef := func(name string) any {
+				return mock.MatchedBy(func(p git.GetRefParams) bool { return p.Name == name })
+			}
+			f.gitClient.On("GetRef", mock.Anything, branchRef("feature")).
+				Return(git.GetRefResponse{SHA: sha.Must(tt.branchSHA)}, nil).Once()
+			f.gitClient.On("GetRef", mock.Anything, branchRef("main")).
+				Return(git.GetRefResponse{SHA: sha.Must(targetSHA)}, nil).Twice()
+			f.pullreqStore.On("List", mock.Anything).Return([]*types.PullReq{}, nil).Once()
+			f.gitClient.On("MergeBase", mock.Anything, mock.Anything).
+				Return(git.MergeBaseOutput{MergeBaseSHA: sha.Must(baseSHA)}, nil).Once()
+
+			var updated *types.PullReq
+			f.pullreqStore.On("Update", mock.Anything).Run(func(args mock.Arguments) {
+				updated, _ = args.Get(0).(*types.PullReq)
+			}).Return(nil).Once()
+			f.gitClient.On("UpdateRef", mock.Anything, mock.Anything).Return(nil).Once()
+			f.repoStore.On("UpdateOptLock", mock.Anything, mock.Anything).
+				Return(&types.Repository{ID: stateTestRepoID}, nil).Once()
+
+			_, err := f.ctrl.State(context.Background(), testSession(), "1", stateTestPRNum,
+				&StateInput{State: enum.PullReqStateOpen})
+			require.NoError(t, err)
+
+			require.NotNil(t, updated)
+			require.Equal(t, enum.PullReqStateOpen, updated.State)
+			require.Equal(t, tt.branchSHA, updated.SourceSHA)
+			require.NotNil(t, updated.SourceSHAPushedBy)
+			require.Equal(t, tt.wantPusher, *updated.SourceSHAPushedBy)
+
+			f.rec.expectReopened(t)
+			f.rec.expectNoMore(t)
+			f.assertExpectations(t)
+		})
+	}
 }

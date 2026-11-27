@@ -239,6 +239,9 @@ func TestUpdatePullReqOnBranchUpdate_AutoMergeCleared(t *testing.T) {
 	if pr.SourceSHA != branchUpdateNewSHA {
 		t.Errorf("source SHA = %q, want %q", pr.SourceSHA, branchUpdateNewSHA)
 	}
+	if pr.SourceSHAPushedBy == nil || *pr.SourceSHAPushedBy != 7 {
+		t.Errorf("source SHA pushed by = %v, want 7", pr.SourceSHAPushedBy)
+	}
 	// Two sequence numbers are reserved, so the counter advances from 5 to 7.
 	if branchUpdateSeq != 6 {
 		t.Errorf("branch update activity seq = %d, want 6", branchUpdateSeq)

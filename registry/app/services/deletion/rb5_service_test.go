@@ -236,6 +236,7 @@ func rb5Reporter(t *testing.T) (*registryevents.Reporter, *rb5Producer) {
 	system, err := events.NewSystem(
 		func(string, string) (events.StreamConsumer, error) { return nil, errRb5Boom },
 		producer, rb5Collector{},
+		false,
 	)
 	require.NoError(t, err)
 	reporter, err := registryevents.NewReporter(system)

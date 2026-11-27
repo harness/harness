@@ -86,6 +86,7 @@ func TestSv5xNewService(t *testing.T) {
 			},
 			sv5xProducer{},
 			events.NewNoopCollector(),
+			false,
 		)
 		require.NoError(t, err)
 		checkFactory, err := checkevents.NewReaderFactory(system)

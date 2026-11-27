@@ -112,6 +112,7 @@ func infNewHarness(t *testing.T) *infHarness {
 		func(string, string) (events.StreamConsumer, error) { return h.consumer, nil },
 		h.producer,
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	h.reporter, err = NewReporter(h.system)

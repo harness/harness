@@ -53,6 +53,9 @@ func (s *Service) CloseBecauseNonUniqueMergeBase(
 		activitySeqMergeBase = pr.ActivitySeq - 1
 		activitySeqPRClosed = pr.ActivitySeq
 
+		if pr.SourceSHA != sourceSHA.String() {
+			pr.SourceSHAPushedBy = nil // the pusher of the new source SHA is unknown, reopen will attribute it
+		}
 		pr.SourceSHA = sourceSHA.String()
 		pr.MergeTargetSHA = ptr.String(targetSHA.String())
 

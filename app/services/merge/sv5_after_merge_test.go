@@ -180,6 +180,7 @@ func sv5NewAfter(t *testing.T) *sv5After {
 		func(string, string) (events.StreamConsumer, error) { return nil, errSv5Boom },
 		env.producer,
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	reporter, err := pullreqevents.NewReporter(system)

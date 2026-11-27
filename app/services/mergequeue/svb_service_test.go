@@ -405,6 +405,7 @@ func svbNewEnv(t *testing.T) *svbEnv {
 		func(string, string) (events.StreamConsumer, error) { return nil, errSvbBoom },
 		env.producer,
 		events.NewNoopCollector(),
+		false,
 	)
 	require.NoError(t, err)
 	reporter, err := mergequeueevents.NewReporter(system)
