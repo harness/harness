@@ -16,8 +16,11 @@ package repo
 
 import (
 	"compress/gzip"
+	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/repo"
@@ -28,6 +31,7 @@ import (
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -71,10 +75,13 @@ func HandleGitServicePack(
 		render.NoCache(w)
 		w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", service))
 
+		start := time.Now()
+		cw := &countingWriter{w: w}
+
 		err = repoCtrl.GitServicePack(ctx, session, repoRef, api.ServicePackOptions{
 			Service:      service,
 			StatelessRPC: true,
-			Stdout:       w,
+			Stdout:       cw,
 			Stdin:        dataReader,
 			Protocol:     gitProtocol,
 		})
@@ -83,8 +90,45 @@ func HandleGitServicePack(
 			return
 		}
 		if err != nil {
+			if cw.n > 0 {
+				// The response is already streaming: the status is sent and an ERR pkt-line would end up
+				// in the middle of the pack, so only record what happened.
+				logStreamFailure(ctx, err, service, cw.n, time.Since(start))
+				return
+			}
 			pktError(ctx, w, err)
 			return
 		}
 	}
+}
+
+// countingWriter counts the bytes written to the underlying writer.
+type countingWriter struct {
+	w io.Writer
+	n int64
+}
+
+func (c *countingWriter) Write(p []byte) (int, error) {
+	n, err := c.w.Write(p)
+	c.n += int64(n)
+	return n, err
+}
+
+// logStreamFailure logs a service pack that failed after data was already sent to the client.
+func logStreamFailure(
+	ctx context.Context,
+	err error,
+	service enum.GitServiceType,
+	written int64,
+	elapsed time.Duration,
+) {
+	level := zerolog.ErrorLevel
+	if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+		level = zerolog.WarnLevel
+	}
+	log.Ctx(ctx).WithLevel(level).Err(err).
+		Str("service", string(service)).
+		Int64("bytes_written", written).
+		Dur("elapsed", elapsed).
+		Msg("service pack failed after the response started streaming")
 }
