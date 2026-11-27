@@ -59,6 +59,9 @@ type Config struct {
 		HTTPGRPCEnabled bool `envconfig:"GITNESS_HTTP_GRPC_TRACING_ENABLED"`
 		// RedisEnabled traces Redis commands and the event streams, if tracing is on.
 		RedisEnabled bool `envconfig:"GITNESS_REDIS_TRACING_ENABLED"`
+		// AppSpansEnabled traces background jobs, if tracing is on. Git commands are traced as part of a traced
+		// request or job.
+		AppSpansEnabled bool `envconfig:"GITNESS_APP_SPANS_TRACING_ENABLED"`
 	}
 
 	// URL defines the URLs via which the different parts of the service are reachable by.

@@ -438,6 +438,7 @@ func ProvideJobsConfig(config *types.Config) job.Config {
 		InstanceID:                  config.InstanceID,
 		BackgroundJobsMaxRunning:    config.BackgroundJobs.MaxRunning,
 		BackgroundJobsRetentionTime: config.BackgroundJobs.RetentionTime,
+		Tracing:                     tracing.Enabled(config.Tracing.Exporter) && config.Tracing.AppSpansEnabled,
 	}
 }
 

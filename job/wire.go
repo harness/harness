@@ -43,7 +43,7 @@ func ProvideScheduler(
 	pubsubService pubsub.PubSub,
 	config Config,
 ) (*Scheduler, error) {
-	return NewScheduler(
+	scheduler, err := NewScheduler(
 		store,
 		executor,
 		mutexManager,
@@ -52,4 +52,10 @@ func ProvideScheduler(
 		config.BackgroundJobsMaxRunning,
 		config.BackgroundJobsRetentionTime,
 	)
+	if err != nil {
+		return nil, err
+	}
+	scheduler.traced = config.Tracing
+
+	return scheduler, nil
 }

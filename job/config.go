@@ -20,6 +20,9 @@ type Config struct {
 	// InstanceID specifis the ID of the instance.
 	InstanceID string `envconfig:"INSTANCE_ID"`
 
+	// Tracing creates spans for scheduling and running jobs; set by the service from its tracing config.
+	Tracing bool `ignored:"true"`
+
 	// MaxRunning is maximum number of jobs that can be running at once.
 	BackgroundJobsMaxRunning int `envconfig:"JOBS_MAX_RUNNING" default:"10"`
 

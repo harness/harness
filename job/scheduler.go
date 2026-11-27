@@ -23,12 +23,29 @@ import (
 	"time"
 
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/logging"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/store"
 
 	"github.com/gorhill/cronexpr"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
+
+var tracer = otel.Tracer("github.com/harness/gitness/job")
+
+// endSpan ends the span and marks it as failed if *err isn't nil.
+func endSpan(span trace.Span, err *error) {
+	if *err != nil {
+		span.RecordError(*err)
+		span.SetStatus(codes.Error, (*err).Error())
+	}
+	span.End()
+}
 
 // Scheduler controls execution of background jobs.
 type Scheduler struct {
@@ -49,6 +66,9 @@ type Scheduler struct {
 	wgRunning    sync.WaitGroup
 	cancelJobMx  sync.Mutex
 	cancelJobMap map[string]context.CancelFunc
+
+	// traced creates spans for scheduling and running jobs.
+	traced bool
 }
 
 func NewScheduler(
@@ -277,7 +297,17 @@ func (s *Scheduler) scheduleIfHaveMoreJobs() {
 // RunJob runs a single job of the type Definition.Type.
 // All parameters a job Handler receives must be inside the Definition.Data string
 // (as JSON or whatever the job Handler can interpret).
-func (s *Scheduler) RunJob(ctx context.Context, def Definition) error {
+func (s *Scheduler) RunJob(ctx context.Context, def Definition) (err error) {
+	// The job runs in its own trace. The shared job.uid attribute correlates it with the trace scheduling it.
+	span := trace.Span(noop.Span{})
+	if s.traced {
+		ctx, span = tracer.Start(ctx, "schedule job "+def.Type, trace.WithAttributes(
+			attribute.String("job.uid", def.UID),
+			attribute.String("job.type", def.Type),
+		))
+	}
+	defer endSpan(span, &err)
+
 	if err := def.Validate(); err != nil {
 		return err
 	}
@@ -295,10 +325,23 @@ func (s *Scheduler) RunJob(ctx context.Context, def Definition) error {
 
 // RunJobs runs a several jobs. It's more efficient than calling RunJob several times
 // because it locks the DB only once.
-func (s *Scheduler) RunJobs(ctx context.Context, groupID string, defs []Definition) error {
+func (s *Scheduler) RunJobs(ctx context.Context, groupID string, defs []Definition) (err error) {
 	if len(defs) == 0 {
 		return nil
 	}
+
+	jobUIDs := make([]string, len(defs))
+	for i, def := range defs {
+		jobUIDs[i] = def.UID
+	}
+	span := trace.Span(noop.Span{})
+	if s.traced {
+		ctx, span = tracer.Start(ctx, "schedule jobs", trace.WithAttributes(
+			attribute.StringSlice("job.uid", jobUIDs),
+			attribute.String("job.group_id", groupID),
+		))
+	}
+	defer endSpan(span, &err)
 
 	jobs := make([]*Job, len(defs))
 	for i, def := range defs {
@@ -425,12 +468,26 @@ func (s *Scheduler) runJob(ctx context.Context, j *Job) {
 	) {
 		defer s.wgRunning.Done()
 
+		span := trace.Span(noop.Span{})
+		if s.traced {
+			ctx, span = tracer.Start(ctx, "job "+jobType, trace.WithAttributes(
+				attribute.String("job.uid", jobUID),
+				attribute.String("job.type", jobType),
+			))
+		}
+		defer span.End()
+
+		ctx = logging.NewContext(ctx, logging.WithTraceContext(span.SpanContext()))
+
 		log.Ctx(ctx).Debug().Msg("started job")
 
 		timeStart := time.Now()
 
 		// Run the job
 		execResult, execFailure := s.doExec(ctx, jobUID, jobType, jobData, jobRunDeadline)
+		if execFailure != "" {
+			span.SetStatus(codes.Error, execFailure)
+		}
 
 		// Use the context.Background() because we want to update the job even if the job's context is done.
 		// The context can be done because the job exceeded its deadline or the server is shutting down.
@@ -450,16 +507,29 @@ func (s *Scheduler) runJob(ctx context.Context, j *Job) {
 		job, err := s.store.Find(backgroundCtx, jobUID)
 		if err != nil {
 			log.Ctx(ctx).Err(err).Msg("failed to find job after execution")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to find job after execution")
 			return
 		}
 
 		// Update the job fields, reschedule if necessary.
 		postExec(job, execResult, execFailure)
 
+		span.SetAttributes(
+			attribute.String("job.state", string(job.State)),
+			attribute.Bool("job.recurring", job.IsRecurring),
+			attribute.Int("job.executions", job.TotalExecutions),
+		)
+		if job.GroupID != "" {
+			span.SetAttributes(attribute.String("job.group_id", job.GroupID))
+		}
+
 		//nolint: contextcheck
 		err = s.store.UpdateExecution(backgroundCtx, job)
 		if err != nil {
 			log.Ctx(ctx).Err(err).Msg("failed to update job after execution")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to update job after execution")
 			return
 		}
 

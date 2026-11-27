@@ -25,12 +25,20 @@ import (
 	"os/exec"
 	"regexp"
 	"sync"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.40.0"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 var (
 	GitExecutable = "git"
 
 	actionRegex = regexp.MustCompile(`^[[:alnum:]]+[-[:alnum:]]*$`)
+
+	tracer = otel.Tracer("github.com/harness/gitness/git/command")
 )
 
 // Command contains options for running a git command.
@@ -128,7 +136,16 @@ func (c *Command) Add(options ...CmdOptionFunc) *Command {
 }
 
 // Run executes the git command with optional configuration using WithXxx functions.
+// As part of a traced operation (the context has a recording span, e.g. of a request or job), the execution is
+// traced as a span named after the git command (e.g. "git rev-list").
+// A non-zero exit code doesn't mark the span as failed, as git uses it for regular results as well.
 func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
+	span := trace.Span(noop.Span{})
+	if trace.SpanFromContext(ctx).IsRecording() {
+		ctx, span = tracer.Start(ctx, c.spanName())
+	}
+	defer span.End()
+
 	options := &RunOption{}
 	for _, f := range opts {
 		f(options)
@@ -157,6 +174,10 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 	cmd.Stdout = options.Stdout
 	cmd.Stderr = options.Stderr
 	if err = cmd.Start(); err != nil {
+		if !errors.Is(err, context.Canceled) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to start git")
+		}
 		return err
 	}
 
@@ -168,6 +189,10 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 	select {
 	case <-ctx.Done():
 		<-result
+		// Cancellation is how callers stop long-running processes (e.g. cat-file --batch) once they are done.
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			span.SetStatus(codes.Error, ctx.Err().Error())
+		}
 		if cmd.Process != nil && cmd.ProcessState != nil && !cmd.ProcessState.Exited() {
 			// exec.CommandContext has usually killed git already, so ErrProcessDone means there is
 			// nothing left to stop - report the cancellation, not the redundant kill.
@@ -179,6 +204,9 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 
 		return ctx.Err()
 	case err = <-result:
+		if cmd.ProcessState != nil {
+			span.SetAttributes(semconv.ProcessExitCode(cmd.ProcessState.ExitCode()))
+		}
 		if err == nil {
 			return nil
 		}
@@ -189,6 +217,17 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 		}
 		return NewError(err, stderr)
 	}
+}
+
+// spanName returns "git <name> [<action>]". Arguments are left out to keep span names low-cardinality.
+func (c *Command) spanName() string {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	if c.Action != "" {
+		return "git " + c.Name + " " + c.Action
+	}
+	return "git " + c.Name
 }
 
 func (c *Command) makeArgs() ([]string, error) {

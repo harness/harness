@@ -28,10 +28,12 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
+const testTracingExporter = "otlp"
+
 func TestProvideRedis(t *testing.T) {
 	cfg := &types.Config{}
 	cfg.Redis.Endpoint = "127.0.0.1:6379"
-	cfg.Tracing.Exporter = "otlp"
+	cfg.Tracing.Exporter = testTracingExporter
 	cfg.Tracing.RedisEnabled = true
 
 	client, err := ProvideRedis(cfg)
@@ -86,9 +88,20 @@ func TestProvideEventsConfigTracing(t *testing.T) {
 	cfg := &types.Config{}
 	assert.False(t, ProvideEventsConfig(cfg).Tracing)
 
-	cfg.Tracing.Exporter = "otlp"
+	cfg.Tracing.Exporter = testTracingExporter
 	assert.False(t, ProvideEventsConfig(cfg).Tracing)
 
 	cfg.Tracing.RedisEnabled = true
 	assert.True(t, ProvideEventsConfig(cfg).Tracing)
+}
+
+func TestProvideJobsConfigTracing(t *testing.T) {
+	cfg := &types.Config{}
+	assert.False(t, ProvideJobsConfig(cfg).Tracing)
+
+	cfg.Tracing.Exporter = testTracingExporter
+	assert.False(t, ProvideJobsConfig(cfg).Tracing)
+
+	cfg.Tracing.AppSpansEnabled = true
+	assert.True(t, ProvideJobsConfig(cfg).Tracing)
 }
